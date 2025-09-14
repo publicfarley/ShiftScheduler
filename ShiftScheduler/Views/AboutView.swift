@@ -6,7 +6,8 @@ struct AlertItem: Identifiable {
     let id = UUID()
     let title: Text
     let message: Text
-    let dismissButton: Alert.Button
+    let primaryButton: Alert.Button
+    let secondaryButton: Alert.Button?
 }
 
 struct AboutView: View {
@@ -52,9 +53,10 @@ struct AboutView: View {
                     self.alertItem = AlertItem(
                         title: Text("Are you sure?"),
                         message: Text("This will permanently delete all data."),
-                        dismissButton: .destructive(Text("Delete")) {
+                        primaryButton: .destructive(Text("Delete")) {
                             self.deleteAllData()
-                        }
+                        },
+                        secondaryButton: .cancel()
                     )
                 }) {
                     Text("Delete All Data")
@@ -72,7 +74,11 @@ struct AboutView: View {
             .navigationTitle("About")
             .navigationBarTitleDisplayMode(.large)
             .alert(item: $alertItem) { alertItem in
-                Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.dismissButton)
+                if let secondaryButton = alertItem.secondaryButton {
+                    return Alert(title: alertItem.title, message: alertItem.message, primaryButton: alertItem.primaryButton, secondaryButton: secondaryButton)
+                } else {
+                    return Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.primaryButton)
+                }
             }
         }
     }
@@ -82,9 +88,9 @@ struct AboutView: View {
             try modelContext.delete(model: ScheduledShift.self)
             try modelContext.delete(model: ShiftType.self)
             try modelContext.delete(model: Location.self)
-            self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), dismissButton: .default(Text("OK")))
+            self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
         } catch {
-            self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), dismissButton: .default(Text("OK")))
+            self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), primaryButton: .default(Text("OK")), secondaryButton: nil)
         }
     }
 }
