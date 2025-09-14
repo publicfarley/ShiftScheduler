@@ -1,7 +1,18 @@
 
 import SwiftUI
+import SwiftData
+
+struct AlertItem: Identifiable {
+    let id = UUID()
+    let title: Text
+    let message: Text
+    let dismissButton: Alert.Button
+}
 
 struct AboutView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var alertItem: AlertItem?
+
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -37,27 +48,22 @@ struct AboutView: View {
 
                 Spacer()
 
-                Text("Version 1.0 (Build 1)")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-
-                Text("© 2025 Farley Caesar")
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-
-                HStack(spacing: 30) {
-                    Image(systemName: "star.fill")
-                        .resizable()
-                        .frame(width: 25, height: 25)
-                        .foregroundColor(.blue)
-                    Image(systemName: "heart.fill")
-                        .resizable()
-                        .frame(width: 25, height: 25)
-                        .foregroundColor(.pink)
-                    Image(systemName: "leaf.fill")
-                        .resizable()
-                        .frame(width: 25, height: 25)
-                        .foregroundColor(.green)
+                Button(action: {
+                    self.alertItem = AlertItem(
+                        title: Text("Are you sure?"),
+                        message: Text("This will permanently delete all data."),
+                        dismissButton: .destructive(Text("Delete")) {
+                            self.deleteAllData()
+                        }
+                    )
+                }) {
+                    Text("Delete All Data")
+                        .foregroundColor(.red)
+                        .padding()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.red, lineWidth: 1)
+                        )
                 }
                 .padding(.bottom, 50) // Add some padding to push it up from the bottom tab bar
 
@@ -65,6 +71,20 @@ struct AboutView: View {
             }
             .navigationTitle("About")
             .navigationBarTitleDisplayMode(.large)
+            .alert(item: $alertItem) { alertItem in
+                Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.dismissButton)
+            }
+        }
+    }
+
+    private func deleteAllData() {
+        do {
+            try modelContext.delete(model: ScheduledShift.self)
+            try modelContext.delete(model: ShiftType.self)
+            try modelContext.delete(model: Location.self)
+            self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), dismissButton: .default(Text("OK")))
+        } catch {
+            self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), dismissButton: .default(Text("OK")))
         }
     }
 }
