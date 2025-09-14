@@ -5,6 +5,7 @@ struct ShiftTypesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
     @State private var showingAddShiftType = false
+    @State private var selectedShiftType: ShiftType? = nil
     @State private var searchText = ""
     @State private var activeOnly = true
 
@@ -83,7 +84,11 @@ struct ShiftTypesView: View {
                 } else {
                     List {
                         ForEach(filteredShiftTypes) { shiftType in
-                            ShiftTypeRow(shiftType: shiftType)
+                            Button(action: {
+                                selectedShiftType = shiftType
+                            }) {
+                                ShiftTypeRow(shiftType: shiftType)
+                            }
                         }
                         .onDelete(perform: deleteShiftTypes)
                     }
@@ -102,6 +107,9 @@ struct ShiftTypesView: View {
             }
             .sheet(isPresented: $showingAddShiftType) {
                 AddShiftTypeView()
+            }
+            .sheet(item: $selectedShiftType) { shiftType in
+                EditShiftTypeView(shiftType: shiftType)
             }
         }
     }

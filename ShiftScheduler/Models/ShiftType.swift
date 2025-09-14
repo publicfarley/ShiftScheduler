@@ -35,6 +35,17 @@ final class ShiftType {
         self.location = location
     }
 
+    func update(symbol: String, startHour: Int, startMinute: Int, endHour: Int, endMinute: Int, title: String, description: String, location: Location) {
+        self.symbol = symbol
+        self.startHour = startHour
+        self.startMinute = startMinute
+        self.endHour = endHour
+        self.endMinute = endMinute
+        self.title = title
+        self.shiftDescription = description
+        self.location = location
+    }
+
     var startTimeString: String {
         String(format: "%02d:%02d", startHour, startMinute)
     }
