@@ -7,6 +7,7 @@ struct LocationsView: View {
     @State private var showingAddLocation = false
     @State private var searchText = ""
     @State private var activeOnly = true
+    @FocusState private var isSearchFieldFocused: Bool
 
     private var filteredLocations: [Location] {
         var filtered = locations
@@ -30,6 +31,7 @@ struct LocationsView: View {
                             .foregroundColor(.secondary)
 
                         TextField("Search locations...", text: $searchText)
+                            .focused($isSearchFieldFocused)
                     }
                     .padding(12)
                     .background(Color(UIColor.systemGray6))
@@ -38,12 +40,7 @@ struct LocationsView: View {
                     .padding(.top)
 
                     HStack {
-                        Text("Active Only")
-                            .font(.body)
-
                         Spacer()
-
-                        Toggle("", isOn: $activeOnly)
 
                         Text("\(filteredLocations.count) locations")
                             .foregroundColor(.secondary)
@@ -87,6 +84,9 @@ struct LocationsView: View {
                         .onDelete(perform: deleteLocations)
                     }
                 }
+            }
+            .onTapGesture {
+                isSearchFieldFocused = false
             }
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
