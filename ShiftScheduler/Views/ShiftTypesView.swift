@@ -141,13 +141,47 @@ struct ShiftTypeRow: View {
                 .foregroundColor(.secondary)
                 .lineLimit(2)
 
-            if let location = shiftType.location {
-                Text("📍 \(location.name)")
+            // Only show location if it exists and is accessible
+            if shiftType.location != nil {
+                LocationDisplayView(shiftType: shiftType)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct LocationDisplayView: View {
+    let shiftType: ShiftType
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var locationName: String?
+    @State private var showLocation: Bool = false
+
+    var body: some View {
+        Group {
+            if showLocation, let locationName = locationName {
+                Text("📍 \(locationName)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 2)
+        .task {
+            await loadLocationSafely()
+        }
+    }
+
+    private func loadLocationSafely() async {
+        await MainActor.run {
+            guard let location = shiftType.location else {
+                showLocation = false
+                return
+            }
+
+            // Simply access the location name
+            // The cascade delete should have already cleaned up invalid references
+            locationName = location.name
+            showLocation = true
+        }
     }
 }
 

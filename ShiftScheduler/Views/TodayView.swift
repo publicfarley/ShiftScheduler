@@ -44,15 +44,11 @@ struct TodayView: View {
                     // Today Section
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("Today")
-                                .font(.title2)
-                                .fontWeight(.bold)
-
-                            Spacer()
-
                             Text(Date(), style: .date)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
+
+                            Spacer()
                         }
 
                         TodayShiftCard(shift: todayShift)

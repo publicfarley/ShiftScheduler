@@ -30,7 +30,7 @@ struct AddLocationView: View {
                                             .foregroundColor(.primary)
                                         Spacer()
                                         TextField("Location name", text: $name)
-                                            .multilineTextAlignment(.trailing)
+                                            .multilineTextAlignment(.leading)
                                             .foregroundColor(.secondary)
                                     }
                                     .padding(.vertical, 12)
@@ -42,9 +42,9 @@ struct AddLocationView: View {
                                             .foregroundColor(.primary)
                                         Spacer()
                                         TextField("Street address", text: $address, axis: .vertical)
-                                            .multilineTextAlignment(.trailing)
+                                            .multilineTextAlignment(.leading)
                                             .foregroundColor(.secondary)
-                                            .lineLimit(1...3)
+                                            .lineLimit(4, reservesSpace: true)
                                     }
                                     .padding(.vertical, 12)
                                 }

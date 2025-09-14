@@ -4,6 +4,7 @@ import SwiftData
 struct LocationsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var locations: [Location]
+    @Query private var shiftTypes: [ShiftType]
     @State private var showingAddLocation = false
     @State private var searchText = ""
     @State private var activeOnly = true
@@ -111,7 +112,19 @@ struct LocationsView: View {
     private func deleteLocations(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(filteredLocations[index])
+                let locationToDelete = filteredLocations[index]
+
+                // First, set location to nil for all shift types that reference this location
+                let affectedShiftTypes = shiftTypes.filter { shiftType in
+                    guard let shiftTypeLocation = shiftType.location else { return false }
+                    return shiftTypeLocation.persistentModelID == locationToDelete.persistentModelID
+                }
+                for shiftType in affectedShiftTypes {
+                    shiftType.location = nil
+                }
+
+                // Then delete the location
+                modelContext.delete(locationToDelete)
             }
         }
     }
