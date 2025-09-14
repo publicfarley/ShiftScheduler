@@ -1,24 +1,38 @@
-//
-//  ContentView.swift
-//  ShiftScheduler
-//
-//  Created by Farley Caesar on 2025-09-14.
-//
-
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            TodayView()
+                .tabItem {
+                    Label("Today", systemImage: "calendar.badge.clock")
+                }
+
+            ScheduleView()
+                .tabItem {
+                    Label("Calendar", systemImage: "calendar")
+                }
+
+            ShiftTypesView()
+                .tabItem {
+                    Label("Shift Types", systemImage: "briefcase")
+                }
+
+            LocationsView()
+                .tabItem {
+                    Label("Locations", systemImage: "location")
+                }
+
+            AboutView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [Location.self, ShiftType.self, ScheduledShift.self], inMemory: true)
 }
