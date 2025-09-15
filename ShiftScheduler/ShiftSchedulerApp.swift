@@ -6,8 +6,7 @@ struct ShiftSchedulerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Location.self,
-            ShiftType.self,
-            ScheduledShift.self
+            ShiftType.self
         ])
 
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

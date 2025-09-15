@@ -12,6 +12,7 @@ struct AlertItem: Identifiable {
 
 struct AboutView: View {
     @Environment(\.modelContext) private var modelContext
+    @StateObject private var calendarService = CalendarService.shared
     @State private var alertItem: AlertItem?
 
     var body: some View {
@@ -84,13 +85,31 @@ struct AboutView: View {
     }
 
     private func deleteAllData() {
-        do {
-            try modelContext.delete(model: ScheduledShift.self)
-            try modelContext.delete(model: ShiftType.self)
-            try modelContext.delete(model: Location.self)
-            self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
-        } catch {
-            self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), primaryButton: .default(Text("OK")), secondaryButton: nil)
+        Task {
+            do {
+                // Delete all calendar events (shifts)
+                if calendarService.isAuthorized {
+                    let startDate = Calendar.current.date(byAdding: .year, value: -10, to: Date()) ?? Date()
+                    let endDate = Calendar.current.date(byAdding: .year, value: 10, to: Date()) ?? Date()
+                    let shifts = try await calendarService.fetchShifts(from: startDate, to: endDate)
+
+                    for shift in shifts {
+                        try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
+                    }
+                }
+
+                // Delete SwiftData models
+                try modelContext.delete(model: ShiftType.self)
+                try modelContext.delete(model: Location.self)
+
+                await MainActor.run {
+                    self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
+                }
+            } catch {
+                await MainActor.run {
+                    self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), primaryButton: .default(Text("OK")), secondaryButton: nil)
+                }
+            }
         }
     }
 }

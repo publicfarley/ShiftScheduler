@@ -5,10 +5,13 @@ struct ScheduleShiftView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var shiftTypes: [ShiftType]
+    @StateObject private var calendarService = CalendarService.shared
 
     let selectedDate: Date
     @State private var selectedShiftType: ShiftType?
     @State private var shiftDate: Date
+    @State private var isLoading = false
+    @State private var errorMessage: String?
 
     init(selectedDate: Date) {
         self.selectedDate = selectedDate
@@ -18,6 +21,13 @@ struct ScheduleShiftView: View {
     var body: some View {
         NavigationView {
             Form {
+                if let errorMessage = errorMessage {
+                    Section {
+                        Text("Error: \(errorMessage)")
+                            .foregroundColor(.red)
+                    }
+                }
+
                 Section("Shift Details") {
                     DatePicker("Date", selection: $shiftDate, displayedComponents: [.date])
 
@@ -90,10 +100,15 @@ struct ScheduleShiftView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        scheduleShift()
+                    if isLoading {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Button("Save") {
+                            scheduleShift()
+                        }
+                        .disabled(selectedShiftType == nil || !calendarService.isAuthorized)
                     }
-                    .disabled(selectedShiftType == nil)
                 }
             }
         }
@@ -101,27 +116,40 @@ struct ScheduleShiftView: View {
 
     private func scheduleShift() {
         guard let shiftType = selectedShiftType else { return }
+        guard calendarService.isAuthorized else { return }
 
-        let fetchDescriptor = FetchDescriptor<ScheduledShift>()
-        let scheduledShifts = (try? modelContext.fetch(fetchDescriptor)) ?? []
-        let existingShift = scheduledShifts.first { scheduledShift in
-            guard let scheduledShiftType = scheduledShift.shiftType else { return false }
-            return scheduledShiftType.id == shiftType.id &&
-                   Calendar.current.isDate(scheduledShift.date, inSameDayAs: shiftDate)
+        isLoading = true
+        errorMessage = nil
+
+        Task {
+            do {
+                let hasDuplicate = try await calendarService.checkForDuplicateShift(shiftTypeId: shiftType.id, on: shiftDate)
+
+                if hasDuplicate {
+                    await MainActor.run {
+                        self.errorMessage = "A shift of this type is already scheduled for this date."
+                        self.isLoading = false
+                    }
+                    return
+                }
+
+                _ = try await calendarService.createShiftEvent(from: shiftType, on: shiftDate)
+
+                await MainActor.run {
+                    self.isLoading = false
+                    self.dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.isLoading = false
+                }
+            }
         }
-
-        if existingShift != nil {
-            return
-        }
-
-        let scheduledShift = ScheduledShift(shiftType: shiftType, date: shiftDate)
-        modelContext.insert(scheduledShift)
-
-        dismiss()
     }
 }
 
 #Preview {
     ScheduleShiftView(selectedDate: Date())
-        .modelContainer(for: [Location.self, ShiftType.self, ScheduledShift.self], inMemory: true)
+        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

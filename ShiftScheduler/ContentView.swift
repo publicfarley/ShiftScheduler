@@ -34,5 +34,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Location.self, ShiftType.self, ScheduledShift.self], inMemory: true)
+        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }
