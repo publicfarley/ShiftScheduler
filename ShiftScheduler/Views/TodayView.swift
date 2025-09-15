@@ -122,30 +122,11 @@ struct TodayView: View {
 
                         // Upcoming Section
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Upcoming")
+                            Text("Tomorrow")
                                 .font(.title3)
                                 .fontWeight(.semibold)
 
-                            HStack {
-                                Text("Tomorrow")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-
-                                Spacer()
-
-                                if let tomorrowShift = tomorrowShift {
-                                    Text(tomorrowShift.shiftType?.title ?? "Shift")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                } else {
-                                    Text("No shift scheduled")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding()
-                            .background(Color(UIColor.systemGray6))
-                            .cornerRadius(12)
+                            TomorrowShiftCard(shift: tomorrowShift)
                         }
                         .padding(.horizontal)
 
@@ -279,6 +260,46 @@ struct QuickActionButton: View {
             .background(Color.blue)
             .cornerRadius(12)
         }
+    }
+}
+
+struct TomorrowShiftCard: View {
+    let shift: ScheduledShift?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if let shift = shift, let shiftType = shift.shiftType {
+                // Has shift scheduled - same as TodayShiftCard
+                VStack(spacing: 8) {
+                    Text(shiftType.symbol)
+                        .font(.system(size: 40))
+
+                    Text(shiftType.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+
+                    Text(shiftType.timeRangeString)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    if let location = shiftType.location {
+                        Text("📍 \(location.name)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } else {
+                // No shift scheduled - simple one liner
+                Text("No shift scheduled")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 16)
+        .background(Color(UIColor.systemGray6))
+        .cornerRadius(16)
     }
 }
 
