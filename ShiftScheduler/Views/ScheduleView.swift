@@ -81,7 +81,11 @@ struct ScheduleView: View {
                     .disabled(!calendarService.isAuthorized)
                 }
             }
-            .sheet(isPresented: $showingScheduleShift) {
+            .sheet(isPresented: $showingScheduleShift, onDismiss: {
+                // Reload shifts when the schedule sheet is dismissed
+                // This ensures newly scheduled shifts appear immediately
+                loadShifts()
+            }) {
                 ScheduleShiftView(selectedDate: selectedDate)
             }
             .onAppear {
