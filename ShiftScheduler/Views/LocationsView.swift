@@ -6,6 +6,8 @@ struct LocationsView: View {
     @Query private var locations: [Location]
     @Query private var shiftTypes: [ShiftType]
     @State private var showingAddLocation = false
+    @State private var showingEditLocation = false
+    @State private var locationToEdit: Location?
     @State private var searchText = ""
     @State private var activeOnly = true
     @FocusState private var searchFieldIsFocused: Bool
@@ -84,6 +86,11 @@ struct LocationsView: View {
                     List {
                         ForEach(filteredLocations) { location in
                             LocationRow(location: location)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    locationToEdit = location
+                                    showingEditLocation = true
+                                }
                         }
                         .onDelete(perform: deleteLocations)
                     }
@@ -105,6 +112,11 @@ struct LocationsView: View {
             }
             .sheet(isPresented: $showingAddLocation) {
                 AddLocationView()
+            }
+            .sheet(isPresented: $showingEditLocation) {
+                if let location = locationToEdit {
+                    EditLocationView(location: location)
+                }
             }
         }
     }
