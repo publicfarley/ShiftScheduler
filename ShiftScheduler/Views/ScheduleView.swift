@@ -8,6 +8,7 @@ struct ScheduleView: View {
     @State private var showingScheduleShift = false
     @State private var selectedDate = Date()
     @State private var scheduledShifts: [ScheduledShift] = []
+    @State private var scheduledDates: Set<Date> = []
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -42,8 +43,7 @@ struct ScheduleView: View {
                     }
                     .padding()
                 } else {
-                    DatePicker("Select Date", selection: $selectedDate, displayedComponents: [.date])
-                        .datePickerStyle(GraphicalDatePickerStyle())
+                    CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
                         .padding()
                         .onChange(of: selectedDate) { _, _ in
                             loadShifts()
@@ -85,11 +85,13 @@ struct ScheduleView: View {
                 // Reload shifts when the schedule sheet is dismissed
                 // This ensures newly scheduled shifts appear immediately
                 loadShifts()
+                loadScheduledDates()
             }) {
                 ScheduleShiftView(selectedDate: selectedDate)
             }
             .onAppear {
                 loadShifts()
+                loadScheduledDates()
             }
         }
     }
@@ -121,6 +123,28 @@ struct ScheduleView: View {
         }
     }
 
+    private func loadScheduledDates() {
+        guard calendarService.isAuthorized else { return }
+
+        Task {
+            do {
+                // Load shifts for a wider date range to get all scheduled dates for highlighting
+                let startDate = Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date()
+                let endDate = Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
+
+                let allShiftData = try await calendarService.fetchShifts(from: startDate, to: endDate)
+                let uniqueDates = Set(allShiftData.map { Calendar.current.startOfDay(for: $0.date) })
+
+                await MainActor.run {
+                    self.scheduledDates = uniqueDates
+                }
+            } catch {
+                // Silently fail for scheduled dates - this is just for highlighting
+                print("Failed to load scheduled dates for highlighting: \(error)")
+            }
+        }
+    }
+
     private func deleteShifts(offsets: IndexSet) {
         let shiftsToDelete = shiftsForSelectedDate.sorted { $0.shiftType?.startHour ?? 0 < $1.shiftType?.startHour ?? 0 }
 
@@ -131,6 +155,7 @@ struct ScheduleView: View {
                     try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
                     await MainActor.run {
                         loadShifts()
+                        loadScheduledDates()
                     }
                 } catch {
                     await MainActor.run {
