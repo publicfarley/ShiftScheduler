@@ -6,7 +6,6 @@ struct LocationsView: View {
     @Query private var locations: [Location]
     @Query private var shiftTypes: [ShiftType]
     @State private var showingAddLocation = false
-    @State private var showingEditLocation = false
     @State private var locationToEdit: Location?
     @State private var searchText = ""
     @State private var activeOnly = true
@@ -85,12 +84,9 @@ struct LocationsView: View {
                 } else {
                     List {
                         ForEach(filteredLocations) { location in
-                            LocationRow(location: location)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    locationToEdit = location
-                                    showingEditLocation = true
-                                }
+                            LocationRow(location: location) {
+                                locationToEdit = location
+                            }
                         }
                         .onDelete(perform: deleteLocations)
                     }
@@ -113,10 +109,8 @@ struct LocationsView: View {
             .sheet(isPresented: $showingAddLocation) {
                 AddLocationView()
             }
-            .sheet(isPresented: $showingEditLocation) {
-                if let location = locationToEdit {
-                    EditLocationView(location: location)
-                }
+            .sheet(item: $locationToEdit) { location in
+                EditLocationView(location: location)
             }
         }
     }
@@ -144,15 +138,27 @@ struct LocationsView: View {
 
 struct LocationRow: View {
     let location: Location
+    let onEdit: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(location.name)
-                .font(.headline)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(location.name)
+                    .font(.headline)
 
-            Text(location.address)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                Text(location.address)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Button(action: onEdit) {
+                Image(systemName: "pencil.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.accentColor)
+            }
+            .buttonStyle(.borderless)
         }
         .padding(.vertical, 2)
     }

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Location {
+final class Location: Identifiable {
     var id: UUID
     var name: String
     var address: String
