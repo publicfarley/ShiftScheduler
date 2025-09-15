@@ -124,21 +124,35 @@ class CalendarService: ObservableObject {
         event.title = "\(shiftType.symbol) - \(shiftType.title)"
 
         let shiftDate = Calendar.current.startOfDay(for: date)
-        var startComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
-        startComponents.hour = shiftType.startHour
-        startComponents.minute = shiftType.startMinute
 
-        var endComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
-        endComponents.hour = shiftType.endHour
-        endComponents.minute = shiftType.endMinute
+        switch shiftType.duration {
+        case .allDay:
+            event.isAllDay = true
+            event.startDate = shiftDate
+            guard let endDate = Calendar.current.date(byAdding: .day, value: 1, to: shiftDate) else {
+                throw CalendarError.invalidDate
+            }
+            event.endDate = endDate
 
-        guard let startDate = Calendar.current.date(from: startComponents),
-              let endDate = Calendar.current.date(from: endComponents) else {
-            throw CalendarError.invalidDate
+        case .scheduled(let from, let to):
+            event.isAllDay = false
+
+            var startComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+            startComponents.hour = from.hour
+            startComponents.minute = from.minute
+
+            var endComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+            endComponents.hour = to.hour
+            endComponents.minute = to.minute
+
+            guard let startDate = Calendar.current.date(from: startComponents),
+                  let endDate = Calendar.current.date(from: endComponents) else {
+                throw CalendarError.invalidDate
+            }
+
+            event.startDate = startDate
+            event.endDate = endDate
         }
-
-        event.startDate = startDate
-        event.endDate = endDate
 
         if let location = shiftType.location {
             event.location = "\(location.name), \(location.address)"

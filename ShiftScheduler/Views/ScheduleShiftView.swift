@@ -41,7 +41,7 @@ struct ScheduleShiftView: View {
                             ForEach(shiftTypes) { shiftType in
                                 VStack(alignment: .leading) {
                                     Text("\(shiftType.symbol) - \(shiftType.title)")
-                                    Text("\(shiftType.startTimeString) - \(shiftType.endTimeString)")
+                                    Text(shiftType.timeRangeString)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -62,7 +62,7 @@ struct ScheduleShiftView: View {
 
                                 Spacer()
 
-                                Text("\(shiftType.startTimeString) - \(shiftType.endTimeString)")
+                                Text(shiftType.timeRangeString)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }

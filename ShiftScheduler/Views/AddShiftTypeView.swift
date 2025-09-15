@@ -9,6 +9,7 @@ struct AddShiftTypeView: View {
     @State private var symbol = ""
     @State private var title = ""
     @State private var description = ""
+    @State private var isAllDay = false
     @State private var startTime = Date()
     @State private var endTime = Date()
     @State private var selectedLocation: Location?
@@ -84,26 +85,40 @@ struct AddShiftTypeView: View {
 
                             VStack(spacing: 0) {
                                 HStack {
-                                    Text("Start Time")
+                                    Text("All Day")
                                         .foregroundColor(.primary)
                                     Spacer()
-                                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                                    Toggle("", isOn: $isAllDay)
                                         .labelsHidden()
                                 }
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 16)
 
-                                Divider()
+                                if !isAllDay {
+                                    Divider()
 
-                                HStack {
-                                    Text("End Time")
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
-                                        .labelsHidden()
+                                    HStack {
+                                        Text("Start Time")
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                                            .labelsHidden()
+                                    }
+                                    .padding(.vertical, 12)
+                                    .padding(.horizontal, 16)
+
+                                    Divider()
+
+                                    HStack {
+                                        Text("End Time")
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                                            .labelsHidden()
+                                    }
+                                    .padding(.vertical, 12)
+                                    .padding(.horizontal, 16)
                                 }
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
                             }
                             .background(Color(UIColor.systemBackground))
                             .cornerRadius(10)
@@ -210,16 +225,18 @@ struct AddShiftTypeView: View {
     private func saveShiftType() {
         guard let location = selectedLocation else { return }
 
-        let calendar = Calendar.current
-        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
-        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        let duration: ShiftDuration
+        if isAllDay {
+            duration = .allDay
+        } else {
+            let startHourMinute = HourMinuteTime(from: startTime)
+            let endHourMinute = HourMinuteTime(from: endTime)
+            duration = .scheduled(from: startHourMinute, to: endHourMinute)
+        }
 
         let shiftType = ShiftType(
             symbol: symbol,
-            startHour: startComponents.hour ?? 9,
-            startMinute: startComponents.minute ?? 0,
-            endHour: endComponents.hour ?? 17,
-            endMinute: endComponents.minute ?? 0,
+            duration: duration,
             title: title,
             description: description,
             location: location

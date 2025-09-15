@@ -136,7 +136,7 @@ struct ShiftTypeRow: View {
 
                 Spacer()
 
-                Text("\(shiftType.startTimeString) - \(shiftType.endTimeString)")
+                Text(shiftType.timeRangeString)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

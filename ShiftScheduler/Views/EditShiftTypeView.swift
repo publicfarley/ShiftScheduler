@@ -10,6 +10,7 @@ struct EditShiftTypeView: View {
     @State private var symbol: String
     @State private var title: String
     @State private var description: String
+    @State private var isAllDay: Bool
     @State private var startTime: Date
     @State private var endTime: Date
     @State private var selectedLocation: Location?
@@ -29,10 +30,17 @@ struct EditShiftTypeView: View {
         _symbol = State(initialValue: shiftType.symbol)
         _title = State(initialValue: shiftType.title)
         _description = State(initialValue: shiftType.shiftDescription)
-        
+        _isAllDay = State(initialValue: shiftType.isAllDay)
+
         let calendar = Calendar.current
-        _startTime = State(initialValue: calendar.date(bySettingHour: shiftType.startHour, minute: shiftType.startMinute, second: 0, of: Date()) ?? Date())
-        _endTime = State(initialValue: calendar.date(bySettingHour: shiftType.endHour, minute: shiftType.endMinute, second: 0, of: Date()) ?? Date())
+        switch shiftType.duration {
+        case .allDay:
+            _startTime = State(initialValue: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date())
+            _endTime = State(initialValue: calendar.date(bySettingHour: 17, minute: 0, second: 0, of: Date()) ?? Date())
+        case .scheduled(let from, let to):
+            _startTime = State(initialValue: calendar.date(bySettingHour: from.hour, minute: from.minute, second: 0, of: Date()) ?? Date())
+            _endTime = State(initialValue: calendar.date(bySettingHour: to.hour, minute: to.minute, second: 0, of: Date()) ?? Date())
+        }
         _selectedLocation = State(initialValue: shiftType.location)
     }
 
@@ -99,26 +107,40 @@ struct EditShiftTypeView: View {
 
                             VStack(spacing: 0) {
                                 HStack {
-                                    Text("Start Time")
+                                    Text("All Day")
                                         .foregroundColor(.primary)
                                     Spacer()
-                                    DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                                    Toggle("", isOn: $isAllDay)
                                         .labelsHidden()
                                 }
                                 .padding(.vertical, 12)
                                 .padding(.horizontal, 16)
 
-                                Divider()
+                                if !isAllDay {
+                                    Divider()
 
-                                HStack {
-                                    Text("End Time")
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
-                                        .labelsHidden()
+                                    HStack {
+                                        Text("Start Time")
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
+                                            .labelsHidden()
+                                    }
+                                    .padding(.vertical, 12)
+                                    .padding(.horizontal, 16)
+
+                                    Divider()
+
+                                    HStack {
+                                        Text("End Time")
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                                            .labelsHidden()
+                                    }
+                                    .padding(.vertical, 12)
+                                    .padding(.horizontal, 16)
                                 }
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
                             }
                             .background(Color(UIColor.systemBackground))
                             .cornerRadius(10)
@@ -220,12 +242,17 @@ struct EditShiftTypeView: View {
     private func updateShiftType() {
         guard let location = selectedLocation else { return }
 
-        let calendar = Calendar.current
-        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
-        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        let duration: ShiftDuration
+        if isAllDay {
+            duration = .allDay
+        } else {
+            let startHourMinute = HourMinuteTime(from: startTime)
+            let endHourMinute = HourMinuteTime(from: endTime)
+            duration = .scheduled(from: startHourMinute, to: endHourMinute)
+        }
 
-        shiftType.update(symbol: symbol, startHour: startComponents.hour ?? 9, startMinute: startComponents.minute ?? 0, endHour: endComponents.hour ?? 17, endMinute: endComponents.minute ?? 0, title: title, description: description, location: location)
-        
+        shiftType.update(symbol: symbol, duration: duration, title: title, description: description, location: location)
+
         dismiss()
     }
 }

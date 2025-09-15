@@ -18,58 +18,72 @@ struct ScheduleView: View {
         }
     }
 
+    private var mainContentView: some View {
+        VStack {
+            CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
+                .padding()
+                .onChange(of: selectedDate) { _, _ in
+                    loadShifts()
+                }
+
+            if isLoading {
+                ProgressView("Loading shifts...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    if let errorMessage = errorMessage {
+                        Text("Error: \(errorMessage)")
+                            .foregroundColor(.red)
+                            .italic()
+                    } else if shiftsForSelectedDate.isEmpty {
+                        Text("No shifts scheduled for this date")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
+                            let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
+                            let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
+                            return startTime1 < startTime2
+                        }) { shift in
+                            ScheduledShiftRow(shift: shift)
+                        }
+                        .onDelete(perform: deleteShifts)
+                    }
+                }
+            }
+        }
+    }
+
+    private var calendarAccessView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.largeTitle)
+                .foregroundColor(.red)
+
+            Text("Calendar Access Required")
+                .font(.headline)
+
+            Text(calendarService.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
+                .multilineTextAlignment(.center)
+                .foregroundColor(.secondary)
+
+            Button("Open Settings") {
+                if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsUrl)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
     var body: some View {
         NavigationView {
             VStack {
                 if !calendarService.isAuthorized {
-                    VStack(spacing: 16) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.largeTitle)
-                            .foregroundColor(.red)
-
-                        Text("Calendar Access Required")
-                            .font(.headline)
-
-                        Text(calendarService.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-
-                        Button("Open Settings") {
-                            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(settingsUrl)
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
+                    calendarAccessView
                 } else {
-                    CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
-                        .padding()
-                        .onChange(of: selectedDate) { _, _ in
-                            loadShifts()
-                        }
-
-                    if isLoading {
-                        ProgressView("Loading shifts...")
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        List {
-                            if let errorMessage = errorMessage {
-                                Text("Error: \(errorMessage)")
-                                    .foregroundColor(.red)
-                                    .italic()
-                            } else if shiftsForSelectedDate.isEmpty {
-                                Text("No shifts scheduled for this date")
-                                    .foregroundColor(.secondary)
-                                    .italic()
-                            } else {
-                                ForEach(shiftsForSelectedDate.sorted { $0.shiftType?.startHour ?? 0 < $1.shiftType?.startHour ?? 0 }) { shift in
-                                    ScheduledShiftRow(shift: shift)
-                                }
-                                .onDelete(perform: deleteShifts)
-                            }
-                        }
-                    }
+                    mainContentView
                 }
             }
             .navigationTitle("Schedule")
@@ -146,7 +160,11 @@ struct ScheduleView: View {
     }
 
     private func deleteShifts(offsets: IndexSet) {
-        let shiftsToDelete = shiftsForSelectedDate.sorted { $0.shiftType?.startHour ?? 0 < $1.shiftType?.startHour ?? 0 }
+        let shiftsToDelete = shiftsForSelectedDate.sorted { shift1, shift2 in
+            let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
+            let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
+            return startTime1 < startTime2
+        }
 
         for index in offsets {
             let shift = shiftsToDelete[index]
@@ -181,7 +199,7 @@ struct ScheduledShiftRow: View {
 
                     Spacer()
 
-                    Text("\(shiftType.startTimeString) - \(shiftType.endTimeString)")
+                    Text(shiftType.timeRangeString)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
