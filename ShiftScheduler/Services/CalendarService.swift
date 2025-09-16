@@ -129,10 +129,7 @@ class CalendarService: ObservableObject {
         case .allDay:
             event.isAllDay = true
             event.startDate = shiftDate
-            guard let endDate = Calendar.current.date(byAdding: .day, value: 1, to: shiftDate) else {
-                throw CalendarError.invalidDate
-            }
-            event.endDate = endDate
+            event.endDate = shiftDate
 
         case .scheduled(let from, let to):
             event.isAllDay = false

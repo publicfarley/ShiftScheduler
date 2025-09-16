@@ -118,7 +118,11 @@ struct ScheduleView: View {
 
         Task {
             do {
-                let shiftData = try await calendarService.fetchShifts(for: selectedDate)
+                // Use date range to ensure we get all shifts for the selected date
+                let startOfDay = Calendar.current.startOfDay(for: selectedDate)
+                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) ?? selectedDate
+
+                let shiftData = try await calendarService.fetchShifts(from: startOfDay, to: endOfDay)
                 let shifts = shiftData.map { data in
                     let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
                     return ScheduledShift(from: data, shiftType: shiftType)
