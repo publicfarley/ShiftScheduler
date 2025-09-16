@@ -114,6 +114,7 @@ struct ShiftTypeRow: View {
     let shiftType: ShiftType
     @Environment(\.modelContext) private var modelContext
     @State private var showingEditView = false
+    @State private var showingDeleteAlert = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -142,9 +143,7 @@ struct ShiftTypeRow: View {
                     }
 
                     Button(action: {
-                        withAnimation {
-                            modelContext.delete(shiftType)
-                        }
+                        showingDeleteAlert = true
                     }) {
                         Image(systemName: "trash")
                             .font(.body)
@@ -173,6 +172,16 @@ struct ShiftTypeRow: View {
         .padding(.vertical, 4)
         .sheet(isPresented: $showingEditView) {
             EditShiftTypeView(shiftType: shiftType)
+        }
+        .alert("Delete Shift Type", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                withAnimation {
+                    modelContext.delete(shiftType)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(shiftType.title)\"? This action cannot be undone.")
         }
     }
 }

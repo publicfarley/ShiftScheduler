@@ -141,6 +141,7 @@ struct LocationRow: View {
     let location: Location
     let onEdit: () -> Void
     @Environment(\.modelContext) private var modelContext
+    @State private var showingDeleteAlert = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -169,9 +170,7 @@ struct LocationRow: View {
                     }
 
                     Button(action: {
-                        withAnimation {
-                            modelContext.delete(location)
-                        }
+                        showingDeleteAlert = true
                     }) {
                         Image(systemName: "trash")
                             .font(.body)
@@ -191,6 +190,16 @@ struct LocationRow: View {
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         .padding(.horizontal)
         .padding(.vertical, 4)
+        .alert("Delete Location", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                withAnimation {
+                    modelContext.delete(location)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(location.name)\"? This action cannot be undone.")
+        }
     }
 }
 
