@@ -156,30 +156,70 @@ struct LocationRow: View {
         referencingShiftTypes.isEmpty
     }
 
+    private let gradientColors: [LinearGradient] = [
+        LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.green, Color.green.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.purple, Color.purple.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.pink, Color.pink.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.red, Color.red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    ]
+
+    private let headerIcons = ["star.fill", "heart.fill", "bolt.fill", "leaf.fill", "flame.fill", "diamond.fill"]
+
+    private var randomGradient: LinearGradient {
+        let hash = abs(location.name.hashValue)
+        return gradientColors[hash % gradientColors.count]
+    }
+
+    private var randomIcon: String {
+        let hash = abs(location.name.hashValue)
+        return headerIcons[hash % headerIcons.count]
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Gradient Header
             HStack {
-                Image(systemName: "location.fill")
-                    .foregroundColor(.blue)
-                    .font(.title2)
-
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(location.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
 
-                    Text("Location")
+                    Text("September 16, 2025")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.8))
                 }
 
                 Spacer()
 
-                HStack(spacing: 16) {
+                Image(systemName: randomIcon)
+                    .font(.title2)
+                    .foregroundColor(.white)
+            }
+            .padding(16)
+            .background(randomGradient)
+
+            // Content Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text(location.address)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .lineLimit(3)
+
+                HStack(spacing: 12) {
                     Button(action: onEdit) {
-                        Image(systemName: "pencil")
-                            .font(.body)
-                            .foregroundColor(.blue)
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil")
+                                .font(.caption)
+                            Text("Edit")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
                     }
 
                     Button(action: {
@@ -189,20 +229,24 @@ struct LocationRow: View {
                             showingConstraintAlert = true
                         }
                     }) {
-                        Image(systemName: "trash")
-                            .font(.body)
-                            .foregroundColor(.red)
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                            Text("Delete")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
                     }
+
+                    Spacer()
                 }
             }
-
-            Text(location.address)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .lineLimit(3)
+            .padding(16)
+            .background(Color(.systemBackground))
         }
-        .padding(16)
-        .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         .padding(.horizontal)

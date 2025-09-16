@@ -116,56 +116,104 @@ struct ShiftTypeRow: View {
     @State private var showingEditView = false
     @State private var showingDeleteAlert = false
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(shiftType.symbol)
-                    .foregroundColor(.orange)
-                    .font(.title2)
+    private let gradientColors: [LinearGradient] = [
+        LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.green, Color.green.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.purple, Color.purple.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.pink, Color.pink.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
+        LinearGradient(colors: [Color.red, Color.red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    ]
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(shiftType.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+    private let headerIcons = ["star.fill", "heart.fill", "bolt.fill", "leaf.fill", "flame.fill", "diamond.fill"]
+
+    private var randomGradient: LinearGradient {
+        let hash = abs(shiftType.title.hashValue)
+        return gradientColors[hash % gradientColors.count]
+    }
+
+    private var randomIcon: String {
+        let hash = abs(shiftType.title.hashValue)
+        return headerIcons[hash % headerIcons.count]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Gradient Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(shiftType.symbol)
+                            .font(.title2)
+                            .foregroundColor(.white)
+
+                        Text(shiftType.title)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                    }
 
                     Text(shiftType.timeRangeString)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.8))
                 }
 
                 Spacer()
 
-                HStack(spacing: 16) {
-                    Button(action: { showingEditView = true }) {
-                        Image(systemName: "pencil")
-                            .font(.body)
-                            .foregroundColor(.blue)
-                    }
-
-                    Button(action: {
-                        showingDeleteAlert = true
-                    }) {
-                        Image(systemName: "trash")
-                            .font(.body)
-                            .foregroundColor(.red)
-                    }
-                }
+                Image(systemName: randomIcon)
+                    .font(.title2)
+                    .foregroundColor(.white)
             }
+            .padding(16)
+            .background(randomGradient)
 
-            VStack(alignment: .leading, spacing: 4) {
+            // Content Section
+            VStack(alignment: .leading, spacing: 12) {
                 Text(shiftType.shiftDescription)
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary)
                     .lineLimit(3)
 
                 // Only show location if it exists and is accessible
                 if shiftType.location != nil {
                     LocationDisplayView(shiftType: shiftType)
                 }
+
+                HStack(spacing: 12) {
+                    Button(action: { showingEditView = true }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil")
+                                .font(.caption)
+                            Text("Edit")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                    }
+
+                    Button(action: {
+                        showingDeleteAlert = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                            Text("Delete")
+                                .font(.caption)
+                        }
+                        .padding(8)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                    }
+
+                    Spacer()
+                }
             }
+            .padding(16)
+            .background(Color(.systemBackground))
         }
-        .padding(16)
-        .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         .padding(.horizontal)
