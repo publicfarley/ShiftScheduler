@@ -19,39 +19,98 @@ struct ScheduleView: View {
     }
 
     private var mainContentView: some View {
-        VStack {
-            CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
-                .padding()
-                .onChange(of: selectedDate) { _, _ in
-                    loadShifts()
-                }
-
-            if isLoading {
-                ProgressView("Loading shifts...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List {
-                    if let errorMessage = errorMessage {
-                        Text("Error: \(errorMessage)")
-                            .foregroundColor(.red)
-                            .italic()
-                    } else if shiftsForSelectedDate.isEmpty {
-                        Text("No shifts scheduled for this date")
-                            .foregroundColor(.secondary)
-                            .italic()
-                    } else {
-                        ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
-                            let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
-                            let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
-                            return startTime1 < startTime2
-                        }) { shift in
-                            ScheduledShiftRow(shift: shift)
-                        }
-                        .onDelete(perform: deleteShifts)
+        VStack(spacing: 0) {
+            // Calendar section with dedicated background
+            VStack {
+                CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
+                    .padding(.horizontal)
+                    .padding(.top)
+                    .onChange(of: selectedDate) { _, _ in
+                        loadShifts()
                     }
+            }
+            .background(Color(.systemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal)
+            .padding(.top)
+
+            // Spacer for visual separation
+            Spacer()
+                .frame(height: 24)
+
+            // Shifts section
+            VStack(alignment: .leading, spacing: 12) {
+                // Section header
+                HStack {
+                    Text(dateHeaderText)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    if !shiftsForSelectedDate.isEmpty {
+                        Text("\(shiftsForSelectedDate.count) shift\(shiftsForSelectedDate.count == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+
+                // Content area
+                if isLoading {
+                    ProgressView("Loading shifts...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
+                } else {
+                    List {
+                        if let errorMessage = errorMessage {
+                            Text("Error: \(errorMessage)")
+                                .foregroundColor(.red)
+                                .italic()
+                        } else if shiftsForSelectedDate.isEmpty {
+                            HStack {
+                                Image(systemName: "calendar.badge.plus")
+                                    .foregroundColor(.secondary)
+                                    .font(.title3)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("No shifts scheduled")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+
+                                    Text("Tap \"Add Shift\" to schedule a shift for this date")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .listRowBackground(Color(.systemGroupedBackground))
+                        } else {
+                            ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
+                                let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
+                                let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
+                                return startTime1 < startTime2
+                            }) { shift in
+                                ScheduledShiftRow(shift: shift)
+                                    .listRowBackground(Color(.systemBackground))
+                            }
+                            .onDelete(perform: deleteShifts)
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
         }
+    }
+
+    private var dateHeaderText: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        return formatter.string(from: selectedDate)
     }
 
     private var calendarAccessView: some View {
@@ -193,38 +252,59 @@ struct ScheduledShiftRow: View {
     let shift: ScheduledShift
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        HStack(spacing: 16) {
+            // Shift symbol with background circle
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.1))
+                    .frame(width: 48, height: 48)
+
                 if let shiftType = shift.shiftType {
                     Text(shiftType.symbol)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
-
-                    Spacer()
-
-                    Text(shiftType.timeRangeString)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
                 }
             }
 
-            if let shiftType = shift.shiftType {
-                Text(shiftType.title)
-                    .font(.headline)
+            // Shift details
+            VStack(alignment: .leading, spacing: 6) {
+                if let shiftType = shift.shiftType {
+                    // Title and time
+                    HStack {
+                        Text(shiftType.title)
+                            .font(.headline)
+                            .fontWeight(.semibold)
 
-                if let location = shiftType.location {
-                    Text("📍 \(location.name)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        Spacer()
+
+                        Text(shiftType.timeRangeString)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(Color.blue.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+
+                    // Location
+                    if let location = shiftType.location {
+                        HStack(spacing: 6) {
+                            Image(systemName: "location.fill")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Text(location.name)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
-
-            Text(shift.date, style: .date)
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
     }
 }
 
