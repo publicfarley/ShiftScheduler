@@ -7,7 +7,6 @@ struct ShiftTypesView: View {
     @State private var showingAddShiftType = false
     @State private var selectedShiftType: ShiftType? = nil
     @State private var searchText = ""
-    @State private var activeOnly = true
 
     private var filteredShiftTypes: [ShiftType] {
         var filtered = shiftTypes
@@ -40,16 +39,11 @@ struct ShiftTypesView: View {
                     .padding(.top)
 
                     HStack {
-                        Text("Active Only")
-                            .font(.body)
-
-                        Spacer()
-
-                        Toggle("", isOn: $activeOnly)
-
-                        Text("\(filteredShiftTypes.count) shift types")
+                        Text("\(filteredShiftTypes.count) \(filteredShiftTypes.count == 1 ? "shift type" : "shift types")")
                             .foregroundColor(.secondary)
                             .font(.subheadline)
+
+                        Spacer()
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 8)

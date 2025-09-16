@@ -36,11 +36,6 @@ struct TodayView: View {
         0
     }
 
-    private var cancelledThisWeek: Int {
-        // For now, return 0 as we don't have a cancellation tracking system yet
-        0
-    }
-
     var body: some View {
         NavigationView {
             ScrollView {
@@ -139,7 +134,6 @@ struct TodayView: View {
                             HStack(spacing: 0) {
                                 WeekStatView(count: thisWeekShifts.count, label: "Scheduled", color: .blue)
                                 WeekStatView(count: completedThisWeek, label: "Completed", color: .green)
-                                WeekStatView(count: cancelledThisWeek, label: "Cancelled", color: .red)
                             }
                             .background(Color(UIColor.systemGray6))
                             .cornerRadius(12)

@@ -16,7 +16,10 @@ struct HourMinuteTime: Codable, Equatable {
     }
 
     var timeString: String {
-        String(format: "%02d:%02d", hour, minute)
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        let date = toDate()
+        return formatter.string(from: date)
     }
 
     func toDate(on date: Date = Date()) -> Date {
