@@ -179,47 +179,49 @@ struct LocationRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Gradient Header
+            // Gradient Header - Compressed height
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(location.name)
-                        .font(.title3)
+                        .font(.callout)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
 
                     Text("September 16, 2025")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.8))
                 }
 
                 Spacer()
 
                 Image(systemName: randomIcon)
-                    .font(.title2)
+                    .font(.callout)
                     .foregroundColor(.white)
             }
-            .padding(16)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             .background(randomGradient)
 
-            // Content Section
-            VStack(alignment: .leading, spacing: 12) {
+            // Content Section - Reduced spacing and padding
+            VStack(alignment: .leading, spacing: 8) {
                 Text(location.address)
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundColor(.primary)
-                    .lineLimit(3)
+                    .lineLimit(2)
 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Button(action: onEdit) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 3) {
                             Image(systemName: "pencil")
-                                .font(.caption)
+                                .font(.caption2)
                             Text("Edit")
-                                .font(.caption)
+                                .font(.caption2)
                         }
-                        .padding(8)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(16)
+                        .cornerRadius(12)
                     }
 
                     Button(action: {
@@ -229,28 +231,30 @@ struct LocationRow: View {
                             showingConstraintAlert = true
                         }
                     }) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 3) {
                             Image(systemName: "trash")
-                                .font(.caption)
+                                .font(.caption2)
                             Text("Delete")
-                                .font(.caption)
+                                .font(.caption2)
                         }
-                        .padding(8)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
                         .background(Color.red)
                         .foregroundColor(.white)
-                        .cornerRadius(16)
+                        .cornerRadius(12)
                     }
 
                     Spacer()
                 }
             }
-            .padding(16)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             .background(Color(.systemBackground))
         }
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .cornerRadius(10)
+        .shadow(color: .black.opacity(0.08), radius: 3, x: 0, y: 1)
         .padding(.horizontal)
-        .padding(.vertical, 4)
+        .padding(.vertical, 3)
         .alert("Delete Location", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
