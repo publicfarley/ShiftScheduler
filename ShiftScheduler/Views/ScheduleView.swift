@@ -57,51 +57,35 @@ struct ScheduleView: View {
                 }
                 .padding(.horizontal)
 
-                // Content area
+                // Content area with enhanced design
                 if isLoading {
-                    ProgressView("Loading shifts...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding()
+                    EnhancedLoadingState()
+                        .padding(.horizontal)
                 } else {
-                    List {
-                        if let errorMessage = errorMessage {
-                            Text("Error: \(errorMessage)")
-                                .foregroundColor(.red)
-                                .italic()
-                        } else if shiftsForSelectedDate.isEmpty {
-                            HStack {
-                                Image(systemName: "calendar.badge.plus")
-                                    .foregroundColor(.secondary)
-                                    .font(.title3)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("No shifts scheduled")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-
-                                    Text("Tap \"Add Shift\" to schedule a shift for this date")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            if let errorMessage = errorMessage {
+                                ErrorStateView(message: errorMessage)
+                                    .padding(.horizontal)
+                            } else if shiftsForSelectedDate.isEmpty {
+                                EnhancedEmptyState(selectedDate: selectedDate)
+                                    .padding(.horizontal)
+                            } else {
+                                ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
+                                    let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
+                                    let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
+                                    return startTime1 < startTime2
+                                }) { shift in
+                                    EnhancedShiftCard(shift: shift) {
+                                        deleteShift(shift)
+                                    }
+                                    .padding(.horizontal)
                                 }
-
-                                Spacer()
                             }
-                            .padding(.vertical, 8)
-                            .listRowBackground(Color(.systemGroupedBackground))
-                        } else {
-                            ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
-                                let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
-                                let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
-                                return startTime1 < startTime2
-                            }) { shift in
-                                ScheduledShiftRow(shift: shift)
-                                    .listRowBackground(Color(.systemBackground))
-                            }
-                            .onDelete(perform: deleteShifts)
                         }
+                        .padding(.vertical)
                     }
-                    .listStyle(.insetGrouped)
-                    .scrollContentBackground(.hidden)
+                    .background(Color(.systemGroupedBackground).ignoresSafeArea())
                 }
             }
         }
@@ -231,80 +215,71 @@ struct ScheduleView: View {
 
         for index in offsets {
             let shift = shiftsToDelete[index]
-            Task {
-                do {
-                    try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
-                    await MainActor.run {
-                        loadShifts()
-                        loadScheduledDates()
-                    }
-                } catch {
-                    await MainActor.run {
-                        errorMessage = "Failed to delete shift: \(error.localizedDescription)"
-                    }
+            deleteShift(shift)
+        }
+    }
+
+    private func deleteShift(_ shift: ScheduledShift) {
+        Task {
+            do {
+                try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
+                await MainActor.run {
+                    loadShifts()
+                    loadScheduledDates()
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to delete shift: \(error.localizedDescription)"
                 }
             }
         }
     }
 }
 
-struct ScheduledShiftRow: View {
-    let shift: ScheduledShift
+// MARK: - Error State Component
+struct ErrorStateView: View {
+    let message: String
 
     var body: some View {
-        HStack(spacing: 16) {
-            // Shift symbol with background circle
+        VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(width: 48, height: 48)
+                    .fill(
+                        LinearGradient(
+                            colors: [.red.opacity(0.1), .red.opacity(0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 60, height: 60)
 
-                if let shiftType = shift.shiftType {
-                    Text(shiftType.symbol)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                }
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.red)
             }
 
-            // Shift details
-            VStack(alignment: .leading, spacing: 6) {
-                if let shiftType = shift.shiftType {
-                    // Title and time
-                    HStack {
-                        Text(shiftType.title)
-                            .font(.headline)
-                            .fontWeight(.semibold)
+            VStack(spacing: 8) {
+                Text("Something went wrong")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
 
-                        Spacer()
-
-                        Text(shiftType.timeRangeString)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.1))
-                            .clipShape(Capsule())
-                    }
-
-                    // Location
-                    if let location = shiftType.location {
-                        HStack(spacing: 6) {
-                            Image(systemName: "location.fill")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Text(location.name)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
+                Text(message)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
             }
         }
-        .padding(.vertical, 8)
-        .contentShape(Rectangle())
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.red.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }
 
