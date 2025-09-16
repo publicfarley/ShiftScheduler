@@ -82,13 +82,14 @@ struct LocationsView: View {
 
                     Spacer()
                 } else {
-                    List {
-                        ForEach(filteredLocations) { location in
-                            LocationRow(location: location) {
-                                locationToEdit = location
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredLocations) { location in
+                                LocationRow(location: location) {
+                                    locationToEdit = location
+                                }
                             }
                         }
-                        .onDelete(perform: deleteLocations)
                     }
                 }
             }
@@ -139,28 +140,57 @@ struct LocationsView: View {
 struct LocationRow: View {
     let location: Location
     let onEdit: () -> Void
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(location.name)
-                    .font(.headline)
-
-                Text(location.address)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            Button(action: onEdit) {
-                Image(systemName: "pencil.circle.fill")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "location.fill")
+                    .foregroundColor(.blue)
                     .font(.title2)
-                    .foregroundColor(.accentColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(location.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Location")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                HStack(spacing: 16) {
+                    Button(action: onEdit) {
+                        Image(systemName: "pencil")
+                            .font(.body)
+                            .foregroundColor(.blue)
+                    }
+
+                    Button(action: {
+                        withAnimation {
+                            modelContext.delete(location)
+                        }
+                    }) {
+                        Image(systemName: "trash")
+                            .font(.body)
+                            .foregroundColor(.red)
+                    }
+                }
             }
-            .buttonStyle(.borderless)
+
+            Text(location.address)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .lineLimit(3)
         }
-        .padding(.vertical, 2)
+        .padding(16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .padding(.horizontal)
+        .padding(.vertical, 4)
     }
 }
 

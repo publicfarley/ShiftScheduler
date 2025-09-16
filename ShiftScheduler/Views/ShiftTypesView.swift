@@ -5,7 +5,6 @@ struct ShiftTypesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
     @State private var showingAddShiftType = false
-    @State private var selectedShiftType: ShiftType? = nil
     @State private var searchText = ""
 
     private var filteredShiftTypes: [ShiftType] {
@@ -76,15 +75,12 @@ struct ShiftTypesView: View {
 
                     Spacer()
                 } else {
-                    List {
-                        ForEach(filteredShiftTypes) { shiftType in
-                            Button(action: {
-                                selectedShiftType = shiftType
-                            }) {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredShiftTypes) { shiftType in
                                 ShiftTypeRow(shiftType: shiftType)
                             }
                         }
-                        .onDelete(perform: deleteShiftTypes)
                     }
                 }
             }
@@ -102,9 +98,6 @@ struct ShiftTypesView: View {
             .sheet(isPresented: $showingAddShiftType) {
                 AddShiftTypeView()
             }
-            .sheet(item: $selectedShiftType) { shiftType in
-                EditShiftTypeView(shiftType: shiftType)
-            }
         }
     }
 
@@ -119,36 +112,68 @@ struct ShiftTypesView: View {
 
 struct ShiftTypeRow: View {
     let shiftType: ShiftType
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingEditView = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(shiftType.symbol)
+                    .foregroundColor(.orange)
                     .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.blue)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(shiftType.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text(shiftType.timeRangeString)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
 
                 Spacer()
 
-                Text(shiftType.timeRangeString)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 16) {
+                    Button(action: { showingEditView = true }) {
+                        Image(systemName: "pencil")
+                            .font(.body)
+                            .foregroundColor(.blue)
+                    }
+
+                    Button(action: {
+                        withAnimation {
+                            modelContext.delete(shiftType)
+                        }
+                    }) {
+                        Image(systemName: "trash")
+                            .font(.body)
+                            .foregroundColor(.red)
+                    }
+                }
             }
 
-            Text(shiftType.title)
-                .font(.headline)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(shiftType.shiftDescription)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
 
-            Text(shiftType.shiftDescription)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .lineLimit(2)
-
-            // Only show location if it exists and is accessible
-            if shiftType.location != nil {
-                LocationDisplayView(shiftType: shiftType)
+                // Only show location if it exists and is accessible
+                if shiftType.location != nil {
+                    LocationDisplayView(shiftType: shiftType)
+                }
             }
         }
-        .padding(.vertical, 2)
+        .padding(16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .padding(.horizontal)
+        .padding(.vertical, 4)
+        .sheet(isPresented: $showingEditView) {
+            EditShiftTypeView(shiftType: shiftType)
+        }
     }
 }
 
