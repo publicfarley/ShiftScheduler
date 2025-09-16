@@ -141,7 +141,20 @@ struct LocationRow: View {
     let location: Location
     let onEdit: () -> Void
     @Environment(\.modelContext) private var modelContext
+    @Query private var shiftTypes: [ShiftType]
     @State private var showingDeleteAlert = false
+    @State private var showingConstraintAlert = false
+
+    private var referencingShiftTypes: [ShiftType] {
+        shiftTypes.filter { shiftType in
+            guard let shiftTypeLocation = shiftType.location else { return false }
+            return shiftTypeLocation.persistentModelID == location.persistentModelID
+        }
+    }
+
+    private var canDelete: Bool {
+        referencingShiftTypes.isEmpty
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -170,7 +183,11 @@ struct LocationRow: View {
                     }
 
                     Button(action: {
-                        showingDeleteAlert = true
+                        if canDelete {
+                            showingDeleteAlert = true
+                        } else {
+                            showingConstraintAlert = true
+                        }
                     }) {
                         Image(systemName: "trash")
                             .font(.body)
@@ -199,6 +216,13 @@ struct LocationRow: View {
             }
         } message: {
             Text("Are you sure you want to delete \"\(location.name)\"? This action cannot be undone.")
+        }
+        .alert("Cannot Delete Location", isPresented: $showingConstraintAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            let count = referencingShiftTypes.count
+            let shiftTypeNames = referencingShiftTypes.map { $0.title }.joined(separator: ", ")
+            return Text("Cannot delete \"\(location.name)\" because it is referenced by \(count) shift type\(count == 1 ? "" : "s"): \(shiftTypeNames). Please remove or reassign these shift types first.")
         }
     }
 }
