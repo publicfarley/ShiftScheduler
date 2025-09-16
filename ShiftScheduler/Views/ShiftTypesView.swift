@@ -142,20 +142,20 @@ struct ShiftTypeRow: View {
             // Gradient Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(shiftType.symbol)
-                            .font(.title2)
-                            .foregroundColor(.white)
-
-                        Text(shiftType.title)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
+                    Text("\(shiftType.symbol) : \(shiftType.title)")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
 
                     Text(shiftType.timeRangeString)
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.8))
+                    
+                    if let location = shiftType.location {
+                        Text("📍 \(location.name)")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
                 }
 
                 Spacer()
@@ -173,11 +173,6 @@ struct ShiftTypeRow: View {
                     .font(.body)
                     .foregroundColor(.primary)
                     .lineLimit(3)
-
-                // Only show location if it exists and is accessible
-                if shiftType.location != nil {
-                    LocationDisplayView(shiftType: shiftType)
-                }
 
                 HStack(spacing: 12) {
                     Button(action: { showingEditView = true }) {
