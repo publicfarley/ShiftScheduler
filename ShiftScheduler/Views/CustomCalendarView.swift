@@ -1,5 +1,16 @@
 import SwiftUI
 
+// Wrapper struct to provide unique identities for calendar cells
+private struct CalendarCell: Identifiable {
+    let id: Int
+    let date: Date?
+
+    init(index: Int, date: Date?) {
+        self.id = index
+        self.date = date
+    }
+}
+
 struct CustomCalendarView: View {
     @Binding var selectedDate: Date
     let scheduledDates: Set<Date>
@@ -54,8 +65,8 @@ struct CustomCalendarView: View {
 
             // Calendar grid
             LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(daysInMonth(), id: \.self) { date in
-                    if let date = date {
+                ForEach(daysInMonth()) { cell in
+                    if let date = cell.date {
                         DayView(
                             date: date,
                             isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
@@ -95,7 +106,7 @@ struct CustomCalendarView: View {
         }
     }
 
-    private func daysInMonth() -> [Date?] {
+    private func daysInMonth() -> [CalendarCell] {
         guard let monthRange = calendar.range(of: .day, in: .month, for: currentMonth),
               let firstOfMonth = calendar.dateInterval(of: .month, for: currentMonth)?.start else {
             return []
@@ -117,7 +128,10 @@ struct CustomCalendarView: View {
             days.append(nil)
         }
 
-        return days
+        // Convert to CalendarCell array with unique IDs
+        return days.enumerated().map { index, date in
+            CalendarCell(index: index, date: date)
+        }
     }
 }
 
