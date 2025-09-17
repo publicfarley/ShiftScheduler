@@ -4,31 +4,17 @@ import SwiftData
 struct ScheduleView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
-    @State private var calendarService = CalendarService.shared
+    @State private var dataManager = ScheduleDataManager.shared
     @State private var showingScheduleShift = false
-    @State private var selectedDate = Date()
-    @State private var scheduledShifts: [ScheduledShift] = []
-    @State private var scheduledDates: Set<Date> = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
-    private var shiftsForSelectedDate: [ScheduledShift] {
-        scheduledShifts.filter { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
-        }
-    }
 
     private var mainContentView: some View {
         VStack(spacing: 12) {
             // Calendar section with dedicated background
-            CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
+            CustomCalendarView(selectedDate: $dataManager.selectedDate, scheduledDates: dataManager.scheduledDates)
                 .padding(.vertical, 12)
                 .background(Color(.systemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal, 16)
-                .onChange(of: selectedDate) { _, _ in
-                    loadShifts()
-                }
 
             // Shifts section
             VStack(alignment: .leading, spacing: 8) {
@@ -41,29 +27,28 @@ struct ScheduleView: View {
 
                     Spacer()
 
-                    if !shiftsForSelectedDate.isEmpty {
-                        Text("\(shiftsForSelectedDate.count) shift\(shiftsForSelectedDate.count == 1 ? "" : "s")")
+                    if !dataManager.shiftsForSelectedDate.isEmpty {
+                        Text("\(dataManager.shiftsForSelectedDate.count) shift\(dataManager.shiftsForSelectedDate.count == 1 ? "" : "s")")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
                 .padding(.horizontal, 16)
 
-                // Content area with enhanced design
+                // Content area with instant, flash-free transitions
                 ScrollView {
-                    if isLoading {
-                        EnhancedLoadingState()
-                            .padding(.horizontal, 16)
-                    } else {
+                    SmoothedContentView(contentKey: "\(dataManager.selectedDate)-\(dataManager.shiftsForSelectedDate.count)-\(dataManager.hasDataForSelectedDate)") {
                         LazyVStack(spacing: 10) {
-                            if let errorMessage = errorMessage {
+                            if let errorMessage = dataManager.errorMessage {
                                 ErrorStateView(message: errorMessage)
                                     .padding(.horizontal, 16)
-                            } else if shiftsForSelectedDate.isEmpty {
-                                EnhancedEmptyState(selectedDate: selectedDate)
+                            } else if dataManager.shiftsForSelectedDate.isEmpty && dataManager.hasDataForSelectedDate {
+                                // Only show empty state when we've confirmed there's no data for this date
+                                EnhancedEmptyState(selectedDate: dataManager.selectedDate)
                                     .padding(.horizontal, 16)
-                            } else {
-                                ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
+                            } else if !dataManager.shiftsForSelectedDate.isEmpty {
+                                // Show shifts when available
+                                ForEach(dataManager.shiftsForSelectedDate.sorted { shift1, shift2 in
                                     let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
                                     let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
                                     return startTime1 < startTime2
@@ -74,6 +59,7 @@ struct ScheduleView: View {
                                     .padding(.horizontal, 16)
                                 }
                             }
+                            // If neither condition is met, show nothing (while loading)
                         }
                         .padding(.vertical, 8)
                     }
@@ -86,7 +72,7 @@ struct ScheduleView: View {
     private var dateHeaderText: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .full
-        return formatter.string(from: selectedDate)
+        return formatter.string(from: dataManager.selectedDate)
     }
 
     private var calendarAccessView: some View {
@@ -98,7 +84,7 @@ struct ScheduleView: View {
             Text("Calendar Access Required")
                 .font(.headline)
 
-            Text(calendarService.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
+            Text(CalendarService.shared.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
 
@@ -115,7 +101,7 @@ struct ScheduleView: View {
     var body: some View {
         NavigationView {
             VStack {
-                if !calendarService.isAuthorized {
+                if !CalendarService.shared.isAuthorized {
                     calendarAccessView
                 } else {
                     mainContentView
@@ -127,101 +113,33 @@ struct ScheduleView: View {
                     Button("Add Shift") {
                         showingScheduleShift = true
                     }
-                    .disabled(!calendarService.isAuthorized)
+                    .disabled(!CalendarService.shared.isAuthorized)
                 }
             }
             .sheet(isPresented: $showingScheduleShift, onDismiss: {
-                // Reload shifts when the schedule sheet is dismissed
-                // This ensures newly scheduled shifts appear immediately
-                loadShifts()
-                loadScheduledDates()
+                // Refresh current date data when sheet is dismissed
+                dataManager.refreshCurrentDate()
             }) {
-                ScheduleShiftView(selectedDate: selectedDate)
+                ScheduleShiftView(selectedDate: dataManager.selectedDate)
             }
             .onAppear {
-                loadShifts()
-                loadScheduledDates()
+                // Update shift types in data manager
+                dataManager.updateShiftTypes(shiftTypes)
             }
-        }
-    }
-
-    private func loadShifts() {
-        guard calendarService.isAuthorized else { return }
-
-        isLoading = true
-        errorMessage = nil
-
-        Task {
-            do {
-                // Use date range to ensure we get all shifts for the selected date
-                let startOfDay = Calendar.current.startOfDay(for: selectedDate)
-                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) ?? selectedDate
-
-                let shiftData = try await calendarService.fetchShifts(from: startOfDay, to: endOfDay)
-                let shifts = shiftData.map { data in
-                    let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
-                    return ScheduledShift(from: data, shiftType: shiftType)
-                }
-
-                await MainActor.run {
-                    self.scheduledShifts = shifts
-                    self.isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+            .onChange(of: shiftTypes) { _, newShiftTypes in
+                // Update shift types when they change
+                dataManager.updateShiftTypes(newShiftTypes)
             }
-        }
-    }
-
-    private func loadScheduledDates() {
-        guard calendarService.isAuthorized else { return }
-
-        Task {
-            do {
-                // Load shifts for a wider date range to get all scheduled dates for highlighting
-                let startDate = Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date()
-                let endDate = Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
-
-                let allShiftData = try await calendarService.fetchShifts(from: startDate, to: endDate)
-                let uniqueDates = Set(allShiftData.map { Calendar.current.startOfDay(for: $0.date) })
-
-                await MainActor.run {
-                    self.scheduledDates = uniqueDates
-                }
-            } catch {
-                // Silently fail for scheduled dates - this is just for highlighting
-                print("Failed to load scheduled dates for highlighting: \(error)")
-            }
-        }
-    }
-
-    private func deleteShifts(offsets: IndexSet) {
-        let shiftsToDelete = shiftsForSelectedDate.sorted { shift1, shift2 in
-            let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
-            let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
-            return startTime1 < startTime2
-        }
-
-        for index in offsets {
-            let shift = shiftsToDelete[index]
-            deleteShift(shift)
         }
     }
 
     private func deleteShift(_ shift: ScheduledShift) {
         Task {
             do {
-                try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
-                await MainActor.run {
-                    loadShifts()
-                    loadScheduledDates()
-                }
+                try await dataManager.deleteShift(shift)
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to delete shift: \(error.localizedDescription)"
+                    dataManager.errorMessage = "Failed to delete shift: \(error.localizedDescription)"
                 }
             }
         }
