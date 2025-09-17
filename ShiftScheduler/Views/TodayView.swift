@@ -121,7 +121,7 @@ struct TodayView: View {
                         }
                         .padding()
                     } else {
-                        // Today Section - Enhanced with prominent visual design
+                        // Today Section - Enhanced with distinctive background treatment
                         VStack(alignment: .leading, spacing: 20) {
                             // Enhanced section header
                             VStack(alignment: .leading, spacing: 8) {
@@ -161,8 +161,53 @@ struct TodayView: View {
                             // Enhanced Today shift card with prominence
                             EnhancedTodayShiftCard(shift: todayShift)
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 24)
+                        .background(
+                            ZStack {
+                                // Primary background with warm gradient
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(.systemBackground),
+                                                Color(.systemBackground).opacity(0.95)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                // Subtle warm overlay for Today section
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.orange.opacity(0.03),
+                                                Color.yellow.opacity(0.02)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                // Light border effect
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.orange.opacity(0.1),
+                                                Color.clear
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            }
+                        )
+                        .shadow(color: .orange.opacity(0.08), radius: 12, x: 0, y: 4)
+                        .padding(.horizontal, 16)
 
                         // Quick Actions Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -251,7 +296,7 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        // Tomorrow Section - Enhanced with improved visual prominence
+                        // Tomorrow Section - Enhanced with distinctive background treatment
                         VStack(alignment: .leading, spacing: 16) {
                             // Enhanced section header
                             HStack(spacing: 8) {
@@ -271,8 +316,57 @@ struct TodayView: View {
                             // Enhanced Tomorrow shift card
                             EnhancedTomorrowShiftCard(shift: tomorrowShift)
                         }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 20)
+                        .background(
+                            ZStack {
+                                // Primary background with cool gradient
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(.systemBackground),
+                                                Color(.secondarySystemBackground).opacity(0.3)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                // Subtle cool overlay for Tomorrow section
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.indigo.opacity(0.025),
+                                                Color.purple.opacity(0.015)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+
+                                // Soft material effect
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(.ultraThinMaterial.opacity(0.3))
+
+                                // Light border effect
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.indigo.opacity(0.08),
+                                                Color.clear
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 0.8
+                                    )
+                            }
+                        )
+                        .shadow(color: .indigo.opacity(0.06), radius: 10, x: 0, y: 3)
+                        .padding(.horizontal, 16)
 
                         // This Week Section
                         VStack(alignment: .leading, spacing: 16) {
