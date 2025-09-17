@@ -156,10 +156,16 @@ struct DayView: View {
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                // Background circle
-                Circle()
-                    .fill(backgroundColor)
-                    .frame(width: 36, height: 36)
+                // Background circle or stroke for selected
+                if isSelected {
+                    Circle()
+                        .stroke(.blue, lineWidth: 2)
+                        .frame(width: 36, height: 36)
+                } else {
+                    Circle()
+                        .fill(backgroundColor)
+                        .frame(width: 36, height: 36)
+                }
 
                 // Day number
                 Text(dayNumber)
@@ -172,9 +178,7 @@ struct DayView: View {
     }
 
     private var backgroundColor: Color {
-        if isSelected {
-            return .blue
-        } else if hasShift {
+        if hasShift {
             return .green.opacity(0.3)
         } else if isToday {
             return .orange.opacity(0.3)
@@ -185,7 +189,7 @@ struct DayView: View {
 
     private var textColor: Color {
         if isSelected {
-            return .white
+            return .blue
         } else if isToday {
             return .orange
         } else if hasShift {
