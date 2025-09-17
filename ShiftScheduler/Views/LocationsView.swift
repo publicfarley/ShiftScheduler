@@ -83,7 +83,7 @@ struct LocationsView: View {
                     Spacer()
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        LazyVStack(spacing: 16) {
                             ForEach(filteredLocations) { location in
                                 LocationRow(location: location) {
                                     locationToEdit = location
@@ -156,21 +156,13 @@ struct LocationRow: View {
         referencingShiftTypes.isEmpty
     }
 
-    private let gradientColors: [LinearGradient] = [
-        LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.green, Color.green.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.purple, Color.purple.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.pink, Color.pink.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.red, Color.red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
-    ]
+    private let consistentGradient = LinearGradient(
+        colors: [Color(.systemGray3), Color(.systemGray4)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 
     private let headerIcons = ["star.fill", "heart.fill", "bolt.fill", "leaf.fill", "flame.fill", "diamond.fill"]
-
-    private var randomGradient: LinearGradient {
-        let hash = abs(location.name.hashValue)
-        return gradientColors[hash % gradientColors.count]
-    }
 
     private var randomIcon: String {
         let hash = abs(location.name.hashValue)
@@ -185,22 +177,22 @@ struct LocationRow: View {
                     Text(location.name)
                         .font(.callout)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
 
                     Text("September 16, 2025")
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: randomIcon)
                     .font(.callout)
-                    .foregroundColor(.white)
+                    .foregroundColor(.secondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(randomGradient)
+            .background(consistentGradient)
 
             // Content Section - Reduced spacing and padding
             VStack(alignment: .leading, spacing: 8) {

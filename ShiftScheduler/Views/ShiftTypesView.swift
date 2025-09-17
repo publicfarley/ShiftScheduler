@@ -76,7 +76,7 @@ struct ShiftTypesView: View {
                     Spacer()
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        LazyVStack(spacing: 16) {
                             ForEach(filteredShiftTypes) { shiftType in
                                 ShiftTypeRow(shiftType: shiftType)
                             }
@@ -116,21 +116,13 @@ struct ShiftTypeRow: View {
     @State private var showingEditView = false
     @State private var showingDeleteAlert = false
 
-    private let gradientColors: [LinearGradient] = [
-        LinearGradient(colors: [Color.blue, Color.blue.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.green, Color.green.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.purple, Color.purple.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.pink, Color.pink.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
-        LinearGradient(colors: [Color.red, Color.red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
-    ]
+    private let consistentGradient = LinearGradient(
+        colors: [Color(.systemGray3), Color(.systemGray4)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 
     private let headerIcons = ["star.fill", "heart.fill", "bolt.fill", "leaf.fill", "flame.fill", "diamond.fill"]
-
-    private var randomGradient: LinearGradient {
-        let hash = abs(shiftType.title.hashValue)
-        return gradientColors[hash % gradientColors.count]
-    }
 
     private var randomIcon: String {
         let hash = abs(shiftType.title.hashValue)
@@ -145,16 +137,16 @@ struct ShiftTypeRow: View {
                     Text("\(shiftType.symbol) : \(shiftType.title)")
                         .font(.callout)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
 
                     Text(shiftType.timeRangeString)
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.secondary)
 
                     if let location = shiftType.location {
                         Text("📍 \(location.name)")
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -162,11 +154,11 @@ struct ShiftTypeRow: View {
 
                 Image(systemName: randomIcon)
                     .font(.callout)
-                    .foregroundColor(.white)
+                    .foregroundColor(.secondary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(randomGradient)
+            .background(consistentGradient)
 
             // Content Section
             VStack(alignment: .leading, spacing: 8) {
