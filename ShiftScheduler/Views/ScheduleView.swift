@@ -35,29 +35,29 @@ struct ScheduleView: View {
                 }
                 .padding(.horizontal, 16)
 
-                // Content area with instant, flash-free transitions
+                // Content area with fade-in animation for new data
                 ScrollView {
-                    SmoothedContentView(contentKey: "\(dataManager.selectedDate)-\(dataManager.shiftsForSelectedDate.count)-\(dataManager.hasDataForSelectedDate)") {
+                    SmoothedContentView(contentKey: "\(dataManager.selectedDate)-\(dataManager.shiftsForSelectedDate.count)") {
                         LazyVStack(spacing: 10) {
                             if let errorMessage = dataManager.errorMessage {
                                 ErrorStateView(message: errorMessage)
                                     .padding(.horizontal, 16)
-                            } else if dataManager.shiftsForSelectedDate.isEmpty && dataManager.hasDataForSelectedDate {
-                                // Only show empty state when we've confirmed there's no data for this date
-                                EnhancedEmptyState(selectedDate: dataManager.selectedDate)
-                                    .padding(.horizontal, 16)
                             } else if !dataManager.shiftsForSelectedDate.isEmpty {
-                                // Show shifts when available
+                                // Show shifts when available - with fade-in animation
                                 ForEach(dataManager.shiftsForSelectedDate.sorted { shift1, shift2 in
                                     let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
                                     let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
                                     return startTime1 < startTime2
                                 }) { shift in
-                                    EnhancedShiftCard(shift: shift) {
+                                    FadeInShiftCard(shift: shift) {
                                         deleteShift(shift)
                                     }
                                     .padding(.horizontal, 16)
                                 }
+                            } else if dataManager.hasDataForSelectedDate {
+                                // Only show empty state when we've confirmed there's no data for this date
+                                EnhancedEmptyState(selectedDate: dataManager.selectedDate)
+                                    .padding(.horizontal, 16)
                             }
                             // If neither condition is met, show nothing (while loading)
                         }
@@ -143,6 +143,39 @@ struct ScheduleView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Fade-In Shift Card Component
+struct FadeInShiftCard: View {
+    let shift: ScheduledShift
+    let onDelete: (() -> Void)?
+
+    @State private var opacity: Double = 0.0
+    @State private var scale: Double = 0.95
+    @State private var hasAppeared = false
+
+    var body: some View {
+        EnhancedShiftCard(shift: shift, onDelete: onDelete)
+            .opacity(opacity)
+            .scaleEffect(scale)
+            .onAppear {
+                // Only animate on first appearance to prevent re-animation on scroll
+                guard !hasAppeared else {
+                    opacity = 1.0
+                    scale = 1.0
+                    return
+                }
+                hasAppeared = true
+
+                // Delay the fade-in animation by 0.05 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
+                        opacity = 1.0
+                        scale = 1.0
+                    }
+                }
+            }
     }
 }
 
