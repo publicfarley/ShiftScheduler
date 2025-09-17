@@ -41,9 +41,9 @@ struct StatusBadge: View {
     @State private var isAnimating = false
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             Image(systemName: status.icon)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundColor(status.color)
                 .scaleEffect(isAnimating && status == .active ? 1.2 : 1.0)
                 .animation(
@@ -54,12 +54,12 @@ struct StatusBadge: View {
                 )
 
             Text(status.displayName)
-                .font(.caption)
+                .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundColor(status.color)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
         .background(
             Capsule()
                 .fill(status.color.opacity(0.15))
@@ -126,18 +126,18 @@ struct EnhancedShiftCard: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main card content
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 // Header section with status
                 HStack {
                     StatusBadge(status: shiftStatus)
                     Spacer()
 
-                    if let onDelete = onDelete {
+                    if onDelete != nil {
                         Button(action: { showingDeleteConfirmation = true }) {
                             Image(systemName: "trash")
                                 .font(.caption)
                                 .foregroundColor(.red.opacity(0.7))
-                                .frame(width: 32, height: 32)
+                                .frame(width: 28, height: 28)
                                 .background(
                                     Circle()
                                         .fill(.red.opacity(0.1))
@@ -149,7 +149,7 @@ struct EnhancedShiftCard: View {
                 }
 
                 // Main content section
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     // Shift symbol with animated background
                     ZStack {
                         Circle()
@@ -160,40 +160,40 @@ struct EnhancedShiftCard: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 56, height: 56)
+                            .frame(width: 44, height: 44)
                             .scaleEffect(isPressed ? 0.95 : 1.0)
 
                         if let shiftType = shift.shiftType {
                             Text(shiftType.symbol)
-                                .font(.title2)
+                                .font(.title3)
                                 .fontWeight(.bold)
                                 .foregroundColor(cardColor)
                         }
                     }
 
                     // Shift details
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 6) {
                         if let shiftType = shift.shiftType {
                             // Title
                             Text(shiftType.title)
-                                .font(.headline)
+                                .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
 
                             // Time range with enhanced styling
-                            HStack(spacing: 8) {
+                            HStack(spacing: 6) {
                                 Image(systemName: "clock")
-                                    .font(.caption)
+                                    .font(.caption2)
                                     .foregroundColor(cardColor)
 
                                 Text(shiftType.timeRangeString)
-                                    .font(.subheadline)
+                                    .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(cardColor)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
                             .background(
                                 Capsule()
                                     .fill(cardColor.opacity(0.1))
@@ -205,15 +205,30 @@ struct EnhancedShiftCard: View {
 
                             // Location with icon
                             if let location = shiftType.location {
-                                HStack(spacing: 6) {
+                                HStack(spacing: 4) {
                                     Image(systemName: "location.fill")
-                                        .font(.caption)
+                                        .font(.caption2)
                                         .foregroundColor(.secondary)
 
                                     Text(location.name)
-                                        .font(.subheadline)
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                         .lineLimit(1)
+                                }
+                            }
+
+                            // Shift description (only show if location is not present to save space)
+                            if !shiftType.shiftDescription.isEmpty && shiftType.location == nil {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "text.alignleft")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(shiftType.shiftDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                        .multilineTextAlignment(.leading)
                                 }
                             }
                         }
@@ -222,7 +237,7 @@ struct EnhancedShiftCard: View {
                     Spacer()
                 }
             }
-            .padding(20)
+            .padding(14)
 
             // Optional gradient footer for visual appeal
             if shiftStatus == .active {
@@ -296,7 +311,7 @@ struct EnhancedEmptyState: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 12) {
             // Animated icon
             ZStack {
                 Circle()
@@ -307,16 +322,16 @@ struct EnhancedEmptyState: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 80, height: 80)
+                    .frame(width: 60, height: 60)
 
                 Image(systemName: "calendar.badge.plus")
-                    .font(.system(size: 32))
+                    .font(.system(size: 24))
                     .foregroundColor(.blue)
             }
 
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text(isToday ? "No shifts today" : "No shifts scheduled")
-                    .font(.headline)
+                    .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
 
@@ -324,32 +339,30 @@ struct EnhancedEmptyState: View {
                      "You have no shifts scheduled for today" :
                      "No shifts scheduled for \(dateFormatter.string(from: selectedDate))"
                 )
-                .font(.body)
+                .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
             }
 
             // Action hint
-            VStack(spacing: 4) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(.blue)
+            HStack(spacing: 4) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
 
-                    Text("Tap \"Add Shift\" to schedule a new shift")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(.blue.opacity(0.1))
-                )
+                Text("Tap \"Add Shift\" to schedule a new shift")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(.blue.opacity(0.1))
+            )
         }
-        .padding(24)
+        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)

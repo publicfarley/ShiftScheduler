@@ -27,18 +27,19 @@ struct CustomCalendarView: View {
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
 
     var body: some View {
-        VStack {
+        VStack(spacing: 6) {
             // Header with month/year and navigation
             HStack {
                 Button(action: previousMonth) {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.blue)
+                        .font(.system(size: 14, weight: .medium))
                 }
 
                 Spacer()
 
                 Text(dateFormatter.string(from: currentMonth))
-                    .font(.title2)
+                    .font(.headline)
                     .fontWeight(.semibold)
 
                 Spacer()
@@ -46,25 +47,25 @@ struct CustomCalendarView: View {
                 Button(action: nextMonth) {
                     Image(systemName: "chevron.right")
                         .foregroundColor(.blue)
+                        .font(.system(size: 14, weight: .medium))
                 }
             }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 10)
 
             // Days of week header
-            HStack {
+            HStack(spacing: 0) {
                 ForEach(calendar.shortWeekdaySymbols, id: \.self) { day in
                     Text(day)
-                        .font(.caption)
+                        .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 10)
 
             // Calendar grid
-            LazyVGrid(columns: columns, spacing: 8) {
+            LazyVGrid(columns: columns, spacing: 2) {
                 ForEach(daysInMonth()) { cell in
                     if let date = cell.date {
                         DayView(
@@ -80,11 +81,11 @@ struct CustomCalendarView: View {
                     } else {
                         // Empty space for dates outside current month
                         Color.clear
-                            .frame(height: 40)
+                            .frame(height: 28)
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 10)
         }
         .onChange(of: selectedDate) { _, newDate in
             // Update current month if selected date is in a different month
@@ -158,15 +159,15 @@ struct DayView: View {
                 // Background circle
                 Circle()
                     .fill(backgroundColor)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 26, height: 26)
 
                 // Day number
                 Text(dayNumber)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(textColor)
             }
         }
-        .frame(height: 40)
+        .frame(height: 28)
         .opacity(isCurrentMonth ? 1.0 : 0.3)
     }
 

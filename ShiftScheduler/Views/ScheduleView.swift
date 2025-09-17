@@ -19,31 +19,23 @@ struct ScheduleView: View {
     }
 
     private var mainContentView: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             // Calendar section with dedicated background
-            VStack {
-                CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
-                    .padding(.horizontal)
-                    .padding(.top)
-                    .onChange(of: selectedDate) { _, _ in
-                        loadShifts()
-                    }
-            }
-            .background(Color(.systemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding(.horizontal)
-            .padding(.top)
-
-            // Spacer for visual separation
-            Spacer()
-                .frame(height: 24)
+            CustomCalendarView(selectedDate: $selectedDate, scheduledDates: scheduledDates)
+                .padding(.vertical, 12)
+                .background(Color(.systemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 16)
+                .onChange(of: selectedDate) { _, _ in
+                    loadShifts()
+                }
 
             // Shifts section
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 // Section header
                 HStack {
                     Text(dateHeaderText)
-                        .font(.headline)
+                        .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
 
@@ -51,25 +43,25 @@ struct ScheduleView: View {
 
                     if !shiftsForSelectedDate.isEmpty {
                         Text("\(shiftsForSelectedDate.count) shift\(shiftsForSelectedDate.count == 1 ? "" : "s")")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16)
 
                 // Content area with enhanced design
                 if isLoading {
                     EnhancedLoadingState()
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16)
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: 10) {
                             if let errorMessage = errorMessage {
                                 ErrorStateView(message: errorMessage)
-                                    .padding(.horizontal)
+                                    .padding(.horizontal, 16)
                             } else if shiftsForSelectedDate.isEmpty {
                                 EnhancedEmptyState(selectedDate: selectedDate)
-                                    .padding(.horizontal)
+                                    .padding(.horizontal, 16)
                             } else {
                                 ForEach(shiftsForSelectedDate.sorted { shift1, shift2 in
                                     let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
@@ -79,11 +71,11 @@ struct ScheduleView: View {
                                     EnhancedShiftCard(shift: shift) {
                                         deleteShift(shift)
                                     }
-                                    .padding(.horizontal)
+                                    .padding(.horizontal, 16)
                                 }
                             }
                         }
-                        .padding(.vertical)
+                        .padding(.vertical, 8)
                     }
                     .background(Color(.systemGroupedBackground).ignoresSafeArea())
                 }
@@ -241,7 +233,7 @@ struct ErrorStateView: View {
     let message: String
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             ZStack {
                 Circle()
                     .fill(
@@ -251,27 +243,27 @@ struct ErrorStateView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 60, height: 60)
+                    .frame(width: 48, height: 48)
 
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .foregroundColor(.red)
             }
 
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text("Something went wrong")
-                    .font(.headline)
+                    .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
 
                 Text(message)
-                    .font(.body)
+                    .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
             }
         }
-        .padding(24)
+        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
