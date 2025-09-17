@@ -1,17 +1,18 @@
 import Foundation
 import EventKit
 import SwiftUI
-import Combine
+import Observation
 
-class CalendarService: ObservableObject {
+@Observable
+class CalendarService {
     static let shared = CalendarService()
 
     private let eventStore = EKEventStore()
     private let calendarName = "functioncraft.shiftscheduler"
     private let appIdentifier = "com.functioncraft.shiftscheduler"
 
-    @Published var isAuthorized = false
-    @Published var authorizationError: String?
+    var isAuthorized = false
+    var authorizationError: String?
 
     private var appCalendar: EKCalendar?
 

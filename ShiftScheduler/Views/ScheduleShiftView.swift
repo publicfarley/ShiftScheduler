@@ -5,7 +5,7 @@ struct ScheduleShiftView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var shiftTypes: [ShiftType]
-    @StateObject private var calendarService = CalendarService.shared
+    @State private var calendarService = CalendarService.shared
 
     let selectedDate: Date
     @State private var selectedShiftType: ShiftType?

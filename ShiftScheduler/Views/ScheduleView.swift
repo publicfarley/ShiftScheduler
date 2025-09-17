@@ -4,7 +4,7 @@ import SwiftData
 struct ScheduleView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
-    @StateObject private var calendarService = CalendarService.shared
+    @State private var calendarService = CalendarService.shared
     @State private var showingScheduleShift = false
     @State private var selectedDate = Date()
     @State private var scheduledShifts: [ScheduledShift] = []

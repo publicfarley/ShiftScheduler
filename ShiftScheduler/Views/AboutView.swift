@@ -12,7 +12,7 @@ struct AlertItem: Identifiable {
 
 struct AboutView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var calendarService = CalendarService.shared
+    @State private var calendarService = CalendarService.shared
     @State private var alertItem: AlertItem?
 
     var body: some View {

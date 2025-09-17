@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-struct ScheduledShift: Identifiable {
+struct ScheduledShift: Identifiable, Equatable {
     let id: UUID
     let eventIdentifier: String
     let shiftType: ShiftType?
@@ -19,5 +19,12 @@ struct ScheduledShift: Identifiable {
         self.eventIdentifier = shiftData.eventIdentifier
         self.shiftType = shiftType
         self.date = shiftData.date
+    }
+
+    static func == (lhs: ScheduledShift, rhs: ScheduledShift) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.eventIdentifier == rhs.eventIdentifier &&
+               lhs.shiftType?.id == rhs.shiftType?.id &&
+               lhs.date == rhs.date
     }
 }

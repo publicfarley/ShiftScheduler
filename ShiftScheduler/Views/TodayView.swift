@@ -63,42 +63,45 @@ struct StatusBadge: View {
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
-    @StateObject private var calendarService = CalendarService.shared
+    @State private var calendarService = CalendarService.shared
     @State private var scheduledShifts: [ScheduledShift] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private var todayShift: ScheduledShift? {
-        scheduledShifts.first { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: Date())
+    // Optimized computed properties with caching
+    @State private var todayShift: ScheduledShift?
+    @State private var tomorrowShift: ScheduledShift?
+    @State private var thisWeekShiftsCount: Int = 0
+    @State private var completedThisWeek: Int = 0
+
+    private func updateCachedShifts() {
+        let calendar = Calendar.current
+        let today = Date()
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+
+        todayShift = scheduledShifts.first { shift in
+            calendar.isDate(shift.date, inSameDayAs: today)
         }
-    }
 
-    private var tomorrowShift: ScheduledShift? {
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        return scheduledShifts.first { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
+        tomorrowShift = scheduledShifts.first { shift in
+            calendar.isDate(shift.date, inSameDayAs: tomorrow)
         }
-    }
 
-    private var thisWeekShifts: [ScheduledShift] {
-        let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-        let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? today
 
-        return scheduledShifts.filter { shift in
+        thisWeekShiftsCount = scheduledShifts.filter { shift in
             shift.date >= startOfWeek && shift.date <= endOfWeek
-        }
-    }
+        }.count
 
-    private var completedThisWeek: Int {
-        // For now, return 0 as we don't have a completion tracking system yet
-        0
+        // For now, keep completed count as 0
+        completedThisWeek = 0
     }
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 20) {
+                LazyVStack(spacing: 20, pinnedViews: []) {
                     if !calendarService.isAuthorized {
                         VStack(spacing: 16) {
                             Image(systemName: "calendar.badge.exclamationmark")
@@ -121,16 +124,15 @@ struct TodayView: View {
                         }
                         .padding()
                     } else {
-                        // Today Section - Enhanced with distinctive background treatment
+                        // Today Section - Optimized for performance
                         VStack(alignment: .leading, spacing: 20) {
-                            // Enhanced section header
+                            // Simplified section header
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     HStack(spacing: 8) {
                                         Image(systemName: "sun.max.fill")
                                             .font(.title3)
                                             .foregroundColor(.orange)
-                                            .symbolEffect(.pulse.byLayer, options: .repeating)
 
                                         Text("Today")
                                             .font(.title)
@@ -158,55 +160,21 @@ struct TodayView: View {
                                     .font(.caption)
                             }
 
-                            // Enhanced Today shift card with prominence
-                            EnhancedTodayShiftCard(shift: todayShift)
+                            // Optimized Today shift card
+                            OptimizedTodayShiftCard(shift: todayShift)
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 24)
                         .background(
-                            ZStack {
-                                // Primary background with warm gradient
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(.systemBackground),
-                                                Color(.systemBackground).opacity(0.95)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-
-                                // Subtle warm overlay for Today section
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.orange.opacity(0.03),
-                                                Color.yellow.opacity(0.02)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-
-                                // Light border effect
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.orange.opacity(0.1),
-                                                Color.clear
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                            }
+                            // Simplified background for better performance
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(.secondarySystemBackground))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.orange.opacity(0.1), lineWidth: 1)
+                                )
                         )
-                        .shadow(color: .orange.opacity(0.08), radius: 12, x: 0, y: 4)
+                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                         .padding(.horizontal, 16)
 
                         // Quick Actions Section
@@ -234,43 +202,41 @@ struct TodayView: View {
                             }
 
                             if todayShift != nil {
-                                // Enhanced quick actions when there's a shift
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 16) {
-                                        EnhancedQuickActionButton(
-                                            title: "Clock In",
-                                            icon: "clock",
-                                            color: .green,
-                                            action: {}
-                                        )
-                                        EnhancedQuickActionButton(
-                                            title: "Break",
-                                            icon: "pause.circle",
-                                            color: .orange,
-                                            action: {}
-                                        )
-                                        EnhancedQuickActionButton(
-                                            title: "Clock Out",
-                                            icon: "clock.badge.checkmark",
-                                            color: .red,
-                                            action: {}
-                                        )
-                                    }
-                                    .padding(.horizontal)
+                                // Optimized quick actions when there's a shift
+                                HStack(spacing: 16) {
+                                    OptimizedQuickActionButton(
+                                        title: "Clock In",
+                                        icon: "clock",
+                                        color: .green,
+                                        action: {}
+                                    )
+                                    OptimizedQuickActionButton(
+                                        title: "Break",
+                                        icon: "pause.circle",
+                                        color: .orange,
+                                        action: {}
+                                    )
+                                    OptimizedQuickActionButton(
+                                        title: "Clock Out",
+                                        icon: "clock.badge.checkmark",
+                                        color: .red,
+                                        action: {}
+                                    )
                                 }
+                                .padding(.horizontal)
                             } else {
-                                // Professional empty state for quick actions
-                                VStack(spacing: 8) {
+                                // Simplified empty state for quick actions
+                                HStack(spacing: 12) {
                                     Image(systemName: "bolt.slash")
                                         .font(.title2)
                                         .foregroundColor(.secondary)
-                                        .frame(width: 44, height: 44)
+                                        .frame(width: 40, height: 40)
                                         .background(
                                             Circle()
                                                 .fill(Color(.systemGray6))
                                         )
 
-                                    VStack(spacing: 4) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text("No quick actions available")
                                             .font(.subheadline)
                                             .fontWeight(.medium)
@@ -280,10 +246,10 @@ struct TodayView: View {
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
+
+                                    Spacer()
                                 }
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 12)
-                                .frame(maxWidth: .infinity)
+                                .padding(16)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
                                         .fill(Color(.systemBackground))
@@ -296,14 +262,13 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        // Tomorrow Section - Enhanced with distinctive background treatment
+                        // Tomorrow Section - Optimized for performance
                         VStack(alignment: .leading, spacing: 16) {
-                            // Enhanced section header
+                            // Simplified section header
                             HStack(spacing: 8) {
                                 Image(systemName: "moon.stars.fill")
                                     .font(.title3)
                                     .foregroundColor(.indigo)
-                                    .symbolEffect(.breathe.byLayer, options: .repeating)
 
                                 Text("Tomorrow")
                                     .font(.title2)
@@ -313,59 +278,21 @@ struct TodayView: View {
                                 Spacer()
                             }
 
-                            // Enhanced Tomorrow shift card
-                            EnhancedTomorrowShiftCard(shift: tomorrowShift)
+                            // Optimized Tomorrow shift card
+                            OptimizedTomorrowShiftCard(shift: tomorrowShift)
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 20)
                         .background(
-                            ZStack {
-                                // Primary background with cool gradient
-                                RoundedRectangle(cornerRadius: 18)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color(.systemBackground),
-                                                Color(.secondarySystemBackground).opacity(0.3)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-
-                                // Subtle cool overlay for Tomorrow section
-                                RoundedRectangle(cornerRadius: 18)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.indigo.opacity(0.025),
-                                                Color.purple.opacity(0.015)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-
-                                // Soft material effect
-                                RoundedRectangle(cornerRadius: 18)
-                                    .fill(.ultraThinMaterial.opacity(0.3))
-
-                                // Light border effect
-                                RoundedRectangle(cornerRadius: 18)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.indigo.opacity(0.08),
-                                                Color.clear
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 0.8
-                                    )
-                            }
+                            // Simplified background for better performance
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(Color(.tertiarySystemBackground))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18)
+                                        .stroke(Color.indigo.opacity(0.1), lineWidth: 1)
+                                )
                         )
-                        .shadow(color: .indigo.opacity(0.06), radius: 10, x: 0, y: 3)
+                        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
                         .padding(.horizontal, 16)
 
                         // This Week Section
@@ -401,13 +328,13 @@ struct TodayView: View {
                             }
 
                             HStack(spacing: 16) {
-                                EnhancedWeekStatView(
-                                    count: thisWeekShifts.count,
+                                OptimizedWeekStatView(
+                                    count: thisWeekShiftsCount,
                                     label: "Scheduled",
                                     color: .blue,
                                     icon: "calendar"
                                 )
-                                EnhancedWeekStatView(
+                                OptimizedWeekStatView(
                                     count: completedThisWeek,
                                     label: "Completed",
                                     color: .green,
@@ -422,10 +349,15 @@ struct TodayView: View {
                 }
                 .padding(.top)
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 loadShifts()
+                updateCachedShifts()
+            }
+            .onChange(of: scheduledShifts) { _, _ in
+                updateCachedShifts()
             }
         }
     }
@@ -449,6 +381,7 @@ struct TodayView: View {
 
                 await MainActor.run {
                     self.scheduledShifts = shifts
+                    self.updateCachedShifts()
                     self.isLoading = false
                 }
             } catch {
@@ -1537,6 +1470,433 @@ struct EnhancedWeekStatView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Optimized Card Components for Better Performance
+
+struct OptimizedTodayShiftCard: View {
+    let shift: ScheduledShift?
+
+    private var shiftStatus: ShiftStatus {
+        guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
+
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Check if shift is today
+        if calendar.isDate(shift.date, inSameDayAs: now) {
+            switch shiftType.duration {
+            case .allDay:
+                return .active
+            case .scheduled(let startTime, let endTime):
+                let shiftStart = startTime.toDate(on: shift.date)
+                let shiftEnd = endTime.toDate(on: shift.date)
+
+                if now < shiftStart {
+                    return .upcoming
+                } else if now >= shiftStart && now <= shiftEnd {
+                    return .active
+                } else {
+                    return .completed
+                }
+            }
+        } else if shift.date < now {
+            return .completed
+        } else {
+            return .upcoming
+        }
+    }
+
+    private var cardColor: Color {
+        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
+
+        let hash = shiftType.symbol.hashValue
+        let colors: [Color] = [
+            Color(red: 0.2, green: 0.35, blue: 0.5),   // Blue
+            Color(red: 0.25, green: 0.4, blue: 0.35),  // Green
+            Color(red: 0.4, green: 0.35, blue: 0.3),   // Brown
+            Color(red: 0.35, green: 0.3, blue: 0.4),   // Purple
+            Color(red: 0.4, green: 0.3, blue: 0.35),   // Burgundy
+            Color(red: 0.3, green: 0.4, blue: 0.4)     // Teal
+        ]
+        return colors[abs(hash) % colors.count]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let shift = shift, let shiftType = shift.shiftType {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Status badge
+                    HStack {
+                        StatusBadge(status: shiftStatus)
+                        Spacer()
+                    }
+
+                    // Main content
+                    HStack(spacing: 14) {
+                        // Symbol
+                        Text(shiftType.symbol)
+                            .font(.title2)
+                            .foregroundColor(cardColor)
+                            .frame(width: 48, height: 48)
+                            .background(
+                                Circle()
+                                    .fill(cardColor.opacity(0.08))
+                                    .overlay(
+                                        Circle()
+                                            .stroke(cardColor.opacity(0.15), lineWidth: 1)
+                                    )
+                            )
+
+                        // Shift details
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(shiftType.title)
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+
+                            if !shiftType.shiftDescription.isEmpty {
+                                Text(shiftType.shiftDescription)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+
+                            // Time badge
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock")
+                                    .font(.caption)
+                                    .foregroundColor(cardColor)
+
+                                Text(shiftType.timeRangeString)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(cardColor)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(cardColor.opacity(0.08))
+                            )
+
+                            // Location
+                            if let location = shiftType.location {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "location")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(location.name)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(16)
+
+                // Active shift indicator
+                if shiftStatus == .active {
+                    Rectangle()
+                        .fill(cardColor.opacity(0.3))
+                        .frame(height: 2)
+                }
+            } else {
+                // Empty state
+                VStack(spacing: 12) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+                        .frame(width: 56, height: 56)
+                        .background(
+                            Circle()
+                                .fill(Color(.systemGray6))
+                        )
+
+                    VStack(spacing: 4) {
+                        Text("No shift scheduled")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        Text("Perfect day for rest or planning ahead")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.systemGray5), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct OptimizedTomorrowShiftCard: View {
+    let shift: ScheduledShift?
+
+    private var cardColor: Color {
+        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
+
+        let hash = shiftType.symbol.hashValue
+        let colors: [Color] = [
+            Color(red: 0.2, green: 0.35, blue: 0.5),   // Blue
+            Color(red: 0.25, green: 0.4, blue: 0.35),  // Green
+            Color(red: 0.4, green: 0.35, blue: 0.3),   // Brown
+            Color(red: 0.35, green: 0.3, blue: 0.4),   // Purple
+            Color(red: 0.4, green: 0.3, blue: 0.35),   // Burgundy
+            Color(red: 0.3, green: 0.4, blue: 0.4)     // Teal
+        ]
+        return colors[abs(hash) % colors.count]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let shift = shift, let shiftType = shift.shiftType {
+                VStack(spacing: 12) {
+                    // Tomorrow label
+                    HStack {
+                        HStack(spacing: 4) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.caption2)
+                                .foregroundColor(.indigo)
+
+                            Text("Tomorrow")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.indigo)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(.indigo.opacity(0.1))
+                        )
+
+                        Spacer()
+                    }
+
+                    // Main content
+                    HStack(spacing: 12) {
+                        // Symbol
+                        Text(shiftType.symbol)
+                            .font(.title3)
+                            .foregroundColor(cardColor)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .fill(cardColor.opacity(0.08))
+                            )
+
+                        // Shift details
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(shiftType.title)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+
+                            if !shiftType.shiftDescription.isEmpty {
+                                Text(shiftType.shiftDescription)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            // Time
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                    .foregroundColor(cardColor)
+
+                                Text(shiftType.timeRangeString)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(cardColor)
+                            }
+
+                            // Location if available
+                            if let location = shiftType.location {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "location")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(location.name)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(16)
+            } else {
+                // Empty state
+                VStack(spacing: 12) {
+                    HStack {
+                        HStack(spacing: 4) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.caption2)
+                                .foregroundColor(.indigo)
+
+                            Text("Tomorrow")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.indigo)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(.indigo.opacity(0.1))
+                        )
+
+                        Spacer()
+                    }
+
+                    HStack(spacing: 12) {
+                        // Empty state icon
+                        Image(systemName: "bed.double.fill")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                Circle()
+                                    .fill(Color(.systemGray6))
+                            )
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("No shift scheduled")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+
+                            Text("A well-deserved day off awaits")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.systemGray5), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct OptimizedWeekStatView: View {
+    let count: Int
+    let label: String
+    let color: Color
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            // Icon
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+                .frame(width: 40, height: 40)
+                .background(
+                    Circle()
+                        .fill(color.opacity(0.08))
+                )
+
+            // Count and label
+            VStack(spacing: 2) {
+                Text("\(count)")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Simple progress indicator
+            if count > 0 {
+                Rectangle()
+                    .fill(color.opacity(0.3))
+                    .frame(height: 2)
+                    .cornerRadius(1)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.systemGray5), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct OptimizedQuickActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                // Icon - simple and clean
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(color)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        Circle()
+                            .fill(color.opacity(0.08))
+                    )
+
+                // Title
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 85)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.systemGray5), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
