@@ -133,11 +133,7 @@ struct TodayView: View {
                                         Image(systemName: "sun.max.fill")
                                             .font(.title3)
                                             .foregroundColor(.orange)
-
-                                        Text("Today")
-                                            .font(.title)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.primary)
+                                            .accessibilityLabel("Today's shift section")
                                     }
 
                                     Spacer()
