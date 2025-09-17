@@ -121,19 +121,35 @@ struct TodayView: View {
                         }
                         .padding()
                     } else {
-                        // Today Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
+                        // Today Section - Enhanced with prominent visual design
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Enhanced section header
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.title3)
+                                            .foregroundColor(.orange)
+                                            .symbolEffect(.pulse.byLayer, options: .repeating)
+
+                                        Text("Today")
+                                            .font(.title)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
+                                    }
+
+                                    Spacer()
+
+                                    if isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    }
+                                }
+
                                 Text(Date(), style: .date)
                                     .font(.subheadline)
+                                    .fontWeight(.medium)
                                     .foregroundColor(.secondary)
-
-                                Spacer()
-
-                                if isLoading {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                }
                             }
 
                             if let errorMessage = errorMessage {
@@ -142,9 +158,11 @@ struct TodayView: View {
                                     .font(.caption)
                             }
 
-                            TodayShiftCard(shift: todayShift)
+                            // Enhanced Today shift card with prominence
+                            EnhancedTodayShiftCard(shift: todayShift)
                         }
                         .padding(.horizontal)
+                        .padding(.vertical, 8)
 
                         // Quick Actions Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -233,15 +251,28 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        // Upcoming Section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Tomorrow")
-                                .font(.title3)
-                                .fontWeight(.semibold)
+                        // Tomorrow Section - Enhanced with improved visual prominence
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Enhanced section header
+                            HStack(spacing: 8) {
+                                Image(systemName: "moon.stars.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.indigo)
+                                    .symbolEffect(.breathe.byLayer, options: .repeating)
 
-                            TomorrowShiftCard(shift: tomorrowShift)
+                                Text("Tomorrow")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+
+                                Spacer()
+                            }
+
+                            // Enhanced Tomorrow shift card
+                            EnhancedTomorrowShiftCard(shift: tomorrowShift)
                         }
                         .padding(.horizontal)
+                        .padding(.vertical, 8)
 
                         // This Week Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -333,6 +364,270 @@ struct TodayView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Enhanced Today Shift Card with Visual Prominence
+struct EnhancedTodayShiftCard: View {
+    let shift: ScheduledShift?
+    @State private var isPressed = false
+    @State private var pulseOpacity = 0.3
+
+    private var shiftStatus: ShiftStatus {
+        guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
+
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Check if shift is today
+        if calendar.isDate(shift.date, inSameDayAs: now) {
+            switch shiftType.duration {
+            case .allDay:
+                return .active
+            case .scheduled(let startTime, let endTime):
+                let shiftStart = startTime.toDate(on: shift.date)
+                let shiftEnd = endTime.toDate(on: shift.date)
+
+                if now < shiftStart {
+                    return .upcoming
+                } else if now >= shiftStart && now <= shiftEnd {
+                    return .active
+                } else {
+                    return .completed
+                }
+            }
+        } else if shift.date < now {
+            return .completed
+        } else {
+            return .upcoming
+        }
+    }
+
+    private var cardColor: Color {
+        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
+
+        let hash = shiftType.symbol.hashValue
+        let vibrantColors: [Color] = [
+            Color(red: 0.1, green: 0.5, blue: 0.8),   // Vibrant Blue
+            Color(red: 0.2, green: 0.7, blue: 0.5),   // Emerald Green
+            Color(red: 0.8, green: 0.4, blue: 0.2),   // Warm Orange
+            Color(red: 0.6, green: 0.3, blue: 0.8),   // Purple
+            Color(red: 0.8, green: 0.3, blue: 0.5),   // Magenta
+            Color(red: 0.3, green: 0.7, blue: 0.7)    // Teal
+        ]
+        return vibrantColors[abs(hash) % vibrantColors.count]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let shift = shift, let shiftType = shift.shiftType {
+                // Enhanced design with gradients and prominence
+                VStack(alignment: .leading, spacing: 16) {
+                    // Status badge with enhanced styling
+                    HStack {
+                        EnhancedStatusBadge(status: shiftStatus)
+                        Spacer()
+                    }
+
+                    // Main content with enhanced layout
+                    HStack(spacing: 16) {
+                        // Enhanced symbol with gradient background
+                        Text(shiftType.symbol)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(width: 60, height: 60)
+                            .background(
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [cardColor, cardColor.opacity(0.7)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .stroke(.white.opacity(0.2), lineWidth: 2)
+                                    )
+                                    .shadow(color: cardColor.opacity(0.4), radius: 8, x: 0, y: 4)
+                            )
+
+                        // Enhanced shift details
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(shiftType.title)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+
+                            if !shiftType.shiftDescription.isEmpty {
+                                Text(shiftType.shiftDescription)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+
+                            // Enhanced time badge
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+
+                                Text(shiftType.timeRangeString)
+                                    .font(.callout)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(cardColor)
+                                    .shadow(color: cardColor.opacity(0.3), radius: 4, x: 0, y: 2)
+                            )
+
+                            // Enhanced location
+                            if let location = shiftType.location {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "location.fill")
+                                        .font(.caption)
+                                        .foregroundColor(cardColor)
+                                    Text(location.name)
+                                        .font(.callout)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(20)
+
+                // Enhanced active indicator with pulse animation
+                if shiftStatus == .active {
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [cardColor, cardColor.opacity(0.6)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 4)
+                        .opacity(pulseOpacity)
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                                pulseOpacity = 0.8
+                            }
+                        }
+                }
+            } else {
+                // Enhanced empty state
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(.systemGray5), Color(.systemGray6)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 80, height: 80)
+
+                        Image(systemName: "calendar.badge.plus")
+                            .font(.title)
+                            .foregroundColor(.secondary)
+                    }
+
+                    VStack(spacing: 6) {
+                        Text("No shift scheduled")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+
+                        Text("Perfect day for rest or planning ahead")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .padding(.horizontal, 20)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: shift != nil ? [cardColor.opacity(0.3), cardColor.opacity(0.1)] : [Color(.systemGray4), Color(.systemGray5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                )
+                .shadow(color: shift != nil ? cardColor.opacity(0.15) : .black.opacity(0.05), radius: 12, x: 0, y: 6)
+        )
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isPressed)
+        .onTapGesture {
+            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+            impactFeedback.impactOccurred()
+
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                isPressed = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isPressed = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Enhanced Status Badge
+struct EnhancedStatusBadge: View {
+    let status: ShiftStatus
+    @State private var glowOpacity = 0.3
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(status.color)
+                .frame(width: 8, height: 8)
+                .shadow(color: status.color.opacity(glowOpacity), radius: 4, x: 0, y: 0)
+                .onAppear {
+                    if status == .active {
+                        withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                            glowOpacity = 0.8
+                        }
+                    }
+                }
+
+            Text(status.displayName)
+                .font(.callout)
+                .fontWeight(.semibold)
+                .foregroundColor(status.color)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(status.color.opacity(0.12))
+                .overlay(
+                    Capsule()
+                        .stroke(status.color.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
 
@@ -602,6 +897,262 @@ struct EnhancedQuickActionButton: View {
                 action()
             }
         )
+    }
+}
+
+// MARK: - Enhanced Tomorrow Shift Card with Visual Prominence
+struct EnhancedTomorrowShiftCard: View {
+    let shift: ScheduledShift?
+    @State private var isPressed = false
+    @State private var shimmerOffset: CGFloat = -200
+
+    private var cardColor: Color {
+        guard let shiftType = shift?.shiftType else { return Color(red: 0.3, green: 0.4, blue: 0.7) }
+
+        let hash = shiftType.symbol.hashValue
+        let elegantColors: [Color] = [
+            Color(red: 0.3, green: 0.4, blue: 0.7),   // Elegant Blue
+            Color(red: 0.3, green: 0.6, blue: 0.5),   // Sophisticated Green
+            Color(red: 0.7, green: 0.5, blue: 0.3),   // Warm Amber
+            Color(red: 0.5, green: 0.3, blue: 0.7),   // Rich Purple
+            Color(red: 0.7, green: 0.3, blue: 0.5),   // Rose
+            Color(red: 0.3, green: 0.6, blue: 0.6)    // Turquoise
+        ]
+        return elegantColors[abs(hash) % elegantColors.count]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let shift = shift, let shiftType = shift.shiftType {
+                // Enhanced design with modern visual effects
+                VStack(alignment: .leading, spacing: 14) {
+                    // Tomorrow badge with enhanced styling
+                    HStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+
+                            Text("Tomorrow")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.indigo, .purple],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .shadow(color: .indigo.opacity(0.3), radius: 4, x: 0, y: 2)
+                        )
+
+                        Spacer()
+                    }
+
+                    // Main content with enhanced layout
+                    HStack(spacing: 14) {
+                        // Enhanced symbol with sophisticated design
+                        Text(shiftType.symbol)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(width: 50, height: 50)
+                            .background(
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [cardColor, cardColor.opacity(0.8)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .stroke(.white.opacity(0.15), lineWidth: 1)
+                                    )
+                                    .shadow(color: cardColor.opacity(0.3), radius: 6, x: 0, y: 3)
+                            )
+
+                        // Enhanced shift details
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(shiftType.title)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+
+                            if !shiftType.shiftDescription.isEmpty {
+                                Text(shiftType.shiftDescription)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            // Enhanced time display
+                            HStack(spacing: 5) {
+                                Image(systemName: "clock.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(cardColor)
+
+                                Text(shiftType.timeRangeString)
+                                    .font(.callout)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(cardColor)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(cardColor.opacity(0.12))
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(cardColor.opacity(0.25), lineWidth: 1)
+                                    )
+                            )
+
+                            // Enhanced location
+                            if let location = shiftType.location {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "location.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(location.name)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(18)
+            } else {
+                // Enhanced empty state for tomorrow
+                VStack(spacing: 14) {
+                    HStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.caption)
+                                .foregroundColor(.white)
+
+                            Text("Tomorrow")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.indigo, .purple],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .shadow(color: .indigo.opacity(0.3), radius: 4, x: 0, y: 2)
+                        )
+
+                        Spacer()
+                    }
+
+                    HStack(spacing: 14) {
+                        // Enhanced empty state icon
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(.systemGray5), Color(.systemGray6)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 50, height: 50)
+
+                            Image(systemName: "bed.double.fill")
+                                .font(.title3)
+                                .foregroundColor(.secondary)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("No shift scheduled")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+
+                            Text("A well-deserved day off awaits")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                }
+                .padding(18)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(
+                            LinearGradient(
+                                colors: shift != nil ? [cardColor.opacity(0.25), cardColor.opacity(0.1)] : [Color(.systemGray4), Color(.systemGray5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .shadow(color: shift != nil ? cardColor.opacity(0.1) : .black.opacity(0.04), radius: 8, x: 0, y: 4)
+        )
+        .overlay(
+            // Subtle shimmer effect
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [.clear, .white.opacity(0.1), .clear],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: 60)
+                .offset(x: shimmerOffset)
+                .clipped()
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: false)) {
+                        shimmerOffset = 400
+                    }
+                }
+        )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isPressed)
+        .onTapGesture {
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                isPressed = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isPressed = false
+                }
+            }
+        }
     }
 }
 
