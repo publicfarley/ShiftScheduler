@@ -65,7 +65,7 @@ struct CustomCalendarView: View {
             .padding(.horizontal, 10)
 
             // Calendar grid
-            LazyVGrid(columns: columns, spacing: 4) {
+            LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(daysInMonth()) { cell in
                     if let date = cell.date {
                         DayView(
@@ -81,7 +81,7 @@ struct CustomCalendarView: View {
                     } else {
                         // Empty space for dates outside current month
                         Color.clear
-                            .frame(height: 36)
+                            .frame(height: 40)
                     }
                 }
             }
@@ -159,15 +159,15 @@ struct DayView: View {
                 // Background circle
                 Circle()
                     .fill(backgroundColor)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 36, height: 36)
 
                 // Day number
                 Text(dayNumber)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(textColor)
             }
         }
-        .frame(height: 36)
+        .frame(height: 40)
         .opacity(isCurrentMonth ? 1.0 : 0.3)
     }
 

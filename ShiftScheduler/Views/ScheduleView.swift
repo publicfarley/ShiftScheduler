@@ -50,11 +50,11 @@ struct ScheduleView: View {
                 .padding(.horizontal, 16)
 
                 // Content area with enhanced design
-                if isLoading {
-                    EnhancedLoadingState()
-                        .padding(.horizontal, 16)
-                } else {
-                    ScrollView {
+                ScrollView {
+                    if isLoading {
+                        EnhancedLoadingState()
+                            .padding(.horizontal, 16)
+                    } else {
                         LazyVStack(spacing: 10) {
                             if let errorMessage = errorMessage {
                                 ErrorStateView(message: errorMessage)
@@ -77,8 +77,8 @@ struct ScheduleView: View {
                         }
                         .padding(.vertical, 8)
                     }
-                    .background(Color(.systemGroupedBackground).ignoresSafeArea())
                 }
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
             }
         }
     }

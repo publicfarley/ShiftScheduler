@@ -215,10 +215,23 @@ struct EnhancedShiftCard: View {
                                         .foregroundColor(.secondary)
                                         .lineLimit(1)
                                 }
+
+                                if !location.address.isEmpty {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "mappin.and.ellipse")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+
+                                        Text(location.address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                }
                             }
 
-                            // Shift description (only show if location is not present to save space)
-                            if !shiftType.shiftDescription.isEmpty && shiftType.location == nil {
+                            // Shift description
+                            if !shiftType.shiftDescription.isEmpty {
                                 HStack(spacing: 4) {
                                     Image(systemName: "text.alignleft")
                                         .font(.caption2)
@@ -439,6 +452,16 @@ struct ShimmerCardPlaceholder: View {
                     Rectangle()
                         .fill(.gray.opacity(0.3))
                         .frame(width: 100, height: 14)
+
+                    // Description placeholder
+                    Rectangle()
+                        .fill(.gray.opacity(0.3))
+                        .frame(width: 180, height: 14)
+
+                    // Address placeholder
+                    Rectangle()
+                        .fill(.gray.opacity(0.3))
+                        .frame(width: 150, height: 14)
                 }
 
                 Spacer()
