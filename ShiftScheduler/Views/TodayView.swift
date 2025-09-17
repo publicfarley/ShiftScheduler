@@ -127,27 +127,25 @@ struct TodayView: View {
                         // Today Section - Optimized for performance
                         VStack(alignment: .leading, spacing: 20) {
                             // Simplified section header
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "sun.max.fill")
-                                            .font(.title3)
-                                            .foregroundColor(.orange)
-                                            .accessibilityLabel("Today's shift section")
-                                    }
+                            HStack {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "sun.max.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.orange)
+                                        .accessibilityLabel("Today's shift section")
 
-                                    Spacer()
-
-                                    if isLoading {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                    }
+                                    Text(Date(), style: .date)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
                                 }
 
-                                Text(Date(), style: .date)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
+                                Spacer()
+
+                                if isLoading {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                }
                             }
 
                             if let errorMessage = errorMessage {
