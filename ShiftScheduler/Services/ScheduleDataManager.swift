@@ -53,9 +53,57 @@ class ScheduleDataManager {
 
     /// Updates shift types and invalidates cache if needed
     func updateShiftTypes(_ types: [ShiftType]) {
+        let oldTypes = shiftTypes
         shiftTypes = types
-        // Invalidate cache entries that might be affected
-        invalidateAllCache()
+
+        // If this is the first time setting shift types, we need to reload data
+        // to ensure shifts get proper shiftType associations
+        if oldTypes.isEmpty && !types.isEmpty {
+            // Clear everything and force a fresh load with shift types available
+            invalidateAllCache()
+            currentShifts = []
+            currentShiftsDate = nil
+
+            // Immediately trigger a fresh load of the current date
+            Task { @MainActor in
+                await loadShiftsForInitialDisplay()
+            }
+        } else if oldTypes.count != types.count {
+            // Shift types changed, invalidate and refresh
+            invalidateAllCache()
+            refreshCurrentDate()
+        } else {
+            // Minor updates, just invalidate cache
+            invalidateAllCache()
+        }
+    }
+
+    /// Loads shifts for initial display when shift types first become available
+    @MainActor
+    private func loadShiftsForInitialDisplay() async {
+        guard calendarService.isAuthorized else { return }
+
+        let targetDate = normalizeDate(selectedDate)
+
+        do {
+            let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
+            let shiftData = try await calendarService.fetchShifts(from: targetDate, to: endOfDay)
+
+            // Convert to ScheduledShift objects with proper shift types
+            let shifts = shiftData.map { data in
+                let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
+                return ScheduledShift(from: data, shiftType: shiftType)
+            }
+
+            // Update UI state immediately
+            currentShifts = shifts
+            currentShiftsDate = targetDate
+            cacheShifts(shifts, for: targetDate)
+            errorMessage = nil
+
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     /// Forces refresh of current date data
@@ -91,7 +139,7 @@ class ScheduleDataManager {
             // Only clear if this is the very first load (no previous content)
             if currentShiftsDate == nil {
                 currentShifts = []
-                currentShiftsDate = normalizedDate
+                // Don't set currentShiftsDate until we have data to prevent hasDataForSelectedDate issues
             }
             // Otherwise keep showing previous content while loading new data
 
