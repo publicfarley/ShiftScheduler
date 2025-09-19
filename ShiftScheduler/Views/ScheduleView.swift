@@ -123,6 +123,8 @@ struct ScheduleView: View {
                 ScheduleShiftView(selectedDate: dataManager.selectedDate)
             }
             .onAppear {
+                // Set selected date to today when view appears
+                dataManager.selectedDate = Date()
                 // Update shift types in data manager
                 dataManager.updateShiftTypes(shiftTypes)
             }
