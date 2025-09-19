@@ -111,6 +111,9 @@ class ScheduleDataManager {
         let date = normalizeDate(selectedDate)
         invalidateCache(for: date)
         handleDateSelection(selectedDate)
+
+        // Also refresh scheduled dates to update calendar highlighting
+        loadScheduledDatesInBackground()
     }
 
     /// Clears all cached data
@@ -285,6 +288,26 @@ class ScheduleDataManager {
         }
     }
 
+    // MARK: - Creation with Cache Update
+
+    func shiftWasCreated(on date: Date) {
+        let normalizedDate = normalizeDate(date)
+
+        // Immediately add to scheduledDates for instant UI update
+        scheduledDates.insert(normalizedDate)
+
+        // Invalidate cache for this date to force refresh
+        invalidateCache(for: normalizedDate)
+
+        // If this is the currently selected date, refresh it
+        if Calendar.current.isDate(normalizedDate, inSameDayAs: selectedDate) {
+            refreshCurrentDate()
+        } else {
+            // Still refresh scheduled dates in background for consistency
+            loadScheduledDatesInBackground()
+        }
+    }
+
     // MARK: - Deletion with Cache Update
 
     func deleteShift(_ shift: ScheduledShift) async throws {
@@ -301,10 +324,16 @@ class ScheduleDataManager {
                 if Calendar.current.isDate(date, inSameDayAs: self.selectedDate) {
                     self.currentShifts = cachedShifts
                 }
+
+                // Immediately update scheduledDates to refresh calendar highlighting
+                // Remove the date from the set if there are no more shifts
+                if cachedShifts.isEmpty {
+                    self.scheduledDates.remove(date)
+                }
             }
         }
 
-        // Refresh scheduled dates
+        // Also refresh scheduled dates from the backend for consistency
         loadScheduledDatesInBackground()
     }
 

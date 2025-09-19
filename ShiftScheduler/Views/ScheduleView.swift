@@ -116,11 +116,11 @@ struct ScheduleView: View {
                     .disabled(!CalendarService.shared.isAuthorized)
                 }
             }
-            .sheet(isPresented: $showingScheduleShift, onDismiss: {
-                // Refresh current date data when sheet is dismissed
-                dataManager.refreshCurrentDate()
-            }) {
-                ScheduleShiftView(selectedDate: dataManager.selectedDate)
+            .sheet(isPresented: $showingScheduleShift) {
+                ScheduleShiftView(selectedDate: dataManager.selectedDate) { createdDate in
+                    // Called when a shift is successfully created
+                    dataManager.shiftWasCreated(on: createdDate)
+                }
             }
             .onAppear {
                 // Set selected date to today when view appears

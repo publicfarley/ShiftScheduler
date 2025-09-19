@@ -8,13 +8,15 @@ struct ScheduleShiftView: View {
     @State private var calendarService = CalendarService.shared
 
     let selectedDate: Date
+    let onShiftCreated: ((Date) -> Void)?
     @State private var selectedShiftType: ShiftType?
     @State private var shiftDate: Date
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    init(selectedDate: Date) {
+    init(selectedDate: Date, onShiftCreated: ((Date) -> Void)? = nil) {
         self.selectedDate = selectedDate
+        self.onShiftCreated = onShiftCreated
         self._shiftDate = State(initialValue: selectedDate)
     }
 
@@ -137,6 +139,8 @@ struct ScheduleShiftView: View {
 
                 await MainActor.run {
                     self.isLoading = false
+                    // Notify about the created shift
+                    self.onShiftCreated?(self.shiftDate)
                     self.dismiss()
                 }
             } catch {
