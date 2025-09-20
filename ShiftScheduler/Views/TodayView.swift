@@ -362,11 +362,23 @@ struct TodayView: View {
         errorMessage = nil
 
         do {
-            let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-            let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+            let today = Date()
+            let calendar = Calendar.current
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
 
-            let shiftData = try await calendarService.fetchShifts(from: startOfWeek, to: endOfWeek)
-            let shifts = shiftData.map { data in
+            // Fetch shifts for today and tomorrow specifically
+            let todayShiftData = try await calendarService.fetchShifts(for: today)
+            let tomorrowShiftData = try await calendarService.fetchShifts(for: tomorrow)
+
+            // Also fetch the full week for the weekly stats
+            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+            let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? today
+            let weekShiftData = try await calendarService.fetchShifts(from: startOfWeek, to: endOfWeek)
+
+            // Combine all shift data and remove duplicates
+            let allShiftData = Array(Set(todayShiftData + tomorrowShiftData + weekShiftData))
+
+            let shifts = allShiftData.map { data in
                 let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
                 return ScheduledShift(from: data, shiftType: shiftType)
             }

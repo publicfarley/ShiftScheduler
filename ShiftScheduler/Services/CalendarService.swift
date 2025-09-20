@@ -290,10 +290,18 @@ enum CalendarError: LocalizedError {
     }
 }
 
-struct ScheduledShiftData {
+struct ScheduledShiftData: Hashable, Equatable {
     let eventIdentifier: String
     let shiftTypeId: UUID
     let date: Date
     let title: String
     let location: String?
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(eventIdentifier)
+    }
+
+    static func == (lhs: ScheduledShiftData, rhs: ScheduledShiftData) -> Bool {
+        return lhs.eventIdentifier == rhs.eventIdentifier
+    }
 }
