@@ -346,9 +346,8 @@ struct TodayView: View {
             .scrollContentBackground(.hidden)
             .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.large)
-            .onAppear {
-                loadShifts()
-                updateCachedShifts()
+            .task {
+                await loadShifts()
             }
             .onChange(of: scheduledShifts) { _, _ in
                 updateCachedShifts()
@@ -356,34 +355,28 @@ struct TodayView: View {
         }
     }
 
-    private func loadShifts() {
+    private func loadShifts() async {
         guard calendarService.isAuthorized else { return }
 
         isLoading = true
         errorMessage = nil
 
-        Task {
-            do {
-                let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-                let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+        do {
+            let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+            let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
 
-                let shiftData = try await calendarService.fetchShifts(from: startOfWeek, to: endOfWeek)
-                let shifts = shiftData.map { data in
-                    let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
-                    return ScheduledShift(from: data, shiftType: shiftType)
-                }
-
-                await MainActor.run {
-                    self.scheduledShifts = shifts
-                    self.updateCachedShifts()
-                    self.isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+            let shiftData = try await calendarService.fetchShifts(from: startOfWeek, to: endOfWeek)
+            let shifts = shiftData.map { data in
+                let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
+                return ScheduledShift(from: data, shiftType: shiftType)
             }
+
+            self.scheduledShifts = shifts
+            self.updateCachedShifts()
+            self.isLoading = false
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isLoading = false
         }
     }
 }
