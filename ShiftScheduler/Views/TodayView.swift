@@ -64,6 +64,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
     @State private var calendarService = CalendarService.shared
+    @State private var currentDayManager = CurrentDayManager.shared
     @State private var scheduledShifts: [ScheduledShift] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -75,20 +76,16 @@ struct TodayView: View {
     @State private var completedThisWeek: Int = 0
 
     private func updateCachedShifts() {
-        let calendar = Calendar.current
-        let today = Date()
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-
         todayShift = scheduledShifts.first { shift in
-            calendar.isDate(shift.date, inSameDayAs: today)
+            currentDayManager.isToday(shift.date)
         }
 
         tomorrowShift = scheduledShifts.first { shift in
-            calendar.isDate(shift.date, inSameDayAs: tomorrow)
+            currentDayManager.isTomorrow(shift.date)
         }
 
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? today
+        let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: currentDayManager.today)?.start ?? currentDayManager.today
+        let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? currentDayManager.today
 
         thisWeekShiftsCount = scheduledShifts.filter { shift in
             shift.date >= startOfWeek && shift.date <= endOfWeek
@@ -134,7 +131,7 @@ struct TodayView: View {
                                         .foregroundColor(.orange)
                                         .accessibilityLabel("Today's shift section")
 
-                                    Text(Date(), style: .date)
+                                    Text(currentDayManager.today, style: .date)
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                         .foregroundColor(.secondary)
@@ -305,7 +302,7 @@ struct TodayView: View {
                                         .font(.caption2)
                                         .foregroundColor(.blue)
 
-                                    Text("Week \(Calendar.current.component(.weekOfYear, from: Date()))")
+                                    Text("Week \(Calendar.current.component(.weekOfYear, from: currentDayManager.today))")
                                         .font(.caption2)
                                         .foregroundColor(.blue)
                                 }
@@ -352,6 +349,12 @@ struct TodayView: View {
             .onChange(of: scheduledShifts) { _, _ in
                 updateCachedShifts()
             }
+            .onCurrentDayChange { previousDate, currentDate in
+                // Refresh shifts when day changes
+                Task {
+                    await loadShifts()
+                }
+            }
         }
     }
 
@@ -362,18 +365,10 @@ struct TodayView: View {
         errorMessage = nil
 
         do {
-            let today = Date()
-            let calendar = Calendar.current
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-
-            // Fetch shifts for today and tomorrow specifically
-            let todayShiftData = try await calendarService.fetchShifts(for: today)
-            let tomorrowShiftData = try await calendarService.fetchShifts(for: tomorrow)
-
-            // Also fetch the full week for the weekly stats
-            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-            let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? today
-            let weekShiftData = try await calendarService.fetchShifts(from: startOfWeek, to: endOfWeek)
+            // Use CurrentDayManager for consistent date handling
+            let todayShiftData = try await calendarService.fetchTodaysShifts()
+            let tomorrowShiftData = try await calendarService.fetchTomorrowsShifts()
+            let weekShiftData = try await calendarService.fetchCurrentWeekShifts()
 
             // Combine all shift data and remove duplicates
             let allShiftData = Array(Set(todayShiftData + tomorrowShiftData + weekShiftData))

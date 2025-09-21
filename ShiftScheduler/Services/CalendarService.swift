@@ -305,3 +305,21 @@ struct ScheduledShiftData: Hashable, Equatable {
         return lhs.eventIdentifier == rhs.eventIdentifier
     }
 }
+
+// MARK: - CurrentDayManager Integration Extensions
+extension CalendarService {
+    func fetchTodaysShifts() async throws -> [ScheduledShiftData] {
+        return try await fetchShifts(for: CurrentDayManager.shared.today)
+    }
+
+    func fetchTomorrowsShifts() async throws -> [ScheduledShiftData] {
+        return try await fetchShifts(for: CurrentDayManager.shared.tomorrow)
+    }
+
+    func fetchCurrentWeekShifts() async throws -> [ScheduledShiftData] {
+        let today = CurrentDayManager.shared.today
+        let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: today)?.start ?? today
+        let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? today
+        return try await fetchShifts(from: startOfWeek, to: endOfWeek)
+    }
+}

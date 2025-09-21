@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ShiftScheduling
+@testable import ShiftScheduler
 
 struct ShiftSchedulingTests {
     
@@ -51,7 +51,7 @@ struct ShiftSchedulingTests {
             date: Calendar.current.startOfDay(for: Date())
         )
         
-        schedule.assign(scheduledShift)
+        try schedule.assign(scheduledShift)
         
         let repo = InMemoryScheduleRepository()
         try repo.save(schedule)
@@ -83,12 +83,13 @@ struct ShiftSchedulingTests {
         let today = Calendar.current.startOfDay(for: Date())
         
         let s1 = ScheduledShift(shiftType: shiftType, date: today)
-        schedule.assign(s1)
+        try schedule.assign(s1)
         
         let s2 = ScheduledShift(shiftType: shiftType, date: today)
         
         #expect(throws: Error.self) {
-            schedule.assign(s2)
+            try schedule.assign(s2)
         }
     }
 }
+
