@@ -32,7 +32,7 @@ struct AboutView: View {
                 VStack(spacing: 0) {
                     // Spacer for top breathing room
                     Spacer()
-                        .frame(height: 40)
+                        .frame(height: 5)
 
                     // Animated app icon with particles
                     ZStack {
@@ -72,11 +72,12 @@ struct AboutView: View {
                                 SparkleIcon()
 
                                 Text("Created by Farley Caesar")
-                                    .font(.title2)
+                                    .font(.headline)
                                     .fontWeight(.semibold)
 
                                 SparkleIcon()
                             }
+                            .frame(maxWidth: .infinity)
 
                             Text("Developer")
                                 .font(.subheadline)
