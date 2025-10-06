@@ -24,6 +24,11 @@ struct ContentView: View {
                     Label("Locations", systemImage: "location")
                 }
 
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+
             AboutView()
                 .tabItem {
                     Label("About", systemImage: "info.circle")

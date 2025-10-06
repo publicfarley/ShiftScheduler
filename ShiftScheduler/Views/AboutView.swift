@@ -1,30 +1,12 @@
 
 import SwiftUI
-import SwiftData
-import OSLog
-
-private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "AboutView")
-
-struct AlertItem: Identifiable {
-    let id = UUID()
-    let title: Text
-    let message: Text
-    let primaryButton: Alert.Button
-    let secondaryButton: Alert.Button?
-}
 
 struct AboutView: View {
-    @Environment(\.modelContext) private var modelContext
-    @State private var calendarService = CalendarService.shared
-    @State private var alertItem: AlertItem?
-
     // Animation states
     @State private var titleAppeared = false
     @State private var creatorAppeared = false
     @State private var roleAppeared = false
     @State private var descriptionAppeared = false
-    @State private var buttonAppeared = false
-    @State private var isPressed = false
 
     var body: some View {
         NavigationView {
@@ -46,7 +28,7 @@ struct AboutView: View {
                         .frame(width: 200, height: 200)
 
                         AnimatedAppIcon(size: 120) {
-                            logger.debug("App icon tapped")
+                            // App icon tapped
                         }
                     }
                     .padding(.bottom, 30)
@@ -119,61 +101,6 @@ struct AboutView: View {
                     .opacity(descriptionAppeared ? 1 : 0)
                     .padding(.bottom, 40)
 
-                    // Delete button with glass effect and press animation
-                    Button(action: {
-                        self.alertItem = AlertItem(
-                            title: Text("Are you sure?"),
-                            message: Text("This will permanently delete all data."),
-                            primaryButton: .destructive(Text("Delete")) {
-                                self.deleteAllData()
-                            },
-                            secondaryButton: .cancel()
-                        )
-                    }) {
-                        HStack {
-                            Image(systemName: "trash.fill")
-                            Text("Delete All Data")
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.red, .red.opacity(0.8)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .shadow(color: .red.opacity(0.3), radius: 8, x: 0, y: 4)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .strokeBorder(.white.opacity(0.2), lineWidth: 1)
-                                }
-                        }
-                    }
-                    .scaleEffect(isPressed ? 0.95 : 1.0)
-                    .offset(y: buttonAppeared ? 0 : 30)
-                    .opacity(buttonAppeared ? 1 : 0)
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                guard !UIAccessibility.isReduceMotionEnabled else { return }
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    isPressed = true
-                                }
-                            }
-                            .onEnded { _ in
-                                guard !UIAccessibility.isReduceMotionEnabled else { return }
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    isPressed = false
-                                }
-                            }
-                    )
-                    .padding(.bottom, 50)
-
                     Spacer()
                         .frame(height: 40)
                 }
@@ -181,13 +108,6 @@ struct AboutView: View {
             }
             .navigationTitle("About")
             .navigationBarTitleDisplayMode(.large)
-            .alert(item: $alertItem) { alertItem in
-                if let secondaryButton = alertItem.secondaryButton {
-                    return Alert(title: alertItem.title, message: alertItem.message, primaryButton: alertItem.primaryButton, secondaryButton: secondaryButton)
-                } else {
-                    return Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.primaryButton)
-                }
-            }
             .onAppear {
                 triggerStaggeredAnimations()
             }
@@ -201,7 +121,6 @@ struct AboutView: View {
             creatorAppeared = true
             roleAppeared = true
             descriptionAppeared = true
-            buttonAppeared = true
             return
         }
 
@@ -220,44 +139,6 @@ struct AboutView: View {
 
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.6)) {
             descriptionAppeared = true
-        }
-
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.8)) {
-            buttonAppeared = true
-        }
-    }
-
-    private func deleteAllData() {
-        logger.debug("Delete all data requested")
-        Task {
-            do {
-                // Delete all calendar events (shifts)
-                if calendarService.isAuthorized {
-                    let startDate = Calendar.current.date(byAdding: .year, value: -10, to: Date()) ?? Date()
-                    let endDate = Calendar.current.date(byAdding: .year, value: 10, to: Date()) ?? Date()
-                    let shifts = try await calendarService.fetchShifts(from: startDate, to: endDate)
-
-                    logger.debug("Deleting \(shifts.count) shifts from calendar")
-                    for shift in shifts {
-                        try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
-                    }
-                }
-
-                // Delete SwiftData models
-                logger.debug("Deleting SwiftData models")
-                try modelContext.delete(model: ShiftType.self)
-                try modelContext.delete(model: Location.self)
-
-                await MainActor.run {
-                    logger.debug("All data deleted successfully")
-                    self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
-                }
-            } catch {
-                await MainActor.run {
-                    logger.error("Failed to delete all data: \(error.localizedDescription)")
-                    self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), primaryButton: .default(Text("OK")), secondaryButton: nil)
-                }
-            }
         }
     }
 }
