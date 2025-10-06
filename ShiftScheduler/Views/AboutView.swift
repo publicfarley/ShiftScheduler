@@ -12,10 +12,6 @@ struct AboutView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Spacer for top breathing room
-                    Spacer()
-                        .frame(height: 5)
-
                     // Animated app icon with particles
                     ZStack {
                         // Background particles
@@ -107,7 +103,7 @@ struct AboutView: View {
                 .frame(maxWidth: .infinity)
             }
             .navigationTitle("About")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 triggerStaggeredAnimations()
             }
