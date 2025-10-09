@@ -4,7 +4,7 @@ import SwiftUI
 import Observation
 
 @Observable
-class CalendarService {
+class CalendarService: CalendarServiceProtocol {
     static let shared = CalendarService()
 
     private let eventStore = EKEventStore()
@@ -250,6 +250,65 @@ class CalendarService {
     func checkForDuplicateShift(shiftTypeId: UUID, on date: Date) async throws -> Bool {
         let shifts = try await fetchShifts(for: date)
         return shifts.contains { $0.shiftTypeId == shiftTypeId }
+    }
+
+    func updateShiftEvent(identifier: String, to newShiftType: ShiftType) async throws {
+        guard isAuthorized else {
+            throw CalendarError.notAuthorized
+        }
+
+        guard let event = eventStore.event(withIdentifier: identifier) else {
+            throw CalendarError.eventNotFound
+        }
+
+        // Update event properties
+        event.title = "\(newShiftType.symbol) - \(newShiftType.title)"
+
+        switch newShiftType.duration {
+        case .allDay:
+            event.isAllDay = true
+            let shiftDate = Calendar.current.startOfDay(for: event.startDate)
+            event.startDate = shiftDate
+            event.endDate = shiftDate
+
+        case .scheduled(let from, let to):
+            event.isAllDay = false
+
+            let shiftDate = Calendar.current.startOfDay(for: event.startDate)
+            var startComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+            startComponents.hour = from.hour
+            startComponents.minute = from.minute
+
+            var endComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+            endComponents.hour = to.hour
+            endComponents.minute = to.minute
+
+            guard let startDate = Calendar.current.date(from: startComponents),
+                  let endDate = Calendar.current.date(from: endComponents) else {
+                throw CalendarError.invalidDate
+            }
+
+            event.startDate = startDate
+            event.endDate = endDate
+        }
+
+        if let location = newShiftType.location {
+            event.location = "\(location.name), \(location.address)"
+        } else {
+            event.location = nil
+        }
+
+        event.notes = """
+        ShiftType ID: \(newShiftType.id.uuidString)
+        App: \(appIdentifier)
+        Description: \(newShiftType.shiftDescription)
+        """
+
+        do {
+            try eventStore.save(event, span: .thisEvent)
+        } catch {
+            throw CalendarError.saveFailed(error)
+        }
     }
 
     private func extractShiftTypeId(from notes: String) -> UUID? {

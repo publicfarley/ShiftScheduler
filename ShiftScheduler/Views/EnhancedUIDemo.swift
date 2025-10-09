@@ -46,10 +46,14 @@ struct CardDemoView: View {
                             startHour: 8,
                             endHour: 16,
                             locationName: "Main Office"
-                        )
-                    ) {
-                        print("Delete morning shift")
-                    }
+                        ),
+                        onDelete: {
+                            print("Delete morning shift")
+                        },
+                        onSwitch: {
+                            print("Switch morning shift")
+                        }
+                    )
 
                     // Sample Evening Shift
                     EnhancedShiftCard(
@@ -59,10 +63,14 @@ struct CardDemoView: View {
                             startHour: 16,
                             endHour: 24,
                             locationName: "Downtown Branch"
-                        )
-                    ) {
-                        print("Delete evening shift")
-                    }
+                        ),
+                        onDelete: {
+                            print("Delete evening shift")
+                        },
+                        onSwitch: {
+                            print("Switch evening shift")
+                        }
+                    )
 
                     // Sample All-Day Shift
                     EnhancedShiftCard(
@@ -70,10 +78,14 @@ struct CardDemoView: View {
                             symbol: "📱",
                             title: "On-Call",
                             locationName: "Remote"
-                        )
-                    ) {
-                        print("Delete on-call shift")
-                    }
+                        ),
+                        onDelete: {
+                            print("Delete on-call shift")
+                        },
+                        onSwitch: {
+                            print("Switch on-call shift")
+                        }
+                    )
 
                     // Sample Weekend Shift
                     EnhancedShiftCard(
@@ -84,10 +96,14 @@ struct CardDemoView: View {
                             endHour: 18,
                             locationName: "Beach Office",
                             daysAgo: 2
-                        )
-                    ) {
-                        print("Delete weekend shift")
-                    }
+                        ),
+                        onDelete: {
+                            print("Delete weekend shift")
+                        },
+                        onSwitch: {
+                            print("Switch weekend shift")
+                        }
+                    )
                 }
                 .padding(.horizontal)
             }

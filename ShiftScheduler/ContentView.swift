@@ -24,6 +24,11 @@ struct ContentView: View {
                     Label("Locations", systemImage: "location")
                 }
 
+            ChangeLogView()
+                .tabItem {
+                    Label("Change Log", systemImage: "clock.arrow.circlepath")
+                }
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
@@ -39,5 +44,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
+        .modelContainer(for: [Location.self, ShiftType.self, ChangeLogEntry.self], inMemory: true)
 }

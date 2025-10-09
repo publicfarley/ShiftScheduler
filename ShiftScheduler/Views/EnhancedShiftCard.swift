@@ -6,6 +6,7 @@ import SwiftUI
 struct EnhancedShiftCard: View {
     let shift: ScheduledShift
     let onDelete: (() -> Void)?
+    let onSwitch: (() -> Void)?
 
     @State private var isPressed = false
     @State private var showingDeleteConfirmation = false
@@ -58,19 +59,36 @@ struct EnhancedShiftCard: View {
                     StatusBadge(status: shiftStatus)
                     Spacer()
 
-                    if onDelete != nil {
-                        Button(action: { showingDeleteConfirmation = true }) {
-                            Image(systemName: "trash")
-                                .font(.caption)
-                                .foregroundColor(.red.opacity(0.7))
-                                .frame(width: 28, height: 28)
-                                .background(
-                                    Circle()
-                                        .fill(.red.opacity(0.1))
-                                        .opacity(isPressed ? 0.5 : 1.0)
-                                )
+                    HStack(spacing: 8) {
+                        if onSwitch != nil {
+                            Button(action: { onSwitch?() }) {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.caption)
+                                    .foregroundColor(.blue.opacity(0.7))
+                                    .frame(width: 28, height: 28)
+                                    .background(
+                                        Circle()
+                                            .fill(.blue.opacity(0.1))
+                                            .opacity(isPressed ? 0.5 : 1.0)
+                                    )
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
-                        .buttonStyle(PlainButtonStyle())
+
+                        if onDelete != nil {
+                            Button(action: { showingDeleteConfirmation = true }) {
+                                Image(systemName: "trash")
+                                    .font(.caption)
+                                    .foregroundColor(.red.opacity(0.7))
+                                    .frame(width: 28, height: 28)
+                                    .background(
+                                        Circle()
+                                            .fill(.red.opacity(0.1))
+                                            .opacity(isPressed ? 0.5 : 1.0)
+                                    )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
                     }
                 }
 
@@ -462,9 +480,11 @@ extension View {
             date: Date()
         )
 
-        EnhancedShiftCard(shift: sampleShift) {
+        EnhancedShiftCard(shift: sampleShift, onDelete: {
             print("Delete tapped")
-        }
+        }, onSwitch: {
+            print("Switch tapped")
+        })
 
         EnhancedEmptyState(selectedDate: Date())
 

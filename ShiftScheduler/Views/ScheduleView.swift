@@ -6,6 +6,8 @@ struct ScheduleView: View {
     @Query private var shiftTypes: [ShiftType]
     @State private var dataManager = ScheduleDataManager.shared
     @State private var showingScheduleShift = false
+    @State private var shiftToSwitch: ScheduledShift?
+    @State private var shiftSwitchService: ShiftSwitchService?
 
     private var mainContentView: some View {
         VStack(spacing: 12) {
@@ -49,9 +51,11 @@ struct ScheduleView: View {
                                     let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
                                     return startTime1 < startTime2
                                 }) { shift in
-                                    FadeInShiftCard(shift: shift) {
+                                    FadeInShiftCard(shift: shift, onDelete: {
                                         deleteShift(shift)
-                                    }
+                                    }, onSwitch: {
+                                        shiftToSwitch = shift
+                                    })
                                     .padding(.horizontal, 16)
                                 }
                             } else if dataManager.hasDataForSelectedDate {
@@ -122,11 +126,18 @@ struct ScheduleView: View {
                     dataManager.shiftWasCreated(on: createdDate)
                 }
             }
+            .sheet(item: $shiftToSwitch) { shift in
+                ShiftChangeSheet(currentShift: shift) { newShiftType, reason in
+                    try await switchShift(shift, to: newShiftType, reason: reason)
+                }
+            }
             .onAppear {
                 // Set selected date to today when view appears
                 dataManager.selectedDate = Date()
                 // Update shift types in data manager
                 dataManager.updateShiftTypes(shiftTypes)
+                // Initialize shift switch service
+                initializeShiftSwitchService()
             }
             .onChange(of: shiftTypes) { _, newShiftTypes in
                 // Update shift types when they change
@@ -146,19 +157,49 @@ struct ScheduleView: View {
             }
         }
     }
+
+    private func initializeShiftSwitchService() {
+        let calendarService = CalendarService.shared
+        let repository = SwiftDataChangeLogRepository(modelContext: modelContext)
+        shiftSwitchService = ShiftSwitchService(
+            calendarService: calendarService,
+            changeLogRepository: repository
+        )
+    }
+
+    private func switchShift(_ shift: ScheduledShift, to newShiftType: ShiftType, reason: String?) async throws {
+        guard let service = shiftSwitchService,
+              let oldShiftType = shift.shiftType else {
+            throw ShiftSwitchError.shiftNotFound
+        }
+
+        try await service.switchShift(
+            eventIdentifier: shift.eventIdentifier,
+            scheduledDate: shift.date,
+            from: oldShiftType,
+            to: newShiftType,
+            reason: reason
+        )
+
+        // Refresh the schedule view
+        await MainActor.run {
+            dataManager.refreshCurrentDate()
+        }
+    }
 }
 
 // MARK: - Fade-In Shift Card Component
 struct FadeInShiftCard: View {
     let shift: ScheduledShift
     let onDelete: (() -> Void)?
+    let onSwitch: (() -> Void)?
 
     @State private var opacity: Double = 0.0
     @State private var scale: Double = 0.95
     @State private var hasAppeared = false
 
     var body: some View {
-        EnhancedShiftCard(shift: shift, onDelete: onDelete)
+        EnhancedShiftCard(shift: shift, onDelete: onDelete, onSwitch: onSwitch)
             .opacity(opacity)
             .scaleEffect(scale)
             .onAppear {
