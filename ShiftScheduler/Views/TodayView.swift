@@ -453,7 +453,7 @@ struct TodayView: View {
     }
 
     private func initializeShiftSwitchService() async {
-        let changeLogRepo = SwiftDataChangeLogRepository(modelContext: modelContext)
+        let changeLogRepo = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
         let service = ShiftSwitchService(
             calendarService: calendarService,
             changeLogRepository: changeLogRepo

@@ -44,7 +44,7 @@ struct ShiftSchedulerApp: App {
 
     private func purgeExpiredChangeLogEntries() async {
         do {
-            let repository = SwiftDataChangeLogRepository(modelContext: sharedModelContainer.mainContext)
+            let repository = SwiftDataChangeLogRepository(modelContainer: sharedModelContainer)
             let purgeService = ChangeLogPurgeService(repository: repository)
 
             let purgedCount = try await purgeService.purgeIfNeeded()

@@ -2,15 +2,11 @@ import Foundation
 import SwiftData
 import OSLog
 
-private let logger = Logger(subsystem: "com.functioncraft.shiftscheduler", category: "ChangeLogRepository")
+nonisolated(unsafe) private let logger = Logger(subsystem: "com.functioncraft.shiftscheduler", category: "ChangeLogRepository")
 
-/// SwiftData implementation of ChangeLogRepository
+/// SwiftData implementation of ChangeLogRepository using ModelActor for proper concurrency
+@ModelActor
 actor SwiftDataChangeLogRepository: ChangeLogRepositoryProtocol {
-    private let modelContext: ModelContext
-
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-    }
 
     func save(_ entry: ChangeLogEntry) async throws {
         logger.debug("Saving change log entry: \(entry.id)")

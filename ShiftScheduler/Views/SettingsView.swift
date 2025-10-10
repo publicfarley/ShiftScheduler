@@ -227,7 +227,7 @@ struct SettingsView: View {
                                 // Last Purge Date
                                 VStack(alignment: .leading, spacing: 8) {
                                     HStack {
-                                        Image(systemName: "trash.clock")
+                                        Image(systemName: "clock.badge.exclamationmark")
                                             .foregroundStyle(.orange)
                                             .font(.title3)
 
@@ -444,7 +444,7 @@ struct SettingsView: View {
         logger.debug("Manual purge requested")
         Task {
             do {
-                let repository = SwiftDataChangeLogRepository(modelContext: modelContext)
+                let repository = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
                 let purgeService = ChangeLogPurgeService(repository: repository)
 
                 let purgedCount = try await purgeService.purgeExpiredEntries()

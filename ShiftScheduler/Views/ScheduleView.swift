@@ -191,7 +191,7 @@ struct ScheduleView: View {
 
     private func initializeShiftSwitchService() async {
         let calendarService = CalendarService.shared
-        let repository = SwiftDataChangeLogRepository(modelContext: modelContext)
+        let repository = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
         let service = ShiftSwitchService(
             calendarService: calendarService,
             changeLogRepository: repository
