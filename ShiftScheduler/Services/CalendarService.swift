@@ -4,7 +4,7 @@ import SwiftUI
 import Observation
 
 @Observable
-class CalendarService: CalendarServiceProtocol {
+class CalendarService {
     static let shared = CalendarService()
 
     private let eventStore = EKEventStore()
@@ -111,7 +111,7 @@ class CalendarService: CalendarServiceProtocol {
         }
     }
 
-    func createShiftEvent(from shiftType: ShiftType, on date: Date) async throws -> String {
+    nonisolated func createShiftEvent(from shiftType: ShiftType, on date: Date) async throws -> String {
         guard isAuthorized else {
             throw CalendarError.notAuthorized
         }
@@ -170,7 +170,7 @@ class CalendarService: CalendarServiceProtocol {
         }
     }
 
-    func fetchShifts(for date: Date) async throws -> [ScheduledShiftData] {
+    nonisolated func fetchShifts(for date: Date) async throws -> [ScheduledShiftData] {
         guard isAuthorized else {
             throw CalendarError.notAuthorized
         }
@@ -203,7 +203,7 @@ class CalendarService: CalendarServiceProtocol {
         }
     }
 
-    func fetchShifts(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {
+    nonisolated func fetchShifts(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {
         guard isAuthorized else {
             throw CalendarError.notAuthorized
         }
@@ -231,7 +231,7 @@ class CalendarService: CalendarServiceProtocol {
         }
     }
 
-    func deleteShift(withIdentifier identifier: String) async throws {
+    nonisolated func deleteShift(withIdentifier identifier: String) async throws {
         guard isAuthorized else {
             throw CalendarError.notAuthorized
         }
@@ -247,12 +247,12 @@ class CalendarService: CalendarServiceProtocol {
         }
     }
 
-    func checkForDuplicateShift(shiftTypeId: UUID, on date: Date) async throws -> Bool {
+    nonisolated func checkForDuplicateShift(shiftTypeId: UUID, on date: Date) async throws -> Bool {
         let shifts = try await fetchShifts(for: date)
         return shifts.contains { $0.shiftTypeId == shiftTypeId }
     }
 
-    func updateShiftEvent(identifier: String, to newShiftType: ShiftType) async throws {
+    nonisolated func updateShiftEvent(identifier: String, to newShiftType: ShiftType) async throws {
         guard isAuthorized else {
             throw CalendarError.notAuthorized
         }
@@ -364,6 +364,9 @@ struct ScheduledShiftData: Hashable, Equatable {
         return lhs.eventIdentifier == rhs.eventIdentifier
     }
 }
+
+// MARK: - Protocol Conformance
+extension CalendarService: CalendarServiceProtocol {}
 
 // MARK: - CurrentDayManager Integration Extensions
 extension CalendarService {

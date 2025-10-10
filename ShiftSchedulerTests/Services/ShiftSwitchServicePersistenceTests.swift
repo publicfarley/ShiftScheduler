@@ -71,15 +71,17 @@ struct ShiftSwitchServicePersistenceTests {
 
         let location = Location(name: "Office", address: "123 Main St")
         let oldShiftType = ShiftType(
-            title: "Morning Shift",
             symbol: "☀️",
             duration: .allDay,
+            title: "Morning Shift",
+            description: "Morning shift work",
             location: location
         )
         let newShiftType = ShiftType(
-            title: "Evening Shift",
             symbol: "🌙",
             duration: .allDay,
+            title: "Evening Shift",
+            description: "Evening shift work",
             location: location
         )
 
@@ -115,15 +117,17 @@ struct ShiftSwitchServicePersistenceTests {
 
         let location = Location(name: "Office", address: "123 Main St")
         let oldShiftType = ShiftType(
-            title: "Morning Shift",
             symbol: "☀️",
             duration: .allDay,
+            title: "Morning Shift",
+            description: "Morning shift work",
             location: location
         )
         let newShiftType = ShiftType(
-            title: "Evening Shift",
             symbol: "🌙",
             duration: .allDay,
+            title: "Evening Shift",
+            description: "Evening shift work",
             location: location
         )
 
