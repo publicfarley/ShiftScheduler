@@ -9,6 +9,11 @@ struct ScheduleView: View {
     @State private var shiftToSwitch: ScheduledShift?
     @State private var shiftSwitchService: ShiftSwitchService?
 
+    // Undo/Redo support
+    @State private var canUndo = false
+    @State private var canRedo = false
+    @State private var toastMessage: ToastMessage?
+
     private var contentKey: String {
         // Create a key that changes whenever shift content changes (not just count)
         let shifts = dataManager.shiftsForSelectedDate
@@ -120,6 +125,22 @@ struct ScheduleView: View {
             }
             .navigationTitle("Schedule")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    // Undo/Redo buttons
+                    if canUndo || canRedo {
+                        CompactUndoRedoButtons(
+                            canUndo: canUndo,
+                            canRedo: canRedo,
+                            onUndo: {
+                                await handleUndo()
+                            },
+                            onRedo: {
+                                await handleRedo()
+                            }
+                        )
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add Shift") {
                         showingScheduleShift = true
@@ -144,12 +165,15 @@ struct ScheduleView: View {
                 // Update shift types in data manager
                 dataManager.updateShiftTypes(shiftTypes)
                 // Initialize shift switch service
-                initializeShiftSwitchService()
+                Task {
+                    await initializeShiftSwitchService()
+                }
             }
             .onChange(of: shiftTypes) { _, newShiftTypes in
                 // Update shift types when they change
                 dataManager.updateShiftTypes(newShiftTypes)
             }
+            .toast($toastMessage)
         }
     }
 
@@ -165,13 +189,27 @@ struct ScheduleView: View {
         }
     }
 
-    private func initializeShiftSwitchService() {
+    private func initializeShiftSwitchService() async {
         let calendarService = CalendarService.shared
         let repository = SwiftDataChangeLogRepository(modelContext: modelContext)
-        shiftSwitchService = ShiftSwitchService(
+        let service = ShiftSwitchService(
             calendarService: calendarService,
             changeLogRepository: repository
         )
+
+        // Restore persisted undo/redo stacks
+        await service.restoreFromPersistence()
+
+        shiftSwitchService = service
+
+        // Update undo/redo button states
+        await updateUndoRedoStates()
+    }
+
+    private func updateUndoRedoStates() async {
+        guard let service = shiftSwitchService else { return }
+        canUndo = await service.canUndo()
+        canRedo = await service.canRedo()
     }
 
     private func switchShift(_ shift: ScheduledShift, to newShiftType: ShiftType, reason: String?) async throws {
@@ -188,8 +226,52 @@ struct ScheduleView: View {
             reason: reason
         )
 
+        // Update undo/redo button states
+        await updateUndoRedoStates()
+
         // Update the cache immediately with the new shift type
         await dataManager.updateShift(shift, with: newShiftType)
+
+        // Show success toast
+        toastMessage = .success("Shift switched to \(newShiftType.title)")
+    }
+
+    private func handleUndo() async {
+        guard let service = shiftSwitchService else { return }
+
+        do {
+            try await service.undo()
+
+            // Update undo/redo button states
+            await updateUndoRedoStates()
+
+            // Refresh the schedule data
+            dataManager.shiftWasCreated(on: dataManager.selectedDate)
+
+            // Show toast
+            toastMessage = .undo()
+        } catch {
+            toastMessage = .error("Failed to undo: \(error.localizedDescription)")
+        }
+    }
+
+    private func handleRedo() async {
+        guard let service = shiftSwitchService else { return }
+
+        do {
+            try await service.redo()
+
+            // Update undo/redo button states
+            await updateUndoRedoStates()
+
+            // Refresh the schedule data
+            dataManager.shiftWasCreated(on: dataManager.selectedDate)
+
+            // Show toast
+            toastMessage = .redo()
+        } catch {
+            toastMessage = .error("Failed to redo: \(error.localizedDescription)")
+        }
     }
 }
 

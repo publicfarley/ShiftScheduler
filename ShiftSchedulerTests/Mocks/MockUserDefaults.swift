@@ -1,8 +1,8 @@
 import Foundation
 @testable import ShiftScheduler
 
-/// Mock implementation of UserDefaultsProtocol for unit testing
-final class MockUserDefaults: UserDefaultsProtocol, @unchecked Sendable {
+/// Mock implementation of UserDefaults for unit testing
+final class MockUserDefaults: @unchecked Sendable {
     private var storage: [String: Any] = [:]
 
     func integer(forKey key: String) -> Int {

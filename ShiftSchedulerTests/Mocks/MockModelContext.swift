@@ -2,8 +2,8 @@ import Foundation
 import SwiftData
 @testable import ShiftScheduler
 
-/// Mock implementation of ModelContextProtocol for unit testing
-final class MockModelContext: ModelContextProtocol, @unchecked Sendable {
+/// Mock implementation of ModelContext for unit testing
+final class MockModelContext: @unchecked Sendable {
     var insertedModels: [Any] = []
     var deletedModels: [Any] = []
     var mockFetchResults: [Any] = []

@@ -8,23 +8,40 @@ actor ShiftSwitchService {
     private let calendarService: CalendarServiceProtocol
     private let changeLogRepository: ChangeLogRepositoryProtocol
     private let dateProvider: DateProviderProtocol
-    private let currentUser: UserProfile
+    private let userProfileManager: UserProfileManager
+    private let persistence: UndoRedoPersistence
 
     // Undo/Redo stacks
     private var undoStack: [ShiftSwitchOperation] = []
     private var redoStack: [ShiftSwitchOperation] = []
     private let maxUndoStackSize = 50
+    private var isRestoringFromPersistence = false
 
     init(
         calendarService: CalendarServiceProtocol,
         changeLogRepository: ChangeLogRepositoryProtocol,
         dateProvider: DateProviderProtocol = SystemDateProvider(),
-        currentUser: UserProfile = UserProfile()
+        userProfileManager: UserProfileManager = .shared,
+        persistence: UndoRedoPersistence = UndoRedoPersistence()
     ) {
         self.calendarService = calendarService
         self.changeLogRepository = changeLogRepository
         self.dateProvider = dateProvider
-        self.currentUser = currentUser
+        self.userProfileManager = userProfileManager
+        self.persistence = persistence
+    }
+
+    /// Restores undo/redo stacks from persistent storage
+    func restoreFromPersistence() async {
+        guard !isRestoringFromPersistence else { return }
+        isRestoringFromPersistence = true
+
+        let stacks = await persistence.loadBothStacks()
+        self.undoStack = stacks.undo
+        self.redoStack = stacks.redo
+
+        logger.debug("Restored \(self.undoStack.count) undo and \(self.redoStack.count) redo operations from persistence")
+        isRestoringFromPersistence = false
     }
 
     /// Switches a shift to a new shift type
@@ -43,6 +60,9 @@ actor ShiftSwitchService {
         // Create snapshots
         let oldSnapshot = ShiftSnapshot(from: oldShiftType)
         let newSnapshot = ShiftSnapshot(from: newShiftType)
+
+        // Get current user profile
+        let currentUser = userProfileManager.getCurrentProfile()
 
         // Log the change
         let entry = ChangeLogEntry(
@@ -71,6 +91,9 @@ actor ShiftSwitchService {
         // Clear redo stack when new action is performed
         redoStack.removeAll()
 
+        // Persist stacks
+        await persistence.saveBothStacks(undo: undoStack, redo: redoStack)
+
         logger.debug("Shift switched successfully")
     }
 
@@ -92,6 +115,9 @@ actor ShiftSwitchService {
         let oldSnapshot = ShiftSnapshot(from: operation.newShiftType)
         let newSnapshot = ShiftSnapshot(from: operation.oldShiftType)
 
+        // Get current user profile
+        let currentUser = userProfileManager.getCurrentProfile()
+
         let entry = ChangeLogEntry(
             timestamp: dateProvider.now(),
             userId: currentUser.userId,
@@ -106,6 +132,9 @@ actor ShiftSwitchService {
 
         // Add to redo stack
         redoStack.append(operation)
+
+        // Persist stacks
+        await persistence.saveBothStacks(undo: undoStack, redo: redoStack)
 
         logger.debug("Undo completed successfully")
     }
@@ -128,6 +157,9 @@ actor ShiftSwitchService {
         let oldSnapshot = ShiftSnapshot(from: operation.oldShiftType)
         let newSnapshot = ShiftSnapshot(from: operation.newShiftType)
 
+        // Get current user profile
+        let currentUser = userProfileManager.getCurrentProfile()
+
         let entry = ChangeLogEntry(
             timestamp: dateProvider.now(),
             userId: currentUser.userId,
@@ -143,6 +175,9 @@ actor ShiftSwitchService {
         // Add back to undo stack
         addToUndoStack(operation)
 
+        // Persist stacks
+        await persistence.saveBothStacks(undo: undoStack, redo: redoStack)
+
         logger.debug("Redo completed successfully")
     }
 
@@ -157,9 +192,13 @@ actor ShiftSwitchService {
     }
 
     /// Clears both undo and redo stacks
-    func clearUndoRedoHistory() {
+    func clearUndoRedoHistory() async {
         undoStack.removeAll()
         redoStack.removeAll()
+
+        // Clear persistence
+        await persistence.clearBothStacks()
+
         logger.debug("Undo/redo history cleared")
     }
 

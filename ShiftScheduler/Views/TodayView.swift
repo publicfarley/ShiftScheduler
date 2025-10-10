@@ -68,6 +68,13 @@ struct TodayView: View {
     @State private var scheduledShifts: [ScheduledShift] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showSwitchShiftSheet = false
+
+    // Undo/Redo support
+    @State private var shiftSwitchService: ShiftSwitchService?
+    @State private var canUndo = false
+    @State private var canRedo = false
+    @State private var toastMessage: ToastMessage?
 
     // Optimized computed properties with caching
     @State private var todayShift: ScheduledShift?
@@ -196,25 +203,67 @@ struct TodayView: View {
 
                             if todayShift != nil {
                                 // Optimized quick actions when there's a shift
-                                HStack(spacing: 16) {
-                                    OptimizedQuickActionButton(
-                                        title: "Clock In",
-                                        icon: "clock",
-                                        color: .green,
-                                        action: {}
-                                    )
-                                    OptimizedQuickActionButton(
-                                        title: "Break",
-                                        icon: "pause.circle",
-                                        color: .orange,
-                                        action: {}
-                                    )
-                                    OptimizedQuickActionButton(
-                                        title: "Clock Out",
-                                        icon: "clock.badge.checkmark",
-                                        color: .red,
-                                        action: {}
-                                    )
+                                VStack(spacing: 16) {
+                                    HStack(spacing: 16) {
+                                        OptimizedQuickActionButton(
+                                            title: "Clock In",
+                                            icon: "clock",
+                                            color: .green,
+                                            action: {}
+                                        )
+                                        OptimizedQuickActionButton(
+                                            title: "Break",
+                                            icon: "pause.circle",
+                                            color: .orange,
+                                            action: {}
+                                        )
+                                        OptimizedQuickActionButton(
+                                            title: "Clock Out",
+                                            icon: "clock.badge.checkmark",
+                                            color: .red,
+                                            action: {}
+                                        )
+                                    }
+
+                                    HStack(spacing: 16) {
+                                        // Switch Shift button
+                                        OptimizedQuickActionButton(
+                                            title: "Switch Shift",
+                                            icon: "arrow.triangle.2.circlepath",
+                                            color: .blue,
+                                            action: {
+                                                showSwitchShiftSheet = true
+                                            }
+                                        )
+
+                                        // Undo button
+                                        OptimizedQuickActionButton(
+                                            title: "Undo",
+                                            icon: "arrow.uturn.backward",
+                                            color: .orange,
+                                            action: {
+                                                Task {
+                                                    await handleUndo()
+                                                }
+                                            }
+                                        )
+                                        .opacity(canUndo ? 1.0 : 0.5)
+                                        .disabled(!canUndo)
+
+                                        // Redo button
+                                        OptimizedQuickActionButton(
+                                            title: "Redo",
+                                            icon: "arrow.uturn.forward",
+                                            color: .blue,
+                                            action: {
+                                                Task {
+                                                    await handleRedo()
+                                                }
+                                            }
+                                        )
+                                        .opacity(canRedo ? 1.0 : 0.5)
+                                        .disabled(!canRedo)
+                                    }
                                 }
                                 .padding(.horizontal)
                             } else {
@@ -349,6 +398,7 @@ struct TodayView: View {
             .navigationBarTitleDisplayMode(.large)
             .task {
                 await loadShifts()
+                await initializeShiftSwitchService()
             }
             .onChange(of: scheduledShifts) { _, _ in
                 updateCachedShifts()
@@ -359,6 +409,17 @@ struct TodayView: View {
                     await loadShifts()
                 }
             }
+            .sheet(isPresented: $showSwitchShiftSheet) {
+                if let todayShift = todayShift {
+                    ShiftChangeSheet(
+                        currentShift: todayShift,
+                        onSwitch: { newShiftType, reason in
+                            try await handleShiftSwitch(shift: todayShift, newShiftType: newShiftType, reason: reason)
+                        }
+                    )
+                }
+            }
+            .toast($toastMessage)
         }
     }
 
@@ -388,6 +449,91 @@ struct TodayView: View {
         } catch {
             self.errorMessage = error.localizedDescription
             self.isLoading = false
+        }
+    }
+
+    private func initializeShiftSwitchService() async {
+        let changeLogRepo = SwiftDataChangeLogRepository(modelContext: modelContext)
+        let service = ShiftSwitchService(
+            calendarService: calendarService,
+            changeLogRepository: changeLogRepo
+        )
+
+        // Restore persisted undo/redo stacks
+        await service.restoreFromPersistence()
+
+        shiftSwitchService = service
+
+        // Update undo/redo button states
+        await updateUndoRedoStates()
+    }
+
+    private func updateUndoRedoStates() async {
+        guard let service = shiftSwitchService else { return }
+        canUndo = await service.canUndo()
+        canRedo = await service.canRedo()
+    }
+
+    private func handleShiftSwitch(shift: ScheduledShift, newShiftType: ShiftType, reason: String?) async throws {
+        guard let oldShiftType = shift.shiftType,
+              let service = shiftSwitchService else {
+            throw NSError(domain: "TodayView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Current shift has no shift type"])
+        }
+
+        // Perform the switch
+        try await service.switchShift(
+            eventIdentifier: shift.eventIdentifier,
+            scheduledDate: shift.date,
+            from: oldShiftType,
+            to: newShiftType,
+            reason: reason
+        )
+
+        // Update undo/redo button states
+        await updateUndoRedoStates()
+
+        // Reload shifts to reflect the change
+        await loadShifts()
+
+        // Show success toast
+        toastMessage = .success("Shift switched to \(newShiftType.title)")
+    }
+
+    private func handleUndo() async {
+        guard let service = shiftSwitchService else { return }
+
+        do {
+            try await service.undo()
+
+            // Update undo/redo button states
+            await updateUndoRedoStates()
+
+            // Reload shifts
+            await loadShifts()
+
+            // Show toast
+            toastMessage = .undo()
+        } catch {
+            toastMessage = .error("Failed to undo: \(error.localizedDescription)")
+        }
+    }
+
+    private func handleRedo() async {
+        guard let service = shiftSwitchService else { return }
+
+        do {
+            try await service.redo()
+
+            // Update undo/redo button states
+            await updateUndoRedoStates()
+
+            // Reload shifts
+            await loadShifts()
+
+            // Show toast
+            toastMessage = .redo()
+        } catch {
+            toastMessage = .error("Failed to redo: \(error.localizedDescription)")
         }
     }
 }
