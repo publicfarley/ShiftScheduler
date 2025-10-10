@@ -53,3 +53,60 @@ This is an iOS Swift/SwiftUI application for shift scheduling, implementing Doma
 ### Testing
 
 Tests use Swift's Testing framework (not XCTest) with the `@Test` macro and `#expect` assertions.
+
+## UI Patterns
+
+### Keyboard Dismissal
+
+**IMPORTANT**: All views with text input controls (TextField, TextEditor, searchable) MUST implement keyboard dismissal to prevent users from getting trapped on screens with blocked CTAs.
+
+#### Required Implementation
+
+Use the keyboard dismissal modifiers from `KeyboardDismissModifier.swift`:
+
+```swift
+// Simple view with text input
+VStack {
+    TextField("Search", text: $searchText)
+}
+.dismissKeyboardOnTap()  // Dismiss when tapping outside text field
+
+// Scrollable form with text input
+ScrollView {
+    VStack {
+        TextField("Name", text: $name)
+        TextField("Email", text: $email)
+    }
+}
+.scrollDismissesKeyboard(.immediately)  // Dismiss on scroll
+.dismissKeyboardOnTap()  // Dismiss on tap
+
+// Sheet or modal with text input
+.sheet(isPresented: $showSheet) {
+    MySheetView()
+        .dismissKeyboardOnTap()
+}
+```
+
+#### Why This Matters
+
+Without keyboard dismissal:
+- Keyboards block action buttons (Save, Delete, Submit, etc.)
+- Users cannot access CTAs covered by the keyboard
+- Users get stuck on screens with no way to proceed
+- Poor UX and accessibility
+
+#### Guidelines
+
+1. **Always apply** `.dismissKeyboardOnTap()` to any view containing text input
+2. **Add** `.scrollDismissesKeyboard(.immediately)` to scrollable content
+3. **Test** that all buttons and CTAs are accessible when keyboard is visible
+4. **Reference** `KEYBOARD_DISMISSAL_GUIDE.md` for detailed usage examples
+
+#### Available Utilities
+
+- `.dismissKeyboardOnTap()` - View modifier for tap-to-dismiss
+- `.scrollDismissesKeyboard(.immediately)` - Built-in scroll-to-dismiss
+- `KeyboardDismisser.dismiss()` - Manual dismissal
+- `KeyboardDismissingScrollView` - Pre-configured ScrollView
+- `KeyboardDismissArea` - Custom tappable clear area

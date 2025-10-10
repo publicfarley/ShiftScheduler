@@ -82,8 +82,10 @@ struct ShiftTypesView: View {
                             }
                         }
                     }
+                    .scrollDismissesKeyboard(.immediately)
                 }
             }
+            .dismissKeyboardOnTap()
             .navigationTitle("Shift Types")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {

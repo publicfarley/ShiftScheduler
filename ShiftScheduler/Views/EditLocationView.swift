@@ -67,7 +67,9 @@ struct EditLocationView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
+                .scrollDismissesKeyboard(.immediately)
             }
+            .dismissKeyboardOnTap()
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Edit Location")
             .navigationBarTitleDisplayMode(.inline)

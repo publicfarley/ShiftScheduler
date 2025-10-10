@@ -174,7 +174,9 @@ struct AddShiftTypeView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
+                .scrollDismissesKeyboard(.immediately)
             }
+            .dismissKeyboardOnTap()
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("New Shift Type")
             .navigationBarTitleDisplayMode(.inline)

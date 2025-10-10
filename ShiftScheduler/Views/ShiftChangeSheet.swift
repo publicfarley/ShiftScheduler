@@ -21,6 +21,7 @@ struct ShiftChangeSheet: View {
                 // Liquid glass background
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
+                    .dismissKeyboardOnTap()
 
                 VStack(spacing: 24) {
                     // Current shift preview
@@ -44,6 +45,7 @@ struct ShiftChangeSheet: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .padding()
             }
+            .dismissKeyboardOnTap()
             .navigationTitle("Switch Shift")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

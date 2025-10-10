@@ -9,7 +9,6 @@ struct LocationsView: View {
     @State private var locationToEdit: Location?
     @State private var searchText = ""
     @State private var activeOnly = true
-    @FocusState private var searchFieldIsFocused: Bool
 
     private var filteredLocations: [Location] {
         var filtered = locations
@@ -33,7 +32,6 @@ struct LocationsView: View {
                             .foregroundColor(.secondary)
 
                         TextField("Search locations...", text: $searchText)
-                            .focused($searchFieldIsFocused)
                     }
                     .padding(12)
                     .background(Color(UIColor.systemGray6))
@@ -50,9 +48,6 @@ struct LocationsView: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 8)
-                }
-                .onTapGesture {
-                    searchFieldIsFocused = false
                 }
 
                 if filteredLocations.isEmpty {
@@ -91,11 +86,10 @@ struct LocationsView: View {
                             }
                         }
                     }
+                    .scrollDismissesKeyboard(.immediately)
                 }
             }
-            .onTapGesture {
-                searchFieldIsFocused = false
-            }
+            .dismissKeyboardOnTap()
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
