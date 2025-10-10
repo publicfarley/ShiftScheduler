@@ -337,6 +337,39 @@ class ScheduleDataManager {
         loadScheduledDatesInBackground()
     }
 
+    // MARK: - Update with Cache Update
+
+    func updateShift(_ shift: ScheduledShift, with newShiftType: ShiftType) async {
+        let date = normalizeDate(shift.date)
+
+        // Update the cache immediately
+        if var cachedShifts = dateCache[date] {
+            // Find and update the shift in the cache
+            if let index = cachedShifts.firstIndex(where: { $0.eventIdentifier == shift.eventIdentifier }) {
+                // Create updated shift with new shift type
+                let updatedShift = ScheduledShift(
+                    eventIdentifier: shift.eventIdentifier,
+                    shiftType: newShiftType,
+                    date: shift.date
+                )
+                cachedShifts[index] = updatedShift
+                cacheShifts(cachedShifts, for: date)
+
+                // Update current shifts if this date is selected
+                await MainActor.run {
+                    if Calendar.current.isDate(date, inSameDayAs: self.selectedDate) {
+                        self.currentShifts = cachedShifts
+                    }
+                }
+            }
+        } else {
+            // No cache exists, force a refresh from the backend
+            await MainActor.run {
+                refreshCurrentDate()
+            }
+        }
+    }
+
     // MARK: - Utilities
 
     private func normalizeDate(_ date: Date) -> Date {

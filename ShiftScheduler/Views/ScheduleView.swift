@@ -9,6 +9,13 @@ struct ScheduleView: View {
     @State private var shiftToSwitch: ScheduledShift?
     @State private var shiftSwitchService: ShiftSwitchService?
 
+    private var contentKey: String {
+        // Create a key that changes whenever shift content changes (not just count)
+        let shifts = dataManager.shiftsForSelectedDate
+        let shiftKeys = shifts.map { "\($0.eventIdentifier)-\($0.shiftType?.id.uuidString ?? "nil")" }.joined(separator: ",")
+        return "\(dataManager.selectedDate)-\(shiftKeys)"
+    }
+
     private var mainContentView: some View {
         VStack(spacing: 12) {
             // Calendar section with dedicated background
@@ -39,7 +46,7 @@ struct ScheduleView: View {
 
                 // Content area with fade-in animation for new data
                 ScrollView {
-                    SmoothedContentView(contentKey: "\(dataManager.selectedDate)-\(dataManager.shiftsForSelectedDate.count)") {
+                    SmoothedContentView(contentKey: contentKey) {
                         LazyVStack(spacing: 10) {
                             if let errorMessage = dataManager.errorMessage {
                                 ErrorStateView(message: errorMessage)
@@ -181,10 +188,8 @@ struct ScheduleView: View {
             reason: reason
         )
 
-        // Refresh the schedule view
-        await MainActor.run {
-            dataManager.refreshCurrentDate()
-        }
+        // Update the cache immediately with the new shift type
+        await dataManager.updateShift(shift, with: newShiftType)
     }
 }
 
