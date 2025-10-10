@@ -130,6 +130,9 @@ struct ShiftChangeSheet: View {
                 .foregroundStyle(.secondary)
 
             Picker("Select Shift Type", selection: $selectedShiftType) {
+                Text("Select a shift type")
+                    .tag(nil as ShiftType?)
+
                 ForEach(shiftTypes.filter { $0.id != currentShift.shiftType?.id }) { type in
                     HStack {
                         Text(type.symbol)
