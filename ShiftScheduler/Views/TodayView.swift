@@ -121,52 +121,54 @@ struct TodayView: View {
                         }
                         .padding()
                     } else {
-                        // Today Section - Optimized for performance
-                        VStack(alignment: .leading, spacing: 20) {
-                            // Simplified section header
-                            HStack {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "sun.max.fill")
-                                        .font(.title3)
-                                        .foregroundColor(.orange)
-                                        .accessibilityLabel("Today's shift section")
+                        // Today Section - Optimized for performance with entrance animation
+                        AnimatedTodaySection {
+                            VStack(alignment: .leading, spacing: 20) {
+                                // Simplified section header
+                                HStack {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.title3)
+                                            .foregroundColor(.orange)
+                                            .accessibilityLabel("Today's shift section")
 
-                                    Text(currentDayManager.today, style: .date)
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.secondary)
+                                        Text(currentDayManager.today, style: .date)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    if isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    }
                                 }
 
-                                Spacer()
-
-                                if isLoading {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
+                                if let errorMessage = errorMessage {
+                                    Text("Error: \(errorMessage)")
+                                        .foregroundColor(.red)
+                                        .font(.caption)
                                 }
-                            }
 
-                            if let errorMessage = errorMessage {
-                                Text("Error: \(errorMessage)")
-                                    .foregroundColor(.red)
-                                    .font(.caption)
+                                // Optimized Today shift card
+                                OptimizedTodayShiftCard(shift: todayShift)
                             }
-
-                            // Optimized Today shift card
-                            OptimizedTodayShiftCard(shift: todayShift)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 24)
+                            .background(
+                                // Simplified background for better performance
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color(.secondarySystemBackground))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.orange.opacity(0.1), lineWidth: 1)
+                                    )
+                            )
+                            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                            .padding(.horizontal, 16)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 24)
-                        .background(
-                            // Simplified background for better performance
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color(.secondarySystemBackground))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(Color.orange.opacity(0.1), lineWidth: 1)
-                                )
-                        )
-                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-                        .padding(.horizontal, 16)
 
                         // Quick Actions Section
                         VStack(alignment: .leading, spacing: 16) {
@@ -253,38 +255,40 @@ struct TodayView: View {
                         }
                         .padding(.horizontal)
 
-                        // Tomorrow Section - Optimized for performance
-                        VStack(alignment: .leading, spacing: 16) {
-                            // Simplified section header
-                            HStack(spacing: 8) {
-                                Image(systemName: "moon.stars.fill")
-                                    .font(.title3)
-                                    .foregroundColor(.indigo)
+                        // Tomorrow Section - Optimized for performance with entrance animation
+                        AnimatedTomorrowSection {
+                            VStack(alignment: .leading, spacing: 16) {
+                                // Simplified section header
+                                HStack(spacing: 8) {
+                                    Image(systemName: "moon.stars.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.indigo)
 
-                                Text("Tomorrow")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.primary)
+                                    Text("Tomorrow")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.primary)
 
-                                Spacer()
+                                    Spacer()
+                                }
+
+                                // Optimized Tomorrow shift card
+                                OptimizedTomorrowShiftCard(shift: tomorrowShift)
                             }
-
-                            // Optimized Tomorrow shift card
-                            OptimizedTomorrowShiftCard(shift: tomorrowShift)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 20)
+                            .background(
+                                // Simplified background for better performance
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(Color(.tertiarySystemBackground))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 18)
+                                            .stroke(Color.indigo.opacity(0.1), lineWidth: 1)
+                                    )
+                            )
+                            .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
+                            .padding(.horizontal, 16)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 20)
-                        .background(
-                            // Simplified background for better performance
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(Color(.tertiarySystemBackground))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 18)
-                                        .stroke(Color.indigo.opacity(0.1), lineWidth: 1)
-                                )
-                        )
-                        .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
-                        .padding(.horizontal, 16)
 
                         // This Week Section
                         VStack(alignment: .leading, spacing: 16) {
