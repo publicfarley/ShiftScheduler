@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// Wraps the Today section with a smooth entrance animation featuring fade and slide effects.
-/// Animation triggers once on first appearance and respects accessibility settings.
+/// Wraps the Today section with a dramatic entrance animation featuring fade and slide effects.
+/// Animation slides in from the left with dramatic motion and triggers once on first appearance, respecting accessibility settings.
 struct AnimatedTodaySection<Content: View>: View {
     let content: Content
 
     @State private var opacity: Double = 0.0
-    @State private var yOffset: CGFloat = 30
+    @State private var xOffset: CGFloat = -400
+    @State private var scale: CGFloat = 0.85
     @State private var hasAppeared = false
 
     init(@ViewBuilder content: () -> Content) {
@@ -16,12 +17,14 @@ struct AnimatedTodaySection<Content: View>: View {
     var body: some View {
         content
             .opacity(opacity)
-            .offset(y: yOffset)
+            .offset(x: xOffset)
+            .scaleEffect(scale)
             .onAppear {
                 // Respect accessibility reduce motion setting first
                 guard !UIAccessibility.isReduceMotionEnabled else {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                     hasAppeared = true
                     return
                 }
@@ -29,27 +32,30 @@ struct AnimatedTodaySection<Content: View>: View {
                 // Only animate on first appearance
                 guard !hasAppeared else {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                     return
                 }
                 hasAppeared = true
 
-                // Trigger smooth entrance animation with project-standard timing
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2)) {
+                // Trigger dramatic entrance animation with enhanced spring
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.1)) {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                 }
             }
     }
 }
 
-/// Wraps the Tomorrow section with a staggered entrance animation featuring fade and slide effects.
-/// Animation triggers after the Today section with a delay to create a cascading effect.
+/// Wraps the Tomorrow section with a dramatic staggered entrance animation featuring fade and slide effects.
+/// Animation slides in from the right with dramatic motion and triggers after the Today section with a delay to create a cascading effect.
 struct AnimatedTomorrowSection<Content: View>: View {
     let content: Content
 
     @State private var opacity: Double = 0.0
-    @State private var yOffset: CGFloat = 30
+    @State private var xOffset: CGFloat = 400
+    @State private var scale: CGFloat = 0.85
     @State private var hasAppeared = false
 
     init(@ViewBuilder content: () -> Content) {
@@ -59,12 +65,14 @@ struct AnimatedTomorrowSection<Content: View>: View {
     var body: some View {
         content
             .opacity(opacity)
-            .offset(y: yOffset)
+            .offset(x: xOffset)
+            .scaleEffect(scale)
             .onAppear {
                 // Respect accessibility reduce motion setting first
                 guard !UIAccessibility.isReduceMotionEnabled else {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                     hasAppeared = true
                     return
                 }
@@ -72,15 +80,17 @@ struct AnimatedTomorrowSection<Content: View>: View {
                 // Only animate on first appearance
                 guard !hasAppeared else {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                     return
                 }
                 hasAppeared = true
 
-                // Trigger staggered entrance animation with project-standard timing
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4)) {
+                // Trigger dramatic staggered entrance animation with enhanced spring
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.35)) {
                     opacity = 1.0
-                    yOffset = 0
+                    xOffset = 0
+                    scale = 1.0
                 }
             }
     }
