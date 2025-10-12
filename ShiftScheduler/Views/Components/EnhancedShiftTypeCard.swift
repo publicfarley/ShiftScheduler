@@ -183,7 +183,7 @@ struct EnhancedShiftTypeCard: View {
         .padding(16)
         .background(
             LinearGradient(
-                colors: [gradientColors.0.opacity(0.9), gradientColors.1.opacity(0.95)],
+                colors: [gradientColors.0.opacity(0.7), gradientColors.1.opacity(0.75)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
