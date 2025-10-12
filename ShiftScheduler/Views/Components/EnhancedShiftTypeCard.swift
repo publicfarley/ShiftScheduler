@@ -117,13 +117,13 @@ struct EnhancedShiftTypeCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [gradientColors.0, gradientColors.1],
+                            colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 56, height: 56)
-                    .shadow(color: shiftColor.opacity(0.4), radius: 8, x: 0, y: 4)
+                    .shadow(color: shiftColor.opacity(0.3), radius: 8, x: 0, y: 4)
 
                 Text(shiftType.symbol)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
@@ -155,12 +155,12 @@ struct EnhancedShiftTypeCard: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [gradientColors.0, gradientColors.1],
+                                colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .shadow(color: shiftColor.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .shadow(color: shiftColor.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
 
                 // Location if available
@@ -183,7 +183,7 @@ struct EnhancedShiftTypeCard: View {
         .padding(16)
         .background(
             LinearGradient(
-                colors: [gradientColors.0.opacity(0.7), gradientColors.1.opacity(0.75)],
+                colors: [gradientColors.0.opacity(0.5), gradientColors.1.opacity(0.6)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

@@ -131,13 +131,13 @@ struct EnhancedLocationCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [gradientColors.0, gradientColors.1],
+                            colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 56, height: 56)
-                    .shadow(color: locationColor.opacity(0.4), radius: 8, x: 0, y: 4)
+                    .shadow(color: locationColor.opacity(0.3), radius: 8, x: 0, y: 4)
 
                 Image(systemName: "building.2.fill")
                     .font(.system(size: 24, weight: .bold))
@@ -169,12 +169,12 @@ struct EnhancedLocationCard: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [gradientColors.0, gradientColors.1],
+                                colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .shadow(color: locationColor.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .shadow(color: locationColor.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
             }
 
@@ -183,7 +183,7 @@ struct EnhancedLocationCard: View {
         .padding(16)
         .background(
             LinearGradient(
-                colors: [gradientColors.0.opacity(0.7), gradientColors.1.opacity(0.75)],
+                colors: [gradientColors.0.opacity(0.5), gradientColors.1.opacity(0.6)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
