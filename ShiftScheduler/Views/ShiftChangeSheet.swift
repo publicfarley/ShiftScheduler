@@ -1,6 +1,229 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Shift Display Card Component
+/// Display-only shift card for ShiftChangeSheet - based on EnhancedShiftCard layout
+/// Shows all shift information without interactive elements
+struct ShiftDisplayCard: View {
+    let shiftType: ShiftType
+    let date: Date
+    let label: String?
+    let showBadge: Bool
+
+    init(
+        shiftType: ShiftType,
+        date: Date,
+        label: String? = nil,
+        showBadge: Bool = false
+    ) {
+        self.shiftType = shiftType
+        self.date = date
+        self.label = label
+        self.showBadge = showBadge
+    }
+
+    private var shiftStatus: ShiftStatus {
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Check if shift is today
+        if calendar.isDate(date, inSameDayAs: now) {
+            switch shiftType.duration {
+            case .allDay:
+                return .active
+            case .scheduled(let startTime, let endTime):
+                let shiftStart = startTime.toDate(on: date)
+                let shiftEnd = endTime.toDate(on: date)
+
+                if now < shiftStart {
+                    return .upcoming
+                } else if now >= shiftStart && now <= shiftEnd {
+                    return .active
+                } else {
+                    return .completed
+                }
+            }
+        } else if date < now {
+            return .completed
+        } else {
+            return .upcoming
+        }
+    }
+
+    private var cardColor: Color {
+        ShiftColorPalette.colorForShift(shiftType)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Main card content
+            VStack(spacing: 12) {
+                // Header section with optional label badge and status
+                HStack {
+                    if let label = label, showBadge {
+                        HStack(spacing: 6) {
+                            Image(systemName: labelIcon)
+                                .font(.caption2)
+                                .foregroundStyle(.white)
+
+                            Text(label)
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [cardColor, cardColor.opacity(0.7)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .shadow(color: cardColor.opacity(0.3), radius: 4, x: 0, y: 2)
+                        )
+                    } else {
+                        StatusBadge(status: shiftStatus)
+                    }
+
+                    Spacer()
+                }
+
+                // Main content section
+                HStack(spacing: 12) {
+                    // Shift symbol with gradient background
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [cardColor.opacity(0.2), cardColor.opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 44, height: 44)
+
+                        Text(shiftType.symbol)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(cardColor)
+                    }
+
+                    // Shift details
+                    VStack(alignment: .leading, spacing: 6) {
+                        // Title
+                        Text(shiftType.title)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+
+                        // Time range with enhanced styling
+                        HStack(spacing: 6) {
+                            Image(systemName: "clock")
+                                .font(.caption2)
+                                .foregroundColor(cardColor)
+
+                            Text(shiftType.timeRangeString)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(cardColor)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(cardColor.opacity(0.1))
+                                .overlay(
+                                    Capsule()
+                                        .stroke(cardColor.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+
+                        // Location with icon
+                        if let location = shiftType.location {
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            if !location.address.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "mappin.and.ellipse")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(location.address)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+
+                        // Shift description
+                        if !shiftType.shiftDescription.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "text.alignleft")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(shiftType.shiftDescription)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .multilineTextAlignment(.leading)
+                            }
+                        }
+                    }
+
+                    Spacer()
+                }
+            }
+            .padding(14)
+
+            // Optional gradient footer for active shifts
+            if shiftStatus == .active {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [cardColor.opacity(0.3), cardColor.opacity(0.1)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 4)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(cardColor.opacity(0.2), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        )
+    }
+
+    private var labelIcon: String {
+        guard let label = label else { return "circle.fill" }
+        switch label.lowercased() {
+        case "current": return "circle.fill"
+        case "new": return "sparkles"
+        default: return "circle.fill"
+        }
+    }
+}
+
 struct ShiftChangeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var shiftTypes: [ShiftType]
@@ -15,36 +238,52 @@ struct ShiftChangeSheet: View {
     @State private var errorMessage: String?
     @State private var showSuccess = false
 
+    // Animation states for staggered entrance
+    @State private var showCurrentShift = false
+    @State private var showTransitionIndicator = false
+    @State private var showNewShiftSection = false
+    @State private var showReasonField = false
+    @State private var showActionButtons = false
+    @FocusState private var isReasonFocused: Bool
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Liquid glass background
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .dismissKeyboardOnTap()
-
-                VStack(spacing: 24) {
-                    // Current shift preview
+            ScrollView {
+                VStack(spacing: 28) {
+                    // Current shift preview with entrance animation
                     currentShiftSection
+                        .offset(y: showCurrentShift ? 0 : 30)
+                        .opacity(showCurrentShift ? 1 : 0)
 
-                    Divider()
+                    // Transition indicator between shifts
+                    if currentShift.shiftType != nil && selectedShiftType != nil {
+                        ShiftTransitionIndicator(
+                            fromShift: currentShift.shiftType,
+                            toShift: selectedShiftType
+                        )
+                        .offset(y: showTransitionIndicator ? 0 : 20)
+                        .opacity(showTransitionIndicator ? 1 : 0)
+                    }
 
-                    // New shift picker
+                    // New shift picker with entrance animation
                     newShiftSection
+                        .offset(y: showNewShiftSection ? 0 : 30)
+                        .opacity(showNewShiftSection ? 1 : 0)
 
-                    // Optional reason field
+                    // Optional reason field with entrance animation
                     reasonSection
+                        .offset(y: showReasonField ? 0 : 20)
+                        .opacity(showReasonField ? 1 : 0)
 
-                    Spacer()
-
-                    // Action buttons
+                    // Action buttons with entrance animation
                     actionButtons
+                        .offset(y: showActionButtons ? 0 : 20)
+                        .opacity(showActionButtons ? 1 : 0)
                 }
-                .padding()
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .padding()
+                .padding(20)
             }
+            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.immediately)
             .dismissKeyboardOnTap()
             .navigationTitle("Switch Shift")
             .navigationBarTitleDisplayMode(.inline)
@@ -84,51 +323,58 @@ struct ShiftChangeSheet: View {
         }
         .onAppear {
             selectedShiftType = shiftTypes.first { $0.id != currentShift.shiftType?.id }
+
+            // Staggered entrance animations
+            withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.1)) {
+                showCurrentShift = true
+            }
+            withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.2)) {
+                showTransitionIndicator = true
+            }
+            withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.3)) {
+                showNewShiftSection = true
+            }
+            withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.4)) {
+                showReasonField = true
+            }
+            withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.5)) {
+                showActionButtons = true
+            }
         }
     }
 
     // MARK: - View Components
 
     private var currentShiftSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Current Shift")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Current Shift")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
 
             if let shiftType = currentShift.shiftType {
-                HStack(spacing: 12) {
-                    Text(shiftType.symbol)
-                        .font(.system(size: 40))
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(shiftType.title)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-
-                        Text(shiftType.timeRangeString)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        if let location = shiftType.location {
-                            Text(location.name)
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                }
-                .padding()
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                ShiftDisplayCard(
+                    shiftType: shiftType,
+                    date: currentShift.date,
+                    label: "Current",
+                    showBadge: true
+                )
             }
         }
     }
 
     private var newShiftSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("New Shift Type")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("New Shift Type")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
 
+            // Enhanced picker with gradient styling
             Picker("Select Shift Type", selection: $selectedShiftType) {
                 Text("Select a shift type")
                     .tag(nil as ShiftType?)
@@ -143,83 +389,102 @@ struct ShiftChangeSheet: View {
             }
             .pickerStyle(.menu)
             .padding()
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-
-            if let selected = selectedShiftType {
-                HStack(spacing: 12) {
-                    Text(selected.symbol)
-                        .font(.system(size: 40))
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(selected.title)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-
-                        Text(selected.timeRangeString)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        if let location = selected.location {
-                            Text(location.name)
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                        }
+            .background {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [
+                                        ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
+                                        .clear
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
                     }
-                }
-                .padding()
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .transition(.scale.combined(with: .opacity))
+            }
+
+            // Enhanced preview card for selected shift
+            if let selected = selectedShiftType {
+                ShiftDisplayCard(
+                    shiftType: selected,
+                    date: currentShift.date,
+                    label: "New",
+                    showBadge: true
+                )
+                .transition(
+                    .asymmetric(
+                        insertion: .scale(scale: 0.9).combined(with: .opacity),
+                        removal: .scale(scale: 0.95).combined(with: .opacity)
+                    )
+                )
             }
         }
-        .animation(.spring(duration: 0.4), value: selectedShiftType)
+        .animation(AnimationPresets.accessible(AnimationPresets.standardSpring), value: selectedShiftType)
     }
 
     private var reasonSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Reason (Optional)")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Reason (Optional)")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
 
             TextField("Why are you switching this shift?", text: $reason, axis: .vertical)
+                .focused($isReasonFocused)
                 .lineLimit(3...5)
-                .padding()
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(16)
+                .background {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(
+                                    isReasonFocused
+                                        ? ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.5)
+                                        : Color.clear,
+                                    lineWidth: 2
+                                )
+                        }
+                        .shadow(
+                            color: isReasonFocused
+                                ? ShiftColorPalette.glowColorForShift(selectedShiftType).opacity(0.2)
+                                : .clear,
+                            radius: 8,
+                            x: 0,
+                            y: 4
+                        )
+                }
+                .animation(AnimationPresets.quickSpring, value: isReasonFocused)
         }
     }
 
     private var actionButtons: some View {
         HStack(spacing: 16) {
-            Button {
-                dismiss()
-            } label: {
-                Text("Cancel")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-
-            Button {
-                showConfirmation = true
-            } label: {
-                if isProcessing {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                } else {
-                    Text("Switch Shift")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
+            GlassActionButton(
+                title: "Cancel",
+                icon: "xmark",
+                action: {
+                    dismiss()
                 }
-            }
-            .background(selectedShiftType != nil ? Color.blue : Color.gray)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .disabled(selectedShiftType == nil || isProcessing)
+            )
+
+            GradientActionButton(
+                title: "Switch Shift",
+                icon: "arrow.triangle.2.circlepath",
+                shiftType: selectedShiftType,
+                isEnabled: selectedShiftType != nil && !isProcessing,
+                isLoading: isProcessing,
+                action: {
+                    showConfirmation = true
+                }
+            )
         }
     }
 
@@ -228,17 +493,48 @@ struct ShiftChangeSheet: View {
             Spacer()
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .font(.title3)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [
+                                ShiftColorPalette.colorForShift(selectedShiftType),
+                                ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.7)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                 Text("Shift switched successfully")
                     .font(.headline)
+                    .fontWeight(.semibold)
             }
-            .padding()
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding()
+            .padding(20)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(
+                                ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
+                                lineWidth: 1.5
+                            )
+                    }
+                    .shadow(
+                        color: ShiftColorPalette.glowColorForShift(selectedShiftType).opacity(0.3),
+                        radius: 12,
+                        x: 0,
+                        y: 6
+                    )
+            }
+            .padding(24)
         }
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(.spring(duration: 0.4), value: showSuccess)
+        .transition(
+            .asymmetric(
+                insertion: .move(edge: .bottom).combined(with: .scale(scale: 0.9)).combined(with: .opacity),
+                removal: .move(edge: .bottom).combined(with: .opacity)
+            )
+        )
+        .animation(AnimationPresets.accessible(AnimationPresets.standardSpring), value: showSuccess)
     }
 
     // MARK: - Actions
