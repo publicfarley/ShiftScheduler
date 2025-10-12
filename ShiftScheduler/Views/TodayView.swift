@@ -1653,24 +1653,18 @@ struct OptimizedTodayShiftCard: View {
     }
 
     private var cardColor: Color {
-        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
+        guard let shiftType = shift?.shiftType else { return .blue }
 
+        // Create color based on shift symbol hash for consistency
         let hash = shiftType.symbol.hashValue
-        let colors: [Color] = [
-            Color(red: 0.2, green: 0.35, blue: 0.5),   // Blue
-            Color(red: 0.25, green: 0.4, blue: 0.35),  // Green
-            Color(red: 0.4, green: 0.35, blue: 0.3),   // Brown
-            Color(red: 0.35, green: 0.3, blue: 0.4),   // Purple
-            Color(red: 0.4, green: 0.3, blue: 0.35),   // Burgundy
-            Color(red: 0.3, green: 0.4, blue: 0.4)     // Teal
-        ]
+        let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .red, .indigo, .teal, .cyan, .mint]
         return colors[abs(hash) % colors.count]
     }
 
     var body: some View {
         VStack(spacing: 0) {
             if let shift = shift, let shiftType = shift.shiftType {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
                     // Status badge
                     HStack {
                         StatusBadge(status: shiftStatus)
@@ -1678,62 +1672,90 @@ struct OptimizedTodayShiftCard: View {
                     }
 
                     // Main content
-                    HStack(spacing: 18) {
-                        // Symbol - larger
-                        Text(shiftType.symbol)
-                            .font(.largeTitle)
-                            .foregroundColor(cardColor)
-                            .frame(width: 64, height: 64)
-                            .background(
-                                Circle()
-                                    .fill(cardColor.opacity(0.08))
-                                    .overlay(
-                                        Circle()
-                                            .stroke(cardColor.opacity(0.15), lineWidth: 1)
+                    HStack(spacing: 14) {
+                        // Symbol with gradient background
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [cardColor.opacity(0.2), cardColor.opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
                                     )
-                            )
+                                )
+                                .frame(width: 50, height: 50)
+
+                            Text(shiftType.symbol)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(cardColor)
+                        }
 
                         // Shift details
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 5) {
                             Text(shiftType.title)
-                                .font(.title3)
-                                .fontWeight(.bold)
+                                .font(.headline)
+                                .fontWeight(.semibold)
                                 .foregroundColor(.primary)
 
-                            if !shiftType.shiftDescription.isEmpty {
-                                Text(shiftType.shiftDescription)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(2)
-                            }
-
-                            // Time badge
-                            HStack(spacing: 6) {
+                            // Time range with enhanced styling
+                            HStack(spacing: 5) {
                                 Image(systemName: "clock")
-                                    .font(.subheadline)
+                                    .font(.caption2)
                                     .foregroundColor(cardColor)
 
                                 Text(shiftType.timeRangeString)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
                                     .foregroundColor(cardColor)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
                             .background(
                                 Capsule()
-                                    .fill(cardColor.opacity(0.08))
+                                    .fill(cardColor.opacity(0.1))
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(cardColor.opacity(0.3), lineWidth: 1)
+                                    )
                             )
 
-                            // Location
+                            // Location with icon
                             if let location = shiftType.location {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "location")
+                                    Image(systemName: "location.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(location.name)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    Text(location.name)
-                                        .font(.callout)
+                                }
+
+                                if !location.address.isEmpty {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "mappin.and.ellipse")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+
+                                        Text(location.address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+
+                            // Shift description
+                            if !shiftType.shiftDescription.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "text.alignleft")
+                                        .font(.caption2)
                                         .foregroundColor(.secondary)
+
+                                    Text(shiftType.shiftDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.leading)
                                 }
                             }
                         }
@@ -1741,50 +1763,64 @@ struct OptimizedTodayShiftCard: View {
                         Spacer()
                     }
                 }
-                .padding(20)
+                .padding(16)
 
                 // Active shift indicator
                 if shiftStatus == .active {
                     Rectangle()
-                        .fill(cardColor.opacity(0.3))
-                        .frame(height: 3)
+                        .fill(
+                            LinearGradient(
+                                colors: [cardColor.opacity(0.3), cardColor.opacity(0.1)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 4)
                 }
             } else {
                 // Empty state
                 VStack(spacing: 16) {
-                    Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                        .frame(width: 72, height: 72)
-                        .background(
-                            Circle()
-                                .fill(Color(.systemGray6))
-                        )
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(.systemGray5), Color(.systemGray6)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 72, height: 72)
+
+                        Image(systemName: "calendar.badge.exclamationmark")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                    }
 
                     VStack(spacing: 6) {
                         Text("No shift scheduled")
-                            .font(.title3)
+                            .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
 
                         Text("Perfect day for rest or planning ahead")
-                            .font(.body)
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 28)
+                .padding(.vertical, 24)
                 .padding(.horizontal, 20)
             }
         }
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(.systemGray5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(cardColor.opacity(0.2), lineWidth: 1)
                 )
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
     }
 }
@@ -1793,24 +1829,18 @@ struct OptimizedTomorrowShiftCard: View {
     let shift: ScheduledShift?
 
     private var cardColor: Color {
-        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
+        guard let shiftType = shift?.shiftType else { return .blue }
 
+        // Create color based on shift symbol hash for consistency
         let hash = shiftType.symbol.hashValue
-        let colors: [Color] = [
-            Color(red: 0.2, green: 0.35, blue: 0.5),   // Blue
-            Color(red: 0.25, green: 0.4, blue: 0.35),  // Green
-            Color(red: 0.4, green: 0.35, blue: 0.3),   // Brown
-            Color(red: 0.35, green: 0.3, blue: 0.4),   // Purple
-            Color(red: 0.4, green: 0.3, blue: 0.35),   // Burgundy
-            Color(red: 0.3, green: 0.4, blue: 0.4)     // Teal
-        ]
+        let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .red, .indigo, .teal, .cyan, .mint]
         return colors[abs(hash) % colors.count]
     }
 
     var body: some View {
         VStack(spacing: 0) {
             if let shift = shift, let shiftType = shift.shiftType {
-                VStack(spacing: 14) {
+                VStack(spacing: 12) {
                     // Tomorrow label
                     HStack {
                         HStack(spacing: 4) {
@@ -1834,61 +1864,90 @@ struct OptimizedTomorrowShiftCard: View {
                     }
 
                     // Main content
-                    HStack(spacing: 16) {
-                        // Symbol - larger
-                        Text(shiftType.symbol)
-                            .font(.title)
-                            .foregroundColor(cardColor)
-                            .frame(width: 56, height: 56)
-                            .background(
-                                Circle()
-                                    .fill(cardColor.opacity(0.08))
-                            )
+                    HStack(spacing: 14) {
+                        // Symbol with gradient background
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [cardColor.opacity(0.2), cardColor.opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 50, height: 50)
+
+                            Text(shiftType.symbol)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(cardColor)
+                        }
 
                         // Shift details
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 5) {
                             Text(shiftType.title)
-                                .font(.title3)
-                                .fontWeight(.bold)
+                                .font(.headline)
+                                .fontWeight(.semibold)
                                 .foregroundColor(.primary)
-                                .lineLimit(1)
 
-                            if !shiftType.shiftDescription.isEmpty {
-                                Text(shiftType.shiftDescription)
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
-
-                            // Time
+                            // Time range with enhanced styling
                             HStack(spacing: 5) {
                                 Image(systemName: "clock")
-                                    .font(.subheadline)
+                                    .font(.caption2)
                                     .foregroundColor(cardColor)
 
                                 Text(shiftType.timeRangeString)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
                                     .foregroundColor(cardColor)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
                             .background(
                                 Capsule()
-                                    .fill(cardColor.opacity(0.08))
+                                    .fill(cardColor.opacity(0.1))
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(cardColor.opacity(0.3), lineWidth: 1)
+                                    )
                             )
 
-                            // Location if available
+                            // Location with icon
                             if let location = shiftType.location {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "location")
-                                        .font(.caption)
+                                    Image(systemName: "location.fill")
+                                        .font(.caption2)
                                         .foregroundColor(.secondary)
 
                                     Text(location.name)
-                                        .font(.callout)
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
-                                        .lineLimit(1)
+                                }
+
+                                if !location.address.isEmpty {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "mappin.and.ellipse")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+
+                                        Text(location.address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+
+                            // Shift description
+                            if !shiftType.shiftDescription.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "text.alignleft")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    Text(shiftType.shiftDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.leading)
                                 }
                             }
                         }
@@ -1896,7 +1955,7 @@ struct OptimizedTomorrowShiftCard: View {
                         Spacer()
                     }
                 }
-                .padding(18)
+                .padding(16)
             } else {
                 // Empty state
                 VStack(spacing: 14) {
@@ -1923,39 +1982,47 @@ struct OptimizedTomorrowShiftCard: View {
 
                     HStack(spacing: 14) {
                         // Empty state icon
-                        Image(systemName: "bed.double.fill")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                            .frame(width: 56, height: 56)
-                            .background(
-                                Circle()
-                                    .fill(Color(.systemGray6))
-                            )
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(.systemGray5), Color(.systemGray6)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 50, height: 50)
+
+                            Image(systemName: "bed.double.fill")
+                                .font(.title3)
+                                .foregroundColor(.secondary)
+                        }
 
                         VStack(alignment: .leading, spacing: 5) {
                             Text("No shift scheduled")
-                                .font(.body)
+                                .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundColor(.primary)
 
                             Text("A well-deserved day off awaits")
-                                .font(.callout)
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
 
                         Spacer()
                     }
                 }
-                .padding(18)
+                .padding(16)
             }
         }
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(.systemGray5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(cardColor.opacity(0.2), lineWidth: 1)
                 )
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
     }
 }
