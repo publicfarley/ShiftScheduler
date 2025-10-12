@@ -95,6 +95,43 @@ struct ShiftColorPalette {
             endPoint: .bottomTrailing
         )
     }
+
+    // MARK: - Location Colors
+
+    /// Generate a color for a location based on its name
+    /// Uses hash-based selection with teal/blue color family
+    static func colorForLocation(_ locationName: String) -> Color {
+        let hash = locationName.hashValue
+        let colors = locationColorPalette
+        return colors[abs(hash) % colors.count]
+    }
+
+    /// Generate gradient colors for a location
+    /// Returns (primary, secondary) colors for gradient effects
+    static func gradientColorsForLocation(_ locationName: String) -> (Color, Color) {
+        let primaryColor = colorForLocation(locationName)
+        let secondaryColor = primaryColor.opacity(0.7)
+        return (primaryColor, secondaryColor)
+    }
+
+    /// Create a glow color for location shadows and highlights
+    static func glowColorForLocation(_ locationName: String) -> Color {
+        colorForLocation(locationName).opacity(0.4)
+    }
+
+    /// Teal/blue color palette for locations
+    /// These colors are selected for:
+    /// - Professional, trustworthy feel appropriate for locations
+    /// - Good contrast with white text
+    /// - Distinct from shift type colors
+    private static let locationColorPalette: [Color] = [
+        Color(red: 0.2, green: 0.6, blue: 0.8),   // Ocean Blue
+        Color(red: 0.2, green: 0.7, blue: 0.7),   // Teal
+        Color(red: 0.3, green: 0.5, blue: 0.8),   // Sky Blue
+        Color(red: 0.2, green: 0.8, blue: 0.7),   // Turquoise
+        Color(red: 0.3, green: 0.6, blue: 0.9),   // Azure
+        Color(red: 0.2, green: 0.7, blue: 0.6),   // Sea Green
+    ]
 }
 
 // MARK: - Color Extensions
