@@ -5,7 +5,10 @@ struct ShiftTypesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var shiftTypes: [ShiftType]
     @State private var showingAddShiftType = false
+    @State private var shiftTypeToEdit: ShiftType?
     @State private var searchText = ""
+    @State private var cardAppeared: [UUID: Bool] = [:]
+    @State private var emptyStateAppeared = false
 
     private var filteredShiftTypes: [ShiftType] {
         var filtered = shiftTypes
@@ -27,13 +30,19 @@ struct ShiftTypesView: View {
                 VStack(spacing: 16) {
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         TextField("Search shift types...", text: $searchText)
                     }
-                    .padding(12)
-                    .background(Color(UIColor.systemGray6))
-                    .cornerRadius(10)
+                    .padding(16)
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(.quaternary, lineWidth: 1)
+                            }
+                    }
                     .padding(.horizontal)
                     .padding(.top)
 
@@ -51,38 +60,106 @@ struct ShiftTypesView: View {
                 if filteredShiftTypes.isEmpty {
                     Spacer()
 
-                    VStack(spacing: 20) {
-                        Image(systemName: "clock.badge.questionmark")
-                            .font(.system(size: 60))
-                            .foregroundColor(.secondary)
+                    VStack(spacing: 24) {
+                        Image(systemName: "clock.badge.plus")
+                            .font(.system(size: 80, weight: .bold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .offset(y: emptyStateAppeared ? 0 : 20)
+                            .opacity(emptyStateAppeared ? 1 : 0)
+                            .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
 
-                        Text("No Shift Types")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                        VStack(spacing: 12) {
+                            Text("No Shift Types")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .offset(y: emptyStateAppeared ? 0 : 15)
+                                .opacity(emptyStateAppeared ? 1 : 0)
 
-                        Text("Create your first shift type to get started\nwith scheduling")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-
-                        Button("Create Shift Type") {
-                            showingAddShiftType = true
+                            Text("Create your first shift type to get started\nwith scheduling")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .offset(y: emptyStateAppeared ? 0 : 10)
+                                .opacity(emptyStateAppeared ? 1 : 0)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+
+                        Button {
+                            showingAddShiftType = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Create Shift Type")
+                            }
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 14)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
+                        }
+                        .buttonStyle(.plain)
+                        .offset(y: emptyStateAppeared ? 0 : 10)
+                        .opacity(emptyStateAppeared ? 1 : 0)
                     }
                     .padding()
+                    .onAppear {
+                        withAnimation(
+                            AnimationPresets.accessible(AnimationPresets.standardSpring)
+                                .delay(0.1)
+                        ) {
+                            emptyStateAppeared = true
+                        }
+                    }
 
                     Spacer()
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 16) {
-                            ForEach(filteredShiftTypes) { shiftType in
-                                ShiftTypeRow(shiftType: shiftType)
+                            ForEach(Array(filteredShiftTypes.enumerated()), id: \.element.id) { index, shiftType in
+                                EnhancedShiftTypeCard(
+                                    shiftType: shiftType,
+                                    onEdit: {
+                                        shiftTypeToEdit = shiftType
+                                    },
+                                    onDelete: {
+                                        withAnimation {
+                                            modelContext.delete(shiftType)
+                                        }
+                                    }
+                                )
+                                .padding(.horizontal)
+                                .offset(y: cardAppeared[shiftType.id] ?? false ? 0 : 30)
+                                .opacity(cardAppeared[shiftType.id] ?? false ? 1 : 0)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .scrollDismissesKeyboard(.immediately)
+                    .onAppear {
+                        // Trigger staggered animations
+                        for (index, shiftType) in filteredShiftTypes.enumerated() {
+                            withAnimation(
+                                AnimationPresets.accessible(AnimationPresets.standardSpring)
+                                    .delay(Double(index) * 0.05)
+                            ) {
+                                cardAppeared[shiftType.id] = true
                             }
                         }
                     }
-                    .scrollDismissesKeyboard(.immediately)
                 }
             }
             .dismissKeyboardOnTap()
@@ -99,6 +176,9 @@ struct ShiftTypesView: View {
             }
             .sheet(isPresented: $showingAddShiftType) {
                 AddShiftTypeView()
+            }
+            .sheet(item: $shiftTypeToEdit) { shiftType in
+                EditShiftTypeView(shiftType: shiftType)
             }
         }
     }
