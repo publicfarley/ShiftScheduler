@@ -235,7 +235,7 @@ struct EnhancedLocationCard: View {
                             .fill(.regularMaterial)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(locationColor.opacity(0.2))
+                                    .fill(Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.2))
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)

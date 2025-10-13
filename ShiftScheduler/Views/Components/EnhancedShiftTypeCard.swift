@@ -117,7 +117,7 @@ struct EnhancedShiftTypeCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
+                            colors: [gradientColors.0.opacity(0.3), gradientColors.1.opacity(0.4)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -155,7 +155,7 @@ struct EnhancedShiftTypeCard: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [gradientColors.0.opacity(0.6), gradientColors.1.opacity(0.7)],
+                                colors: [gradientColors.0.opacity(0.3), gradientColors.1.opacity(0.4)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -183,7 +183,7 @@ struct EnhancedShiftTypeCard: View {
         .padding(16)
         .background(
             LinearGradient(
-                colors: [gradientColors.0.opacity(0.5), gradientColors.1.opacity(0.6)],
+                colors: [gradientColors.0.opacity(0.2), gradientColors.1.opacity(0.3)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -229,7 +229,7 @@ struct EnhancedShiftTypeCard: View {
                             .fill(.regularMaterial)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(shiftColor.opacity(0.2))
+                                    .fill(Color(red: 0.2, green: 0.7, blue: 0.6).opacity(0.2))
                             }
                             .overlay {
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
