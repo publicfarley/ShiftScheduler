@@ -67,8 +67,11 @@ playground.xcworkspace
 Carthage/Build/
 
 # Accio dependency management
-Dependencies/
+# Dependencies/  # Commented out to allow ShiftScheduler/Dependencies/ (TCA code)
 .accio/
+
+# Exception: Allow TCA Dependencies directory
+!ShiftScheduler/Dependencies/
 
 # fastlane
 #
