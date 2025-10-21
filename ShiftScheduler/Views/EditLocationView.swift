@@ -89,8 +89,9 @@ struct EditLocationView: View {
     }
     
     private func updateLocation() {
-        location.name = name
-        location.address = address
+        // TODO: This view needs to be updated to work with the new aggregate pattern
+        // Location updates should be handled through PersistenceClient in Task 10
+        // For now, just dismiss
         dismiss()
     }
 }

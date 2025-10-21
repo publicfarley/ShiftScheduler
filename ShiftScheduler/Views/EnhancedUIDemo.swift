@@ -333,7 +333,7 @@ private func createSampleShift(
         ),
         title: title,
         description: "Sample \(title.lowercased())",
-        locationId: location.id
+        location: location
     )
 
     // Create scheduled shift
@@ -364,7 +364,7 @@ private func createSampleAllDayShift(
         duration: .allDay,
         title: title,
         description: "Sample \(title.lowercased())",
-        locationId: location.id
+        location: location
     )
 
     // Create scheduled shift

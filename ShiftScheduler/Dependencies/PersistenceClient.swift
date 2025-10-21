@@ -1,6 +1,22 @@
 import Foundation
 import ComposableArchitecture
 
+/// Error thrown when attempting to delete a Location that is referenced by ShiftTypes
+enum LocationDeletionError: LocalizedError {
+    case locationInUse(count: Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .locationInUse(let count):
+            return "Cannot delete location. It is used by \(count) shift type\(count == 1 ? "" : "s")."
+        }
+    }
+
+    var recoverySuggestion: String? {
+        return "Delete or reassign all shift types that use this location first."
+    }
+}
+
 /// TCA Dependency Client for data persistence operations
 /// Provides controlled access to JSON file-based persistence for TCA reducers
 @DependencyClient
@@ -38,6 +54,13 @@ struct PersistenceClient: Sendable {
 
     /// Delete a location
     var deleteLocation: @Sendable (Location) async throws -> Void
+
+    /// Check if a location can be safely deleted (not referenced by any ShiftType)
+    var canDeleteLocation: @Sendable (Location) async throws -> Bool = { _ in true }
+
+    /// Delete location only if not referenced by any ShiftType
+    /// Throws LocationDeletionError if location is in use
+    var safeDeleteLocation: @Sendable (Location) async throws -> Void
 
     // MARK: - ChangeLogEntry Operations
 
@@ -89,6 +112,20 @@ extension PersistenceClient: DependencyKey {
             deleteLocation: { location in
                 try await locationRepo.delete(id: location.id)
             },
+            canDeleteLocation: { location in
+                let shiftTypes = try await shiftTypeRepo.fetchAll()
+                return !shiftTypes.contains { $0.location.id == location.id }
+            },
+            safeDeleteLocation: { location in
+                let shiftTypes = try await shiftTypeRepo.fetchAll()
+                let referencingCount = shiftTypes.filter { $0.location.id == location.id }.count
+
+                guard referencingCount == 0 else {
+                    throw LocationDeletionError.locationInUse(count: referencingCount)
+                }
+
+                try await locationRepo.delete(id: location.id)
+            },
             fetchChangeLogEntries: {
                 try await changeLogRepo.fetchAll()
             },
@@ -120,6 +157,8 @@ extension PersistenceClient: DependencyKey {
         saveLocation: { _ in },
         updateLocation: { _ in },
         deleteLocation: { _ in },
+        canDeleteLocation: { _ in true },
+        safeDeleteLocation: { _ in },
         fetchChangeLogEntries: { [] },
         saveChangeLogEntry: { _ in },
         deleteOldChangeLogEntries: { _ in }

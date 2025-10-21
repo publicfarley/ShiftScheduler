@@ -123,18 +123,16 @@ struct EnhancedShiftPreviewCard: View {
                             .shadow(color: primaryColor.opacity(0.3), radius: 4, x: 0, y: 2)
                     )
 
-                    // Location if available
-                    if let location = shiftType.location {
-                        HStack(spacing: 6) {
-                            Image(systemName: "location.fill")
-                                .font(.caption)
-                                .foregroundStyle(primaryColor)
+                    // Location (always available in aggregate)
+                    HStack(spacing: 6) {
+                        Image(systemName: "location.fill")
+                            .font(.caption)
+                            .foregroundStyle(primaryColor)
 
-                            Text(location.name)
-                                .font(.callout)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(shiftType.location.name)
+                            .font(.callout)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
                     }
                 }
 

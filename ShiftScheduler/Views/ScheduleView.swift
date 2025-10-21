@@ -160,16 +160,11 @@ struct ScheduleView: View {
             .onAppear {
                 // Set selected date to today when view appears
                 dataManager.selectedDate = Date()
-                // Update shift types in data manager
-                dataManager.updateShiftTypes(shiftTypes)
+                // TODO: Update shift types when ScheduleFeature is implemented (Task 5)
                 // Initialize shift switch service
                 Task {
                     await initializeShiftSwitchService()
                 }
-            }
-            .onChange(of: shiftTypes) { _, newShiftTypes in
-                // Update shift types when they change
-                dataManager.updateShiftTypes(newShiftTypes)
             }
             .toast($toastMessage)
         }

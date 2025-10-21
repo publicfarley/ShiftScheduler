@@ -147,30 +147,28 @@ struct EnhancedShiftCard: View {
                                     )
                             )
 
-                            // Location with icon
-                            if let location = shiftType.location {
+                            // Location with icon (always available in aggregate)
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(shiftType.location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            if !shiftType.location.address.isEmpty {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "location.fill")
+                                    Image(systemName: "mappin.and.ellipse")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
 
-                                    Text(location.name)
+                                    Text(shiftType.location.address)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                         .lineLimit(1)
-                                }
-
-                                if !location.address.isEmpty {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "mappin.and.ellipse")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-
-                                        Text(location.address)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(1)
-                                    }
                                 }
                             }
 

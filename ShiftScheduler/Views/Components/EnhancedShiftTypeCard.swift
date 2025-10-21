@@ -162,18 +162,16 @@ struct EnhancedShiftTypeCard: View {
                         .shadow(color: shiftColor.opacity(0.2), radius: 4, x: 0, y: 2)
                 )
 
-                // Location if available
-                if let location = shiftType.location {
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                // Location (always available in aggregate)
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
 
-                        Text(location.name)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
+                    Text(shiftType.location.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
 
@@ -318,9 +316,7 @@ struct EnhancedShiftTypeCard: View {
 
     private var accessibilityLabel: String {
         var label = "\(shiftType.symbol) \(shiftType.title), \(shiftType.timeRangeString)"
-        if let location = shiftType.locationId {
-            label += ", at \(location.uuidString)"
-        }
+        label += ", at \(shiftType.location.name)"
         if !shiftType.shiftDescription.isEmpty {
             label += ", \(shiftType.shiftDescription)"
         }
@@ -331,6 +327,7 @@ struct EnhancedShiftTypeCard: View {
 // MARK: - Preview
 
 #Preview {
+    let location = Location(name: "Main Office", address: "123 Main Street")
     let shiftType = ShiftType(
         symbol: "D",
         duration: .scheduled(
@@ -338,7 +335,8 @@ struct EnhancedShiftTypeCard: View {
             to: HourMinuteTime(hour: 17, minute: 0)
         ),
         title: "Day Shift",
-        description: "Standard daytime shift for regular operations"
+        description: "Standard daytime shift for regular operations",
+        location: location
     )
 
     VStack(spacing: 20) {

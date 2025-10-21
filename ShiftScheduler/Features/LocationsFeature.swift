@@ -136,8 +136,12 @@ struct LocationsFeature {
                 state.isLoading = true
                 return .run { send in
                     do {
-                        try await persistenceClient.deleteLocation(location)
+                        // ✅ Use safeDeleteLocation to check if location is in use by ShiftTypes
+                        try await persistenceClient.safeDeleteLocation(location)
                         await send(.locationDeleted(.success(())))
+                    } catch let error as LocationDeletionError {
+                        // Show user-friendly error if location is in use
+                        await send(.locationDeleted(.failure(error)))
                     } catch {
                         await send(.locationDeleted(.failure(error)))
                     }

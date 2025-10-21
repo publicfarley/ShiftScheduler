@@ -1,13 +1,14 @@
 import Foundation
 
-/// Value-type model for a shift type/template
-struct ShiftType: Identifiable, Codable, Equatable, Sendable {
+/// Aggregate Root for shift type templates
+/// Contains embedded Location as a part of the aggregate
+struct ShiftType: Identifiable, Codable, Equatable, Hashable, Sendable {
     let id: UUID
     var symbol: String
     var duration: ShiftDuration
     var title: String
     var shiftDescription: String
-    var locationId: UUID?
+    var location: Location  // ✅ Non-optional, embedded as aggregate part
 
     init(
         id: UUID = UUID(),
@@ -15,14 +16,19 @@ struct ShiftType: Identifiable, Codable, Equatable, Sendable {
         duration: ShiftDuration,
         title: String,
         description: String,
-        locationId: UUID? = nil
+        location: Location  // ✅ Required parameter
     ) {
         self.id = id
         self.symbol = symbol
         self.duration = duration
         self.title = title
         self.shiftDescription = description
-        self.locationId = locationId
+        self.location = location
+    }
+
+    /// Convenience method for updating the location
+    mutating func updateLocation(_ location: Location) {
+        self.location = location
     }
 
     var startTimeString: String {

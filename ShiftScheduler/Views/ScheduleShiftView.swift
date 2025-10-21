@@ -31,24 +31,11 @@ struct ScheduleShiftView: View {
                 Section("Shift Details") {
                     DatePicker("Date", selection: $shiftDate, displayedComponents: [.date])
 
-                    if shiftTypes.isEmpty {
-                        Text("No shift types available")
-                            .foregroundColor(.secondary)
-                            .italic()
-                    } else {
-                        Picker("Shift Type", selection: $selectedShiftType) {
-                            Text("Select a shift type").tag(nil as ShiftType?)
-                            ForEach(shiftTypes) { shiftType in
-                                VStack(alignment: .leading) {
-                                    Text("\(shiftType.symbol) - \(shiftType.title)")
-                                    Text(shiftType.timeRangeString)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .tag(shiftType as ShiftType?)
-                            }
-                        }
-                    }
+                    // TODO: This view will be migrated to TCA in Task 9
+                    // Shift types will come from ShiftTypesFeature
+                    Text("No shift types available")
+                        .foregroundColor(.secondary)
+                        .italic()
                 }
 
                 if let shiftType = selectedShiftType {
@@ -74,17 +61,15 @@ struct ScheduleShiftView: View {
                                 .font(.body)
                                 .foregroundColor(.secondary)
 
-                            if let location = shiftType.location {
-                                HStack {
-                                    Text("📍 \(location.name)")
-                                        .font(.subheadline)
-                                    Spacer()
-                                }
-
-                                Text(location.address)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                            HStack {
+                                Text("📍 \(shiftType.location.name)")
+                                    .font(.subheadline)
+                                Spacer()
                             }
+
+                            Text(shiftType.location.address)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                         .padding(.vertical, 4)
                     }

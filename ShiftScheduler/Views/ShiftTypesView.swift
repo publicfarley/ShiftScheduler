@@ -8,18 +8,10 @@ struct ShiftTypesView: View {
     @State private var cardAppeared: [UUID: Bool] = [:]
     @State private var emptyStateAppeared = false
 
+    // TODO: This view will be migrated to TCA in Task 8 - ShiftTypesFeature
+    // Until then, filteredShiftTypes is disabled
     private var filteredShiftTypes: [ShiftType] {
-        var filtered = shiftTypes
-
-        if !searchText.isEmpty {
-            filtered = filtered.filter { shiftType in
-                shiftType.title.localizedCaseInsensitiveContains(searchText) ||
-                shiftType.symbol.localizedCaseInsensitiveContains(searchText) ||
-                shiftType.shiftDescription.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        return filtered
+        []
     }
 
     var body: some View {
@@ -216,11 +208,9 @@ struct ShiftTypeRow: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
 
-                    if let location = shiftType.location {
-                        Text("📍 \(location.name)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                    Text("📍 \(shiftType.location.name)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
 
                 Spacer()
@@ -317,14 +307,8 @@ struct LocationDisplayView: View {
 
     private func loadLocationSafely() async {
         await MainActor.run {
-            guard let location = shiftType.location else {
-                showLocation = false
-                return
-            }
-
-            // Simply access the location name
-            // The cascade delete should have already cleaned up invalid references
-            locationName = location.name
+            // Location is always available in the aggregate
+            locationName = shiftType.location.name
             showLocation = true
         }
     }
