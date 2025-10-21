@@ -68,18 +68,45 @@ struct LocationsFeature {
         case locationsLoaded(TaskResult<[Location]>)
 
         /// Location deleted
-        case locationDeleted(TaskResult<Void>)
+        case locationDeleted(Result<Void, Error>)
 
         /// Add/Edit sheet actions
         case addEditSheet(PresentationAction<AddEditLocationFeature.Action>)
 
         /// Refresh locations after add/edit
         case refreshLocations
+
+        static func == (lhs: Action, rhs: Action) -> Bool {
+            switch (lhs, rhs) {
+            case (.task, .task):
+                return true
+            case let (.searchTextChanged(lhs), .searchTextChanged(rhs)):
+                return lhs == rhs
+            case (.addButtonTapped, .addButtonTapped):
+                return true
+            case let (.editLocation(lhs), .editLocation(rhs)):
+                return lhs.id == rhs.id
+            case let (.deleteLocation(lhs), .deleteLocation(rhs)):
+                return lhs.id == rhs.id
+            case let (.locationsLoaded(lhs), .locationsLoaded(rhs)):
+                return lhs == rhs
+            case (.locationDeleted(.success), .locationDeleted(.success)):
+                return true
+            case let (.locationDeleted(.failure(lhs)), .locationDeleted(.failure(rhs))):
+                return lhs.localizedDescription == rhs.localizedDescription
+            case let (.addEditSheet(lhs), .addEditSheet(rhs)):
+                return lhs == rhs
+            case (.refreshLocations, .refreshLocations):
+                return true
+            default:
+                return false
+            }
+        }
     }
 
-    @Dependency(\.swiftDataClient) var swiftDataClient
+    @Dependency(\.persistenceClient) var persistenceClient
 
-    var body: some ReducerOf<Self> {
+    var reducer: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .task:
@@ -88,7 +115,7 @@ struct LocationsFeature {
                 return .run { send in
                     await send(.locationsLoaded(
                         TaskResult {
-                            try await swiftDataClient.fetchLocations()
+                            try await persistenceClient.fetchLocations()
                         }
                     ))
                 }
@@ -108,11 +135,12 @@ struct LocationsFeature {
             case let .deleteLocation(location):
                 state.isLoading = true
                 return .run { send in
-                    await send(.locationDeleted(
-                        TaskResult {
-                            try await swiftDataClient.deleteLocation(location)
-                        }
-                    ))
+                    do {
+                        try await persistenceClient.deleteLocation(location)
+                        await send(.locationDeleted(.success(())))
+                    } catch {
+                        await send(.locationDeleted(.failure(error)))
+                    }
                 }
 
             case let .locationsLoaded(.success(locations)):
@@ -148,7 +176,7 @@ struct LocationsFeature {
                 return .run { send in
                     await send(.locationsLoaded(
                         TaskResult {
-                            try await swiftDataClient.fetchLocations()
+                            try await persistenceClient.fetchLocations()
                         }
                     ))
                 }
@@ -157,139 +185,5 @@ struct LocationsFeature {
         .ifLet(\.$addEditSheet, action: \.addEditSheet) {
             AddEditLocationFeature()
         }
-    }
-}
-
-/// Feature for adding or editing a location
-@Reducer
-struct AddEditLocationFeature {
-    @ObservableState
-    struct State: Equatable {
-        /// Edit mode: adding new or editing existing
-        var mode: Mode
-
-        /// Form fields
-        var name: String
-        var address: String
-
-        /// Validation
-        var validationErrors: [String] = []
-
-        /// Saving state
-        var isSaving = false
-
-        enum Mode: Equatable {
-            case add
-            case edit(Location)
-        }
-
-        init(mode: Mode) {
-            self.mode = mode
-            switch mode {
-            case .add:
-                self.name = ""
-                self.address = ""
-            case let .edit(location):
-                self.name = location.name
-                self.address = location.address
-            }
-        }
-    }
-
-    enum Action: BindableAction, Equatable {
-        /// Two-way binding for form fields
-        case binding(BindingAction<State>)
-
-        /// Save button tapped
-        case saveButtonTapped
-
-        /// Save completed
-        case saved(TaskResult<Void>)
-
-        /// Cancel button tapped
-        case cancelButtonTapped
-
-        /// Dismiss the sheet
-        case dismiss
-    }
-
-    @Dependency(\.swiftDataClient) var swiftDataClient
-    @Dependency(\.dismiss) var dismiss
-
-    var body: some ReducerOf<Self> {
-        BindingReducer()
-
-        Reduce { state, action in
-            switch action {
-            case .binding:
-                // Clear validation errors when user types
-                state.validationErrors = []
-                return .none
-
-            case .saveButtonTapped:
-                // Validate form
-                state.validationErrors = validate(state: state)
-                guard state.validationErrors.isEmpty else {
-                    return .none
-                }
-
-                state.isSaving = true
-                return .run { [state] send in
-                    await send(.saved(
-                        TaskResult {
-                            switch state.mode {
-                            case .add:
-                                let newLocation = Location(
-                                    id: UUID(),
-                                    name: state.name,
-                                    address: state.address
-                                )
-                                try await swiftDataClient.saveLocation(newLocation)
-
-                            case let .edit(existingLocation):
-                                existingLocation.name = state.name
-                                existingLocation.address = state.address
-                                try await swiftDataClient.updateLocation(existingLocation)
-                            }
-                        }
-                    ))
-                }
-
-            case .saved(.success):
-                state.isSaving = false
-                return .run { _ in
-                    await dismiss()
-                }
-
-            case let .saved(.failure(error)):
-                state.isSaving = false
-                state.validationErrors = ["Failed to save: \(error.localizedDescription)"]
-                return .none
-
-            case .cancelButtonTapped:
-                return .run { _ in
-                    await dismiss()
-                }
-
-            case .dismiss:
-                return .run { _ in
-                    await dismiss()
-                }
-            }
-        }
-    }
-
-    private func validate(state: State) -> [String] {
-        var errors: [String] = []
-
-        if state.name.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors.append("Location name is required")
-        }
-
-        if state.address.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors.append("Address is required")
-        }
-
-        return errors
     }
 }

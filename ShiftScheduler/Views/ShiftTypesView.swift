@@ -1,9 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct ShiftTypesView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var shiftTypes: [ShiftType]
+    // @Query private var shiftTypes: [ShiftType]
     @State private var showingAddShiftType = false
     @State private var shiftTypeToEdit: ShiftType?
     @State private var searchText = ""
@@ -136,9 +134,7 @@ struct ShiftTypesView: View {
                                         shiftTypeToEdit = shiftType
                                     },
                                     onDelete: {
-                                        withAnimation {
-                                            modelContext.delete(shiftType)
-                                        }
+                                        // TODO: Implement deletion through ShiftTypesFeature (Task 7)
                                     }
                                 )
                                 .padding(.horizontal)
@@ -184,17 +180,12 @@ struct ShiftTypesView: View {
     }
 
     private func deleteShiftTypes(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(shiftTypes[index])
-            }
-        }
+        // TODO: Implement deletion through ShiftTypesFeature (Task 7)
     }
 }
 
 struct ShiftTypeRow: View {
     let shiftType: ShiftType
-    @Environment(\.modelContext) private var modelContext
     @State private var showingEditView = false
     @State private var showingDeleteAlert = false
 
@@ -297,9 +288,7 @@ struct ShiftTypeRow: View {
         .alert("Delete Shift Type", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                withAnimation {
-                    modelContext.delete(shiftType)
-                }
+                // TODO: Implement deletion through ShiftTypesFeature (Task 7)
             }
         } message: {
             Text("Are you sure you want to delete \"\(shiftType.title)\"? This action cannot be undone.")
@@ -309,7 +298,6 @@ struct ShiftTypeRow: View {
 
 struct LocationDisplayView: View {
     let shiftType: ShiftType
-    @Environment(\.modelContext) private var modelContext
 
     @State private var locationName: String?
     @State private var showLocation: Bool = false
@@ -344,5 +332,4 @@ struct LocationDisplayView: View {
 
 #Preview {
     ShiftTypesView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

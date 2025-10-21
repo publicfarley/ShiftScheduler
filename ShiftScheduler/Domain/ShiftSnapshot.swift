@@ -17,8 +17,10 @@ struct ShiftSnapshot: Codable, Equatable, Sendable {
         self.title = shiftType.title
         self.shiftDescription = shiftType.shiftDescription
         self.duration = shiftType.duration
-        self.locationName = shiftType.location?.name
-        self.locationAddress = shiftType.location?.address
+        // Location information is stored via locationId in ShiftType
+        // It can be fetched separately via the LocationRepository if needed
+        self.locationName = nil
+        self.locationAddress = nil
     }
 
     init(

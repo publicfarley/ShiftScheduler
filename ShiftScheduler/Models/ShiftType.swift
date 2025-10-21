@@ -1,14 +1,13 @@
 import Foundation
-import SwiftData
 
-@Model
-final class ShiftType {
-    var id: UUID
+/// Value-type model for a shift type/template
+struct ShiftType: Identifiable, Codable, Equatable, Sendable {
+    let id: UUID
     var symbol: String
     var duration: ShiftDuration
     var title: String
     var shiftDescription: String
-    var location: Location?
+    var locationId: UUID?
 
     init(
         id: UUID = UUID(),
@@ -16,22 +15,14 @@ final class ShiftType {
         duration: ShiftDuration,
         title: String,
         description: String,
-        location: Location
+        locationId: UUID? = nil
     ) {
         self.id = id
         self.symbol = symbol
         self.duration = duration
         self.title = title
         self.shiftDescription = description
-        self.location = location
-    }
-
-    func update(symbol: String, duration: ShiftDuration, title: String, description: String, location: Location) {
-        self.symbol = symbol
-        self.duration = duration
-        self.title = title
-        self.shiftDescription = description
-        self.location = location
+        self.locationId = locationId
     }
 
     var startTimeString: String {

@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import ComposableArchitecture
 
 struct ContentView: View {
     var body: some View {
@@ -19,7 +19,9 @@ struct ContentView: View {
                     Label("Shift Types", systemImage: "briefcase")
                 }
 
-            LocationsView()
+            LocationsView(store: Store(initialState: LocationsFeature.State(), reducer: {
+                LocationsFeature()
+            }))
                 .tabItem {
                     Label("Locations", systemImage: "location")
                 }
@@ -44,5 +46,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Location.self, ShiftType.self, ChangeLogEntry.self], inMemory: true)
 }

@@ -1,10 +1,8 @@
 import SwiftUI
-import SwiftData
 
 struct ScheduleShiftView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var shiftTypes: [ShiftType]
+    // @Query private var shiftTypes: [ShiftType]
     @State private var calendarService = CalendarService.shared
 
     let selectedDate: Date
@@ -155,5 +153,4 @@ struct ScheduleShiftView: View {
 
 #Preview {
     ScheduleShiftView(selectedDate: Date())
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

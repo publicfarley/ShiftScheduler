@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // MARK: - Shift Display Card Component
 /// Display-only shift card for ShiftChangeSheet - based on EnhancedShiftCard layout
@@ -226,7 +225,7 @@ struct ShiftDisplayCard: View {
 
 struct ShiftChangeSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @Query private var shiftTypes: [ShiftType]
+    // @Query private var shiftTypes: [ShiftType]
 
     let currentShift: ScheduledShift
     let onSwitch: (ShiftType, String?) async throws -> Void

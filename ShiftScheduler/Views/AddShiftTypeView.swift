@@ -1,10 +1,8 @@
 import SwiftUI
-import SwiftData
 
 struct AddShiftTypeView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var locations: [Location]
+    // // @Query private var locations: [Location]
 
     @State private var symbol = ""
     @State private var title = ""
@@ -218,10 +216,10 @@ struct AddShiftTypeView: View {
 
     private func addLocation() {
         let location = Location(name: newLocationName, address: newLocationAddress)
-        modelContext.insert(location)
         selectedLocation = location
         newLocationName = ""
         newLocationAddress = ""
+        // TODO: Persist location through PersistenceClient when feature is available (Task 7)
     }
 
     private func saveShiftType() {
@@ -244,12 +242,11 @@ struct AddShiftTypeView: View {
             location: location
         )
 
-        modelContext.insert(shiftType)
+        // TODO: Persist shiftType through PersistenceClient when feature is available (Task 7)
         dismiss()
     }
 }
 
 #Preview {
     AddShiftTypeView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 /// Enhanced location card with dynamic teal/blue colors, glassmorphic styling, and premium visual effects
 ///
@@ -351,18 +350,11 @@ struct EnhancedLocationCard: View {
 // MARK: - Preview
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Location.self, ShiftType.self, configurations: config)
-
     let location1 = Location(name: "Hospital A", address: "123 Main Street, Downtown")
     let location2 = Location(name: "Clinic B", address: "456 Oak Avenue, Suite 200, Medical District")
     let location3 = Location(name: "Office C", address: "789 Pine Road")
 
-    container.mainContext.insert(location1)
-    container.mainContext.insert(location2)
-    container.mainContext.insert(location3)
-
-    return ScrollView {
+    ScrollView {
         VStack(spacing: 20) {
             Text("Location Cards")
                 .font(.title2)
@@ -396,5 +388,4 @@ struct EnhancedLocationCard: View {
         }
         .padding()
     }
-    .modelContainer(container)
 }

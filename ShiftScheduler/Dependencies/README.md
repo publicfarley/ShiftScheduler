@@ -28,10 +28,10 @@ Provides access to calendar operations via EventKit.
 
 **Status:** ✅ Live implementation complete
 
-### SwiftDataClient
-Provides access to SwiftData model operations.
+### PersistenceClient
+Provides access to data persistence operations via JSON file-based repositories.
 
-**File:** `SwiftDataClient.swift`
+**File:** `PersistenceClient.swift`
 
 **Operations:**
 
@@ -54,7 +54,7 @@ Provides access to SwiftData model operations.
 - `saveChangeLogEntry(ChangeLogEntry)` - Create change log entry
 - `deleteOldChangeLogEntries(Date)` - Clean up old entries
 
-**Status:** ⚠️ Live implementation pending (Phase 2)
+**Status:** ✅ Live implementation complete (using JSON file-based repositories)
 
 ### ChangeLogRepositoryClient
 Provides access to change log repository operations.
@@ -155,39 +155,6 @@ TCA provides several built-in dependencies:
 - `\.urlSession` - Network requests
 
 ## Phase 2 TODO: Implement Live Dependencies
-
-### SwiftDataClient Live Implementation
-
-The live implementation needs access to the app's ModelContext. There are two approaches:
-
-**Approach 1: Pass ModelContext through environment**
-```swift
-static func liveValue(context: ModelContext) -> SwiftDataClient {
-    SwiftDataClient(
-        fetchLocations: {
-            let descriptor = FetchDescriptor<Location>()
-            return try context.fetch(descriptor)
-        }
-        // ...
-    )
-}
-```
-
-**Approach 2: Create a shared ModelContainer dependency**
-```swift
-@DependencyClient
-struct ModelContainerClient {
-    var context: @Sendable () -> ModelContext
-}
-
-// Then use in SwiftDataClient
-@Dependency(\.modelContainer) var modelContainer
-
-var fetchLocations = {
-    let context = modelContainer.context()
-    return try context.fetch(FetchDescriptor<Location>())
-}
-```
 
 ### ChangeLogRepositoryClient Live Implementation
 

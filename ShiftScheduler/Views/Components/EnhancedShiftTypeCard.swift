@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 /// Enhanced shift type card with dynamic colors, glassmorphic styling, and premium visual effects
 ///
@@ -319,8 +318,8 @@ struct EnhancedShiftTypeCard: View {
 
     private var accessibilityLabel: String {
         var label = "\(shiftType.symbol) \(shiftType.title), \(shiftType.timeRangeString)"
-        if let location = shiftType.location {
-            label += ", at \(location.name)"
+        if let location = shiftType.locationId {
+            label += ", at \(location.uuidString)"
         }
         if !shiftType.shiftDescription.isEmpty {
             label += ", \(shiftType.shiftDescription)"
@@ -332,12 +331,6 @@ struct EnhancedShiftTypeCard: View {
 // MARK: - Preview
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: ShiftType.self, Location.self, configurations: config)
-
-    let location = Location(name: "Hospital A", address: "123 Main St")
-    container.mainContext.insert(location)
-
     let shiftType = ShiftType(
         symbol: "D",
         duration: .scheduled(
@@ -345,12 +338,10 @@ struct EnhancedShiftTypeCard: View {
             to: HourMinuteTime(hour: 17, minute: 0)
         ),
         title: "Day Shift",
-        description: "Standard daytime shift for regular operations",
-        location: location
+        description: "Standard daytime shift for regular operations"
     )
-    container.mainContext.insert(shiftType)
 
-    return VStack(spacing: 20) {
+    VStack(spacing: 20) {
         EnhancedShiftTypeCard(
             shiftType: shiftType,
             onEdit: { print("Edit tapped") },
@@ -360,5 +351,4 @@ struct EnhancedShiftTypeCard: View {
 
         Spacer()
     }
-    .modelContainer(container)
 }

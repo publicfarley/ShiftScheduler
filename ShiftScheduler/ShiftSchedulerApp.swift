@@ -1,27 +1,10 @@
 import SwiftUI
-import SwiftData
 import OSLog
 
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "App")
 
 @main
 struct ShiftSchedulerApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Location.self,
-            ShiftType.self,
-            ChangeLogEntry.self
-        ])
-
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -30,7 +13,6 @@ struct ShiftSchedulerApp: App {
                     await performBackgroundTasks()
                 }
         }
-        .modelContainer(sharedModelContainer)
     }
 
     // MARK: - Background Tasks
@@ -44,7 +26,7 @@ struct ShiftSchedulerApp: App {
 
     private func purgeExpiredChangeLogEntries() async {
         do {
-            let repository = SwiftDataChangeLogRepository(modelContainer: sharedModelContainer)
+            let repository = ChangeLogRepository()
             let purgeService = ChangeLogPurgeService(repository: repository)
 
             let purgedCount = try await purgeService.purgeIfNeeded()

@@ -1,8 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct ChangeLogView: View {
-    @Query(sort: \ChangeLogEntry.timestamp, order: .reverse) private var allEntries: [ChangeLogEntry]
+    // @Query(sort: \ChangeLogEntry.timestamp, order: .reverse) private var allEntries: [ChangeLogEntry]
     @State private var searchText = ""
     @State private var selectedChangeType: ChangeType?
     @State private var showFilters = false

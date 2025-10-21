@@ -1,8 +1,6 @@
 import SwiftUI
-import SwiftData
 
 struct EditLocationView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
     @State private var name: String
@@ -99,5 +97,4 @@ struct EditLocationView: View {
 
 #Preview {
     EditLocationView(location: Location(name: "Sample Location", address: "123 Main St"))
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

@@ -1,9 +1,8 @@
 import Foundation
-import SwiftData
 
-@Model
-final class Location: Identifiable {
-    var id: UUID
+/// Value-type model for a location where shifts can occur
+struct Location: Identifiable, Codable, Equatable, Hashable, Sendable {
+    let id: UUID
     var name: String
     var address: String
 

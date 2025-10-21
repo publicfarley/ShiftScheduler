@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // MARK: - Shift Status Enumeration (shared with EnhancedShiftCard)
 enum ShiftStatus {
@@ -61,8 +60,7 @@ struct StatusBadge: View {
 }
 
 struct TodayView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var shiftTypes: [ShiftType]
+    // @Query private var shiftTypes: [ShiftType]
     @State private var calendarService = CalendarService.shared
     @State private var currentDayManager = CurrentDayManager.shared
     @State private var scheduledShifts: [ScheduledShift] = []
@@ -453,7 +451,7 @@ struct TodayView: View {
     }
 
     private func initializeShiftSwitchService() async {
-        let changeLogRepo = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
+        let changeLogRepo = ChangeLogRepository()
         let service = ShiftSwitchService(
             calendarService: calendarService,
             changeLogRepository: changeLogRepo
@@ -2208,5 +2206,4 @@ struct CompactWeekStatView: View {
 
 #Preview {
     TodayView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

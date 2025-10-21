@@ -1,9 +1,7 @@
 import SwiftUI
-import SwiftData
 
 struct ScheduleView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var shiftTypes: [ShiftType]
+    // @Query private var shiftTypes: [ShiftType]
     @State private var dataManager = ScheduleDataManager.shared
     @State private var showingScheduleShift = false
     @State private var shiftToSwitch: ScheduledShift?
@@ -191,7 +189,7 @@ struct ScheduleView: View {
 
     private func initializeShiftSwitchService() async {
         let calendarService = CalendarService.shared
-        let repository = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
+        let repository = ChangeLogRepository()
         let service = ShiftSwitchService(
             calendarService: calendarService,
             changeLogRepository: repository
@@ -358,5 +356,4 @@ struct ErrorStateView: View {
 
 #Preview {
     ScheduleView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

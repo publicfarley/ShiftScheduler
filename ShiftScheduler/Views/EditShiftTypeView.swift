@@ -1,11 +1,8 @@
-
 import SwiftUI
-import SwiftData
 
 struct EditShiftTypeView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var locations: [Location]
+    // @Query private var locations: [Location]
 
     @State private var symbol: String
     @State private var title: String
@@ -235,10 +232,10 @@ struct EditShiftTypeView: View {
 
     private func addLocation() {
         let location = Location(name: newLocationName, address: newLocationAddress)
-        modelContext.insert(location)
         selectedLocation = location
         newLocationName = ""
         newLocationAddress = ""
+        // TODO: Persist location through PersistenceClient when feature is available (Task 7)
     }
 
     private func updateShiftType() {
@@ -255,6 +252,8 @@ struct EditShiftTypeView: View {
 
         shiftType.update(symbol: symbol, duration: duration, title: title, description: description, location: location)
 
+        // TODO: Persist update through PersistenceClient when feature is available (Task 7)
         dismiss()
     }
 }
+

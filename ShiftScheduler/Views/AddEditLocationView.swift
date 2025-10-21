@@ -1,14 +1,8 @@
 import SwiftUI
+import ComposableArchitecture
 
-struct AddLocationView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var name = ""
-    @State private var address = ""
-
-    private var isFormValid: Bool {
-        !name.isEmpty && !address.isEmpty
-    }
+struct AddEditLocationView: View {
+    @Bindable var store: StoreOf<AddEditLocationFeature>
 
     var body: some View {
         NavigationView {
@@ -27,7 +21,7 @@ struct AddLocationView: View {
                                         Text("Name")
                                             .foregroundColor(.primary)
                                         Spacer()
-                                        TextField("Location name", text: $name)
+                                        TextField("Location name", text: $store.name)
                                             .multilineTextAlignment(.leading)
                                             .foregroundColor(.secondary)
                                     }
@@ -39,7 +33,7 @@ struct AddLocationView: View {
                                         Text("Address")
                                             .foregroundColor(.primary)
                                         Spacer()
-                                        TextField("Street address", text: $address, axis: .vertical)
+                                        TextField("Street address", text: $store.address, axis: .vertical)
                                             .multilineTextAlignment(.leading)
                                             .foregroundColor(.secondary)
                                             .lineLimit(4, reservesSpace: true)
@@ -52,6 +46,23 @@ struct AddLocationView: View {
                             }
                         }
 
+                        if !store.validationErrors.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(store.validationErrors, id: \.self) { error in
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundColor(.red)
+                                        Text(error)
+                                            .font(.subheadline)
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                            }
+                            .padding(12)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(8)
+                        }
+
                         Spacer(minLength: 100)
                     }
                     .padding(.horizontal, 16)
@@ -61,31 +72,38 @@ struct AddLocationView: View {
             }
             .dismissKeyboardOnTap()
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("New Location")
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.send(.cancelButtonTapped)
                     }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Create") {
-                        saveLocation()
+                    Button("Save") {
+                        store.send(.saveButtonTapped)
                     }
-                    .disabled(!isFormValid)
+                    .disabled(store.isSaving)
                 }
             }
         }
     }
 
-    private func saveLocation() {
-        let location = Location(name: name, address: address)
-        dismiss()
+    private var navigationTitle: String {
+        switch store.mode {
+        case .add:
+            return "New Location"
+        case .edit:
+            return "Edit Location"
+        }
     }
 }
 
 #Preview {
-    AddLocationView()
+    AddEditLocationView(store: Store(
+        initialState: AddEditLocationFeature.State(mode: .add),
+        reducer: { AddEditLocationFeature() }
+    ))
 }

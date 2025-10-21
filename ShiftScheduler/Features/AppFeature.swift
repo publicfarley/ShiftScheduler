@@ -52,9 +52,9 @@ struct AppFeature {
     }
 
     @Dependency(\.calendarClient) var calendarClient
-    @Dependency(\.swiftDataClient) var swiftDataClient
+    @Dependency(\.persistenceClient) var persistenceClient
 
-    var body: some ReducerOf<Self> {
+    var reducer: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):

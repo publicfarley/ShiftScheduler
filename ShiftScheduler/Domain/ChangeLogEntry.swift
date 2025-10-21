@@ -1,21 +1,16 @@
 import Foundation
-import SwiftData
 
-/// SwiftData model for persisting change log entries
-@Model
-final class ChangeLogEntry {
-    @Attribute(.unique) var id: UUID
-    var timestamp: Date
-    var userId: UUID
-    var userDisplayName: String
-    var changeTypeRaw: String
-    var scheduledShiftDate: Date
-
-    // Shift snapshots stored as JSON
-    var oldShiftSnapshotData: Data?
-    var newShiftSnapshotData: Data?
-
-    var reason: String?
+/// Value-type model for persisting change log entries
+struct ChangeLogEntry: Identifiable, Codable, Equatable, Sendable {
+    let id: UUID
+    let timestamp: Date
+    let userId: UUID
+    let userDisplayName: String
+    let changeType: ChangeType
+    let scheduledShiftDate: Date
+    let oldShiftSnapshot: ShiftSnapshot?
+    let newShiftSnapshot: ShiftSnapshot?
+    let reason: String?
 
     init(
         id: UUID = UUID(),
@@ -24,38 +19,18 @@ final class ChangeLogEntry {
         userDisplayName: String,
         changeType: ChangeType,
         scheduledShiftDate: Date,
-        oldShiftSnapshot: ShiftSnapshot?,
-        newShiftSnapshot: ShiftSnapshot?,
-        reason: String?
+        oldShiftSnapshot: ShiftSnapshot? = nil,
+        newShiftSnapshot: ShiftSnapshot? = nil,
+        reason: String? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
         self.userId = userId
         self.userDisplayName = userDisplayName
-        self.changeTypeRaw = changeType.rawValue
+        self.changeType = changeType
         self.scheduledShiftDate = scheduledShiftDate
+        self.oldShiftSnapshot = oldShiftSnapshot
+        self.newShiftSnapshot = newShiftSnapshot
         self.reason = reason
-
-        // Encode snapshots to JSON
-        if let oldSnapshot = oldShiftSnapshot {
-            self.oldShiftSnapshotData = try? JSONEncoder().encode(oldSnapshot)
-        }
-        if let newSnapshot = newShiftSnapshot {
-            self.newShiftSnapshotData = try? JSONEncoder().encode(newSnapshot)
-        }
-    }
-
-    var changeType: ChangeType {
-        ChangeType(rawValue: changeTypeRaw) ?? .switched
-    }
-
-    var oldShiftSnapshot: ShiftSnapshot? {
-        guard let data = oldShiftSnapshotData else { return nil }
-        return try? JSONDecoder().decode(ShiftSnapshot.self, from: data)
-    }
-
-    var newShiftSnapshot: ShiftSnapshot? {
-        guard let data = newShiftSnapshotData else { return nil }
-        return try? JSONDecoder().decode(ShiftSnapshot.self, from: data)
     }
 }

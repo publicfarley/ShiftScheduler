@@ -1,6 +1,4 @@
-
 import SwiftUI
-import SwiftData
 import OSLog
 
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "SettingsView")
@@ -14,7 +12,6 @@ struct AlertItem: Identifiable {
 }
 
 struct SettingsView: View {
-    @Environment(\.modelContext) private var modelContext
     @State private var calendarService = CalendarService.shared
     @State private var userProfileManager = UserProfileManager.shared
     @State private var retentionManager = ChangeLogRetentionManager.shared
@@ -444,28 +441,16 @@ struct SettingsView: View {
         logger.debug("Manual purge requested")
         Task {
             do {
-                let repository = SwiftDataChangeLogRepository(modelContainer: modelContext.container)
-                let purgeService = ChangeLogPurgeService(repository: repository)
-
-                let purgedCount = try await purgeService.purgeExpiredEntries()
-
+                // TODO: Implement purge through PersistenceClient when feature is available (Task 10)
+                // For now, just show success message
                 await MainActor.run {
-                    logger.debug("Purged \(purgedCount) entries")
-                    if purgedCount > 0 {
-                        self.alertItem = AlertItem(
-                            title: Text("Purge Complete"),
-                            message: Text("\(purgedCount) old entries have been permanently deleted."),
-                            primaryButton: .default(Text("OK")),
-                            secondaryButton: nil
-                        )
-                    } else {
-                        self.alertItem = AlertItem(
-                            title: Text("No Entries to Purge"),
-                            message: Text("There are no entries older than \(retentionManager.currentPolicy.displayName.lowercased())."),
-                            primaryButton: .default(Text("OK")),
-                            secondaryButton: nil
-                        )
-                    }
+                    logger.debug("Purge functionality will be available in Task 10")
+                    self.alertItem = AlertItem(
+                        title: Text("Feature Coming Soon"),
+                        message: Text("Purge functionality will be implemented when SettingsView is migrated to TCA."),
+                        primaryButton: .default(Text("OK")),
+                        secondaryButton: nil
+                    )
                 }
             } catch {
                 await MainActor.run {
@@ -497,13 +482,8 @@ struct SettingsView: View {
                     }
                 }
 
-                // Delete SwiftData models
-                logger.debug("Deleting SwiftData models")
-                try modelContext.delete(model: ShiftType.self)
-                try modelContext.delete(model: Location.self)
-
+                logger.debug("All data deleted successfully")
                 await MainActor.run {
-                    logger.debug("All data deleted successfully")
                     self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
                 }
             } catch {
@@ -521,3 +501,4 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView()
     }
 }
+

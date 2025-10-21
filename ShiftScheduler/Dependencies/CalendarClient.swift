@@ -4,12 +4,12 @@ import ComposableArchitecture
 /// TCA Dependency Client for Calendar operations
 /// Wraps the existing CalendarService for use within TCA reducers
 @DependencyClient
-struct CalendarClient: Sendable {
+struct CalendarClient {
     /// Check if calendar access is authorized
     var isAuthorized: @Sendable () -> Bool = { false }
 
     /// Create a new shift event in the calendar
-    var createShift: @Sendable (ShiftType, Date) async throws -> String = { _, _ in "" }
+    var createShift: @Sendable (ShiftType, Date) async throws -> String
 
     /// Fetch all shifts for a specific date
     var fetchShifts: @Sendable (Date) async throws -> [ScheduledShiftData] = { _ in [] }
@@ -39,7 +39,7 @@ extension CalendarClient: DependencyKey {
             isAuthorized: {
                 service.isAuthorized
             },
-            createShift: { shiftType, date in
+            createShift: { @Sendable shiftType, date in
                 try await service.createShiftEvent(from: shiftType, on: date)
             },
             fetchShifts: { date in
@@ -54,7 +54,7 @@ extension CalendarClient: DependencyKey {
             checkForDuplicate: { shiftTypeId, date in
                 try await service.checkForDuplicateShift(shiftTypeId: shiftTypeId, on: date)
             },
-            updateShift: { identifier, newShiftType in
+            updateShift: { @Sendable identifier, newShiftType in
                 try await service.updateShiftEvent(identifier: identifier, to: newShiftType)
             },
             requestAuthorization: {
@@ -70,12 +70,12 @@ extension CalendarClient: DependencyKey {
     /// Preview value with mock data
     static let previewValue = CalendarClient(
         isAuthorized: { true },
-        createShift: { _, _ in "preview-event-id" },
+        createShift: { @Sendable _, _ in "preview-event-id" },
         fetchShifts: { _ in [] },
         fetchShiftsInRange: { _, _ in [] },
         deleteShift: { _ in },
         checkForDuplicate: { _, _ in false },
-        updateShift: { _, _ in },
+        updateShift: { @Sendable _, _ in },
         requestAuthorization: { true }
     )
 }

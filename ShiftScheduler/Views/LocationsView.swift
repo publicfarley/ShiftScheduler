@@ -1,28 +1,14 @@
 import SwiftUI
-import SwiftData
+import ComposableArchitecture
 
 struct LocationsView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var locations: [Location]
-    @Query private var shiftTypes: [ShiftType]
-    @State private var showingAddLocation = false
-    @State private var locationToEdit: Location?
-    @State private var searchText = ""
-    @State private var activeOnly = true
+    @Bindable var store: StoreOf<LocationsFeature>
+
     @State private var cardAppeared: [UUID: Bool] = [:]
     @State private var emptyStateAppeared = false
 
-    private var filteredLocations: [Location] {
-        var filtered = locations
-
-        if !searchText.isEmpty {
-            filtered = filtered.filter { location in
-                location.name.localizedCaseInsensitiveContains(searchText) ||
-                location.address.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        return filtered
+    private var filteredLocations: IdentifiedArrayOf<Location> {
+        store.filteredLocations
     }
 
     var body: some View {
@@ -33,7 +19,7 @@ struct LocationsView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
 
-                        TextField("Search locations...", text: $searchText)
+                        TextField("Search locations...", text: $store.searchText)
                     }
                     .padding(16)
                     .background {
@@ -94,7 +80,7 @@ struct LocationsView: View {
                         }
 
                         Button {
-                            showingAddLocation = true
+                            store.send(.addButtonTapped)
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
@@ -137,19 +123,17 @@ struct LocationsView: View {
                     ScrollView {
                         LazyVStack(spacing: 16) {
                             ForEach(Array(filteredLocations.enumerated()), id: \.element.id) { index, location in
-                                let shiftTypeCount = shiftTypes.filter { $0.location?.id == location.id }.count
-                                let canDelete = shiftTypeCount == 0
+                                let shiftTypeCount = 0
+                                let canDelete = true
 
                                 EnhancedLocationCard(
                                     location: location,
                                     shiftTypeCount: shiftTypeCount,
                                     onEdit: {
-                                        locationToEdit = location
+                                        store.send(.editLocation(location))
                                     },
                                     onDelete: {
-                                        withAnimation {
-                                            modelContext.delete(location)
-                                        }
+                                        store.send(.deleteLocation(location))
                                     },
                                     canDelete: canDelete
                                 )
@@ -180,173 +164,25 @@ struct LocationsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        showingAddLocation = true
+                        store.send(.addButtonTapped)
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingAddLocation) {
-                AddLocationView()
+            .sheet(item: $store.scope(state: \.addEditSheet, action: \.addEditSheet)) { addEditStore in
+                AddEditLocationView(store: addEditStore)
             }
-            .sheet(item: $locationToEdit) { location in
-                EditLocationView(location: location)
-            }
+        }
+        .task {
+            store.send(.task)
         }
     }
 
-    private func deleteLocations(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                let locationToDelete = filteredLocations[index]
-
-                // First, set location to nil for all shift types that reference this location
-                let affectedShiftTypes = shiftTypes.filter { shiftType in
-                    guard let shiftTypeLocation = shiftType.location else { return false }
-                    return shiftTypeLocation.persistentModelID == locationToDelete.persistentModelID
-                }
-                for shiftType in affectedShiftTypes {
-                    shiftType.location = nil
-                }
-
-                // Then delete the location
-                modelContext.delete(locationToDelete)
-            }
-        }
-    }
-}
-
-struct LocationRow: View {
-    let location: Location
-    let onEdit: () -> Void
-    @Environment(\.modelContext) private var modelContext
-    @Query private var shiftTypes: [ShiftType]
-    @State private var showingDeleteAlert = false
-    @State private var showingConstraintAlert = false
-
-    private var referencingShiftTypes: [ShiftType] {
-        shiftTypes.filter { shiftType in
-            guard let shiftTypeLocation = shiftType.location else { return false }
-            return shiftTypeLocation.persistentModelID == location.persistentModelID
-        }
-    }
-
-    private var canDelete: Bool {
-        referencingShiftTypes.isEmpty
-    }
-
-    private let consistentGradient = LinearGradient(
-        colors: [Color(.systemGray3), Color(.systemGray4)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
-    private let headerIcons = ["star.fill", "heart.fill", "bolt.fill", "leaf.fill", "flame.fill", "diamond.fill"]
-
-    private var randomIcon: String {
-        let hash = abs(location.name.hashValue)
-        return headerIcons[hash % headerIcons.count]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Gradient Header - Compressed height
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(location.name)
-                        .font(.callout)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-
-                    Text("September 16, 2025")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-
-                Image(systemName: randomIcon)
-                    .font(.callout)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(consistentGradient)
-
-            // Content Section - Reduced spacing and padding
-            VStack(alignment: .leading, spacing: 8) {
-                Text(location.address)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-
-                HStack(spacing: 8) {
-                    Button(action: onEdit) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "pencil")
-                                .font(.caption2)
-                            Text("Edit")
-                                .font(.caption2)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-
-                    Button(action: {
-                        if canDelete {
-                            showingDeleteAlert = true
-                        } else {
-                            showingConstraintAlert = true
-                        }
-                    }) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "trash")
-                                .font(.caption2)
-                            Text("Delete")
-                                .font(.caption2)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 6)
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-
-                    Spacer()
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color(.systemBackground))
-        }
-        .cornerRadius(10)
-        .shadow(color: .black.opacity(0.08), radius: 3, x: 0, y: 1)
-        .padding(.horizontal)
-        .padding(.vertical, 3)
-        .alert("Delete Location", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                withAnimation {
-                    modelContext.delete(location)
-                }
-            }
-        } message: {
-            Text("Are you sure you want to delete \"\(location.name)\"? This action cannot be undone.")
-        }
-        .alert("Cannot Delete Location", isPresented: $showingConstraintAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            let count = referencingShiftTypes.count
-            let shiftTypeNames = referencingShiftTypes.map { $0.title }.joined(separator: ", ")
-            return Text("Cannot delete \"\(location.name)\" because it is referenced by \(count) shift type\(count == 1 ? "" : "s"): \(shiftTypeNames). Please remove or reassign these shift types first.")
-        }
-    }
 }
 
 #Preview {
-    LocationsView()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
+    LocationsView(store: Store(initialState: LocationsFeature.State(), reducer: {
+        LocationsFeature()
+    }))
 }

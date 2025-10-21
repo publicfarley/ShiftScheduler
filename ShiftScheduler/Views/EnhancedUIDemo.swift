@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 // MARK: - Enhanced UI Components Demo
 struct EnhancedUIDemo: View {
@@ -334,7 +333,7 @@ private func createSampleShift(
         ),
         title: title,
         description: "Sample \(title.lowercased())",
-        location: location
+        locationId: location.id
     )
 
     // Create scheduled shift
@@ -365,7 +364,7 @@ private func createSampleAllDayShift(
         duration: .allDay,
         title: title,
         description: "Sample \(title.lowercased())",
-        location: location
+        locationId: location.id
     )
 
     // Create scheduled shift
@@ -380,5 +379,4 @@ private func createSampleAllDayShift(
 // MARK: - Preview
 #Preview {
     EnhancedUIDemo()
-        .modelContainer(for: [Location.self, ShiftType.self], inMemory: true)
 }

@@ -152,9 +152,8 @@ class CalendarService {
             event.endDate = endDate
         }
 
-        if let location = shiftType.location {
-            event.location = "\(location.name), \(location.address)"
-        }
+        // Location will need to be fetched via repository when needed
+        // For now, location is stored as locationId in ShiftType
 
         event.notes = """
         ShiftType ID: \(shiftType.id.uuidString)
@@ -292,11 +291,9 @@ class CalendarService {
             event.endDate = endDate
         }
 
-        if let location = newShiftType.location {
-            event.location = "\(location.name), \(location.address)"
-        } else {
-            event.location = nil
-        }
+        // Location will need to be fetched via repository when needed
+        // For now, location is stored as locationId in ShiftType
+        event.location = nil
 
         event.notes = """
         ShiftType ID: \(newShiftType.id.uuidString)
