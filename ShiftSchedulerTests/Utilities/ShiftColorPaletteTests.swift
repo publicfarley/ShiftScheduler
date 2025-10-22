@@ -167,6 +167,8 @@ struct ShiftColorPaletteTests {
     // MARK: - Helper Methods
 
     private func createMockShiftType(symbol: String, title: String) -> ShiftType {
+        let testLocation = Location(id: UUID(), name: "Test Location", address: "123 Test St")
+
         return ShiftType(
             symbol: symbol,
             duration: .scheduled(
@@ -175,7 +177,7 @@ struct ShiftColorPaletteTests {
             ),
             title: title,
             description: "Test shift",
-            location: nil
+            location: testLocation
         )
     }
 }

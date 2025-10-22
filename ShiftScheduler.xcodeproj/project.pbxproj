@@ -18,19 +18,11 @@
 			remoteGlobalIDString = B4B284AD2E7682320010D2E9;
 			remoteInfo = ShiftScheduler;
 		};
-		B4B284C62E7682340010D2E9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B4B284A62E7682320010D2E9 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B4B284AD2E7682320010D2E9;
-			remoteInfo = ShiftScheduler;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		B4B284AE2E7682320010D2E9 /* ShiftScheduler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShiftScheduler.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShiftSchedulerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B4B284C52E7682340010D2E9 /* ShiftSchedulerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShiftSchedulerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -42,11 +34,6 @@
 		B4B284BE2E7682340010D2E9 /* ShiftSchedulerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ShiftSchedulerTests;
-			sourceTree = "<group>";
-		};
-		B4B284C82E7682340010D2E9 /* ShiftSchedulerUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ShiftSchedulerUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -67,13 +54,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B4B284C22E7682340010D2E9 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -82,7 +62,6 @@
 			children = (
 				B4B284B02E7682320010D2E9 /* ShiftScheduler */,
 				B4B284BE2E7682340010D2E9 /* ShiftSchedulerTests */,
-				B4B284C82E7682340010D2E9 /* ShiftSchedulerUITests */,
 				B4B284AF2E7682320010D2E9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -92,7 +71,6 @@
 			children = (
 				B4B284AE2E7682320010D2E9 /* ShiftScheduler.app */,
 				B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */,
-				B4B284C52E7682340010D2E9 /* ShiftSchedulerUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,29 +124,6 @@
 			productReference = B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		B4B284C42E7682340010D2E9 /* ShiftSchedulerUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B4B284D52E7682340010D2E9 /* Build configuration list for PBXNativeTarget "ShiftSchedulerUITests" */;
-			buildPhases = (
-				B4B284C12E7682340010D2E9 /* Sources */,
-				B4B284C22E7682340010D2E9 /* Frameworks */,
-				B4B284C32E7682340010D2E9 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B4B284C72E7682340010D2E9 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				B4B284C82E7682340010D2E9 /* ShiftSchedulerUITests */,
-			);
-			name = ShiftSchedulerUITests;
-			packageProductDependencies = (
-			);
-			productName = ShiftSchedulerUITests;
-			productReference = B4B284C52E7682340010D2E9 /* ShiftSchedulerUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -183,10 +138,6 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					B4B284BA2E7682340010D2E9 = {
-						CreatedOnToolsVersion = 26.0;
-						TestTargetID = B4B284AD2E7682320010D2E9;
-					};
-					B4B284C42E7682340010D2E9 = {
 						CreatedOnToolsVersion = 26.0;
 						TestTargetID = B4B284AD2E7682320010D2E9;
 					};
@@ -211,7 +162,6 @@
 			targets = (
 				B4B284AD2E7682320010D2E9 /* ShiftScheduler */,
 				B4B284BA2E7682340010D2E9 /* ShiftSchedulerTests */,
-				B4B284C42E7682340010D2E9 /* ShiftSchedulerUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -225,13 +175,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B4B284B92E7682340010D2E9 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B4B284C32E7682340010D2E9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -255,13 +198,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B4B284C12E7682340010D2E9 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -269,11 +205,6 @@
 			isa = PBXTargetDependency;
 			target = B4B284AD2E7682320010D2E9 /* ShiftScheduler */;
 			targetProxy = B4B284BC2E7682340010D2E9 /* PBXContainerItemProxy */;
-		};
-		B4B284C72E7682340010D2E9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B4B284AD2E7682320010D2E9 /* ShiftScheduler */;
-			targetProxy = B4B284C62E7682340010D2E9 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -515,46 +446,6 @@
 			};
 			name = Release;
 		};
-		B4B284D62E7682340010D2E9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M8T74C3QWG;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.ShiftSchedulerUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ShiftScheduler;
-			};
-			name = Debug;
-		};
-		B4B284D72E7682340010D2E9 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = M8T74C3QWG;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.ShiftSchedulerUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ShiftScheduler;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -581,15 +472,6 @@
 			buildConfigurations = (
 				B4B284D32E7682340010D2E9 /* Debug */,
 				B4B284D42E7682340010D2E9 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B4B284D52E7682340010D2E9 /* Build configuration list for PBXNativeTarget "ShiftSchedulerUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B4B284D62E7682340010D2E9 /* Debug */,
-				B4B284D72E7682340010D2E9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

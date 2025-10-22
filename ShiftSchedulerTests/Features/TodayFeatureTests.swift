@@ -3,6 +3,7 @@ import Testing
 import ComposableArchitecture
 @testable import ShiftScheduler
 
+@MainActor
 @Suite("TodayFeature Tests")
 struct TodayFeatureTests {
     // MARK: - Test Helpers
@@ -27,12 +28,12 @@ struct TodayFeatureTests {
         let shiftType = makeShiftType()
 
         let shiftsData = [
-            ScheduledShiftData(eventIdentifier: "event-001", shiftTypeId: shiftType.id, date: today),
-            ScheduledShiftData(eventIdentifier: "event-002", shiftTypeId: shiftType.id, date: tomorrow)
+            ScheduledShiftData(eventIdentifier: "event-001", shiftTypeId: shiftType.id, date: today, title: shiftType.title, location: shiftType.location.name),
+            ScheduledShiftData(eventIdentifier: "event-002", shiftTypeId: shiftType.id, date: tomorrow, title: shiftType.title, location: shiftType.location.name)
         ]
 
-        let mockCalendarClient = MockCalendarClient(mockFetchShiftsInRange: shiftsData)
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State()
@@ -102,8 +103,8 @@ struct TodayFeatureTests {
             date: today
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -142,10 +143,8 @@ struct TodayFeatureTests {
             date: today
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient(
-            mockSwitchShiftResult: UUID()
-        )
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -184,8 +183,8 @@ struct TodayFeatureTests {
             date: today
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -218,10 +217,8 @@ struct TodayFeatureTests {
             reason: "Test undo"
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient(
-            mockUndoResult: ()
-        )
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -252,8 +249,8 @@ struct TodayFeatureTests {
 
     @Test("undo fails gracefully when stack is empty")
     func testUndoWithEmptyStack() async {
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -285,10 +282,8 @@ struct TodayFeatureTests {
             reason: "Test redo"
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient(
-            mockRedoResult: ()
-        )
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -319,8 +314,8 @@ struct TodayFeatureTests {
 
     @Test("redo fails gracefully when stack is empty")
     func testRedoWithEmptyStack() async {
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -355,8 +350,8 @@ struct TodayFeatureTests {
             ScheduledShift(id: UUID(), eventIdentifier: "event-003", shiftType: shiftType, date: nextWeek)
         ]
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -379,8 +374,8 @@ struct TodayFeatureTests {
 
     @Test("updateCachedShifts with empty shifts")
     func testCachedShiftsWithEmptyShifts() async {
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -405,8 +400,8 @@ struct TodayFeatureTests {
 
     @Test("toastMessageCleared clears toast notification")
     func testToastMessageCleared() async {
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -434,8 +429,8 @@ struct TodayFeatureTests {
             date: Date()
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -467,8 +462,8 @@ struct TodayFeatureTests {
             reason: "Test"
         )
 
-        let mockCalendarClient = MockCalendarClient()
-        let mockShiftSwitchClient = MockShiftSwitchClient()
+        let mockCalendarClient = CalendarClient.testValue
+        let mockShiftSwitchClient = ShiftSwitchClient.testValue
 
         let store = TestStore(
             initialState: TodayFeature.State(
@@ -487,66 +482,4 @@ struct TodayFeatureTests {
             state.canRedo = true
         }
     }
-}
-
-// MARK: - Mock Clients
-
-/// Mock implementation of CalendarClient for testing
-struct MockCalendarClient {
-    var mockFetchShiftsInRange: [ScheduledShiftData] = []
-    var mockFetchShiftsError: (any Error)?
-
-    func fetchShiftsInRange(_ startDate: Date, _ endDate: Date) async throws -> [ScheduledShiftData] {
-        if let error = mockFetchShiftsError {
-            throw error
-        }
-        return mockFetchShiftsInRange
-    }
-}
-
-/// Mock implementation of ShiftSwitchClient for testing
-struct MockShiftSwitchClient {
-    var mockSwitchShiftResult: UUID?
-    var mockSwitchShiftError: (any Error)?
-    var mockUndoResult: Void?
-    var mockUndoError: (any Error)?
-    var mockRedoResult: Void?
-    var mockRedoError: (any Error)?
-    var mockRestoreStacksResult: (undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation]) = ([], [])
-    var mockRestoreStacksError: (any Error)?
-
-    var switchShift: @Sendable (
-        String,
-        Date,
-        ShiftType,
-        ShiftType,
-        String?
-    ) async throws -> UUID {
-        if let error = mockSwitchShiftError {
-            throw error
-        }
-        return mockSwitchShiftResult ?? UUID()
-    }
-
-    var undoOperation: @Sendable (ShiftSwitchOperation) async throws -> Void {
-        if let error = mockUndoError {
-            throw error
-        }
-    }
-
-    var redoOperation: @Sendable (ShiftSwitchOperation) async throws -> Void {
-        if let error = mockRedoError {
-            throw error
-        }
-    }
-
-    var restoreStacks: @Sendable () async throws -> (undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation]) {
-        if let error = mockRestoreStacksError {
-            throw error
-        }
-        return mockRestoreStacksResult
-    }
-
-    var persistStacks: @Sendable ([ShiftSwitchOperation], [ShiftSwitchOperation]) async -> Void = { _, _ in }
-    var clearHistory: @Sendable () async throws -> Void = { }
 }
