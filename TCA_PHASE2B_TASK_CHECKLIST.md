@@ -135,25 +135,31 @@ Status: ✅ Completed (Session: Oct 21)
 **Description**: Create ScheduleFeature for calendar and schedule management
 **Dependencies**: PersistenceClient (done), CalendarClient (done)
 **Files to Create/Modify**:
-- [ ] Create `ShiftScheduler/Features/ScheduleFeature.swift`
+- [x] Create `ShiftScheduler/Features/ScheduleFeature.swift`
 
 **State to Manage**:
-- [ ] Scheduled shifts for date range
-- [ ] Selected date
-- [ ] Loading state
-- [ ] Error messages
-- [ ] Search/filter text
+- [x] Scheduled shifts for date range
+- [x] Selected date
+- [x] Loading state
+- [x] Error messages
+- [x] Search/filter text
 
 **Acceptance Criteria**:
-- [ ] Feature compiles
-- [ ] Loads shifts for date range
-- [ ] Filters by date/search
-- [ ] Handles errors gracefully
+- [x] Feature compiles
+- [x] Loads shifts for date range
+- [x] Filters by date/search
+- [x] Handles errors gracefully
 
 **Notes**:
 ```
-Status: ⏳ Not Started
-Reference LocationsFeature pattern
+Status: ✅ Completed (Session: Oct 21)
+- ScheduleFeature created with full TCA reducer
+- State includes shifts, selectedDate, searchText, undo/redo stacks
+- Actions for loading shifts, date selection, search, delete, switch, undo/redo
+- Properly manages undo/redo stacks with persistence via ShiftSwitchClient
+- Filters shifts by selected date and search text
+- Loads shifts for current month on date selection
+- Full error handling with toast notifications
 ```
 
 ---
@@ -416,6 +422,7 @@ Final sign-off task
 - [x] Task 2: TodayFeature Reducer
 - [x] Task 3: TodayView Migration
 - [x] Task 4: TodayFeature Unit Tests
+- [x] Task 5: ScheduleFeature
 - [x] Task 7: ShiftTypesFeature
 - [x] Task 8: ShiftTypesView Migration
 - [x] AddEditLocationFeature
@@ -429,11 +436,10 @@ Final sign-off task
 - None (all critical path features complete!)
 
 ### Pending ⏹️
-- [ ] Task 5: ScheduleFeature
 - [ ] Task 6: ScheduleView Migration
 - [ ] Task 9-14: Remaining tasks
 
-### Completion: 70% (10/14 tasks completed)
+### Completion: 73% (11/14 tasks completed)
 
 ---
 
