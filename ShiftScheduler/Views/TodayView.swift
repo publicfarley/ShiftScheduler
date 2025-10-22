@@ -1,4 +1,5 @@
 import SwiftUI
+import ComposableArchitecture
 
 // MARK: - Shift Status Enumeration (shared with EnhancedShiftCard)
 enum ShiftStatus {
@@ -60,67 +61,29 @@ struct StatusBadge: View {
 }
 
 struct TodayView: View {
-    @State private var shiftTypes: [ShiftType] = [] // Added property for shiftTypes
+    @Bindable var store: StoreOf<TodayFeature>
 
-    @State private var calendarService = CalendarService.shared
-    @State private var currentDayManager = CurrentDayManager.shared
-    @State private var scheduledShifts: [ScheduledShift] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var showSwitchShiftSheet = false
-
-    // Undo/Redo support
-    @State private var shiftSwitchService: ShiftSwitchService?
-    @State private var canUndo = false
-    @State private var canRedo = false
-    @State private var toastMessage: ToastMessage?
-
-    // Optimized computed properties with caching
-    @State private var todayShift: ScheduledShift?
-    @State private var tomorrowShift: ScheduledShift?
-    @State private var thisWeekShiftsCount: Int = 0
-    @State private var completedThisWeek: Int = 0
-
-    private func updateCachedShifts() {
-        todayShift = scheduledShifts.first { shift in
-            currentDayManager.isToday(shift.date)
-        }
-
-        tomorrowShift = scheduledShifts.first { shift in
-            currentDayManager.isTomorrow(shift.date)
-        }
-
-        let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: currentDayManager.today)?.start ?? currentDayManager.today
-        let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? currentDayManager.today
-
-        thisWeekShiftsCount = scheduledShifts.filter { shift in
-            shift.date >= startOfWeek && shift.date <= endOfWeek
-        }.count
-
-        // For now, keep completed count as 0
-        completedThisWeek = 0
-    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 20, pinnedViews: []) {
-                    if !calendarService.isAuthorized {
+                    if let errorMessage = store.errorMessage {
                         VStack(spacing: 16) {
                             Image(systemName: "calendar.badge.exclamationmark")
                                 .font(.largeTitle)
                                 .foregroundColor(.red)
 
-                            Text("Calendar Access Required")
+                            Text("Error Loading Shifts")
                                 .font(.headline)
 
-                            Text(calendarService.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
+                            Text(errorMessage)
                                 .multilineTextAlignment(.center)
                                 .foregroundColor(.secondary)
 
-                            Button("Open Settings") {
-                                if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                    UIApplication.shared.open(settingsUrl)
+                            Button("Retry") {
+                                Task {
+                                    await store.send(.task).finish()
                                 }
                             }
                             .buttonStyle(.borderedProminent)
@@ -138,7 +101,7 @@ struct TodayView: View {
                                             .foregroundColor(.orange)
                                             .accessibilityLabel("Today's shift section")
 
-                                        Text(currentDayManager.today, style: .date)
+                                        Text(Date(), style: .date)
                                             .font(.callout)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.secondary)
@@ -146,20 +109,14 @@ struct TodayView: View {
 
                                     Spacer()
 
-                                    if isLoading {
+                                    if store.isLoading {
                                         ProgressView()
                                             .scaleEffect(0.8)
                                     }
                                 }
 
-                                if let errorMessage = errorMessage {
-                                    Text("Error: \(errorMessage)")
-                                        .foregroundColor(.red)
-                                        .font(.caption)
-                                }
-
                                 // Optimized Today shift card
-                                OptimizedTodayShiftCard(shift: todayShift)
+                                OptimizedTodayShiftCard(shift: store.todayShift)
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 16)
@@ -186,7 +143,7 @@ struct TodayView: View {
 
                                 Spacer()
 
-                                if todayShift != nil {
+                                if store.todayShift != nil {
                                     // Status indicator for quick actions
                                     HStack(spacing: 4) {
                                         Circle()
@@ -200,7 +157,7 @@ struct TodayView: View {
                                 }
                             }
 
-                            if todayShift != nil {
+                            if store.todayShift != nil {
                                 // Compact quick actions when there's a shift
                                 VStack(spacing: 10) {
                                     HStack(spacing: 10) {
@@ -231,7 +188,7 @@ struct TodayView: View {
                                             icon: "arrow.triangle.2.circlepath",
                                             color: .blue,
                                             action: {
-                                                showSwitchShiftSheet = true
+                                                store.send(.switchShiftTapped(store.todayShift ?? ScheduledShift(id: UUID(), eventIdentifier: "", shiftType: nil, date: Date())))
                                             }
                                         )
 
@@ -241,13 +198,11 @@ struct TodayView: View {
                                             icon: "arrow.uturn.backward",
                                             color: .orange,
                                             action: {
-                                                Task {
-                                                    await handleUndo()
-                                                }
+                                                store.send(.undo)
                                             }
                                         )
-                                        .opacity(canUndo ? 1.0 : 0.5)
-                                        .disabled(!canUndo)
+                                        .opacity(store.canUndo ? 1.0 : 0.5)
+                                        .disabled(!store.canUndo)
 
                                         // Redo button
                                         CompactQuickActionButton(
@@ -255,13 +210,11 @@ struct TodayView: View {
                                             icon: "arrow.uturn.forward",
                                             color: .blue,
                                             action: {
-                                                Task {
-                                                    await handleRedo()
-                                                }
+                                                store.send(.redo)
                                             }
                                         )
-                                        .opacity(canRedo ? 1.0 : 0.5)
-                                        .disabled(!canRedo)
+                                        .opacity(store.canRedo ? 1.0 : 0.5)
+                                        .disabled(!store.canRedo)
                                     }
                                 }
                                 .padding(.horizontal)
@@ -321,7 +274,7 @@ struct TodayView: View {
                                 }
 
                                 // Optimized Tomorrow shift card
-                                OptimizedTomorrowShiftCard(shift: tomorrowShift)
+                                OptimizedTomorrowShiftCard(shift: store.tomorrowShift)
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 16)
@@ -354,7 +307,7 @@ struct TodayView: View {
                                         .font(.caption2)
                                         .foregroundColor(.blue)
 
-                                    Text("Week \(Calendar.current.component(.weekOfYear, from: currentDayManager.today))")
+                                    Text("Week \(Calendar.current.component(.weekOfYear, from: Date()))")
                                         .font(.caption2)
                                         .foregroundColor(.blue)
                                 }
@@ -372,13 +325,13 @@ struct TodayView: View {
 
                             HStack(spacing: 10) {
                                 CompactWeekStatView(
-                                    count: thisWeekShiftsCount,
+                                    count: store.thisWeekShiftsCount,
                                     label: "Scheduled",
                                     color: .blue,
                                     icon: "calendar"
                                 )
                                 CompactWeekStatView(
-                                    count: completedThisWeek,
+                                    count: store.completedThisWeek,
                                     label: "Completed",
                                     color: .green,
                                     icon: "checkmark.circle.fill"
@@ -396,146 +349,37 @@ struct TodayView: View {
             .navigationTitle("Today")
             .navigationBarTitleDisplayMode(.large)
             .task {
-                await loadShifts()
-                await initializeShiftSwitchService()
+                await store.send(.task).finish()
             }
-            .onChange(of: scheduledShifts) { _, _ in
-                updateCachedShifts()
-            }
-            .onCurrentDayChange { previousDate, currentDate in
-                // Refresh shifts when day changes
-                Task {
-                    await loadShifts()
-                }
-            }
-            .sheet(isPresented: $showSwitchShiftSheet) {
-                if let todayShift = todayShift {
+            .sheet(
+                isPresented: Binding(
+                    get: { store.showSwitchShiftSheet },
+                    set: { isPresented in
+                        if !isPresented {
+                            store.send(.switchShiftSheetDismissed)
+                        }
+                    }
+                )
+            ) {
+                if let selectedShift = store.selectedShift {
                     ShiftChangeSheet(
-                        currentShift: todayShift,
+                        currentShift: selectedShift,
                         onSwitch: { newShiftType, reason in
-                            try await handleShiftSwitch(shift: todayShift, newShiftType: newShiftType, reason: reason)
+                            store.send(.performSwitchShift(selectedShift, newShiftType, reason))
                         }
                     )
                 }
             }
-            .toast($toastMessage)
-        }
-    }
-
-    private func loadShifts() async {
-        guard calendarService.isAuthorized else { return }
-
-        isLoading = true
-        errorMessage = nil
-
-        do {
-            // TODO: Load shiftTypes here from persistence if needed
-            // Example: self.shiftTypes = try await PersistenceClient.shared.fetchShiftTypes()
-
-            // Use CurrentDayManager for consistent date handling
-            let todayShiftData = try await calendarService.fetchTodaysShifts()
-            let tomorrowShiftData = try await calendarService.fetchTomorrowsShifts()
-            let weekShiftData = try await calendarService.fetchCurrentWeekShifts()
-
-            // Combine all shift data and remove duplicates
-            let allShiftData = Array(Set(todayShiftData + tomorrowShiftData + weekShiftData))
-
-            let shifts = allShiftData.map { data in
-                let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
-                return ScheduledShift(from: data, shiftType: shiftType)
-            }
-
-            self.scheduledShifts = shifts
-            self.updateCachedShifts()
-            self.isLoading = false
-        } catch {
-            self.errorMessage = error.localizedDescription
-            self.isLoading = false
-        }
-    }
-
-    private func initializeShiftSwitchService() async {
-        let changeLogRepo = ChangeLogRepository()
-        let service = ShiftSwitchService(
-            calendarService: calendarService,
-            changeLogRepository: changeLogRepo
-        )
-
-        // Restore persisted undo/redo stacks
-        await service.restoreFromPersistence()
-
-        shiftSwitchService = service
-
-        // Update undo/redo button states
-        await updateUndoRedoStates()
-    }
-
-    private func updateUndoRedoStates() async {
-        guard let service = shiftSwitchService else { return }
-        canUndo = await service.canUndo()
-        canRedo = await service.canRedo()
-    }
-
-    private func handleShiftSwitch(shift: ScheduledShift, newShiftType: ShiftType, reason: String?) async throws {
-        guard let oldShiftType = shift.shiftType,
-              let service = shiftSwitchService else {
-            throw NSError(domain: "TodayView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Current shift has no shift type"])
-        }
-
-        // Perform the switch
-        try await service.switchShift(
-            eventIdentifier: shift.eventIdentifier,
-            scheduledDate: shift.date,
-            from: oldShiftType,
-            to: newShiftType,
-            reason: reason
-        )
-
-        // Update undo/redo button states
-        await updateUndoRedoStates()
-
-        // Reload shifts to reflect the change
-        await loadShifts()
-
-        // Show success toast
-        toastMessage = .success("Shift switched to \(newShiftType.title)")
-    }
-
-    private func handleUndo() async {
-        guard let service = shiftSwitchService else { return }
-
-        do {
-            try await service.undo()
-
-            // Update undo/redo button states
-            await updateUndoRedoStates()
-
-            // Reload shifts
-            await loadShifts()
-
-            // Show toast
-            toastMessage = .undo()
-        } catch {
-            toastMessage = .error("Failed to undo: \(error.localizedDescription)")
-        }
-    }
-
-    private func handleRedo() async {
-        guard let service = shiftSwitchService else { return }
-
-        do {
-            try await service.redo()
-
-            // Update undo/redo button states
-            await updateUndoRedoStates()
-
-            // Reload shifts
-            await loadShifts()
-
-            // Show toast
-            toastMessage = .redo()
-        } catch {
-            toastMessage = .error("Failed to redo: \(error.localizedDescription)")
+            .toast(
+                Binding(
+                    get: { store.toastMessage },
+                    set: { newMessage in
+                        if newMessage == nil {
+                            store.send(.toastMessageCleared)
+                        }
+                    }
+                )
+            )
         }
     }
 }
@@ -2203,5 +2047,12 @@ struct CompactWeekStatView: View {
 }
 
 #Preview {
-    TodayView()
+    TodayView(
+        store: Store(initialState: TodayFeature.State()) {
+            TodayFeature()
+        } withDependencies: {
+            $0.calendarClient = .previewValue
+            $0.shiftSwitchClient = .previewValue
+        }
+    )
 }

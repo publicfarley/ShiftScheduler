@@ -2,9 +2,13 @@ import SwiftUI
 import ComposableArchitecture
 
 struct ContentView: View {
+    let todayStore = Store(initialState: TodayFeature.State()) {
+        TodayFeature()
+    }
+
     var body: some View {
         TabView {
-            TodayView()
+            TodayView(store: todayStore)
                 .tabItem {
                     Label("Today", systemImage: "calendar.badge.clock")
                 }
