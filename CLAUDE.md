@@ -50,6 +50,36 @@ This is an iOS Swift/SwiftUI application for shift scheduling, implementing Doma
 
 - **InMemoryRepositories.swift**: In-memory implementations of the repository protocols
 
+### TCA Migration & Dependency Injection
+
+**CRITICAL PRINCIPLE: Zero Singletons in New Code**
+
+During the TCA migration (Phase 2+), all new features must follow strict dependency injection patterns:
+
+- ❌ **DO NOT create `.shared` singletons** - Even if existing code has them
+- ❌ **DO NOT access global state** from features or reducers
+- ✅ **DO use `@Dependency` injection** in all TCA reducers
+- ✅ **DO keep state in feature reducers** where it can be tested and mocked
+- ✅ **DO create stateless client dependencies** that perform operations without holding state
+
+**Why This Matters:**
+Singletons in the codebase are technical debt from pre-TCA architecture. They violate:
+- Testability (hard to mock in tests)
+- Composability (multiple features can't have independent state)
+- Predictability (global state makes debugging difficult)
+
+**Pattern Example:**
+```swift
+// ❌ Bad: Singleton state (old pattern - don't copy)
+let service = MyService.shared  // Global mutable state
+
+// ✅ Good: Dependency injection (TCA pattern - use this)
+@Dependency(\.myClient) var myClient
+// Feature owns its state via @ObservableState
+```
+
+Each TCA feature manages its own state through the reducer's `@ObservableState` struct. State is never shared across features via singletons—composition happens at the TCA view level.
+
 ### Testing
 
 Tests use Swift's Testing framework (not XCTest) with the `@Test` macro and `#expect` assertions.
