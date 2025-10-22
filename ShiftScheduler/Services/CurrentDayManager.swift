@@ -1,8 +1,7 @@
 import Foundation
+import UIKit
 import SwiftUI
-import Observation
 
-@Observable
 class CurrentDayManager {
     static let shared = CurrentDayManager()
 

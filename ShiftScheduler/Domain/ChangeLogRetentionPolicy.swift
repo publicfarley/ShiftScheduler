@@ -44,7 +44,6 @@ enum ChangeLogRetentionPolicy: String, Codable, CaseIterable, Identifiable {
 }
 
 /// Manages retention policy persistence and purge operations
-@Observable
 final class ChangeLogRetentionManager {
     static let shared = ChangeLogRetentionManager()
 

@@ -15,6 +15,9 @@ struct ScheduleFeature {
         /// Loading state
         var isLoading: Bool = false
 
+        /// Calendar authorization state
+        var isCalendarAuthorized: Bool = false
+
         /// Error message if any
         var errorMessage: String?
 
@@ -57,6 +60,7 @@ struct ScheduleFeature {
             scheduledShifts: [ScheduledShift] = [],
             selectedDate: Date = Date(),
             isLoading: Bool = false,
+            isCalendarAuthorized: Bool = false,
             errorMessage: String? = nil,
             searchText: String = "",
             toastMessage: ToastMessage? = nil,
@@ -67,6 +71,7 @@ struct ScheduleFeature {
             self.scheduledShifts = scheduledShifts
             self.selectedDate = selectedDate
             self.isLoading = isLoading
+            self.isCalendarAuthorized = isCalendarAuthorized
             self.errorMessage = errorMessage
             self.searchText = searchText
             self.toastMessage = toastMessage
@@ -79,6 +84,7 @@ struct ScheduleFeature {
             lhs.scheduledShifts == rhs.scheduledShifts &&
             lhs.selectedDate == rhs.selectedDate &&
             lhs.isLoading == rhs.isLoading &&
+            lhs.isCalendarAuthorized == rhs.isCalendarAuthorized &&
             lhs.errorMessage == rhs.errorMessage &&
             lhs.searchText == rhs.searchText &&
             lhs.toastMessage == rhs.toastMessage &&
@@ -91,6 +97,12 @@ struct ScheduleFeature {
     enum Action: Equatable {
         /// View appeared, load initial data and restore undo/redo stacks
         case task
+
+        /// Check calendar authorization status
+        case checkAuthorization
+
+        /// Authorization status checked
+        case authorizationChecked(Bool)
 
         /// Load shifts from calendar for the current month
         case loadShifts
@@ -139,10 +151,13 @@ struct ScheduleFeature {
 
         static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
-            case (.task, .task), (.loadShifts, .loadShifts),
+            case (.task, .task), (.checkAuthorization, .checkAuthorization),
+                 (.loadShifts, .loadShifts),
                  (.addShiftButtonTapped, .addShiftButtonTapped),
                  (.undo, .undo), (.redo, .redo):
                 return true
+            case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
+                return lhs == rhs
             case let (.selectedDateChanged(lhs), .selectedDateChanged(rhs)):
                 return lhs == rhs
             case let (.searchTextChanged(lhs), .searchTextChanged(rhs)):
@@ -185,7 +200,7 @@ struct ScheduleFeature {
     @Dependency(\.calendarClient) var calendarClient
     @Dependency(\.shiftSwitchClient) var shiftSwitchClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .task:
@@ -197,8 +212,19 @@ struct ScheduleFeature {
                         })
                         await send(.stacksRestored(result))
                     },
+                    .send(.checkAuthorization),
                     .send(.loadShifts)
                 )
+
+            case .checkAuthorization:
+                return .run { send in
+                    let isAuthorized = calendarClient.isAuthorized()
+                    await send(.authorizationChecked(isAuthorized))
+                }
+
+            case let .authorizationChecked(isAuthorized):
+                state.isCalendarAuthorized = isAuthorized
+                return .none
 
             case .loadShifts:
                 state.isLoading = true

@@ -183,7 +183,7 @@ struct TodayFeature {
     @Dependency(\.calendarClient) var calendarClient
     @Dependency(\.shiftSwitchClient) var shiftSwitchClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .task:

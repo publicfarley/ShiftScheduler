@@ -54,7 +54,7 @@ struct AppFeature {
     @Dependency(\.calendarClient) var calendarClient
     @Dependency(\.persistenceClient) var persistenceClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):

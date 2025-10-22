@@ -98,7 +98,7 @@ struct ScheduleView: View {
             Text("Calendar Access Required")
                 .font(.headline)
 
-            Text(CalendarService.shared.authorizationError ?? "ShiftScheduler needs calendar access to function properly.")
+            Text("ShiftScheduler needs calendar access to function properly.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
 
@@ -115,7 +115,7 @@ struct ScheduleView: View {
     var body: some View {
         NavigationView {
             VStack {
-                if !CalendarService.shared.isAuthorized {
+                if !store.isCalendarAuthorized {
                     calendarAccessView
                 } else {
                     mainContentView
@@ -143,7 +143,7 @@ struct ScheduleView: View {
                     Button("Add Shift") {
                         store.send(.addShiftButtonTapped)
                     }
-                    .disabled(!CalendarService.shared.isAuthorized)
+                    .disabled(!store.isCalendarAuthorized)
                 }
             }
             .sheet(isPresented: Binding(

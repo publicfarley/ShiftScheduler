@@ -4,7 +4,7 @@ import OSLog
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "UserProfileManager")
 
 /// Manages user profile persistence and retrieval using UserDefaults
-@Observable
+
 final class UserProfileManager {
     static let shared = UserProfileManager()
 

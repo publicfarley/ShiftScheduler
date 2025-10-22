@@ -40,7 +40,6 @@ extension ShiftSwitchClient: DependencyKey {
     /// Live implementation using the real services
     /// Note: ShiftSwitchService is no longer used directly; its logic is now in the reducer
     static let liveValue: ShiftSwitchClient = {
-        let calendarService = CalendarService.shared
         let changeLogRepository = ChangeLogRepository()
         let dateProvider = SystemDateProvider()
         let userProfileManager = UserProfileManager.shared
@@ -48,8 +47,10 @@ extension ShiftSwitchClient: DependencyKey {
 
         return ShiftSwitchClient(
             switchShift: { @Sendable eventIdentifier, scheduledDate, oldShiftType, newShiftType, reason in
+                @Dependency(\.calendarClient) var calendarClient
+
                 // Update the calendar event
-                try await calendarService.updateShiftEvent(identifier: eventIdentifier, to: newShiftType)
+                try await calendarClient.updateShift(eventIdentifier, newShiftType)
 
                 // Create snapshots
                 let oldSnapshot = ShiftSnapshot(from: oldShiftType)
@@ -74,10 +75,12 @@ extension ShiftSwitchClient: DependencyKey {
                 return entry.id
             },
             undoOperation: { @Sendable operation in
+                @Dependency(\.calendarClient) var calendarClient
+
                 // Revert the calendar event
-                try await calendarService.updateShiftEvent(
-                    identifier: operation.eventIdentifier,
-                    to: operation.oldShiftType
+                try await calendarClient.updateShift(
+                    operation.eventIdentifier,
+                    operation.oldShiftType
                 )
 
                 // Log the undo
@@ -99,10 +102,12 @@ extension ShiftSwitchClient: DependencyKey {
                 try await changeLogRepository.save(entry)
             },
             redoOperation: { @Sendable operation in
+                @Dependency(\.calendarClient) var calendarClient
+
                 // Reapply the calendar event change
-                try await calendarService.updateShiftEvent(
-                    identifier: operation.eventIdentifier,
-                    to: operation.newShiftType
+                try await calendarClient.updateShift(
+                    operation.eventIdentifier,
+                    operation.newShiftType
                 )
 
                 // Log the redo

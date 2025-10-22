@@ -1,8 +1,9 @@
 import Foundation
 import ComposableArchitecture
+import EventKit
 
 /// TCA Dependency Client for Calendar operations
-/// Wraps the existing CalendarService for use within TCA reducers
+/// Provides shift management through EventKit abstraction
 @DependencyClient
 struct CalendarClient {
     /// Check if calendar access is authorized
@@ -31,35 +32,166 @@ struct CalendarClient {
 }
 
 extension CalendarClient: DependencyKey {
-    /// Live implementation using the real CalendarService
+    /// Live implementation using EventKitClient
     static let liveValue: CalendarClient = {
-        let service = CalendarService.shared
-
         return CalendarClient(
             isAuthorized: {
-                service.isAuthorized
+                @Dependency(\.eventKitClient) var eventKitClient
+                let status = eventKitClient.checkAuthorizationStatus()
+                return status == .fullAccess || status == .authorized
             },
             createShift: { @Sendable shiftType, date in
-                try await service.createShiftEvent(from: shiftType, on: date)
+                @Dependency(\.eventKitClient) var eventKitClient
+
+                let shiftDate = Calendar.current.startOfDay(for: date)
+
+                let (startDate, endDate, isAllDay): (Date, Date, Bool)
+
+                if case .allDay = shiftType.duration {
+                    (startDate, endDate, isAllDay) = (shiftDate, shiftDate, true)
+                } else if case let .scheduled(from, to) = shiftType.duration {
+                    var startComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+                    startComponents.hour = from.hour
+                    startComponents.minute = from.minute
+
+                    var endComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+                    endComponents.hour = to.hour
+                    endComponents.minute = to.minute
+
+                    guard let start = Calendar.current.date(from: startComponents),
+                          let end = Calendar.current.date(from: endComponents) else {
+                        throw EventKitError.invalidDate
+                    }
+
+                    (startDate, endDate, isAllDay) = (start, end, false)
+                } else {
+                    throw EventKitError.invalidDate
+                }
+
+                let notes = """
+                ShiftType ID: \(shiftType.id.uuidString)
+                App: com.functioncraft.shiftscheduler
+                Description: \(shiftType.shiftDescription)
+                """
+
+                return try await eventKitClient.createEvent(
+                    "\(shiftType.symbol) - \(shiftType.title)",
+                    startDate,
+                    endDate,
+                    isAllDay,
+                    notes
+                )
             },
             fetchShifts: { date in
-                try await service.fetchShifts(for: date)
+                @Dependency(\.eventKitClient) var eventKitClient
+
+                let startOfDay = Calendar.current.startOfDay(for: date)
+                guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else {
+                    throw EventKitError.invalidDate
+                }
+
+                let events = try await eventKitClient.fetchEvents(startOfDay, endOfDay)
+                return events.compactMap { event in
+                    guard let notes = event.notes,
+                          let shiftTypeId = extractShiftTypeId(from: notes) else {
+                        return nil
+                    }
+
+                    return ScheduledShiftData(
+                        eventIdentifier: event.eventIdentifier,
+                        shiftTypeId: shiftTypeId,
+                        date: event.startDate,
+                        title: event.title ?? "",
+                        location: event.location
+                    )
+                }
             },
             fetchShiftsInRange: { startDate, endDate in
-                try await service.fetchShifts(from: startDate, to: endDate)
+                @Dependency(\.eventKitClient) var eventKitClient
+
+                let events = try await eventKitClient.fetchEvents(startDate, endDate)
+                return events.compactMap { event in
+                    guard let notes = event.notes,
+                          let shiftTypeId = extractShiftTypeId(from: notes) else {
+                        return nil
+                    }
+
+                    return ScheduledShiftData(
+                        eventIdentifier: event.eventIdentifier,
+                        shiftTypeId: shiftTypeId,
+                        date: event.startDate,
+                        title: event.title ?? "",
+                        location: event.location
+                    )
+                }
             },
             deleteShift: { identifier in
-                try await service.deleteShift(withIdentifier: identifier)
+                @Dependency(\.eventKitClient) var eventKitClient
+                try await eventKitClient.deleteEvent(identifier)
             },
             checkForDuplicate: { shiftTypeId, date in
-                try await service.checkForDuplicateShift(shiftTypeId: shiftTypeId, on: date)
+                @Dependency(\.eventKitClient) var eventKitClient
+
+                let startOfDay = Calendar.current.startOfDay(for: date)
+                guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else {
+                    throw EventKitError.invalidDate
+                }
+
+                let events = try await eventKitClient.fetchEvents(startOfDay, endOfDay)
+                return events.contains { event in
+                    guard let notes = event.notes,
+                          let eventShiftTypeId = extractShiftTypeId(from: notes) else {
+                        return false
+                    }
+                    return eventShiftTypeId == shiftTypeId
+                }
             },
             updateShift: { @Sendable identifier, newShiftType in
-                try await service.updateShiftEvent(identifier: identifier, to: newShiftType)
+                @Dependency(\.eventKitClient) var eventKitClient
+
+                let shiftDate = Calendar.current.startOfDay(for: Date())
+
+                let (startDate, endDate, isAllDay): (Date, Date, Bool)
+
+                if case .allDay = newShiftType.duration {
+                    (startDate, endDate, isAllDay) = (shiftDate, shiftDate, true)
+                } else if case let .scheduled(from, to) = newShiftType.duration {
+                    var startComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+                    startComponents.hour = from.hour
+                    startComponents.minute = from.minute
+
+                    var endComponents = Calendar.current.dateComponents([.year, .month, .day], from: shiftDate)
+                    endComponents.hour = to.hour
+                    endComponents.minute = to.minute
+
+                    guard let start = Calendar.current.date(from: startComponents),
+                          let end = Calendar.current.date(from: endComponents) else {
+                        throw EventKitError.invalidDate
+                    }
+
+                    (startDate, endDate, isAllDay) = (start, end, false)
+                } else {
+                    throw EventKitError.invalidDate
+                }
+
+                let notes = """
+                ShiftType ID: \(newShiftType.id.uuidString)
+                App: com.functioncraft.shiftscheduler
+                Description: \(newShiftType.shiftDescription)
+                """
+
+                try await eventKitClient.updateEvent(
+                    identifier,
+                    "\(newShiftType.symbol) - \(newShiftType.title)",
+                    startDate,
+                    endDate,
+                    isAllDay,
+                    notes
+                )
             },
             requestAuthorization: {
-                // This would need to be implemented to handle async authorization
-                service.isAuthorized
+                @Dependency(\.eventKitClient) var eventKitClient
+                return await eventKitClient.requestFullAccess()
             }
         )
     }()
@@ -78,6 +210,19 @@ extension CalendarClient: DependencyKey {
         updateShift: { @Sendable _, _ in },
         requestAuthorization: { true }
     )
+}
+
+// MARK: - Helper Functions
+
+private func extractShiftTypeId(from notes: String) -> UUID? {
+    let lines = notes.components(separatedBy: .newlines)
+    for line in lines {
+        if line.hasPrefix("ShiftType ID: ") {
+            let idString = line.replacingOccurrences(of: "ShiftType ID: ", with: "")
+            return UUID(uuidString: idString)
+        }
+    }
+    return nil
 }
 
 extension DependencyValues {

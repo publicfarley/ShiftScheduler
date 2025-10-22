@@ -76,7 +76,7 @@ struct AddEditLocationFeature {
     @Dependency(\.persistenceClient) var persistenceClient
     @Dependency(\.dismiss) var dismiss
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .binding(_):

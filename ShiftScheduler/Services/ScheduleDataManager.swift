@@ -1,14 +1,10 @@
 import Foundation
-import SwiftUI
-import Observation
+import ComposableArchitecture
 
-/// High-performance data manager for schedule data with predictive caching and flash-free UI updates
-@Observable
 class ScheduleDataManager {
     static let shared = ScheduleDataManager()
 
     // MARK: - Core State
-    private let calendarService = CalendarService.shared
     private var shiftTypes: [ShiftType] = []
 
     // MARK: - Cache Management
@@ -81,13 +77,16 @@ class ScheduleDataManager {
     /// Loads shifts for initial display when shift types first become available
     @MainActor
     private func loadShiftsForInitialDisplay() async {
-        guard calendarService.isAuthorized else { return }
+        let dependencyValues = DependencyValues._current
+        let calendarClient = dependencyValues.calendarClient
+
+        guard calendarClient.isAuthorized() else { return }
 
         let targetDate = normalizeDate(selectedDate)
 
         do {
             let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
-            let shiftData = try await calendarService.fetchShifts(from: targetDate, to: endOfDay)
+            let shiftData = try await calendarClient.fetchShiftsInRange(targetDate, endOfDay)
 
             // Convert to ScheduledShift objects with proper shift types
             let shifts = shiftData.map { data in
@@ -156,7 +155,10 @@ class ScheduleDataManager {
     }
 
     private func loadShifts(for date: Date) {
-        guard calendarService.isAuthorized else { return }
+        let dependencyValues = DependencyValues._current
+        let calendarClient = dependencyValues.calendarClient
+
+        guard calendarClient.isAuthorized() else { return }
 
         let normalizedDate = normalizeDate(date)
 
@@ -167,13 +169,13 @@ class ScheduleDataManager {
 
         Task {
             do {
-                // Fetch data from calendar service
+                // Fetch data from calendar client
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: normalizedDate) ?? normalizedDate
-                let shiftData = try await calendarService.fetchShifts(from: normalizedDate, to: endOfDay)
+                let shiftData = try await calendarClient.fetchShiftsInRange(normalizedDate, endOfDay)
 
                 // Convert to ScheduledShift objects
                 let shifts = shiftData.map { data in
-                    let shiftType = shiftTypes.first { $0.id == data.shiftTypeId }
+                    let shiftType = self.shiftTypes.first { $0.id == data.shiftTypeId }
                     return ScheduledShift(from: data, shiftType: shiftType)
                 }
 
@@ -267,7 +269,10 @@ class ScheduleDataManager {
     // MARK: - Scheduled Dates Loading
 
     private func loadScheduledDatesInBackground() {
-        guard calendarService.isAuthorized else { return }
+        let dependencyValues = DependencyValues._current
+        let calendarClient = dependencyValues.calendarClient
+
+        guard calendarClient.isAuthorized() else { return }
 
         Task {
             do {
@@ -275,7 +280,7 @@ class ScheduleDataManager {
                 let startDate = Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date()
                 let endDate = Calendar.current.date(byAdding: .month, value: 6, to: Date()) ?? Date()
 
-                let allShiftData = try await calendarService.fetchShifts(from: startDate, to: endDate)
+                let allShiftData = try await calendarClient.fetchShiftsInRange(startDate, endDate)
                 let uniqueDates = Set(allShiftData.map { normalizeDate($0.date) })
 
                 await MainActor.run {
@@ -311,7 +316,10 @@ class ScheduleDataManager {
     // MARK: - Deletion with Cache Update
 
     func deleteShift(_ shift: ScheduledShift) async throws {
-        try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
+        let dependencyValues = DependencyValues._current
+        let calendarClient = dependencyValues.calendarClient
+
+        try await calendarClient.deleteShift(shift.eventIdentifier)
 
         // Update cache immediately
         let date = normalizeDate(shift.date)

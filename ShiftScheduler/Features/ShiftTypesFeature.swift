@@ -107,7 +107,7 @@ struct ShiftTypesFeature {
 
     @Dependency(\.persistenceClient) var persistenceClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .task:
@@ -276,7 +276,7 @@ struct AddEditShiftTypeFeature {
     @Dependency(\.persistenceClient) var persistenceClient
     @Dependency(\.dismiss) var dismiss
 
-    var reducer: some ReducerOf<Self> {
+    var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .binding(_):
