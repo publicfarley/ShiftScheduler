@@ -142,3 +142,4 @@ Without keyboard dismissal:
 - `KeyboardDismissArea` - Custom tappable clear area
 - Use var reducer: some ReducerOf<Self> (not var body) for TCA compatibility
 - Use the TCA_PHASE2B_TASK_CHECKLIST.md file as the official project task list
+- SwiftData is banned from this project and should never be used. This poject uses JSON based persistence.
