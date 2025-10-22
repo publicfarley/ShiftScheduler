@@ -185,7 +185,7 @@ struct ScheduleFeature {
     @Dependency(\.calendarClient) var calendarClient
     @Dependency(\.shiftSwitchClient) var shiftSwitchClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .task:

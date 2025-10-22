@@ -48,7 +48,7 @@ struct SettingsFeature {
     @Dependency(\.changeLogRetentionManagerClient) var changeLogRetentionManagerClient
     @Dependency(\.calendarClient) var calendarClient
 
-    var reducer: some ReducerOf<Self> {
+    var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
