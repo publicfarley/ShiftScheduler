@@ -1,5 +1,6 @@
 import Foundation
 import OSLog
+import ComposableArchitecture
 
 private let logger = Logger(subsystem: "com.functioncraft.shiftscheduler", category: "ShiftSwitchService")
 
@@ -12,7 +13,7 @@ actor ShiftSwitchService {
     private let calendarService: CalendarServiceProtocol
     private let changeLogRepository: ChangeLogRepositoryProtocol
     private let dateProvider: DateProviderProtocol
-    private let userProfileManager: UserProfileManager
+    private let userProfileClient: UserProfileClient
     private let persistence: UndoRedoPersistence
 
     // Undo/Redo stacks
@@ -25,13 +26,13 @@ actor ShiftSwitchService {
         calendarService: CalendarServiceProtocol,
         changeLogRepository: ChangeLogRepositoryProtocol,
         dateProvider: DateProviderProtocol = SystemDateProvider(),
-        userProfileManager: UserProfileManager = .shared,
+        userProfileClient: UserProfileClient = .liveValue,
         persistence: UndoRedoPersistence = UndoRedoPersistence()
     ) {
         self.calendarService = calendarService
         self.changeLogRepository = changeLogRepository
         self.dateProvider = dateProvider
-        self.userProfileManager = userProfileManager
+        self.userProfileClient = userProfileClient
         self.persistence = persistence
     }
 
@@ -66,7 +67,7 @@ actor ShiftSwitchService {
         let newSnapshot = ShiftSnapshot(from: newShiftType)
 
         // Get current user profile
-        let currentUser = userProfileManager.getCurrentProfile()
+        let currentUser = userProfileClient.getCurrentProfile()
 
         // Log the change
         let entry = ChangeLogEntry(
@@ -120,7 +121,7 @@ actor ShiftSwitchService {
         let newSnapshot = ShiftSnapshot(from: operation.oldShiftType)
 
         // Get current user profile
-        let currentUser = userProfileManager.getCurrentProfile()
+        let currentUser = userProfileClient.getCurrentProfile()
 
         let entry = ChangeLogEntry(
             timestamp: dateProvider.now(),
@@ -162,7 +163,7 @@ actor ShiftSwitchService {
         let newSnapshot = ShiftSnapshot(from: operation.newShiftType)
 
         // Get current user profile
-        let currentUser = userProfileManager.getCurrentProfile()
+        let currentUser = userProfileClient.getCurrentProfile()
 
         let entry = ChangeLogEntry(
             timestamp: dateProvider.now(),

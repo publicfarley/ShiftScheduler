@@ -27,7 +27,8 @@ struct ShiftSchedulerApp: App {
     private func purgeExpiredChangeLogEntries() async {
         do {
             let repository = ChangeLogRepository()
-            let purgeService = ChangeLogPurgeService(repository: repository)
+            let retentionManager = UserDefaultsRetentionPolicyManager()
+            let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
 
             let purgedCount = try await purgeService.purgeIfNeeded()
 

@@ -42,12 +42,12 @@ extension ShiftSwitchClient: DependencyKey {
     static let liveValue: ShiftSwitchClient = {
         let changeLogRepository = ChangeLogRepository()
         let dateProvider = SystemDateProvider()
-        let userProfileManager = UserProfileManager.shared
         let persistence = UndoRedoPersistence()
 
         return ShiftSwitchClient(
             switchShift: { @Sendable eventIdentifier, scheduledDate, oldShiftType, newShiftType, reason in
                 @Dependency(\.calendarClient) var calendarClient
+                @Dependency(\.userProfileClient) var userProfileClient
 
                 // Update the calendar event
                 try await calendarClient.updateShift(eventIdentifier, newShiftType)
@@ -57,7 +57,7 @@ extension ShiftSwitchClient: DependencyKey {
                 let newSnapshot = ShiftSnapshot(from: newShiftType)
 
                 // Get current user profile
-                let currentUser = userProfileManager.getCurrentProfile()
+                let currentUser = userProfileClient.getCurrentProfile()
 
                 // Log the change
                 let entry = ChangeLogEntry(
@@ -76,6 +76,7 @@ extension ShiftSwitchClient: DependencyKey {
             },
             undoOperation: { @Sendable operation in
                 @Dependency(\.calendarClient) var calendarClient
+                @Dependency(\.userProfileClient) var userProfileClient
 
                 // Revert the calendar event
                 try await calendarClient.updateShift(
@@ -87,7 +88,7 @@ extension ShiftSwitchClient: DependencyKey {
                 let oldSnapshot = ShiftSnapshot(from: operation.newShiftType)
                 let newSnapshot = ShiftSnapshot(from: operation.oldShiftType)
 
-                let currentUser = userProfileManager.getCurrentProfile()
+                let currentUser = userProfileClient.getCurrentProfile()
 
                 let entry = ChangeLogEntry(
                     timestamp: dateProvider.now(),
@@ -103,6 +104,7 @@ extension ShiftSwitchClient: DependencyKey {
             },
             redoOperation: { @Sendable operation in
                 @Dependency(\.calendarClient) var calendarClient
+                @Dependency(\.userProfileClient) var userProfileClient
 
                 // Reapply the calendar event change
                 try await calendarClient.updateShift(
@@ -114,7 +116,7 @@ extension ShiftSwitchClient: DependencyKey {
                 let oldSnapshot = ShiftSnapshot(from: operation.oldShiftType)
                 let newSnapshot = ShiftSnapshot(from: operation.newShiftType)
 
-                let currentUser = userProfileManager.getCurrentProfile()
+                let currentUser = userProfileClient.getCurrentProfile()
 
                 let entry = ChangeLogEntry(
                     timestamp: dateProvider.now(),

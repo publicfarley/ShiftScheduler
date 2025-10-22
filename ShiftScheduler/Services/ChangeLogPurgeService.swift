@@ -1,16 +1,47 @@
 import Foundation
 import OSLog
+import ComposableArchitecture
 
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "ChangeLogPurgeService")
+
+/// Abstraction for retention policy management
+protocol ChangeLogRetentionPolicyManager: Sendable {
+    var currentPolicy: ChangeLogRetentionPolicy { get }
+    var lastPurgeDate: Date? { get }
+    func recordPurge(entriesPurged: Int) async
+}
+
+/// UserDefaults-based implementation of ChangeLogRetentionPolicyManager
+actor UserDefaultsRetentionPolicyManager: ChangeLogRetentionPolicyManager {
+    private let userDefaultsKey = "com.workevents.ShiftScheduler.changeLogRetentionPolicy"
+    private let lastPurgeDateKey = "com.workevents.ShiftScheduler.lastPurgeDate"
+    private let defaults = UserDefaults.standard
+
+    var currentPolicy: ChangeLogRetentionPolicy {
+        if let policyString = defaults.string(forKey: userDefaultsKey),
+           let policy = ChangeLogRetentionPolicy(rawValue: policyString) {
+            return policy
+        }
+        return .year1
+    }
+
+    var lastPurgeDate: Date? {
+        defaults.object(forKey: lastPurgeDateKey) as? Date
+    }
+
+    func recordPurge(entriesPurged: Int) async {
+        defaults.set(Date(), forKey: lastPurgeDateKey)
+    }
+}
 
 /// Service responsible for purging expired change log entries based on retention policy
 actor ChangeLogPurgeService {
     private let repository: ChangeLogRepositoryProtocol
-    private let retentionManager: ChangeLogRetentionManager
+    private let retentionManager: any ChangeLogRetentionPolicyManager
 
     init(
         repository: ChangeLogRepositoryProtocol,
-        retentionManager: ChangeLogRetentionManager = .shared
+        retentionManager: any ChangeLogRetentionPolicyManager
     ) {
         self.repository = repository
         self.retentionManager = retentionManager
@@ -46,7 +77,7 @@ actor ChangeLogPurgeService {
         try await repository.deleteEntriesOlderThan(cutoffDate)
 
         // Record the purge operation
-        retentionManager.recordPurge(entriesPurged: purgedCount)
+        await retentionManager.recordPurge(entriesPurged: purgedCount)
 
         logger.debug("Purge completed: removed \(purgedCount) entries")
 

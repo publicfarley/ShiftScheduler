@@ -2,16 +2,29 @@ import Testing
 import Foundation
 @testable import ShiftScheduler
 
+// MARK: - Mock Retention Manager
+final class MockRetentionPolicyManager: ChangeLogRetentionPolicyManager {
+    nonisolated(unsafe) var currentPolicy: ChangeLogRetentionPolicy
+    nonisolated(unsafe) var lastPurgeDate: Date?
+    var purgeHistory: [(count: Int, date: Date)] = []
+
+    init(policy: ChangeLogRetentionPolicy = .year1) {
+        self.currentPolicy = policy
+    }
+
+    func recordPurge(entriesPurged: Int) async {
+        lastPurgeDate = Date()
+        purgeHistory.append((count: entriesPurged, date: Date()))
+    }
+}
+
 struct ChangeLogPurgeServiceTests {
 
     @Test("Purge service removes entries older than cutoff date")
     func testPurgeExpiredEntries() async throws {
         // Given: A repository with old and new entries
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-
-        // Set retention policy to 30 days
-        retentionManager.updatePolicy(.days30)
+        let retentionManager = MockRetentionPolicyManager(policy: .days30)
 
         let now = Date()
         let oldDate = Calendar.current.date(byAdding: .day, value: -45, to: now)!
@@ -52,8 +65,7 @@ struct ChangeLogPurgeServiceTests {
     func testPurgeWithForeverPolicy() async throws {
         // Given: Forever retention policy
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-        retentionManager.updatePolicy(.forever)
+        let retentionManager = MockRetentionPolicyManager(policy: .forever)
 
         // Add old entries
         let veryOldDate = Calendar.current.date(byAdding: .year, value: -5, to: Date())!
@@ -76,8 +88,7 @@ struct ChangeLogPurgeServiceTests {
     func testPurgeWithNoExpiredEntries() async throws {
         // Given: All entries within retention period
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-        retentionManager.updatePolicy(.year1)
+        let retentionManager = MockRetentionPolicyManager(policy: .year1)
 
         let recentDate = Calendar.current.date(byAdding: .month, value: -6, to: Date())!
         for i in 0..<5 {
@@ -99,50 +110,40 @@ struct ChangeLogPurgeServiceTests {
     func testShouldPerformPurgeWhenNeverPurged() async throws {
         // Given: New retention manager (never purged)
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-
-        // Clear last purge date by resetting
-        if retentionManager.lastPurgeDate != nil {
-            // Create a fresh manager state by testing with no purge history
-            // Note: In real implementation, we'd need to clear UserDefaults
-        }
+        let retentionManager = MockRetentionPolicyManager()
 
         let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
 
         // When: Check if purge should be performed
         let shouldPurge = await purgeService.shouldPerformPurge()
 
-        // Then: Should return true (or false if previously purged)
-        // Note: This test may vary based on actual state
-        #expect(shouldPurge == true || shouldPurge == false) // Just verify it doesn't crash
+        // Then: Should return true since never purged
+        #expect(shouldPurge == true)
     }
 
     @Test("purgeIfNeeded respects daily purge frequency")
     func testPurgeIfNeededDailyFrequency() async throws {
         // Given: Repository with expired entries
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-        retentionManager.updatePolicy(.days30)
+        let retentionManager = MockRetentionPolicyManager(policy: .days30)
 
         let oldDate = Calendar.current.date(byAdding: .day, value: -60, to: Date())!
         await repository.addEntry(createTestEntry(timestamp: oldDate))
 
         let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
 
-        // When: First purge (should execute if needed)
+        // When: First purge (should execute since never purged)
         let firstPurgeCount = try await purgeService.purgeIfNeeded()
 
-        // Then: Entries may or may not be purged based on last purge date
-        // This is a state-dependent test
-        #expect(firstPurgeCount >= 0)
+        // Then: Entries should be purged
+        #expect(firstPurgeCount == 1)
     }
 
     @Test("purge service handles empty repository")
     func testPurgeEmptyRepository() async throws {
         // Given: Empty repository
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-        retentionManager.updatePolicy(.days30)
+        let retentionManager = MockRetentionPolicyManager(policy: .days30)
 
         let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
 
@@ -157,8 +158,7 @@ struct ChangeLogPurgeServiceTests {
     func testPurgeBoundaryDates() async throws {
         // Given: Entries exactly at cutoff date
         let repository = MockChangeLogRepository()
-        let retentionManager = ChangeLogRetentionManager.shared
-        retentionManager.updatePolicy(.days30)
+        let retentionManager = MockRetentionPolicyManager(policy: .days30)
 
         let cutoffDate = try #require(retentionManager.currentPolicy.cutoffDate)
 
