@@ -218,7 +218,7 @@ actor ShiftSwitchService {
 
 // MARK: - Supporting Types
 
-struct ShiftSwitchOperation: Sendable {
+struct ShiftSwitchOperation: Sendable, Equatable {
     let eventIdentifier: String
     let scheduledDate: Date
     let oldShiftType: ShiftType
