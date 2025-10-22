@@ -5,6 +5,8 @@ private let logger = Logger(subsystem: "com.functioncraft.shiftscheduler", categ
 
 /// Service for handling shift type switching with undo/redo support
 actor ShiftSwitchService {
+    static let shared = ShiftSwitchService()
+
     private let calendarService: CalendarServiceProtocol
     private let changeLogRepository: ChangeLogRepositoryProtocol
     private let dateProvider: DateProviderProtocol
@@ -18,8 +20,8 @@ actor ShiftSwitchService {
     private var isRestoringFromPersistence = false
 
     init(
-        calendarService: CalendarServiceProtocol,
-        changeLogRepository: ChangeLogRepositoryProtocol,
+        calendarService: CalendarServiceProtocol = CalendarService.shared,
+        changeLogRepository: ChangeLogRepositoryProtocol = ChangeLogRepository(),
         dateProvider: DateProviderProtocol = SystemDateProvider(),
         userProfileManager: UserProfileManager = .shared,
         persistence: UndoRedoPersistence = UndoRedoPersistence()
