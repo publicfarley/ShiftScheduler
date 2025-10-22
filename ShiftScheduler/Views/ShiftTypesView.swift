@@ -1,17 +1,14 @@
 import SwiftUI
+import ComposableArchitecture
 
 struct ShiftTypesView: View {
-    // @Query private var shiftTypes: [ShiftType]
-    @State private var showingAddShiftType = false
-    @State private var shiftTypeToEdit: ShiftType?
-    @State private var searchText = ""
+    @Bindable var store: StoreOf<ShiftTypesFeature>
+
     @State private var cardAppeared: [UUID: Bool] = [:]
     @State private var emptyStateAppeared = false
 
-    // TODO: This view will be migrated to TCA in Task 8 - ShiftTypesFeature
-    // Until then, filteredShiftTypes is disabled
-    private var filteredShiftTypes: [ShiftType] {
-        []
+    private var filteredShiftTypes: IdentifiedArrayOf<ShiftType> {
+        store.filteredShiftTypes
     }
 
     var body: some View {
@@ -22,7 +19,10 @@ struct ShiftTypesView: View {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
 
-                        TextField("Search shift types...", text: $searchText)
+                        TextField("Search shift types...", text: $store.searchText)
+                            .onChange(of: store.searchText) { _, newValue in
+                                store.send(.searchTextChanged(newValue))
+                            }
                     }
                     .padding(16)
                     .background {
@@ -80,7 +80,7 @@ struct ShiftTypesView: View {
                         }
 
                         Button {
-                            showingAddShiftType = true
+                            store.send(.addButtonTapped)
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
@@ -119,14 +119,15 @@ struct ShiftTypesView: View {
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 16) {
-                            ForEach(Array(filteredShiftTypes.enumerated()), id: \.element.id) { index, shiftType in
+                            ForEach(Array(filteredShiftTypes), id: \.id) { shiftType in
+                                let index = Array(filteredShiftTypes).firstIndex(where: { $0.id == shiftType.id }) ?? 0
                                 EnhancedShiftTypeCard(
                                     shiftType: shiftType,
                                     onEdit: {
-                                        shiftTypeToEdit = shiftType
+                                        store.send(.editShiftType(shiftType))
                                     },
                                     onDelete: {
-                                        // TODO: Implement deletion through ShiftTypesFeature (Task 7)
+                                        store.send(.deleteShiftType(shiftType))
                                     }
                                 )
                                 .padding(.horizontal)
@@ -139,7 +140,8 @@ struct ShiftTypesView: View {
                     .scrollDismissesKeyboard(.immediately)
                     .onAppear {
                         // Trigger staggered animations
-                        for (index, shiftType) in filteredShiftTypes.enumerated() {
+                        let shiftTypeArray = Array(filteredShiftTypes)
+                        for (index, shiftType) in shiftTypeArray.enumerated() {
                             withAnimation(
                                 AnimationPresets.accessible(AnimationPresets.standardSpring)
                                     .delay(Double(index) * 0.05)
@@ -156,23 +158,19 @@ struct ShiftTypesView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        showingAddShiftType = true
+                        store.send(.addButtonTapped)
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingAddShiftType) {
-                AddShiftTypeView()
+            .sheet(item: $store.scope(state: \.addEditSheet, action: \.addEditSheet)) { addEditStore in
+                AddEditShiftTypeView(store: addEditStore)
             }
-            .sheet(item: $shiftTypeToEdit) { shiftType in
-                EditShiftTypeView(shiftType: shiftType)
+            .task {
+                store.send(.task)
             }
         }
-    }
-
-    private func deleteShiftTypes(offsets: IndexSet) {
-        // TODO: Implement deletion through ShiftTypesFeature (Task 7)
     }
 }
 
@@ -315,5 +313,12 @@ struct LocationDisplayView: View {
 }
 
 #Preview {
-    ShiftTypesView()
+    ShiftTypesView(
+        store: Store(
+            initialState: ShiftTypesFeature.State(),
+            reducer: {
+                ShiftTypesFeature()
+            }
+        )
+    )
 }

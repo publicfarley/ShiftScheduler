@@ -18,7 +18,9 @@ struct ContentView: View {
                     Label("Calendar", systemImage: "calendar")
                 }
 
-            ShiftTypesView()
+            ShiftTypesView(store: Store(initialState: ShiftTypesFeature.State(), reducer: {
+                ShiftTypesFeature()
+            }))
                 .tabItem {
                     Label("Shift Types", systemImage: "briefcase")
                 }
