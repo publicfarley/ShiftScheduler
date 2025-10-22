@@ -18,8 +18,10 @@ struct LocationsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.secondary)
+                        
+                        Text("Search locations temporarily disabled")
 
-                        TextField("Search locations...", text: $store.searchText)
+//                        TextField("Search locations...", text: $store.searchText)
                     }
                     .padding(16)
                     .background {

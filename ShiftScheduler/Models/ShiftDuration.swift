@@ -1,6 +1,6 @@
 import Foundation
 
-struct HourMinuteTime: Codable, Equatable {
+struct HourMinuteTime: Codable, Equatable, Hashable {
     let hour: Int
     let minute: Int
 
@@ -30,7 +30,7 @@ struct HourMinuteTime: Codable, Equatable {
     }
 }
 
-enum ShiftDuration: Codable, Equatable {
+enum ShiftDuration: Codable, Equatable, Hashable {
     case allDay
     case scheduled(from: HourMinuteTime, to: HourMinuteTime)
 

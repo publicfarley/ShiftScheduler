@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ChangeLogView: View {
+    @State private var allEntries: [ChangeLogEntry] = []
     // @Query(sort: \ChangeLogEntry.timestamp, order: .reverse) private var allEntries: [ChangeLogEntry]
     @State private var searchText = ""
     @State private var selectedChangeType: ChangeType?
@@ -73,6 +74,14 @@ struct ChangeLogView: View {
                 }
             }
             .navigationTitle("Change Log")
+            .task {
+                do {
+                    allEntries = try await PersistenceClient().fetchChangeLogEntries()
+                } catch {
+                    // Optionally handle error (e.g. show empty, log, etc)
+                    allEntries = []
+                }
+            }
             .searchable(text: $searchText, prompt: "Search changes...")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct EditShiftTypeView: View {
     @Environment(\.dismiss) private var dismiss
-    // @Query private var locations: [Location]
+    @State private var locations: [Location] = []
 
     @State private var symbol: String
     @State private var title: String
@@ -250,9 +250,16 @@ struct EditShiftTypeView: View {
             duration = .scheduled(from: startHourMinute, to: endHourMinute)
         }
 
-        shiftType.update(symbol: symbol, duration: duration, title: title, description: description, location: location)
+        let updatedShiftType = ShiftType(
+            id: shiftType.id,
+            symbol: symbol,
+            duration: duration,
+            title: title,
+            description: description,
+            location: location
+        )
+        // TODO: Persist updatedShiftType using your PersistenceClient or preferred method.
 
-        // TODO: Persist update through PersistenceClient when feature is available (Task 7)
         dismiss()
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AddShiftTypeView: View {
     @Environment(\.dismiss) private var dismiss
-    // // @Query private var locations: [Location]
+    @State private var locations: [Location] = []
 
     @State private var symbol = ""
     @State private var title = ""

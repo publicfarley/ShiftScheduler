@@ -60,7 +60,8 @@ struct StatusBadge: View {
 }
 
 struct TodayView: View {
-    // @Query private var shiftTypes: [ShiftType]
+    @State private var shiftTypes: [ShiftType] = [] // Added property for shiftTypes
+
     @State private var calendarService = CalendarService.shared
     @State private var currentDayManager = CurrentDayManager.shared
     @State private var scheduledShifts: [ScheduledShift] = []
@@ -428,6 +429,9 @@ struct TodayView: View {
         errorMessage = nil
 
         do {
+            // TODO: Load shiftTypes here from persistence if needed
+            // Example: self.shiftTypes = try await PersistenceClient.shared.fetchShiftTypes()
+
             // Use CurrentDayManager for consistent date handling
             let todayShiftData = try await calendarService.fetchTodaysShifts()
             let tomorrowShiftData = try await calendarService.fetchTomorrowsShifts()
@@ -656,16 +660,15 @@ struct EnhancedTodayShiftCard: View {
                             )
 
                             // Enhanced location
-                            if let location = shiftType.location {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "location.fill")
-                                        .font(.caption)
-                                        .foregroundColor(cardColor)
-                                    Text(location.name)
-                                        .font(.callout)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.secondary)
-                                }
+                            let location = shiftType.location
+                            HStack(spacing: 6) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption)
+                                    .foregroundColor(cardColor)
+                                Text(location.name)
+                                    .font(.callout)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
                             }
                         }
 
@@ -911,15 +914,14 @@ struct TodayShiftCard: View {
                             )
 
                             // Location
-                            if let location = shiftType.location {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "location")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Text(location.name)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                            let location = shiftType.location
+                            HStack(spacing: 4) {
+                                Image(systemName: "location")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
 
@@ -1186,18 +1188,17 @@ struct EnhancedTomorrowShiftCard: View {
                             )
 
                             // Enhanced location
-                            if let location = shiftType.location {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "location.fill")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                            let location = shiftType.location
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
 
-                                    Text(location.name)
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                }
+                                Text(location.name)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
                             }
                         }
 
@@ -1421,17 +1422,16 @@ struct TomorrowShiftCard: View {
                             }
 
                             // Location if available
-                            if let location = shiftType.location {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "location")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                            let location = shiftType.location
+                            HStack(spacing: 3) {
+                                Image(systemName: "location")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
 
-                                    Text(location.name)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                }
+                                Text(location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
                             }
                         }
 
@@ -1719,27 +1719,26 @@ struct OptimizedTodayShiftCard: View {
                             )
 
                             // Location with icon
-                            if let location = shiftType.location {
+                            let location = shiftType.location
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            if !shiftType.location.address.isEmpty {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "location.fill")
+                                    Image(systemName: "mappin.and.ellipse")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
 
-                                    Text(location.name)
+                                    Text(shiftType.location.address)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                }
-
-                                if !location.address.isEmpty {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "mappin.and.ellipse")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-
-                                        Text(location.address)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
                                 }
                             }
 
@@ -1911,27 +1910,26 @@ struct OptimizedTomorrowShiftCard: View {
                             )
 
                             // Location with icon
-                            if let location = shiftType.location {
+                            let location = shiftType.location
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(location.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            if !shiftType.location.address.isEmpty {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "location.fill")
+                                    Image(systemName: "mappin.and.ellipse")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
 
-                                    Text(location.name)
+                                    Text(shiftType.location.address)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                }
-
-                                if !location.address.isEmpty {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "mappin.and.ellipse")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-
-                                        Text(location.address)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
                                 }
                             }
 
