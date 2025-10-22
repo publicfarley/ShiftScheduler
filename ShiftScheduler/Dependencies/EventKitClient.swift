@@ -5,6 +5,8 @@ import SwiftUI
 
 /// TCA Dependency Client for direct EventKit operations
 /// Provides a stateless abstraction over iOS EventKit for calendar event management
+/// Marked as @MainActor because EventKit requires main thread access for all operations
+@MainActor
 @DependencyClient
 struct EventKitClient {
     /// Check the current authorization status for calendar access
