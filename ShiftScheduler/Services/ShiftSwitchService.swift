@@ -4,9 +4,11 @@ import OSLog
 private let logger = Logger(subsystem: "com.functioncraft.shiftscheduler", category: "ShiftSwitchService")
 
 /// Service for handling shift type switching with undo/redo support
+///
+/// DEPRECATED: This service is no longer used in TCA-migrated features.
+/// Use ShiftSwitchClient dependency instead. Undo/redo state is now managed
+/// by TCA reducers, not by this service.
 actor ShiftSwitchService {
-    static let shared = ShiftSwitchService()
-
     private let calendarService: CalendarServiceProtocol
     private let changeLogRepository: ChangeLogRepositoryProtocol
     private let dateProvider: DateProviderProtocol
@@ -20,8 +22,8 @@ actor ShiftSwitchService {
     private var isRestoringFromPersistence = false
 
     init(
-        calendarService: CalendarServiceProtocol = CalendarService.shared,
-        changeLogRepository: ChangeLogRepositoryProtocol = ChangeLogRepository(),
+        calendarService: CalendarServiceProtocol,
+        changeLogRepository: ChangeLogRepositoryProtocol,
         dateProvider: DateProviderProtocol = SystemDateProvider(),
         userProfileManager: UserProfileManager = .shared,
         persistence: UndoRedoPersistence = UndoRedoPersistence()
