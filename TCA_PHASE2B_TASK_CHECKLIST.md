@@ -220,21 +220,24 @@ Status: ✅ Completed (Session: Oct 21)
 - [x] Create `ShiftScheduler/Views/AddEditShiftTypeView.swift`
 
 **Acceptance Criteria**:
-- [~] View compiles (minor type-checking issues to resolve)
-- [~] Shift types display
-- [~] Add/edit works
-- [~] Delete works
-- [~] Search works
+- [x] View compiles
+- [x] Shift types display
+- [x] Add/edit works
+- [x] Delete works
+- [x] Search works
 
 **Notes**:
 ```
-Status: ⏳ In Progress (Session: Oct 21)
-- ShiftTypesView migrated to use TCA store
-- AddEditShiftTypeView created for form handling
-- ContentView updated to pass store to ShiftTypesView
-- Minor Swift type-checking complexity issue in body property
-- Need to break down body into sub-views to resolve compiler issues
-- Core functionality implemented, needs compilation fixes
+Status: ✅ Completed (Session: Oct 21)
+- ShiftTypesView refactored to break complex body into sub-views
+  - SearchBar() function extracts search UI
+  - EmptyStateView() function extracts empty state UI
+  - ShiftTypesListView() function extracts list UI
+- Fixed binding issue: use Binding(get:set:) for store property bindings
+- AddEditShiftTypeView working with TCA store
+- All compilation errors resolved
+- View now displays shift types correctly
+- Search, add, edit, and delete functionality all working
 ```
 
 ---
@@ -414,6 +417,7 @@ Final sign-off task
 - [x] Task 3: TodayView Migration
 - [x] Task 4: TodayFeature Unit Tests
 - [x] Task 7: ShiftTypesFeature
+- [x] Task 8: ShiftTypesView Migration
 - [x] AddEditLocationFeature
 - [x] LocationsFeature
 - [x] LocationsView migration
@@ -422,14 +426,14 @@ Final sign-off task
 - [x] Design documentation created
 
 ### In Progress ⏳
-- [ ] Task 8: ShiftTypesView Migration (90% complete, needs compilation fixes)
+- None (all critical path features complete!)
 
 ### Pending ⏹️
 - [ ] Task 5: ScheduleFeature
 - [ ] Task 6: ScheduleView Migration
 - [ ] Task 9-14: Remaining tasks
 
-### Completion: 64% (9/14 tasks completed)
+### Completion: 70% (10/14 tasks completed)
 
 ---
 

@@ -14,142 +14,32 @@ struct ShiftTypesView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                VStack(spacing: 16) {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-
-                        TextField("Search shift types...", text: $store.searchText)
-                            .onChange(of: store.searchText) { _, newValue in
-                                store.send(.searchTextChanged(newValue))
-                            }
-                    }
-                    .padding(16)
-                    .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(.quaternary, lineWidth: 1)
-                            }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top)
-
-                    HStack {
-                        Text("\(filteredShiftTypes.count) \(filteredShiftTypes.count == 1 ? "shift type" : "shift types")")
-                            .foregroundColor(.secondary)
-                            .font(.subheadline)
-
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-                }
+                SearchBar()
 
                 if filteredShiftTypes.isEmpty {
-                    Spacer()
-
-                    VStack(spacing: 24) {
-                        Image(systemName: "clock.badge.plus")
-                            .font(.system(size: 80, weight: .bold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .offset(y: emptyStateAppeared ? 0 : 20)
-                            .opacity(emptyStateAppeared ? 1 : 0)
-                            .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
-
-                        VStack(spacing: 12) {
-                            Text("No Shift Types")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .offset(y: emptyStateAppeared ? 0 : 15)
-                                .opacity(emptyStateAppeared ? 1 : 0)
-
-                            Text("Create your first shift type to get started\nwith scheduling")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .offset(y: emptyStateAppeared ? 0 : 10)
-                                .opacity(emptyStateAppeared ? 1 : 0)
-                        }
-
-                        Button {
-                            store.send(.addButtonTapped)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill")
-                                Text("Create Shift Type")
-                            }
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 14)
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .blue.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
-                        }
-                        .buttonStyle(.plain)
-                        .offset(y: emptyStateAppeared ? 0 : 10)
-                        .opacity(emptyStateAppeared ? 1 : 0)
-                    }
-                    .padding()
-                    .onAppear {
-                        withAnimation(
-                            AnimationPresets.accessible(AnimationPresets.standardSpring)
-                                .delay(0.1)
-                        ) {
-                            emptyStateAppeared = true
-                        }
-                    }
-
-                    Spacer()
+                    EmptyStateView()
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(Array(filteredShiftTypes), id: \.id) { shiftType in
-                                let index = Array(filteredShiftTypes).firstIndex(where: { $0.id == shiftType.id }) ?? 0
-                                EnhancedShiftTypeCard(
-                                    shiftType: shiftType,
-                                    onEdit: {
-                                        store.send(.editShiftType(shiftType))
-                                    },
-                                    onDelete: {
-                                        store.send(.deleteShiftType(shiftType))
-                                    }
-                                )
-                                .padding(.horizontal)
-                                .offset(y: cardAppeared[shiftType.id] ?? false ? 0 : 30)
-                                .opacity(cardAppeared[shiftType.id] ?? false ? 1 : 0)
+                    ShiftTypesListView(
+                        cardAppeared: $cardAppeared,
+                        filteredShiftTypes: filteredShiftTypes,
+                        onEdit: { shiftType in
+                            store.send(.editShiftType(shiftType))
+                        },
+                        onDelete: { shiftType in
+                            store.send(.deleteShiftType(shiftType))
+                        },
+                        onAppear: {
+                            let shiftTypeArray = Array(filteredShiftTypes)
+                            for (index, shiftType) in shiftTypeArray.enumerated() {
+                                withAnimation(
+                                    AnimationPresets.accessible(AnimationPresets.standardSpring)
+                                        .delay(Double(index) * 0.05)
+                                ) {
+                                    cardAppeared[shiftType.id] = true
+                                }
                             }
                         }
-                        .padding(.vertical, 8)
-                    }
-                    .scrollDismissesKeyboard(.immediately)
-                    .onAppear {
-                        // Trigger staggered animations
-                        let shiftTypeArray = Array(filteredShiftTypes)
-                        for (index, shiftType) in shiftTypeArray.enumerated() {
-                            withAnimation(
-                                AnimationPresets.accessible(AnimationPresets.standardSpring)
-                                    .delay(Double(index) * 0.05)
-                            ) {
-                                cardAppeared[shiftType.id] = true
-                            }
-                        }
-                    }
+                    )
                 }
             }
             .dismissKeyboardOnTap()
@@ -170,6 +60,150 @@ struct ShiftTypesView: View {
             .task {
                 store.send(.task)
             }
+        }
+    }
+
+    // MARK: - Sub-views for type-checking
+
+    private func SearchBar() -> some View {
+        VStack(spacing: 16) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search shift types...", text: Binding(
+                    get: { store.searchText },
+                    set: { newValue in
+                        store.send(.searchTextChanged(newValue))
+                    }
+                ))
+            }
+            .padding(16)
+            .background {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(.quaternary, lineWidth: 1)
+                    }
+            }
+            .padding(.horizontal)
+            .padding(.top)
+
+            HStack {
+                Text("\(filteredShiftTypes.count) \(filteredShiftTypes.count == 1 ? "shift type" : "shift types")")
+                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+        }
+    }
+
+    private func EmptyStateView() -> some View {
+        VStack {
+            Spacer()
+
+            VStack(spacing: 24) {
+                Image(systemName: "clock.badge.plus")
+                    .font(.system(size: 80, weight: .bold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .offset(y: emptyStateAppeared ? 0 : 20)
+                    .opacity(emptyStateAppeared ? 1 : 0)
+                    .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
+
+                VStack(spacing: 12) {
+                    Text("No Shift Types")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .offset(y: emptyStateAppeared ? 0 : 15)
+                        .opacity(emptyStateAppeared ? 1 : 0)
+
+                    Text("Create your first shift type to get started\nwith scheduling")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .offset(y: emptyStateAppeared ? 0 : 10)
+                        .opacity(emptyStateAppeared ? 1 : 0)
+                }
+
+                Button {
+                    store.send(.addButtonTapped)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Create Shift Type")
+                    }
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [.blue, .blue.opacity(0.8)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .shadow(color: .blue.opacity(0.3), radius: 12, y: 6)
+                }
+                .buttonStyle(.plain)
+                .offset(y: emptyStateAppeared ? 0 : 10)
+                .opacity(emptyStateAppeared ? 1 : 0)
+            }
+            .padding()
+            .onAppear {
+                withAnimation(
+                    AnimationPresets.accessible(AnimationPresets.standardSpring)
+                        .delay(0.1)
+                ) {
+                    emptyStateAppeared = true
+                }
+            }
+
+            Spacer()
+        }
+    }
+
+    private func ShiftTypesListView(
+        cardAppeared: Binding<[UUID: Bool]>,
+        filteredShiftTypes: IdentifiedArrayOf<ShiftType>,
+        onEdit: @escaping (ShiftType) -> Void,
+        onDelete: @escaping (ShiftType) -> Void,
+        onAppear: @escaping () -> Void
+    ) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach(Array(filteredShiftTypes), id: \.id) { shiftType in
+                    EnhancedShiftTypeCard(
+                        shiftType: shiftType,
+                        onEdit: {
+                            onEdit(shiftType)
+                        },
+                        onDelete: {
+                            onDelete(shiftType)
+                        }
+                    )
+                    .padding(.horizontal)
+                    .offset(y: cardAppeared.wrappedValue[shiftType.id] ?? false ? 0 : 30)
+                    .opacity(cardAppeared.wrappedValue[shiftType.id] ?? false ? 1 : 0)
+                }
+            }
+            .padding(.vertical, 8)
+        }
+        .scrollDismissesKeyboard(.immediately)
+        .onAppear {
+            onAppear()
         }
     }
 }

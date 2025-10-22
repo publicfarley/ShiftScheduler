@@ -184,12 +184,13 @@ struct ChangeLogPurgeServiceTests {
     // MARK: - Helper Methods
 
     private func createTestEntry(timestamp: Date) -> ChangeLogEntry {
+        let testLocation = Location(id: UUID(), name: "Test Location", address: "123 Test St")
         let shiftType = ShiftType(
             symbol: "🌅",
-            title: "Morning Shift",
-            shiftDescription: "Early morning shift",
             duration: .allDay,
-            location: nil
+            title: "Morning Shift",
+            description: "Early morning shift",
+            location: testLocation
         )
 
         return ChangeLogEntry(
