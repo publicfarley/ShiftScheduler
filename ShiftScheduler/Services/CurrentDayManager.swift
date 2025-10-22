@@ -2,7 +2,12 @@ import Foundation
 import UIKit
 import SwiftUI
 
+/// DEPRECATED: Use CurrentDayClient TCA dependency instead
+/// This class is maintained only for backward compatibility with pre-TCA code.
+/// All new code should use the CurrentDayClient dependency.
 class CurrentDayManager {
+    // MARK: - Deprecated Singleton
+    @available(*, deprecated, message: "Use CurrentDayClient TCA dependency instead. This singleton will be removed in a future version.")
     static let shared = CurrentDayManager()
 
     // MARK: - Public Properties
@@ -121,10 +126,12 @@ protocol CurrentDayObserver: AnyObject {
     func currentDayDidChange(from previousDate: Date, to currentDate: Date)
 }
 
-// Helper for easier observation management
+/// DEPRECATED: Use CurrentDayClient TCA dependency instead
+/// This manager is maintained only for backward compatibility with pre-TCA code.
 class CurrentDayObserverManager {
     private var observers: [WeakReference<AnyObject>] = []
 
+    @available(*, deprecated, message: "Use CurrentDayClient TCA dependency instead. This singleton will be removed in a future version.")
     static let shared = CurrentDayObserverManager()
     private init() {
         NotificationCenter.default.addObserver(

@@ -4,8 +4,10 @@ import OSLog
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "UserProfileManager")
 
 /// Manages user profile persistence and retrieval using UserDefaults
-
+/// DEPRECATED: Use UserProfileManagerClient TCA dependency instead.
+/// This class is maintained only for backward compatibility with pre-TCA code.
 final class UserProfileManager {
+    @available(*, deprecated, message: "Use UserProfileManagerClient TCA dependency instead. This singleton will be removed in a future version.")
     static let shared = UserProfileManager()
 
     private let userDefaultsKey = "com.workevents.ShiftScheduler.userProfile"

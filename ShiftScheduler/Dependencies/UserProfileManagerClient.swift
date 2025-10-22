@@ -18,7 +18,13 @@ struct UserProfileManagerClient {
 extension UserProfileManagerClient: DependencyKey {
     /// Live implementation using the real UserProfileManager
     static let liveValue: UserProfileManagerClient = {
-        let manager = UserProfileManager.shared
+        // Note: We suppress the deprecation warning here because the client is the proper TCA
+        // abstraction that wraps the singleton. The singleton itself is deprecated, but
+        // its usage within the client is acceptable during the transition period.
+        nonisolated(unsafe) var manager: UserProfileManager {
+            @available(*, deprecated)
+            get { UserProfileManager.shared }
+        }
 
         return UserProfileManagerClient(
             getCurrentProfile: {

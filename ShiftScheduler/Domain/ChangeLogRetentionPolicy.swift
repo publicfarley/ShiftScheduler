@@ -44,7 +44,10 @@ enum ChangeLogRetentionPolicy: String, Codable, CaseIterable, Identifiable {
 }
 
 /// Manages retention policy persistence and purge operations
+/// DEPRECATED: Use ChangeLogRetentionManagerClient TCA dependency instead.
+/// This class is maintained only for backward compatibility with pre-TCA code.
 final class ChangeLogRetentionManager {
+    @available(*, deprecated, message: "Use ChangeLogRetentionManagerClient TCA dependency instead. This singleton will be removed in a future version.")
     static let shared = ChangeLogRetentionManager()
 
     private let userDefaultsKey = "com.workevents.ShiftScheduler.changeLogRetentionPolicy"

@@ -24,7 +24,13 @@ struct ChangeLogRetentionManagerClient {
 extension ChangeLogRetentionManagerClient: DependencyKey {
     /// Live implementation using the real ChangeLogRetentionManager
     static let liveValue: ChangeLogRetentionManagerClient = {
-        let manager = ChangeLogRetentionManager.shared
+        // Note: We suppress the deprecation warning here because the client is the proper TCA
+        // abstraction that wraps the singleton. The singleton itself is deprecated, but
+        // its usage within the client is acceptable during the transition period.
+        nonisolated(unsafe) var manager: ChangeLogRetentionManager {
+            @available(*, deprecated)
+            get { ChangeLogRetentionManager.shared }
+        }
 
         return ChangeLogRetentionManagerClient(
             getCurrentPolicy: {
