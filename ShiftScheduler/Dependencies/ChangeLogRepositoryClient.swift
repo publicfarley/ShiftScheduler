@@ -26,11 +26,9 @@ struct ChangeLogRepositoryClient: Sendable {
 
 extension ChangeLogRepositoryClient: DependencyKey {
     /// Live implementation using the real repository
-    /// Note: The repository needs to be injected or accessed from SwiftData context
     static let liveValue = ChangeLogRepositoryClient(
         save: { entry in
             // TODO: Implement live repository access
-            // This will need to be wired up with SwiftDataChangeLogRepository
             fatalError("Live ChangeLogRepositoryClient not yet implemented")
         },
         fetchAll: {

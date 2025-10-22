@@ -15,44 +15,35 @@ actor UndoRedoPersistence {
     // MARK: - Save Operations
 
     /// Saves the undo stack to UserDefaults
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func saveUndoStack(_ operations: [ShiftSwitchOperation]) {
-        // Persistence disabled - ShiftType is a SwiftData model that cannot be easily serialized
         logger.debug("Persistence disabled - stack not saved")
     }
 
     /// Saves the redo stack to UserDefaults
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func saveRedoStack(_ operations: [ShiftSwitchOperation]) {
-        // Persistence disabled - ShiftType is a SwiftData model that cannot be easily serialized
         logger.debug("Persistence disabled - stack not saved")
     }
 
     /// Saves both undo and redo stacks
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func saveBothStacks(undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation]) {
-        // Persistence disabled - ShiftType is a SwiftData model that cannot be easily serialized
         logger.debug("Persistence disabled - stacks not saved")
     }
 
     // MARK: - Load Operations
 
     /// Loads the undo stack from UserDefaults
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func loadUndoStack() -> [ShiftSwitchOperation] {
         logger.debug("Persistence disabled - no stack to load")
         return []
     }
 
     /// Loads the redo stack from UserDefaults
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func loadRedoStack() -> [ShiftSwitchOperation] {
         logger.debug("Persistence disabled - no stack to load")
         return []
     }
 
     /// Loads both undo and redo stacks
-    /// NOTE: Disabled for now as ShiftType cannot be serialized without SwiftData context
     func loadBothStacks() -> (undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation]) {
         logger.debug("Persistence disabled - no stacks to load")
         return (undo: [], redo: [])

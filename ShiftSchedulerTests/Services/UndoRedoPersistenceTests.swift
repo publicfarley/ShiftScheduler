@@ -3,7 +3,6 @@ import Foundation
 @testable import ShiftScheduler
 
 /// Tests for UndoRedoPersistence
-/// NOTE: Persistence is currently disabled since ShiftType is a SwiftData model
 /// These tests verify that the persistence layer handles the disabled state correctly
 @Suite("UndoRedoPersistence Tests")
 struct UndoRedoPersistenceTests {

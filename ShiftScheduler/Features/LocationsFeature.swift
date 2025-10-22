@@ -7,7 +7,6 @@ import ComposableArchitecture
 struct LocationsFeature {
     @ObservableState
     struct State: Equatable {
-        /// All locations loaded from SwiftData
         var locations: IdentifiedArrayOf<Location> = []
 
         /// Search text for filtering locations

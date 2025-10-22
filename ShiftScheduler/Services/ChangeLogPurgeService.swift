@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 import OSLog
 
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "ChangeLogPurgeService")

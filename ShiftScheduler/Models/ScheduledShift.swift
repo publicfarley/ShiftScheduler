@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 struct ScheduledShift: Identifiable, Equatable {
     let id: UUID

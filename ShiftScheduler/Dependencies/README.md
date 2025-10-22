@@ -158,7 +158,6 @@ TCA provides several built-in dependencies:
 
 ### ChangeLogRepositoryClient Live Implementation
 
-Similar to SwiftDataClient, this needs access to the repository instance:
 
 ```swift
 static func liveValue(repository: any ChangeLogRepositoryProtocol) -> ChangeLogRepositoryClient {
