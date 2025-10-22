@@ -1,28 +1,11 @@
 import SwiftUI
 import OSLog
+import ComposableArchitecture
 
 private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category: "SettingsView")
 
-struct AlertItem: Identifiable {
-    let id = UUID()
-    let title: Text
-    let message: Text
-    let primaryButton: Alert.Button
-    let secondaryButton: Alert.Button?
-}
-
 struct SettingsView: View {
-    @State private var calendarService = CalendarService.shared
-    @State private var userProfileManager = UserProfileManager.shared
-    @State private var retentionManager = ChangeLogRetentionManager.shared
-    @State private var alertItem: AlertItem?
-    @State private var displayName: String = ""
-
-    // Animation states
-    @State private var titleAppeared = false
-    @State private var userProfileSectionAppeared = false
-    @State private var changeLogSectionAppeared = false
-    @State private var dataManagementSectionAppeared = false
+    @Bindable var store: StoreOf<SettingsFeature>
     @State private var isPressed = false
 
     var body: some View {
@@ -59,8 +42,8 @@ struct SettingsView: View {
                         .padding(.vertical, 8)
                     }
                     .padding(.horizontal, 24)
-                    .offset(y: titleAppeared ? 0 : 30)
-                    .opacity(titleAppeared ? 1 : 0)
+                    .offset(y: store.titleAppeared ? 0 : 30)
+                    .opacity(store.titleAppeared ? 1 : 0)
                     .padding(.bottom, 32)
 
                     // User Profile section
@@ -86,11 +69,11 @@ struct SettingsView: View {
                                         Spacer()
                                     }
 
-                                    TextField("Enter your name", text: $displayName)
-                                        .textFieldStyle(.roundedBorder)
-                                        .onChange(of: displayName) { _, newValue in
-                                            userProfileManager.updateDisplayName(newValue)
-                                        }
+                                    TextField("Enter your name", text: Binding(
+                                        get: { store.displayName },
+                                        set: { store.send(.displayNameChanged($0)) }
+                                    ))
+                                    .textFieldStyle(.roundedBorder)
                                 }
 
                                 Divider()
@@ -110,14 +93,14 @@ struct SettingsView: View {
                                     }
 
                                     HStack {
-                                        Text(userProfileManager.currentProfile.userId.uuidString)
+                                        Text(store.currentUserId.uuidString)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                             .lineLimit(1)
                                             .truncationMode(.middle)
 
                                         Button {
-                                            UIPasteboard.general.string = userProfileManager.currentProfile.userId.uuidString
+                                            UIPasteboard.general.string = store.currentUserId.uuidString
                                         } label: {
                                             Image(systemName: "doc.on.doc")
                                                 .font(.caption)
@@ -134,15 +117,7 @@ struct SettingsView: View {
 
                                 // Reset User ID button
                                 Button(action: {
-                                    self.alertItem = AlertItem(
-                                        title: Text("Reset User ID?"),
-                                        message: Text("This will create a new user identity. All future changes will be logged under the new ID. Existing change log entries will keep the old ID."),
-                                        primaryButton: .destructive(Text("Reset ID")) {
-                                            userProfileManager.resetUserProfile()
-                                            displayName = userProfileManager.currentProfile.displayName
-                                        },
-                                        secondaryButton: .cancel()
-                                    )
+                                    store.send(.resetUserProfile)
                                 }) {
                                     HStack {
                                         Image(systemName: "arrow.clockwise")
@@ -173,8 +148,8 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 24)
                     }
-                    .offset(y: userProfileSectionAppeared ? 0 : 30)
-                    .opacity(userProfileSectionAppeared ? 1 : 0)
+                    .offset(y: store.userProfileSectionAppeared ? 0 : 30)
+                    .opacity(store.userProfileSectionAppeared ? 1 : 0)
                     .padding(.bottom, 24)
 
                     // Change Log Settings section
@@ -201,8 +176,8 @@ struct SettingsView: View {
                                     }
 
                                     Picker("Retention Period", selection: Binding(
-                                        get: { retentionManager.currentPolicy },
-                                        set: { retentionManager.updatePolicy($0) }
+                                        get: { store.currentPolicy },
+                                        set: { store.send(.policyChanged($0)) }
                                     )) {
                                         ForEach(ChangeLogRetentionPolicy.allCases) { policy in
                                             Text(policy.displayName).tag(policy)
@@ -235,13 +210,13 @@ struct SettingsView: View {
                                         Spacer()
                                     }
 
-                                    if let lastPurge = retentionManager.lastPurgeDate {
+                                    if let lastPurge = store.lastPurgeDate {
                                         Text(lastPurge, style: .relative) + Text(" ago")
                                             .font(.subheadline)
                                             .foregroundStyle(.secondary)
 
-                                        if retentionManager.lastPurgedCount > 0 {
-                                            Text("\(retentionManager.lastPurgedCount) entries removed")
+                                        if store.lastPurgedCount > 0 {
+                                            Text("\(store.lastPurgedCount) entries removed")
                                                 .font(.caption2)
                                                 .foregroundStyle(.tertiary)
                                         }
@@ -256,14 +231,7 @@ struct SettingsView: View {
 
                                 // Manual Purge Button
                                 Button(action: {
-                                    self.alertItem = AlertItem(
-                                        title: Text("Purge Old Entries?"),
-                                        message: Text("This will permanently delete change log entries older than \(retentionManager.currentPolicy.displayName.lowercased()). This action cannot be undone."),
-                                        primaryButton: .destructive(Text("Purge Now")) {
-                                            self.purgeChangeLogEntries()
-                                        },
-                                        secondaryButton: .cancel()
-                                    )
+                                    store.send(.purgeButtonTapped)
                                 }) {
                                     HStack {
                                         Image(systemName: "trash.circle")
@@ -289,14 +257,14 @@ struct SettingsView: View {
                                             }
                                     }
                                 }
-                                .disabled(retentionManager.currentPolicy == .forever)
+                                .disabled(store.currentPolicy == .forever)
                             }
                             .padding(4)
                         }
                         .padding(.horizontal, 24)
                     }
-                    .offset(y: changeLogSectionAppeared ? 0 : 30)
-                    .opacity(changeLogSectionAppeared ? 1 : 0)
+                    .offset(y: store.changeLogSectionAppeared ? 0 : 30)
+                    .opacity(store.changeLogSectionAppeared ? 1 : 0)
                     .padding(.bottom, 24)
 
                     // Data Management section
@@ -330,14 +298,7 @@ struct SettingsView: View {
 
                                 // Delete All Data button
                                 Button(action: {
-                                    self.alertItem = AlertItem(
-                                        title: Text("Are you sure?"),
-                                        message: Text("This will permanently delete all shift types, locations, and scheduled shifts. This action cannot be undone."),
-                                        primaryButton: .destructive(Text("Delete All Data")) {
-                                            self.deleteAllData()
-                                        },
-                                        secondaryButton: .cancel()
-                                    )
+                                    store.send(.deleteAllDataButtonTapped)
                                 }) {
                                     HStack {
                                         Image(systemName: "trash.fill")
@@ -384,8 +345,8 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 24)
                     }
-                    .offset(y: dataManagementSectionAppeared ? 0 : 30)
-                    .opacity(dataManagementSectionAppeared ? 1 : 0)
+                    .offset(y: store.dataManagementSectionAppeared ? 0 : 30)
+                    .opacity(store.dataManagementSectionAppeared ? 1 : 0)
 
                     Spacer()
                         .frame(height: 40)
@@ -394,103 +355,50 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
-            .alert(item: $alertItem) { alertItem in
-                if let secondaryButton = alertItem.secondaryButton {
-                    return Alert(title: alertItem.title, message: alertItem.message, primaryButton: alertItem.primaryButton, secondaryButton: secondaryButton)
-                } else {
-                    return Alert(title: alertItem.title, message: alertItem.message, dismissButton: alertItem.primaryButton)
-                }
-            }
+            .presentationAlert(store: store)
             .onAppear {
-                displayName = userProfileManager.currentProfile.displayName
-                triggerStaggeredAnimations()
+                store.send(.onAppear)
             }
             .dismissKeyboardOnTap()
         }
     }
+}
 
-    private func triggerStaggeredAnimations() {
-        guard !UIAccessibility.isReduceMotionEnabled else {
-            // Immediately show all elements if reduced motion is enabled
-            titleAppeared = true
-            userProfileSectionAppeared = true
-            changeLogSectionAppeared = true
-            dataManagementSectionAppeared = true
-            return
-        }
+// MARK: - Alert Presentation Extension
 
-        // Stagger animations with spring effects
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2)) {
-            titleAppeared = true
-        }
-
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4)) {
-            userProfileSectionAppeared = true
-        }
-
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.6)) {
-            changeLogSectionAppeared = true
-        }
-
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.8)) {
-            dataManagementSectionAppeared = true
-        }
-    }
-
-    private func purgeChangeLogEntries() {
-        logger.debug("Manual purge requested")
-        Task {
-            do {
-                // TODO: Implement purge through PersistenceClient when feature is available (Task 10)
-                // For now, just show success message
-                await MainActor.run {
-                    logger.debug("Purge functionality will be available in Task 10")
-                    self.alertItem = AlertItem(
-                        title: Text("Feature Coming Soon"),
-                        message: Text("Purge functionality will be implemented when SettingsView is migrated to TCA."),
-                        primaryButton: .default(Text("OK")),
-                        secondaryButton: nil
-                    )
-                }
-            } catch {
-                await MainActor.run {
-                    logger.error("Failed to purge entries: \(error.localizedDescription)")
-                    self.alertItem = AlertItem(
-                        title: Text("Purge Failed"),
-                        message: Text("Failed to purge entries: \(error.localizedDescription)"),
-                        primaryButton: .default(Text("OK")),
-                        secondaryButton: nil
-                    )
-                }
-            }
-        }
-    }
-
-    private func deleteAllData() {
-        logger.debug("Delete all data requested")
-        Task {
-            do {
-                // Delete all calendar events (shifts)
-                if calendarService.isAuthorized {
-                    let startDate = Calendar.current.date(byAdding: .year, value: -10, to: Date()) ?? Date()
-                    let endDate = Calendar.current.date(byAdding: .year, value: 10, to: Date()) ?? Date()
-                    let shifts = try await calendarService.fetchShifts(from: startDate, to: endDate)
-
-                    logger.debug("Deleting \(shifts.count) shifts from calendar")
-                    for shift in shifts {
-                        try await calendarService.deleteShift(withIdentifier: shift.eventIdentifier)
+extension View {
+    @ViewBuilder
+    func presentationAlert(store: StoreOf<SettingsFeature>) -> some View {
+        self.alert(
+            item: Binding(
+                get: { store.alertItem },
+                set: { _ in store.send(.alertDismissed) }
+            )
+        ) { alertItem in
+            switch alertItem.actionStyle {
+            case .default:
+                Alert(
+                    title: Text(alertItem.title),
+                    message: Text(alertItem.message),
+                    dismissButton: .default(Text(alertItem.actionTitle)) {
+                        store.send(alertItem.action)
                     }
-                }
-
-                logger.debug("All data deleted successfully")
-                await MainActor.run {
-                    self.alertItem = AlertItem(title: Text("Success"), message: Text("All data has been deleted successfully."), primaryButton: .default(Text("OK")), secondaryButton: nil)
-                }
-            } catch {
-                await MainActor.run {
-                    logger.error("Failed to delete all data: \(error.localizedDescription)")
-                    self.alertItem = AlertItem(title: Text("Error"), message: Text("Failed to delete all data: \(error.localizedDescription)"), primaryButton: .default(Text("OK")), secondaryButton: nil)
-                }
+                )
+            case .destructive:
+                Alert(
+                    title: Text(alertItem.title),
+                    message: Text(alertItem.message),
+                    primaryButton: .destructive(Text(alertItem.actionTitle)) {
+                        store.send(alertItem.action)
+                    },
+                    secondaryButton: .cancel()
+                )
+            case .cancel:
+                Alert(
+                    title: Text(alertItem.title),
+                    message: Text(alertItem.message),
+                    dismissButton: .cancel()
+                )
             }
         }
     }
@@ -498,7 +406,9 @@ struct SettingsView: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView()
+        SettingsView(store: Store(initialState: SettingsFeature.State()) {
+            SettingsFeature()
+        })
     }
 }
 

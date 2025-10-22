@@ -1,27 +1,20 @@
 import SwiftUI
+import ComposableArchitecture
+import Combine
 
 struct ScheduleShiftView: View {
-    @Environment(\.dismiss) private var dismiss
-    // @Query private var shiftTypes: [ShiftType]
-    @State private var calendarService = CalendarService.shared
+    @Bindable var store: StoreOf<ScheduleShiftFeature>
 
-    let selectedDate: Date
+    /// Shift types available for selection (provided by parent)
+    let availableShiftTypes: [ShiftType]
+
+    /// Callback when shift is created successfully
     let onShiftCreated: ((Date) -> Void)?
-    @State private var selectedShiftType: ShiftType?
-    @State private var shiftDate: Date
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
-    init(selectedDate: Date, onShiftCreated: ((Date) -> Void)? = nil) {
-        self.selectedDate = selectedDate
-        self.onShiftCreated = onShiftCreated
-        self._shiftDate = State(initialValue: selectedDate)
-    }
 
     var body: some View {
         NavigationView {
             Form {
-                if let errorMessage = errorMessage {
+                if let errorMessage = store.errorMessage {
                     Section {
                         Text("Error: \(errorMessage)")
                             .foregroundColor(.red)
@@ -29,16 +22,39 @@ struct ScheduleShiftView: View {
                 }
 
                 Section("Shift Details") {
-                    DatePicker("Date", selection: $shiftDate, displayedComponents: [.date])
+                    DatePicker(
+                        "Date",
+                        selection: Binding(
+                            get: { store.shiftDate },
+                            set: { store.send(.dateChanged($0)) }
+                        ),
+                        displayedComponents: [.date]
+                    )
 
-                    // TODO: This view will be migrated to TCA in Task 9
-                    // Shift types will come from ShiftTypesFeature
-                    Text("No shift types available")
-                        .foregroundColor(.secondary)
-                        .italic()
+                    // Shift type selection
+                    if availableShiftTypes.isEmpty {
+                        Text("No shift types available")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        Picker("Shift Type", selection: Binding(
+                            get: { store.selectedShiftType },
+                            set: { store.send(.shiftTypeSelected($0)) }
+                        )) {
+                            Text("Select a shift type").tag(Optional<ShiftType>.none)
+                            ForEach(availableShiftTypes, id: \.id) { shiftType in
+                                HStack {
+                                    Text(shiftType.symbol)
+                                        .font(.headline)
+                                    Text(shiftType.title)
+                                }
+                                .tag(Optional(shiftType))
+                            }
+                        }
+                    }
                 }
 
-                if let shiftType = selectedShiftType {
+                if let shiftType = store.selectedShiftType {
                     Section("Shift Preview") {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -80,62 +96,54 @@ struct ScheduleShiftView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.send(.cancelButtonTapped)
                     }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if isLoading {
+                    if store.isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
                     } else {
                         Button("Save") {
-                            scheduleShift()
+                            store.send(.saveButtonTapped)
                         }
-                        .disabled(selectedShiftType == nil || !calendarService.isAuthorized)
+                        .disabled(store.selectedShiftType == nil)
                     }
                 }
             }
-        }
-    }
-
-    private func scheduleShift() {
-        guard let shiftType = selectedShiftType else { return }
-        guard calendarService.isAuthorized else { return }
-
-        isLoading = true
-        errorMessage = nil
-
-        Task {
-            do {
-                let hasDuplicate = try await calendarService.checkForDuplicateShift(shiftTypeId: shiftType.id, on: shiftDate)
-
-                if hasDuplicate {
-                    await MainActor.run {
-                        self.errorMessage = "A shift of this type is already scheduled for this date."
-                        self.isLoading = false
-                    }
-                    return
-                }
-
-                _ = try await calendarService.createShiftEvent(from: shiftType, on: shiftDate)
-
-                await MainActor.run {
-                    self.isLoading = false
-                    // Notify about the created shift
-                    self.onShiftCreated?(self.shiftDate)
-                    self.dismiss()
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+            .onChange(of: store.shiftDate) { oldValue, newValue in
+                store.send(.dateChanged(newValue))
+            }
+            .onChange(of: store.selectedShiftType) { oldValue, newValue in
+                store.send(.shiftTypeSelected(newValue))
             }
         }
+        .onReceive(Just(store.isLoading == false && store.errorMessage == nil).filter { $0 }.map { _ in () }, perform: { _ in
+            // Notify parent about creation
+            if store.isLoading == false && store.errorMessage == nil {
+                onShiftCreated?(store.shiftDate)
+            }
+        })
     }
 }
 
 #Preview {
-    ScheduleShiftView(selectedDate: Date())
+    let mockShiftType = ShiftType(
+        id: UUID(),
+        symbol: "☀️",
+        duration: .scheduled(from: HourMinuteTime(hour: 6, minute: 0), to: HourMinuteTime(hour: 14, minute: 0)),
+        title: "Morning Shift",
+        description: "Early morning shift",
+        location: Location(id: UUID(), name: "Main Store", address: "123 Main St")
+    )
+
+    ScheduleShiftView(
+        store: Store(
+            initialState: ScheduleShiftFeature.State(selectedDate: Date()),
+            reducer: { ScheduleShiftFeature() }
+        ),
+        availableShiftTypes: [mockShiftType],
+        onShiftCreated: nil
+    )
 }

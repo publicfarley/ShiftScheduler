@@ -1,73 +1,13 @@
 import SwiftUI
+import ComposableArchitecture
 
 struct ChangeLogView: View {
-    @State private var allEntries: [ChangeLogEntry] = []
-    // @Query(sort: \ChangeLogEntry.timestamp, order: .reverse) private var allEntries: [ChangeLogEntry]
-    @State private var searchText = ""
-    @State private var selectedChangeType: ChangeType?
-    @State private var showFilters = false
-
-    var filteredEntries: [ChangeLogEntry] {
-        var entries = allEntries
-
-        // Filter by change type
-        if let type = selectedChangeType {
-            entries = entries.filter { $0.changeType == type }
-        }
-
-        // Filter by search text
-        if !searchText.isEmpty {
-            entries = entries.filter { entry in
-                entry.userDisplayName.localizedCaseInsensitiveContains(searchText) ||
-                entry.reason?.localizedCaseInsensitiveContains(searchText) == true ||
-                entry.oldShiftSnapshot?.title.localizedCaseInsensitiveContains(searchText) == true ||
-                entry.newShiftSnapshot?.title.localizedCaseInsensitiveContains(searchText) == true
-            }
-        }
-
-        return entries
-    }
-
-    var groupedEntries: [(String, [ChangeLogEntry])] {
-        let calendar = Calendar.current
-        let grouped = Dictionary(grouping: filteredEntries) { entry -> String in
-            if calendar.isDateInToday(entry.timestamp) {
-                return "Today"
-            } else if calendar.isDateInYesterday(entry.timestamp) {
-                return "Yesterday"
-            } else if calendar.isDate(entry.timestamp, equalTo: Date(), toGranularity: .weekOfYear) {
-                return "This Week"
-            } else if calendar.isDate(entry.timestamp, equalTo: Date(), toGranularity: .month) {
-                return "This Month"
-            } else {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "MMMM yyyy"
-                return formatter.string(from: entry.timestamp)
-            }
-        }
-
-        let sortedKeys = grouped.keys.sorted { key1, key2 in
-            let order = ["Today", "Yesterday", "This Week", "This Month"]
-            if let index1 = order.firstIndex(of: key1), let index2 = order.firstIndex(of: key2) {
-                return index1 < index2
-            } else if order.contains(key1) {
-                return true
-            } else if order.contains(key2) {
-                return false
-            } else {
-                return key1 > key2
-            }
-        }
-
-        return sortedKeys.map { key in
-            (key, grouped[key] ?? [])
-        }
-    }
+    @Bindable var store: StoreOf<ChangeLogFeature>
 
     var body: some View {
         NavigationStack {
             Group {
-                if filteredEntries.isEmpty {
+                if store.filteredEntries.isEmpty {
                     emptyState
                 } else {
                     changeLogList
@@ -75,25 +15,37 @@ struct ChangeLogView: View {
             }
             .navigationTitle("Change Log")
             .task {
-                do {
-                    allEntries = try await PersistenceClient().fetchChangeLogEntries()
-                } catch {
-                    // Optionally handle error (e.g. show empty, log, etc)
-                    allEntries = []
-                }
+                await store.send(.task).finish()
             }
-            .searchable(text: $searchText, prompt: "Search changes...")
+            .searchable(
+                text: Binding(
+                    get: { store.searchText },
+                    set: { store.send(.searchTextChanged($0)) }
+                ),
+                prompt: "Search changes..."
+            )
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showFilters.toggle()
+                        store.send(.toggleFilters)
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(selectedChangeType != nil ? .blue : .primary)
+                            .foregroundStyle(store.selectedChangeType != nil ? .blue : .primary)
                     }
                 }
             }
-            .sheet(isPresented: $showFilters) {
+            .sheet(
+                isPresented: Binding(
+                    get: { store.showFilters },
+                    set: { newValue in
+                        if !newValue {
+                            store.send(.dismissFilters)
+                        } else {
+                            store.send(.toggleFilters)
+                        }
+                    }
+                )
+            ) {
                 filterSheet
             }
         }
@@ -103,7 +55,7 @@ struct ChangeLogView: View {
 
     private var changeLogList: some View {
         List {
-            ForEach(groupedEntries, id: \.0) { section, entries in
+            ForEach(store.groupedEntries, id: \.0) { section, entries in
                 Section {
                     ForEach(entries, id: \.id) { entry in
                         ChangeLogEntryCard(entry: entry)
@@ -122,7 +74,7 @@ struct ChangeLogView: View {
         ContentUnavailableView {
             Label("No Changes", systemImage: "clock.arrow.circlepath")
         } description: {
-            if searchText.isEmpty && selectedChangeType == nil {
+            if store.searchText.isEmpty && store.selectedChangeType == nil {
                 Text("Your shift changes will appear here")
             } else {
                 Text("No changes match your filters")
@@ -135,12 +87,12 @@ struct ChangeLogView: View {
             List {
                 Section("Change Type") {
                     Button {
-                        selectedChangeType = nil
+                        store.send(.changeTypeSelected(nil))
                     } label: {
                         HStack {
                             Text("All")
                             Spacer()
-                            if selectedChangeType == nil {
+                            if store.selectedChangeType == nil {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(.blue)
                             }
@@ -149,12 +101,12 @@ struct ChangeLogView: View {
 
                     ForEach(ChangeType.allCases, id: \.self) { type in
                         Button {
-                            selectedChangeType = type
+                            store.send(.changeTypeSelected(type))
                         } label: {
                             HStack {
                                 Text(type.displayName)
                                 Spacer()
-                                if selectedChangeType == type {
+                                if store.selectedChangeType == type {
                                     Image(systemName: "checkmark")
                                         .foregroundStyle(.blue)
                                 }
@@ -168,7 +120,7 @@ struct ChangeLogView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        showFilters = false
+                        store.send(.dismissFilters)
                     }
                 }
             }

@@ -1,28 +1,28 @@
 import SwiftUI
+import ComposableArchitecture
 
 struct ScheduleView: View {
-    // @Query private var shiftTypes: [ShiftType]
-    @State private var dataManager = ScheduleDataManager.shared
-    @State private var showingScheduleShift = false
-    @State private var shiftToSwitch: ScheduledShift?
-    @State private var shiftSwitchService: ShiftSwitchService?
+    @Bindable var store: StoreOf<ScheduleFeature>
 
-    // Undo/Redo support
-    @State private var canUndo = false
-    @State private var canRedo = false
-    @State private var toastMessage: ToastMessage?
+    @State private var shiftToSwitch: ScheduledShift?
 
     private var contentKey: String {
         // Create a key that changes whenever shift content changes (not just count)
-        let shifts = dataManager.shiftsForSelectedDate
+        let shifts = store.shiftsForSelectedDate
         let shiftKeys = shifts.map { "\($0.eventIdentifier)-\($0.shiftType?.id.uuidString ?? "nil")" }.joined(separator: ",")
-        return "\(dataManager.selectedDate)-\(shiftKeys)"
+        return "\(store.selectedDate)-\(shiftKeys)"
     }
 
     private var mainContentView: some View {
         VStack(spacing: 12) {
             // Calendar section with dedicated background
-            CustomCalendarView(selectedDate: $dataManager.selectedDate, scheduledDates: dataManager.scheduledDates)
+            CustomCalendarView(
+                selectedDate: Binding(
+                    get: { store.selectedDate },
+                    set: { store.send(.selectedDateChanged($0)) }
+                ),
+                scheduledDates: Set(store.scheduledShifts.map { $0.date })
+            )
                 .padding(.vertical, 12)
                 .background(Color(.systemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -39,8 +39,8 @@ struct ScheduleView: View {
 
                     Spacer()
 
-                    if !dataManager.shiftsForSelectedDate.isEmpty {
-                        Text("\(dataManager.shiftsForSelectedDate.count) shift\(dataManager.shiftsForSelectedDate.count == 1 ? "" : "s")")
+                    if !store.shiftsForSelectedDate.isEmpty {
+                        Text("\(store.shiftsForSelectedDate.count) shift\(store.shiftsForSelectedDate.count == 1 ? "" : "s")")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -51,26 +51,26 @@ struct ScheduleView: View {
                 ScrollView {
                     SmoothedContentView(contentKey: contentKey) {
                         LazyVStack(spacing: 10) {
-                            if let errorMessage = dataManager.errorMessage {
+                            if let errorMessage = store.errorMessage {
                                 ErrorStateView(message: errorMessage)
                                     .padding(.horizontal, 16)
-                            } else if !dataManager.shiftsForSelectedDate.isEmpty {
+                            } else if !store.shiftsForSelectedDate.isEmpty {
                                 // Show shifts when available - with fade-in animation
-                                ForEach(dataManager.shiftsForSelectedDate.sorted { shift1, shift2 in
+                                ForEach(store.shiftsForSelectedDate.sorted { shift1, shift2 in
                                     let startTime1 = shift1.shiftType?.duration.startTime?.hour ?? 0
                                     let startTime2 = shift2.shiftType?.duration.startTime?.hour ?? 0
                                     return startTime1 < startTime2
                                 }) { shift in
                                     FadeInShiftCard(shift: shift, onDelete: {
-                                        deleteShift(shift)
+                                        store.send(.deleteShift(shift))
                                     }, onSwitch: {
                                         shiftToSwitch = shift
                                     })
                                     .padding(.horizontal, 16)
                                 }
-                            } else if dataManager.hasDataForSelectedDate {
+                            } else {
                                 // Only show empty state when we've confirmed there's no data for this date
-                                EnhancedEmptyState(selectedDate: dataManager.selectedDate)
+                                EnhancedEmptyState(selectedDate: store.selectedDate)
                                     .padding(.horizontal, 16)
                             }
                             // If neither condition is met, show nothing (while loading)
@@ -86,7 +86,7 @@ struct ScheduleView: View {
     private var dateHeaderText: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .full
-        return formatter.string(from: dataManager.selectedDate)
+        return formatter.string(from: store.selectedDate)
     }
 
     private var calendarAccessView: some View {
@@ -125,15 +125,15 @@ struct ScheduleView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     // Undo/Redo buttons
-                    if canUndo || canRedo {
+                    if store.canUndo || store.canRedo {
                         CompactUndoRedoButtons(
-                            canUndo: canUndo,
-                            canRedo: canRedo,
+                            canUndo: store.canUndo,
+                            canRedo: store.canRedo,
                             onUndo: {
-                                await handleUndo()
+                                store.send(.undo)
                             },
                             onRedo: {
-                                await handleRedo()
+                                store.send(.redo)
                             }
                         )
                     }
@@ -141,131 +141,35 @@ struct ScheduleView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add Shift") {
-                        showingScheduleShift = true
+                        store.send(.addShiftButtonTapped)
                     }
                     .disabled(!CalendarService.shared.isAuthorized)
                 }
             }
-            .sheet(isPresented: $showingScheduleShift) {
-                ScheduleShiftView(selectedDate: dataManager.selectedDate) { createdDate in
-                    // Called when a shift is successfully created
-                    dataManager.shiftWasCreated(on: createdDate)
+            .sheet(isPresented: Binding(
+                get: { store.showAddShiftSheet },
+                set: { _ in store.send(.addShiftButtonTapped) }
+            )) {
+                AddShiftSheetContainer(selectedDate: store.selectedDate) {
+                    // Called when a shift is successfully created - reload shifts
+                    store.send(.loadShifts)
                 }
             }
             .sheet(item: $shiftToSwitch) { shift in
                 ShiftChangeSheet(currentShift: shift) { newShiftType, reason in
-                    try await switchShift(shift, to: newShiftType, reason: reason)
+                    store.send(.performSwitchShift(shift, newShiftType, reason))
                 }
             }
-            .onAppear {
-                // Set selected date to today when view appears
-                dataManager.selectedDate = Date()
-                // TODO: Update shift types when ScheduleFeature is implemented (Task 5)
-                // Initialize shift switch service
-                Task {
-                    await initializeShiftSwitchService()
-                }
+            .task {
+                await store.send(.task).finish()
             }
-            .toast($toastMessage)
+            .toast(Binding(
+                get: { store.toastMessage },
+                set: { _ in }
+            ))
         }
     }
 
-    private func deleteShift(_ shift: ScheduledShift) {
-        Task {
-            do {
-                try await dataManager.deleteShift(shift)
-            } catch {
-                await MainActor.run {
-                    dataManager.errorMessage = "Failed to delete shift: \(error.localizedDescription)"
-                }
-            }
-        }
-    }
-
-    private func initializeShiftSwitchService() async {
-        let calendarService = CalendarService.shared
-        let repository = ChangeLogRepository()
-        let service = ShiftSwitchService(
-            calendarService: calendarService,
-            changeLogRepository: repository
-        )
-
-        // Restore persisted undo/redo stacks
-        await service.restoreFromPersistence()
-
-        shiftSwitchService = service
-
-        // Update undo/redo button states
-        await updateUndoRedoStates()
-    }
-
-    private func updateUndoRedoStates() async {
-        guard let service = shiftSwitchService else { return }
-        canUndo = await service.canUndo()
-        canRedo = await service.canRedo()
-    }
-
-    private func switchShift(_ shift: ScheduledShift, to newShiftType: ShiftType, reason: String?) async throws {
-        guard let service = shiftSwitchService,
-              let oldShiftType = shift.shiftType else {
-            throw ShiftSwitchError.shiftNotFound
-        }
-
-        try await service.switchShift(
-            eventIdentifier: shift.eventIdentifier,
-            scheduledDate: shift.date,
-            from: oldShiftType,
-            to: newShiftType,
-            reason: reason
-        )
-
-        // Update undo/redo button states
-        await updateUndoRedoStates()
-
-        // Update the cache immediately with the new shift type
-        await dataManager.updateShift(shift, with: newShiftType)
-
-        // Show success toast
-        toastMessage = .success("Shift switched to \(newShiftType.title)")
-    }
-
-    private func handleUndo() async {
-        guard let service = shiftSwitchService else { return }
-
-        do {
-            try await service.undo()
-
-            // Update undo/redo button states
-            await updateUndoRedoStates()
-
-            // Refresh the schedule data
-            dataManager.shiftWasCreated(on: dataManager.selectedDate)
-
-            // Show toast
-            toastMessage = .undo()
-        } catch {
-            toastMessage = .error("Failed to undo: \(error.localizedDescription)")
-        }
-    }
-
-    private func handleRedo() async {
-        guard let service = shiftSwitchService else { return }
-
-        do {
-            try await service.redo()
-
-            // Update undo/redo button states
-            await updateUndoRedoStates()
-
-            // Refresh the schedule data
-            dataManager.shiftWasCreated(on: dataManager.selectedDate)
-
-            // Show toast
-            toastMessage = .redo()
-        } catch {
-            toastMessage = .error("Failed to redo: \(error.localizedDescription)")
-        }
-    }
 }
 
 // MARK: - Fade-In Shift Card Component
@@ -349,6 +253,49 @@ struct ErrorStateView: View {
     }
 }
 
+// MARK: - Add Shift Sheet Container
+struct AddShiftSheetContainer: View {
+    @Environment(\.dismiss) private var dismiss
+    @Dependency(\.persistenceClient) var persistenceClient
+
+    let selectedDate: Date
+    let onShiftCreated: (() -> Void)?
+
+    @State private var shiftTypes: [ShiftType] = []
+    @State private var isLoading = true
+
+    var body: some View {
+        if isLoading {
+            ProgressView()
+                .task {
+                    do {
+                        shiftTypes = try await persistenceClient.fetchShiftTypes()
+                        isLoading = false
+                    } catch {
+                        isLoading = false
+                    }
+                }
+        } else {
+            ScheduleShiftView(
+                store: Store(
+                    initialState: ScheduleShiftFeature.State(selectedDate: selectedDate),
+                    reducer: { ScheduleShiftFeature() }
+                ),
+                availableShiftTypes: shiftTypes,
+                onShiftCreated: { _ in
+                    onShiftCreated?()
+                    dismiss()
+                }
+            )
+        }
+    }
+}
+
 #Preview {
-    ScheduleView()
+    ScheduleView(
+        store: Store(
+            initialState: ScheduleFeature.State(),
+            reducer: { ScheduleFeature() }
+        )
+    )
 }

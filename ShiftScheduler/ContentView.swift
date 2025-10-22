@@ -6,6 +6,18 @@ struct ContentView: View {
         TodayFeature()
     }
 
+    let scheduleStore = Store(initialState: ScheduleFeature.State()) {
+        ScheduleFeature()
+    }
+
+    let changeLogStore = Store(initialState: ChangeLogFeature.State()) {
+        ChangeLogFeature()
+    }
+
+    let settingsStore = Store(initialState: SettingsFeature.State()) {
+        SettingsFeature()
+    }
+
     var body: some View {
         TabView {
             TodayView(store: todayStore)
@@ -13,7 +25,7 @@ struct ContentView: View {
                     Label("Today", systemImage: "calendar.badge.clock")
                 }
 
-            ScheduleView()
+            ScheduleView(store: scheduleStore)
                 .tabItem {
                     Label("Calendar", systemImage: "calendar")
                 }
@@ -32,12 +44,12 @@ struct ContentView: View {
                     Label("Locations", systemImage: "location")
                 }
 
-            ChangeLogView()
+            ChangeLogView(store: changeLogStore)
                 .tabItem {
                     Label("Change Log", systemImage: "clock.arrow.circlepath")
                 }
 
-            SettingsView()
+            SettingsView(store: settingsStore)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
