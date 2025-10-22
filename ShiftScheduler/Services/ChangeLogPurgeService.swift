@@ -12,31 +12,25 @@ protocol ChangeLogRetentionPolicyManager: Sendable {
 }
 
 /// UserDefaults-based implementation of ChangeLogRetentionPolicyManager
-final class UserDefaultsRetentionPolicyManager: ChangeLogRetentionPolicyManager, Sendable {
-    private let userDefaultsKey: String
-    private let lastPurgeDateKey: String
-    private let defaults: UserDefaults
+actor UserDefaultsRetentionPolicyManager: ChangeLogRetentionPolicyManager {
+    private let userDefaultsKey = "com.workevents.ShiftScheduler.changeLogRetentionPolicy"
+    private let lastPurgeDateKey = "com.workevents.ShiftScheduler.lastPurgeDate"
+    private let defaults = UserDefaults.standard
 
-    init() {
-        self.userDefaultsKey = "com.workevents.ShiftScheduler.changeLogRetentionPolicy"
-        self.lastPurgeDateKey = "com.workevents.ShiftScheduler.lastPurgeDate"
-        self.defaults = UserDefaults.standard
-    }
-
-    nonisolated var currentPolicy: ChangeLogRetentionPolicy {
-        if let policyString = UserDefaults.standard.string(forKey: userDefaultsKey),
+    var currentPolicy: ChangeLogRetentionPolicy {
+        if let policyString = defaults.string(forKey: userDefaultsKey),
            let policy = ChangeLogRetentionPolicy(rawValue: policyString) {
             return policy
         }
         return .year1
     }
 
-    nonisolated var lastPurgeDate: Date? {
-        UserDefaults.standard.object(forKey: lastPurgeDateKey) as? Date
+    var lastPurgeDate: Date? {
+        defaults.object(forKey: lastPurgeDateKey) as? Date
     }
 
-    nonisolated func recordPurge(entriesPurged: Int) async {
-        UserDefaults.standard.set(Date(), forKey: lastPurgeDateKey)
+    func recordPurge(entriesPurged: Int) async {
+        defaults.set(Date(), forKey: lastPurgeDateKey)
     }
 }
 
