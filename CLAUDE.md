@@ -86,6 +86,30 @@ Tests use Swift's Testing framework (not XCTest) with the `@Test` macro and `#ex
 
 ## UI Patterns
 
+### Design Reference
+
+**Use the old views as reference for look, feel, and behavior:**
+```
+/Users/farley/Documents/code/projects/swift/tmp/ShiftScheduler/ShiftScheduler/Views
+```
+
+These views contain:
+- Professional UI components (cards, badges, buttons)
+- Animation patterns (staggered, pulse, shimmer effects)
+- Color palettes and gradients
+- Empty state designs
+- Glass morphism effects
+- Shift status indicators
+- Layout hierarchies
+
+**When implementing new views or enhancing existing ones, reference these patterns for:**
+- Visual consistency
+- User experience flows
+- Component styling
+- Animation timing
+- Typography hierarchy
+- Spacing and padding conventions
+
 ### Keyboard Dismissal
 
 **IMPORTANT**: All views with text input controls (TextField, TextEditor, searchable) MUST implement keyboard dismissal to prevent users from getting trapped on screens with blocked CTAs.
