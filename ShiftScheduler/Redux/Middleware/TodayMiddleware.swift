@@ -49,9 +49,13 @@ func todayMiddleware(
 
     case .performSwitchShift(let shift, let newShiftType, let reason):
         logger.debug("Performing shift switch from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title)")
-        // TODO: Implement shift switch via services
         Task {
             do {
+                // Create snapshots of old and new shift types
+                let oldSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
+                let newSnapshot = ShiftSnapshot(from: newShiftType)
+
+                // Create change log entry with full history
                 let entry = ChangeLogEntry(
                     id: UUID(),
                     timestamp: Date(),
@@ -59,10 +63,18 @@ func todayMiddleware(
                     userDisplayName: state.userProfile.displayName,
                     changeType: .switched,
                     scheduledShiftDate: shift.date,
+                    oldShiftSnapshot: oldSnapshot,
+                    newShiftSnapshot: newSnapshot,
                     reason: reason
                 )
+
+                // Persist the change log entry
+                try await services.persistenceService.addChangeLogEntry(entry)
+
+                logger.debug("Shift switched successfully. Change log entry saved.")
                 dispatch(.today(.shiftSwitched(.success(()))))
-                // Reload shifts after switch
+
+                // Reload shifts after switch to refresh from calendar
                 dispatch(.today(.loadShifts))
             } catch {
                 logger.error("Failed to switch shift: \(error.localizedDescription)")
