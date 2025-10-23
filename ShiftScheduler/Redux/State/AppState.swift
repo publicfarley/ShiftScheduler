@@ -1,0 +1,259 @@
+import Foundation
+
+/// Root application state - Single source of truth
+/// Contains all feature states and global application state
+struct AppState: Equatable {
+    /// Currently selected tab
+    var selectedTab: Tab = .today
+
+    /// User profile information
+    var userProfile: UserProfile = UserProfile(userId: UUID(), displayName: "User")
+
+    // MARK: - Feature States
+
+    /// Today feature state
+    var today: TodayState = TodayState()
+
+    /// Schedule feature state
+    var schedule: ScheduleState = ScheduleState()
+
+    /// Shift types feature state
+    var shiftTypes: ShiftTypesState = ShiftTypesState()
+
+    /// Locations feature state
+    var locations: LocationsState = LocationsState()
+
+    /// Change log feature state
+    var changeLog: ChangeLogState = ChangeLogState()
+
+    /// Settings feature state
+    var settings: SettingsState = SettingsState()
+}
+
+// MARK: - Today State
+
+/// State for the Today feature (daily shift overview)
+struct TodayState: Equatable {
+    /// All scheduled shifts loaded from calendar
+    var scheduledShifts: [ScheduledShift] = []
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Sheet presentation for shift switching
+    var showSwitchShiftSheet: Bool = false
+
+    /// Toast notification
+    var toastMessage: ToastMessage? = nil
+
+    /// Cached today's shift
+    var todayShift: ScheduledShift? = nil
+
+    /// Cached tomorrow's shift
+    var tomorrowShift: ScheduledShift? = nil
+
+    /// Count of shifts this week
+    var thisWeekShiftsCount: Int = 0
+
+    /// Count of completed shifts this week
+    var completedThisWeek: Int = 0
+
+    /// Undo availability state
+    var canUndo: Bool = false
+
+    /// Redo availability state
+    var canRedo: Bool = false
+
+    /// Selected shift for switching operations
+    var selectedShift: ScheduledShift? = nil
+}
+
+// MARK: - Schedule State
+
+/// State for the Schedule feature (calendar view with shift management)
+struct ScheduleState: Equatable {
+    /// All scheduled shifts for the current month
+    var scheduledShifts: [ScheduledShift] = []
+
+    /// The currently selected date
+    var selectedDate: Date = Date()
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Calendar authorization state
+    var isCalendarAuthorized: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Search/filter text
+    var searchText: String = ""
+
+    /// Toast notification
+    var toastMessage: ToastMessage? = nil
+
+    /// Sheet presentation for adding a new shift
+    var showAddShiftSheet: Bool = false
+
+    /// Undo stack for shift switching operations
+    var undoStack: [ChangeLogEntry] = []
+
+    /// Redo stack for shift switching operations
+    var redoStack: [ChangeLogEntry] = []
+
+    // MARK: - Computed Properties
+
+    /// Undo/redo button states
+    var canUndo: Bool { !undoStack.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
+    /// Filtered shifts based on search text
+    var filteredShifts: [ScheduledShift] {
+        if searchText.isEmpty {
+            return shiftsForSelectedDate
+        }
+        return shiftsForSelectedDate.filter { shift in
+            shift.shiftType?.title.localizedCaseInsensitiveContains(searchText) ?? false
+        }
+    }
+
+    /// Shifts for the currently selected date
+    var shiftsForSelectedDate: [ScheduledShift] {
+        scheduledShifts.filter { shift in
+            Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
+        }
+    }
+}
+
+// MARK: - Shift Types State
+
+/// State for the Shift Types feature (CRUD for shift templates)
+struct ShiftTypesState: Equatable {
+    /// All shift types loaded from persistence
+    var shiftTypes: [ShiftType] = []
+
+    /// Search text for filtering shift types
+    var searchText: String = ""
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Presented add/edit sheet
+    var showAddEditSheet: Bool = false
+
+    /// Shift type being edited (nil for add mode)
+    var editingShiftType: ShiftType? = nil
+
+    // MARK: - Computed Properties
+
+    /// Filtered shift types based on search text
+    var filteredShiftTypes: [ShiftType] {
+        if searchText.isEmpty {
+            return shiftTypes
+        }
+        return shiftTypes.filter { shiftType in
+            shiftType.title.localizedCaseInsensitiveContains(searchText) ||
+            shiftType.symbol.localizedCaseInsensitiveContains(searchText) ||
+            shiftType.location.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+}
+
+// MARK: - Locations State
+
+/// State for the Locations feature (location CRUD)
+struct LocationsState: Equatable {
+    /// All locations loaded from persistence
+    var locations: [Location] = []
+
+    /// Search text for filtering locations
+    var searchText: String = ""
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Presented add/edit sheet
+    var showAddEditSheet: Bool = false
+
+    /// Location being edited (nil for add mode)
+    var editingLocation: Location? = nil
+
+    // MARK: - Computed Properties
+
+    /// Filtered locations based on search text
+    var filteredLocations: [Location] {
+        if searchText.isEmpty {
+            return locations
+        }
+        return locations.filter { location in
+            location.name.localizedCaseInsensitiveContains(searchText) ||
+            location.address.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+}
+
+// MARK: - Change Log State
+
+/// State for the Change Log feature (history of shift operations)
+struct ChangeLogState: Equatable {
+    /// All change log entries
+    var entries: [ChangeLogEntry] = []
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Search/filter text
+    var searchText: String = ""
+
+    /// Toast notification
+    var toastMessage: ToastMessage? = nil
+
+    // MARK: - Computed Properties
+
+    /// Filtered entries based on search text
+    var filteredEntries: [ChangeLogEntry] {
+        if searchText.isEmpty {
+            return entries
+        }
+        return entries.filter { entry in
+            entry.userDisplayName.localizedCaseInsensitiveContains(searchText) ||
+            entry.changeType.displayName.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+}
+
+// MARK: - Settings State
+
+/// State for the Settings feature (user preferences)
+struct SettingsState: Equatable {
+    /// User display name
+    var displayName: String = ""
+
+    /// User ID
+    var userId: UUID = UUID()
+
+    /// Loading state
+    var isLoading: Bool = false
+
+    /// Error message if any
+    var errorMessage: String? = nil
+
+    /// Toast notification
+    var toastMessage: ToastMessage? = nil
+
+    /// Whether changes have been made but not saved
+    var hasUnsavedChanges: Bool = false
+}
