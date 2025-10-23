@@ -44,6 +44,8 @@ struct SettingsView: View {
                 }
                 .padding()
             }
+            .scrollDismissesKeyboard(.immediately)
+            .dismissKeyboardOnTap()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {

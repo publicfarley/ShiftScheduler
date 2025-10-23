@@ -196,6 +196,7 @@ struct SearchBar: View {
         .padding(.vertical, 4)
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .dismissKeyboardOnTap()
     }
 }
 
