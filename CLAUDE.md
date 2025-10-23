@@ -490,13 +490,60 @@ ForEach(store.state.feature.items) { item in
 
 ---
 
-**Priority 3 - Shift Switching:**
-- [ ] Shift switching modal sheet
-- [ ] New shift type selection
-- [ ] Reason/notes input field
-- [ ] Confirmation with validation
-- [ ] Undo/redo button integration
-- [ ] Change log entry creation
+**Priority 3 - Shift Switching:** 🔄 IN PROGRESS
+**Date:** October 23, 2025
+**Commits:** (Current implementation)
+
+**Shell Completed:**
+- ✅ Shift switching modal sheet (updated ShiftChangeSheet with Redux)
+- ✅ New shift type selection (using store.state.shiftTypes)
+- ✅ Reason/notes input field (optional text area)
+- ✅ Confirmation with validation (alert before switch)
+- ✅ TodayView sheet integration with "Switch Shift" button
+- ⏳ Undo/redo button integration (infrastructure ready, needs UI)
+- ⏳ Change log entry creation (middleware stubs ready)
+
+**Implementation Details:**
+
+**ShiftChangeSheet Redux Integration:**
+- Updated to accept Redux store via @Environment
+- Removed callback-based onSwitch parameter
+- Now dispatches actions: `.today(.performSwitchShift)` or `.schedule(.performSwitchShift)`
+- Automatically filters shift types (excludes current)
+- Loads from Redux state instead of passed parameters
+
+**TodayView Integration:**
+- Added sheet presentation for `showSwitchShiftSheet`
+- Added "Switch Shift" button below today's shift card
+- Button dispatches `.switchShiftTapped` action
+- Sheet displays ShiftChangeSheet with `.today` feature flag
+
+**Remaining Work (Post-October 23):**
+1. **Middleware Implementation**
+   - Implement `.performSwitchShift` in TodayMiddleware
+   - Create ChangeLogEntry with shift snapshots
+   - Persist changes to calendar
+   - Update scheduledShifts state
+
+2. **Undo/Redo Implementation**
+   - Implement `.undo` and `.redo` in ScheduleMiddleware
+   - Integrate UndoRedoButtonsView to ScheduleView
+   - Update middleware to handle undo/redo logic
+
+3. **ScheduleView Integration**
+   - Add switch shift capability to ScheduleView
+   - Add UndoRedoButtonsView to toolbar
+   - Display undo/redo button states
+
+4. **Testing**
+   - Test shift switching success flow
+   - Test undo/redo stack operations
+   - Test change log persistence
+   - Verify middleware side effects
+
+**Status:** 🔄 Shell ready - Middleware implementation needed
+
+---
 
 **Priority 4 - Testing:**
 - [ ] Unit tests for all service implementations

@@ -119,8 +119,31 @@ struct TodayView: View {
                                     Calendar.current.isDate(shift.date, inSameDayAs: Date())
                                 }
 
-                                if let shift = todayShifts.first, let shiftType = shift.shiftType {
-                                    TodayShiftCard(shift: shift)
+                                if let shift = todayShifts.first {
+                                    VStack(spacing: 12) {
+                                        TodayShiftCard(shift: shift)
+
+                                        Button(action: {
+                                            store.dispatch(action: .today(.switchShiftTapped(shift)))
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "arrow.triangle.2.circlepath")
+                                                Text("Switch Shift")
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .foregroundColor(.white)
+                                            .cornerRadius(10)
+                                        }
+                                    }
                                 } else {
                                     VStack(spacing: 12) {
                                         Image(systemName: "calendar.badge.exclamationmark")
@@ -188,6 +211,11 @@ struct TodayView: View {
                     .scrollContentBackground(.hidden)
                     .navigationTitle("Today")
                     .navigationBarTitleDisplayMode(.large)
+                }
+            }
+            .sheet(isPresented: .constant(store.state.today.showSwitchShiftSheet)) {
+                if let shift = store.state.today.selectedShift {
+                    ShiftChangeSheet(currentShift: shift, feature: .today)
                 }
             }
             .onAppear {

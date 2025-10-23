@@ -222,11 +222,11 @@ struct ShiftDisplayCard: View {
 }
 
 struct ShiftChangeSheet: View {
+    @Environment(\.reduxStore) var store
     @Environment(\.dismiss) private var dismiss
-    let shiftTypes: [ShiftType] = [] // Temporary code. Value needs to come from AppState
 
     let currentShift: ScheduledShift
-    let onSwitch: (ShiftType, String?) async throws -> Void
+    let feature: ShiftSwitchFeature  // 'today' or 'schedule'
 
     @State private var selectedShiftType: ShiftType?
     @State private var reason: String = ""
@@ -242,6 +242,17 @@ struct ShiftChangeSheet: View {
     @State private var showReasonField = false
     @State private var showActionButtons = false
     @FocusState private var isReasonFocused: Bool
+
+    /// Which feature is triggering the shift switch
+    enum ShiftSwitchFeature {
+        case today
+        case schedule
+    }
+
+    /// Get available shift types excluding current shift
+    private var availableShiftTypes: [ShiftType] {
+        store.state.shiftTypes.shiftTypes.filter { $0.id != currentShift.shiftType?.id }
+    }
 
     var body: some View {
         NavigationStack {
@@ -319,7 +330,7 @@ struct ShiftChangeSheet: View {
             }
         }
         .onAppear {
-            selectedShiftType = shiftTypes.first { $0.id != currentShift.shiftType?.id }
+            selectedShiftType = availableShiftTypes.first
 
             // Staggered entrance animations
             withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.1)) {
@@ -337,6 +348,14 @@ struct ShiftChangeSheet: View {
             withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.5)) {
                 showActionButtons = true
             }
+        }
+        .onChange(of: store.state.today.showSwitchShiftSheet) { _, newValue in
+            if !newValue && feature == .today {
+                dismiss()
+            }
+        }
+        .onChange(of: store.state.schedule.scheduledShifts) { _, _ in
+            // No dismissal needed - sheet handles its own state
         }
     }
 
@@ -371,54 +390,63 @@ struct ShiftChangeSheet: View {
                 Spacer()
             }
 
-            // Enhanced picker with gradient styling
-            Picker("Select Shift Type", selection: $selectedShiftType) {
-                Text("Select a shift type")
-                    .tag(nil as ShiftType?)
+            if availableShiftTypes.isEmpty {
+                Text("No other shift types available")
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(14)
+            } else {
+                // Enhanced picker with gradient styling
+                Picker("Select Shift Type", selection: $selectedShiftType) {
+                    Text("Select a shift type")
+                        .tag(nil as ShiftType?)
 
-                ForEach(shiftTypes.filter { $0.id != currentShift.shiftType?.id }) { type in
-                    HStack {
-                        Text(type.symbol)
-                        Text(type.title)
+                    ForEach(availableShiftTypes) { type in
+                        HStack {
+                            Text(type.symbol)
+                            Text(type.title)
+                        }
+                        .tag(Optional(type))
                     }
-                    .tag(Optional(type))
                 }
-            }
-            .pickerStyle(.menu)
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [
-                                        ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
-                                        .clear
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    }
-            }
+                .pickerStyle(.menu)
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [
+                                            ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
+                                            .clear
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        }
+                }
 
-            // Enhanced preview card for selected shift
-            if let selected = selectedShiftType {
-                ShiftDisplayCard(
-                    shiftType: selected,
-                    date: currentShift.date,
-                    label: "New",
-                    showBadge: true
-                )
-                .transition(
-                    .asymmetric(
-                        insertion: .scale(scale: 0.9).combined(with: .opacity),
-                        removal: .scale(scale: 0.95).combined(with: .opacity)
+                // Enhanced preview card for selected shift
+                if let selected = selectedShiftType {
+                    ShiftDisplayCard(
+                        shiftType: selected,
+                        date: currentShift.date,
+                        label: "New",
+                        showBadge: true
                     )
-                )
+                    .transition(
+                        .asymmetric(
+                            insertion: .scale(scale: 0.9).combined(with: .opacity),
+                            removal: .scale(scale: 0.95).combined(with: .opacity)
+                        )
+                    )
+                }
             }
         }
         .animation(AnimationPresets.accessible(AnimationPresets.standardSpring), value: selectedShiftType)
@@ -542,27 +570,26 @@ struct ShiftChangeSheet: View {
         isProcessing = true
         errorMessage = nil
 
-        do {
-            let reasonText = reason.isEmpty ? nil : reason
-            try await onSwitch(newShiftType, reasonText)
+        let reasonText = reason.isEmpty ? nil : reason
 
-            // Show success feedback
-            await MainActor.run {
-                showSuccess = true
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
+        // Dispatch shift switch action based on feature
+        switch feature {
+        case .today:
+            store.dispatch(action: .today(.performSwitchShift(currentShift, newShiftType, reasonText)))
+        case .schedule:
+            store.dispatch(action: .schedule(.performSwitchShift(currentShift, newShiftType, reasonText)))
+        }
 
-            // Dismiss after a delay
-            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
-            await MainActor.run {
-                dismiss()
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = error.localizedDescription
-                isProcessing = false
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-            }
+        // Show success feedback
+        await MainActor.run {
+            showSuccess = true
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+
+        // Dismiss after a delay
+        try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+        await MainActor.run {
+            dismiss()
         }
     }
 }
