@@ -10,16 +10,16 @@ import SwiftUI
 @DependencyClient
 struct EventKitClient {
     /// Check the current authorization status for calendar access
-    var checkAuthorizationStatus: @Sendable () -> EKAuthorizationStatus = { .notDetermined }
+    var checkAuthorizationStatus: () -> EKAuthorizationStatus = { .notDetermined }
 
     /// Request full access to calendar events (iOS 17+) or basic access (earlier versions)
-    var requestFullAccess: @Sendable () async -> Bool = { false }
+    var requestFullAccess: () async -> Bool = { false }
 
     /// Get or create the ShiftScheduler app calendar, creating if necessary
-    var getOrCreateAppCalendar: @Sendable () async throws -> String = { throw EventKitError.calendarNotFound }
+    var getOrCreateAppCalendar: () async throws -> String = { throw EventKitError.calendarNotFound }
 
     /// Create a new calendar event with the specified details
-    var createEvent: @Sendable (String, Date, Date, Bool, String?) async throws -> String = { _, _, _, _, _ in throw EventKitError.saveFailed(NSError()) }
+    var createEvent: (String, Date, Date, Bool, String?) async throws -> String = { _, _, _, _, _ in throw EventKitError.saveFailed(NSError()) }
 
     /// Event data structure for Sendable compliance
     struct EventData: Sendable {
@@ -33,13 +33,13 @@ struct EventKitClient {
     }
 
     /// Fetch all events within a date range that belong to the app calendar
-    var fetchEvents: @Sendable (Date, Date) async throws -> [EventData] = { _, _ in [] }
+    var fetchEvents: (Date, Date) async throws -> [EventData] = { _, _ in [] }
 
     /// Delete an event by its identifier
-    var deleteEvent: @Sendable (String) async throws -> Void = { _ in throw EventKitError.eventNotFound }
+    var deleteEvent: (String) async throws -> Void = { _ in throw EventKitError.eventNotFound }
 
     /// Update an existing event with new details
-    var updateEvent: @Sendable (String, String, Date, Date, Bool, String?) async throws -> Void = { _, _, _, _, _, _ in throw EventKitError.eventNotFound }
+    var updateEvent: (String, String, Date, Date, Bool, String?) async throws -> Void = { _, _, _, _, _, _ in throw EventKitError.eventNotFound }
 }
 
 extension EventKitClient: DependencyKey {
@@ -107,7 +107,7 @@ extension EventKitClient: DependencyKey {
                     throw EventKitError.saveFailed(error)
                 }
             },
-            createEvent: { @Sendable title, startDate, endDate, isAllDay, notes in
+            createEvent: { title, startDate, endDate, isAllDay, notes in
                 let calendarId = try await EventKitClient.liveValue.getOrCreateAppCalendar()
                 guard let calendar = eventStore.calendar(withIdentifier: calendarId) else {
                     throw EventKitError.calendarNotFound
@@ -128,11 +128,13 @@ extension EventKitClient: DependencyKey {
                     throw EventKitError.saveFailed(error)
                 }
             },
-            fetchEvents: { @Sendable startDate, endDate in
+            fetchEvents: { @MainActor startDate, endDate in
                 let calendarId = try await EventKitClient.liveValue.getOrCreateAppCalendar()
                 guard let calendar = eventStore.calendar(withIdentifier: calendarId) else {
                     return []
                 }
+                
+                let a = EKEventStore.authorizationStatus(for: .event)
 
                 let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: [calendar])
                 let events = eventStore.events(matching: predicate)
@@ -148,7 +150,7 @@ extension EventKitClient: DependencyKey {
                     )
                 }
             },
-            deleteEvent: { @Sendable identifier in
+            deleteEvent: { identifier in
                 guard let event = eventStore.event(withIdentifier: identifier) else {
                     throw EventKitError.eventNotFound
                 }
@@ -159,7 +161,7 @@ extension EventKitClient: DependencyKey {
                     throw EventKitError.deleteFailed(error)
                 }
             },
-            updateEvent: { @Sendable identifier, title, startDate, endDate, isAllDay, notes in
+            updateEvent: { identifier, title, startDate, endDate, isAllDay, notes in
                 guard let event = eventStore.event(withIdentifier: identifier) else {
                     throw EventKitError.eventNotFound
                 }

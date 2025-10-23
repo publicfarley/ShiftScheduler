@@ -1,6 +1,6 @@
 import Foundation
 
-struct ScheduledShift: Identifiable, Equatable {
+struct ScheduledShift: Identifiable, Equatable, Sendable {
     let id: UUID
     let eventIdentifier: String
     let shiftType: ShiftType?

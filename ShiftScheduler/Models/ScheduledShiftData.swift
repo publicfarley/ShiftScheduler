@@ -2,7 +2,7 @@ import Foundation
 
 /// Data structure representing a shift event from the calendar
 /// Used as an intermediate representation when fetching shifts from EventKit
-struct ScheduledShiftData: Hashable, Equatable {
+struct ScheduledShiftData: Hashable, Equatable, Sendable {
     let eventIdentifier: String
     let shiftTypeId: UUID
     let date: Date

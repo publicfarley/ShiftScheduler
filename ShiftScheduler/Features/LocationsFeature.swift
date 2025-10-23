@@ -103,7 +103,7 @@ struct LocationsFeature {
         }
     }
 
-    @Dependency(\.persistenceClient) var persistenceClient
+    @Dependency(\.persistenceClient) var persistenceClient                                                                                                                       
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in

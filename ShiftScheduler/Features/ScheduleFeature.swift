@@ -31,8 +31,6 @@ struct ScheduleFeature {
         var showAddShiftSheet: Bool = false
 
         /// Undo/redo stacks for shift switching operations
-        var undoStack: [ShiftSwitchOperation] = []
-        var redoStack: [ShiftSwitchOperation] = []
 
         /// Undo/redo button states
         var canUndo: Bool { !undoStack.isEmpty }
@@ -65,8 +63,6 @@ struct ScheduleFeature {
             searchText: String = "",
             toastMessage: ToastMessage? = nil,
             showAddShiftSheet: Bool = false,
-            undoStack: [ShiftSwitchOperation] = [],
-            redoStack: [ShiftSwitchOperation] = []
         ) {
             self.scheduledShifts = scheduledShifts
             self.selectedDate = selectedDate
@@ -135,7 +131,6 @@ struct ScheduleFeature {
         case shiftsLoaded(TaskResult<[ScheduledShift]>)
 
         /// Handle undo/redo stacks restored from persistence
-        case stacksRestored(TaskResult<(undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation])>)
 
         /// Undo operation
         case undo

@@ -42,10 +42,6 @@ struct TodayFeature {
         /// Selected shift for switching operations
         var selectedShift: ScheduledShift?
 
-        /// Undo/redo stacks for persistence
-        var undoStack: [ShiftSwitchOperation] = []
-        var redoStack: [ShiftSwitchOperation] = []
-
         /// Initialize with optional initial shifts
         init(
             scheduledShifts: [ScheduledShift] = [],
@@ -59,9 +55,7 @@ struct TodayFeature {
             completedThisWeek: Int = 0,
             canUndo: Bool = false,
             canRedo: Bool = false,
-            selectedShift: ScheduledShift? = nil,
-            undoStack: [ShiftSwitchOperation] = [],
-            redoStack: [ShiftSwitchOperation] = []
+            selectedShift: ScheduledShift? = nil
         ) {
             self.scheduledShifts = scheduledShifts
             self.isLoading = isLoading
@@ -75,8 +69,6 @@ struct TodayFeature {
             self.canUndo = canUndo
             self.canRedo = canRedo
             self.selectedShift = selectedShift
-            self.undoStack = undoStack
-            self.redoStack = redoStack
         }
 
         static func == (lhs: State, rhs: State) -> Bool {
@@ -91,14 +83,12 @@ struct TodayFeature {
             lhs.completedThisWeek == rhs.completedThisWeek &&
             lhs.canUndo == rhs.canUndo &&
             lhs.canRedo == rhs.canRedo &&
-            lhs.selectedShift == rhs.selectedShift &&
-            lhs.undoStack == rhs.undoStack &&
-            lhs.redoStack == rhs.redoStack
+            lhs.selectedShift == rhs.selectedShift
         }
     }
 
     enum Action: Equatable {
-        /// View appeared, load initial data and restore undo/redo stacks
+        /// View appeared, load initial data
         case task
 
         /// Load shifts from calendar for a specific date range
@@ -106,9 +96,6 @@ struct TodayFeature {
 
         /// Handle shifts loaded result
         case shiftsLoaded(TaskResult<[ScheduledShift]>)
-
-        /// Handle undo/redo stacks restored from persistence
-        case stacksRestored(TaskResult<(undo: [ShiftSwitchOperation], redo: [ShiftSwitchOperation])>)
 
         /// User tapped to switch a shift
         case switchShiftTapped(ScheduledShift)
@@ -118,18 +105,6 @@ struct TodayFeature {
 
         /// Handle shift switch result
         case shiftSwitched(Result<Void, Error>)
-
-        /// Perform undo operation
-        case undo
-
-        /// Handle undo result
-        case undoCompleted(Result<Void, Error>)
-
-        /// Perform redo operation
-        case redo
-
-        /// Handle redo result
-        case redoCompleted(Result<Void, Error>)
 
         /// Clear the toast message
         case toastMessageCleared
@@ -146,7 +121,6 @@ struct TodayFeature {
         static func == (lhs: Action, rhs: Action) -> Bool {
             switch (lhs, rhs) {
             case (.task, .task), (.loadShifts, .loadShifts),
-                 (.undo, .undo), (.redo, .redo),
                  (.toastMessageCleared, .toastMessageCleared),
                  (.switchShiftSheetDismissed, .switchShiftSheetDismissed),
                  (.updateCachedShifts, .updateCachedShifts),
@@ -154,25 +128,12 @@ struct TodayFeature {
                 return true
             case let (.shiftsLoaded(a), .shiftsLoaded(b)):
                 return a == b
-            case let (.stacksRestored(a), .stacksRestored(b)):
-                switch (a, b) {
-                case let (.success(aStacks), .success(bStacks)):
-                    return aStacks.undo == bStacks.undo && aStacks.redo == bStacks.redo
-                case (.failure, .failure):
-                    return true
-                default:
-                    return false
-                }
             case let (.switchShiftTapped(a), .switchShiftTapped(b)):
                 return a.id == b.id
             case let (.performSwitchShift(aShift, aType, aReason), .performSwitchShift(bShift, bType, bReason)):
                 return aShift.id == bShift.id && aType.id == bType.id && aReason == bReason
             case (.shiftSwitched(.success), .shiftSwitched(.success)),
-                 (.shiftSwitched(.failure), .shiftSwitched(.failure)),
-                 (.undoCompleted(.success), .undoCompleted(.success)),
-                 (.undoCompleted(.failure), .undoCompleted(.failure)),
-                 (.redoCompleted(.success), .redoCompleted(.success)),
-                 (.redoCompleted(.failure), .redoCompleted(.failure)):
+                 (.shiftSwitched(.failure), .shiftSwitched(.failure)):
                 return true
             default:
                 return false
@@ -188,25 +149,30 @@ struct TodayFeature {
             switch action {
             case .task:
                 state.isLoading = true
-                return .merge(
-                    .run { @Sendable send in
-                        let result = await TaskResult(catching: {
-                            try await shiftSwitchClient.restoreStacks()
-                        })
-                        await send(.stacksRestored(result))
-                    },
-                    .send(.loadShifts)
-                )
+                return .send(.loadShifts)
 
             case .loadShifts:
                 state.isLoading = true
-                return .run { send in
+                return .run { @MainActor send in
                     let today = Calendar.current.startOfDay(for: Date())
                     let endDate = Calendar.current.date(byAdding: .day, value: 30, to: today) ?? today
 
-                    let result: TaskResult<[ScheduledShift]> = await TaskResult {
+//                    let result: TaskResult<[ScheduledShift]> = await TaskResult {
+//                        let shiftDataList = try await calendarClient.fetchShiftsInRange(today, endDate)
+//                        return shiftDataList.map { data in
+//                            ScheduledShift(
+//                                id: UUID(),
+//                                eventIdentifier: data.eventIdentifier,
+//                                shiftType: nil,
+//                                date: data.date
+//                            )
+//                        }
+//                    }
+                    
+                    let result: TaskResult<[ScheduledShift]>
+                    do {
                         let shiftDataList = try await calendarClient.fetchShiftsInRange(today, endDate)
-                        return shiftDataList.map { data in
+                        let scheduledShiftList = shiftDataList.map { data in
                             ScheduledShift(
                                 id: UUID(),
                                 eventIdentifier: data.eventIdentifier,
@@ -214,9 +180,13 @@ struct TodayFeature {
                                 date: data.date
                             )
                         }
+                        
+                        result = .success(scheduledShiftList)
+                    } catch {
+                        result = .failure(error)
                     }
 
-                    await send(.shiftsLoaded(result))
+                    send(.shiftsLoaded(result))
                 }
 
             case let .shiftsLoaded(.success(shifts)):
@@ -228,15 +198,6 @@ struct TodayFeature {
             case let .shiftsLoaded(.failure(error)):
                 state.isLoading = false
                 state.errorMessage = "Failed to load shifts: \(error.localizedDescription)"
-                return .none
-
-            case let .stacksRestored(.success((undoStack, redoStack))):
-                state.undoStack = undoStack
-                state.redoStack = redoStack
-                return .send(.updateUndoRedoStates)
-
-            case let .stacksRestored(.failure(error)):
-                state.errorMessage = "Failed to restore undo/redo stacks: \(error.localizedDescription)"
                 return .none
 
             case let .switchShiftTapped(shift):
@@ -286,98 +247,6 @@ struct TodayFeature {
                 state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
                 return .none
 
-            case .undo:
-                guard !state.undoStack.isEmpty else {
-                    state.toastMessage = .error("No operation to undo")
-                    return .none
-                }
-
-                guard let operation = state.undoStack.last else {
-                    return .none
-                }
-
-                state.isLoading = true
-                return .run { send in
-                    await send(.undoCompleted(
-                        Result {
-                            try await shiftSwitchClient.undoOperation(operation)
-                            return ()
-                        }
-                    ))
-                }
-
-            case .undoCompleted(.success):
-                state.isLoading = false
-                if !state.undoStack.isEmpty {
-                    let operation = state.undoStack.removeLast()
-                    state.redoStack.append(operation)
-                }
-                state.toastMessage = .success("Undo successful")
-
-                // Capture stacks before returning to avoid state capture issues
-                let undoStack = state.undoStack
-                let redoStack = state.redoStack
-
-                // Persist updated stacks and reload
-                return .merge(
-                    .run { _ in
-                        await shiftSwitchClient.persistStacks(undoStack, redoStack)
-                    },
-                    .send(.loadShifts),
-                    .send(.updateUndoRedoStates)
-                )
-
-            case let .undoCompleted(.failure(error)):
-                state.isLoading = false
-                state.toastMessage = .error("Undo failed: \(error.localizedDescription)")
-                return .none
-
-            case .redo:
-                guard !state.redoStack.isEmpty else {
-                    state.toastMessage = .error("No operation to redo")
-                    return .none
-                }
-
-                guard let operation = state.redoStack.last else {
-                    return .none
-                }
-
-                state.isLoading = true
-                return .run { send in
-                    await send(.redoCompleted(
-                        Result {
-                            try await shiftSwitchClient.redoOperation(operation)
-                            return ()
-                        }
-                    ))
-                }
-
-            case .redoCompleted(.success):
-                state.isLoading = false
-                if !state.redoStack.isEmpty {
-                    let operation = state.redoStack.removeLast()
-                    state.undoStack.append(operation)
-                }
-                state.toastMessage = .success("Redo successful")
-
-                // Capture stacks before returning to avoid state capture issues
-                let undoStack = state.undoStack
-                let redoStack = state.redoStack
-
-                // Persist updated stacks and reload
-                return .merge(
-                    .run { _ in
-                        await shiftSwitchClient.persistStacks(undoStack, redoStack)
-                    },
-                    .send(.loadShifts),
-                    .send(.updateUndoRedoStates)
-                )
-
-            case let .redoCompleted(.failure(error)):
-                state.isLoading = false
-                state.toastMessage = .error("Redo failed: \(error.localizedDescription)")
-                return .none
-
             case .toastMessageCleared:
                 state.toastMessage = nil
                 return .none
@@ -420,8 +289,9 @@ struct TodayFeature {
                 return .none
 
             case .updateUndoRedoStates:
-                state.canUndo = !state.undoStack.isEmpty
-                state.canRedo = !state.redoStack.isEmpty
+                // Undo/redo disabled for now (future implementation)
+                state.canUndo = false
+                state.canRedo = false
                 return .none
             }
         }

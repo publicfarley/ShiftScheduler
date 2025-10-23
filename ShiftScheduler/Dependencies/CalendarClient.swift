@@ -38,7 +38,7 @@ extension CalendarClient: DependencyKey {
             isAuthorized: {
                 @Dependency(\.eventKitClient) var eventKitClient
                 let status = eventKitClient.checkAuthorizationStatus()
-                return status == .fullAccess || status == .authorized
+                return status == .fullAccess
             },
             createShift: { @Sendable shiftType, date in
                 @Dependency(\.eventKitClient) var eventKitClient
