@@ -1,65 +1,236 @@
 import SwiftUI
+import OSLog
+
+private let logger = os.Logger(subsystem: "com.shiftscheduler.views", category: "Schedule")
 
 struct ScheduleView: View {
     @Environment(\.reduxStore) var store
 
     var body: some View {
         NavigationView {
-            VStack {
+            ZStack {
                 if !store.state.schedule.isCalendarAuthorized {
-                    VStack(spacing: 16) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.largeTitle)
-                            .foregroundColor(.red)
-                        Text("Calendar Access Required")
-                            .font(.headline)
-                        Text("ShiftScheduler needs calendar access to view your schedule.")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
-                        Button("Open Settings") {
-                            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(settingsUrl)
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
+                    authorizationRequiredView
                 } else {
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            Text("Schedule View")
-                                .font(.headline)
-
-                            Text("Shifts: \(store.state.schedule.scheduledShifts.count)")
-                                .foregroundColor(.secondary)
-
-                            ForEach(store.state.schedule.scheduledShifts.prefix(5)) { shift in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(shift.shiftType?.title ?? "Unknown")
-                                        .font(.headline)
-                                    Text(shift.date, style: .date)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
-                            }
-                        }
-                        .padding()
-                    }
-                    .navigationTitle("Schedule")
-                    .navigationBarTitleDisplayMode(.large)
+                    scheduleContentView
                 }
+            }
+            .navigationTitle("Schedule")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if store.state.schedule.isCalendarAuthorized {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        filterButton
+                    }
+                }
+            }
+            .sheet(isPresented: .constant(store.state.schedule.showFilterSheet)) {
+                ScheduleFilterSheetView()
             }
             .onAppear {
                 store.dispatch(action: .schedule(.task))
             }
         }
+        .dismissKeyboardOnTap()
+    }
+
+    // MARK: - View Components
+
+    private var authorizationRequiredView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 48))
+                .foregroundColor(.red)
+            Text("Calendar Access Required")
+                .font(.headline)
+            Text("ShiftScheduler needs calendar access to view your schedule.")
+                .multilineTextAlignment(.center)
+                .foregroundColor(.secondary)
+                .font(.body)
+            Button("Open Settings") {
+                if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsUrl)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    private var scheduleContentView: some View {
+        VStack(spacing: 0) {
+            // Calendar month view
+            CustomCalendarView(
+                selectedDate: Binding(
+                    get: { store.state.schedule.selectedDate },
+                    set: { store.dispatch(action: .schedule(.selectedDateChanged($0))) }
+                ),
+                scheduledDates: Set(
+                    store.state.schedule.scheduledShifts.map { shift in
+                        Calendar.current.startOfDay(for: shift.date)
+                    }
+                )
+            )
+            .padding()
+            .background(Color(.systemGray6))
+
+            // Shifts list
+            if store.state.schedule.filteredShifts.isEmpty {
+                emptyStateView
+            } else {
+                shiftsListView
+            }
+        }
+    }
+
+    private var shiftsListView: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                // Active filters indicator
+                if store.state.schedule.hasActiveFilters {
+                    activeFiltersIndicator
+                }
+
+                // Shift count
+                HStack {
+                    Text("Showing \(store.state.schedule.filteredShifts.count) shift(s)")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    if store.state.schedule.hasActiveFilters {
+                        Button(action: clearAllFilters) {
+                            Text("Clear filters")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+
+                // Shifts
+                ForEach(store.state.schedule.filteredShifts, id: \.id) { shift in
+                    shiftCard(for: shift)
+                }
+            }
+            .padding(.vertical)
+        }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "calendar")
+                .font(.system(size: 48))
+                .foregroundColor(.gray)
+            Text("No Shifts Found")
+                .font(.headline)
+            if store.state.schedule.hasActiveFilters {
+                Text("Try adjusting your filters or clearing them to see more shifts.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                    .font(.body)
+                Button(action: clearAllFilters) {
+                    Text("Clear Filters")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
+            } else {
+                Text("No shifts scheduled for this date.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                    .font(.body)
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    private var activeFiltersIndicator: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                .font(.caption)
+            Text("Filters applied")
+                .font(.caption)
+                .fontWeight(.semibold)
+            Spacer()
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Color.blue.opacity(0.1))
+        .foregroundColor(.blue)
+        .cornerRadius(6)
+        .padding(.horizontal)
+    }
+
+    private var filterButton: some View {
+        Button(action: { store.dispatch(action: .schedule(.filterSheetToggled(true))) }) {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
+        }
+    }
+
+    private func shiftCard(for shift: ScheduledShift) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(shift.shiftType?.title ?? "Unknown Shift")
+                        .font(.headline)
+                    HStack(spacing: 8) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text(shift.shiftType?.location.name ?? "Unknown Location")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(shift.date.formatted(date: .abbreviated, time: .omitted))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if let symbol = shift.shiftType?.symbol {
+                        Text(symbol)
+                            .font(.title3)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+        .padding(.horizontal)
+    }
+
+    private func clearAllFilters() {
+        logger.debug("Clearing all filters")
+        store.dispatch(action: .schedule(.clearFilters))
     }
 }
 
 #Preview {
     ScheduleView()
+        .environment(\.reduxStore, previewStore)
 }
+
+private let previewStore: Store = {
+    let store = Store(
+        state: AppState(),
+        reducer: appReducer,
+        services: ServiceContainer(),
+        middlewares: [
+            scheduleMiddleware,
+            todayMiddleware,
+            locationsMiddleware,
+            shiftTypesMiddleware,
+            changeLogMiddleware,
+            settingsMiddleware,
+            loggingMiddleware
+        ]
+    )
+    return store
+}()
+

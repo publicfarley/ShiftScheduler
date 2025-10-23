@@ -105,20 +105,67 @@ struct ScheduleState: Equatable {
     /// Redo stack for shift switching operations
     var redoStack: [ChangeLogEntry] = []
 
+    // MARK: - Filter State
+
+    /// Start date for date range filtering (nil = no filter)
+    var filterDateRangeStart: Date? = nil
+
+    /// End date for date range filtering (nil = no filter)
+    var filterDateRangeEnd: Date? = nil
+
+    /// Selected location filter (nil = no location filter)
+    var filterSelectedLocation: Location? = nil
+
+    /// Selected shift type filter (nil = no shift type filter)
+    var filterSelectedShiftType: ShiftType? = nil
+
+    /// Whether the filter sheet is visible
+    var showFilterSheet: Bool = false
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states
     var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
 
-    /// Filtered shifts based on search text
+    /// Filtered shifts based on all active filters and search text
     var filteredShifts: [ScheduledShift] {
-        if searchText.isEmpty {
-            return shiftsForSelectedDate
+        var result = scheduledShifts
+
+        // Apply date range filter
+        if let startDate = filterDateRangeStart, let endDate = filterDateRangeEnd {
+            result = result.filter { shift in
+                shift.date >= startDate && shift.date <= endDate
+            }
+        } else {
+            // If no date range filter, use selected date
+            result = result.filter { shift in
+                Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
+            }
         }
-        return shiftsForSelectedDate.filter { shift in
-            shift.shiftType?.title.localizedCaseInsensitiveContains(searchText) ?? false
+
+        // Apply location filter
+        if let location = filterSelectedLocation {
+            result = result.filter { shift in
+                shift.shiftType?.location.id == location.id
+            }
         }
+
+        // Apply shift type filter
+        if let shiftType = filterSelectedShiftType {
+            result = result.filter { shift in
+                shift.shiftType?.id == shiftType.id
+            }
+        }
+
+        // Apply search text filter
+        if !searchText.isEmpty {
+            result = result.filter { shift in
+                shift.shiftType?.title.localizedCaseInsensitiveContains(searchText) ?? false
+            }
+        }
+
+        return result
     }
 
     /// Shifts for the currently selected date
@@ -126,6 +173,15 @@ struct ScheduleState: Equatable {
         scheduledShifts.filter { shift in
             Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
         }
+    }
+
+    /// Whether any filters are active
+    var hasActiveFilters: Bool {
+        filterDateRangeStart != nil ||
+        filterDateRangeEnd != nil ||
+        filterSelectedLocation != nil ||
+        filterSelectedShiftType != nil ||
+        !searchText.isEmpty
     }
 }
 

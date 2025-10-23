@@ -106,6 +106,42 @@ func scheduleMiddleware(
         // TODO: Implement redo via shift switch service
         dispatch(.schedule(.redoCompleted(.success(()))))
 
+    // MARK: - Filter Actions
+
+    case .filterSheetToggled(let show):
+        logger.debug("Filter sheet toggled: \(show)")
+        // No middleware side effects - handled by reducer
+
+    case .filterDateRangeChanged(let startDate, let endDate):
+        logger.debug("Date range filter applied: \(String(describing: startDate)) to \(String(describing: endDate))")
+        // Load shifts for the selected date range
+        if let start = startDate, let end = endDate {
+            Task {
+                do {
+                    let shifts = try await services.calendarService.loadShifts(from: start, to: end)
+                    dispatch(.schedule(.shiftsLoaded(.success(shifts))))
+                } catch {
+                    logger.error("Failed to load shifts for date range: \(error.localizedDescription)")
+                    dispatch(.schedule(.shiftsLoaded(.failure(error))))
+                }
+            }
+        } else {
+            // If date range is cleared, load current month
+            dispatch(.schedule(.loadShifts))
+        }
+
+    case .filterLocationChanged(let location):
+        logger.debug("Location filter changed to: \(location?.name ?? "None")")
+        // No middleware side effects - filtering handled in state
+
+    case .filterShiftTypeChanged(let shiftType):
+        logger.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
+        // No middleware side effects - filtering handled in state
+
+    case .clearFilters:
+        logger.debug("Filters cleared - reloading all shifts")
+        dispatch(.schedule(.loadShifts))
+
     case .authorizationChecked, .shiftDeleted, .shiftSwitched, .shiftsLoaded, .stacksRestored, .undoCompleted, .redoCompleted:
         logger.debug("No middleware side effects for action: \(String(describing: scheduleAction))")
         // These actions are handled by the reducer only

@@ -179,12 +179,30 @@ enum ScheduleAction: Equatable {
     /// Handle redo result
     case redoCompleted(Result<Void, Error>)
 
+    // MARK: - Filter Actions
+
+    /// Show/hide filter sheet
+    case filterSheetToggled(Bool)
+
+    /// Date range filter changed
+    case filterDateRangeChanged(startDate: Date?, endDate: Date?)
+
+    /// Location filter changed
+    case filterLocationChanged(Location?)
+
+    /// Shift type filter changed
+    case filterShiftTypeChanged(ShiftType?)
+
+    /// Clear all active filters
+    case clearFilters
+
     static func == (lhs: ScheduleAction, rhs: ScheduleAction) -> Bool {
         switch (lhs, rhs) {
         case (.task, .task), (.checkAuthorization, .checkAuthorization),
              (.loadShifts, .loadShifts),
              (.addShiftButtonTapped, .addShiftButtonTapped),
-             (.undo, .undo), (.redo, .redo):
+             (.undo, .undo), (.redo, .redo),
+             (.clearFilters, .clearFilters):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs
@@ -226,6 +244,14 @@ enum ScheduleAction: Equatable {
              (.undoCompleted(.failure), .undoCompleted(.failure)),
              (.redoCompleted(.failure), .redoCompleted(.failure)):
             return true
+        case let (.filterSheetToggled(lhs), .filterSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.filterDateRangeChanged(lhsStart, lhsEnd), .filterDateRangeChanged(rhsStart, rhsEnd)):
+            return lhsStart == rhsStart && lhsEnd == rhsEnd
+        case let (.filterLocationChanged(lhs), .filterLocationChanged(rhs)):
+            return lhs?.id == rhs?.id
+        case let (.filterShiftTypeChanged(lhs), .filterShiftTypeChanged(rhs)):
+            return lhs?.id == rhs?.id
         default:
             return false
         }

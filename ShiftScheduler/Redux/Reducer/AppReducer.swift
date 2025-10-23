@@ -250,6 +250,33 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
     case .redoCompleted(.failure(let error)):
         state.isLoading = false
         state.toastMessage = .error("Redo failed: \(error.localizedDescription)")
+
+    // MARK: - Filter Actions
+
+    case .filterSheetToggled(let show):
+        state.showFilterSheet = show
+
+    case .filterDateRangeChanged(let startDate, let endDate):
+        state.filterDateRangeStart = startDate
+        state.filterDateRangeEnd = endDate
+        logger.debug("Date range filter changed: \(String(describing: startDate)) to \(String(describing: endDate))")
+
+    case .filterLocationChanged(let location):
+        state.filterSelectedLocation = location
+        logger.debug("Location filter changed to: \(location?.name ?? "None")")
+
+    case .filterShiftTypeChanged(let shiftType):
+        state.filterSelectedShiftType = shiftType
+        logger.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
+
+    case .clearFilters:
+        state.filterDateRangeStart = nil
+        state.filterDateRangeEnd = nil
+        state.filterSelectedLocation = nil
+        state.filterSelectedShiftType = nil
+        state.searchText = ""
+        state.showFilterSheet = false
+        logger.debug("All filters cleared")
     }
 
     return state

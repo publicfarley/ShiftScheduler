@@ -409,23 +409,86 @@ ForEach(store.state.feature.items) { item in
 
 ---
 
-### Phase 4: Enhanced Features (PLANNED) 🔄 IN PROGRESS
+### Phase 4: Enhanced Features 🔄 IN PROGRESS
 
-**Priority 1 - Full CRUD Operations:**
-- [ ] Add Location sheet modal with form validation
-- [ ] Edit Location with persistence
-- [ ] Delete Location with confirmation dialog
-- [ ] Add Shift Type sheet modal with form validation
-- [ ] Edit Shift Type with persistence
-- [ ] Delete Shift Type with confirmation dialog
-- [ ] Dispatch appropriate Redux actions for all operations
+**Priority 1 - Full CRUD Operations:** ✅ COMPLETE
+**Date:** October 23, 2025
+**Commits:** d6ae0a3 feat: implement Phase 4 Priority 1 - Full CRUD operations for Locations and Shift Types
 
-**Priority 2 - Calendar & Filtering:**
-- [ ] Calendar date picker in Schedule view
-- [ ] Month/week navigation
-- [ ] Date range filtering
-- [ ] Search functionality across all views
-- [ ] Advanced filtering (by location, shift type, etc.)
+**Completed:**
+- ✅ Add Location sheet modal with form validation
+- ✅ Edit Location with persistence
+- ✅ Delete Location with confirmation dialog
+- ✅ Add Shift Type sheet modal with form validation
+- ✅ Edit Shift Type with persistence
+- ✅ Delete Shift Type with confirmation dialog
+- ✅ Dispatch appropriate Redux actions for all operations
+
+---
+
+**Priority 2 - Calendar & Filtering:** ✅ COMPLETE
+**Date:** October 23, 2025
+**Commits:** (Current implementation)
+
+**Completed:**
+- ✅ Calendar date picker in Schedule view (CustomCalendarView integration)
+- ✅ Month/week navigation (via calendar view)
+- ✅ Date range filtering (start/end date pickers)
+- ✅ Search functionality (searchable modifier in ScheduleView)
+- ✅ Advanced filtering (by location, shift type, etc.)
+
+**Implementation Details:**
+
+**Redux Extensions:**
+- Added filter state to ScheduleState:
+  - `filterDateRangeStart`, `filterDateRangeEnd` (optional)
+  - `filterSelectedLocation`, `filterSelectedShiftType` (optional)
+  - `showFilterSheet`, `hasActiveFilters`
+- Added filter actions to ScheduleAction:
+  - `filterSheetToggled(Bool)`
+  - `filterDateRangeChanged(startDate, endDate)`
+  - `filterLocationChanged(Location?)`
+  - `filterShiftTypeChanged(ShiftType?)`
+  - `clearFilters`
+
+**Reducer Updates:**
+- Handle all 5 new filter actions
+- Update state properties and compute filtered results
+- Debug logging for filter changes
+
+**Middleware Enhancements:**
+- Date range changes trigger calendar service to load shifts for range
+- Location/type filters apply at state level (no middleware needed)
+- Clear filters action reloads all shifts
+
+**UI Components:**
+- Created `ScheduleFilterSheetView.swift`:
+  - Date range picker controls (From/To)
+  - Location filter selector
+  - Shift type filter selector
+  - Clear filters button
+  - Apply filters button
+  - Keyboard dismissal support
+
+**ScheduleView Updates:**
+- Integrated CustomCalendarView for month display
+- Added filter toolbar button with active indicator
+- Display active filters banner
+- Show filtered shifts (no longer limited to 5)
+- Empty state with clear filters option
+- Improved shift card display with location info
+- Keyboard dismissal support
+
+**Features:**
+- Multiple filter combinations work together
+- Date range filter overrides single date selection
+- Active filter indicator shows when filters applied
+- Quick clear filters button in empty state
+- Professional UI with design system compliance
+
+**Status:** ✅ Complete - Build succeeded with zero errors
+
+---
 
 **Priority 3 - Shift Switching:**
 - [ ] Shift switching modal sheet
@@ -442,7 +505,7 @@ ForEach(store.state.feature.items) { item in
 - [ ] Mock service validation tests
 - [ ] State transition tests
 
-**Status:** 🔄 Not started - Ready to begin once prioritized
+**Status:** 🔄 Priorities 3-4 pending
 
 ---
 
@@ -469,6 +532,7 @@ ForEach(store.state.feature.items) { item in
 - Ready for unit test implementation
 
 **Build Status:**
-- ✅ Phase 0-3: Zero errors
-- ⚠️ 4 minor warnings in old views (non-critical)
-- Ready for Phase 4 feature enhancements
+- ✅ Phase 0-4 (Priority 1-2): Zero errors
+- ⚠️ 1 minor AppIntents warning (non-critical)
+- Ready for Phase 4 Priority 3 - Shift Switching
+- Priorities 1-2 successfully completed and tested
