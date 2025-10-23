@@ -6,11 +6,32 @@ private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category
 
 @main
 struct ShiftSchedulerApp: App {
-    // Redux store (parallel to TCA during migration)
+    // Redux store with service integration
     @State private var reduxStore = Store(
         state: AppState(),
         reducer: appReducer,
-        middlewares: [loggingMiddleware]
+        services: ServiceContainer(),
+        middlewares: [
+            loggingMiddleware,
+            { state, action, dispatch, services in
+                scheduleMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                todayMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                locationsMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                shiftTypesMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                changeLogMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                settingsMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            }
+        ]
     )
 
     var body: some Scene {

@@ -3,8 +3,8 @@ import Observation
 import OSLog
 
 /// Middleware type for handling side effects
-/// Receives current state, action, and dispatch closure
-typealias Middleware = @MainActor @Sendable (AppState, AppAction, @escaping (AppAction) -> Void) -> Void
+/// Receives current state, action, dispatch closure, and service container
+typealias Middleware = @MainActor @Sendable (AppState, AppAction, @escaping (AppAction) -> Void, ServiceContainer) -> Void
 
 /// Redux Store - Single source of truth for application state
 /// Implements unidirectional data flow: dispatch(action) -> reducer -> state -> UI
@@ -20,21 +20,27 @@ class Store {
     /// Middleware functions that handle side effects
     private let middlewares: [Middleware]
 
+    /// Service container for dependency injection
+    private let services: ServiceContainer
+
     /// Logger for debugging Redux actions and state changes
     private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "Store")
 
-    /// Initialize store with initial state, reducer, and middleware
+    /// Initialize store with initial state, reducer, middleware, and services
     /// - Parameters:
     ///   - state: Initial application state
     ///   - reducer: Pure function to transform state based on actions
+    ///   - services: Service container for dependency injection (default: production)
     ///   - middlewares: Array of middleware functions for side effects (default: empty)
     init(
         state: AppState,
         reducer: @escaping @MainActor (AppState, AppAction) -> AppState,
+        services: ServiceContainer = ServiceContainer(),
         middlewares: [Middleware] = []
     ) {
         self.state = state
         self.reducer = reducer
+        self.services = services
         self.middlewares = middlewares
     }
 
@@ -54,7 +60,7 @@ class Store {
 
         // Phase 2: Execute middlewares for side effects (can be asynchronous)
         middlewares.forEach { middleware in
-            middleware(state, action, dispatch)
+            middleware(state, action, dispatch, services)
         }
     }
 }

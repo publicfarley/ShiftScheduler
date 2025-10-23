@@ -5,7 +5,12 @@ private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: 
 
 /// Logging middleware that logs all dispatched actions and state changes
 /// Useful for debugging Redux flow and understanding action sequences
-func loggingMiddleware(state: AppState, action: AppAction, dispatch: @escaping (AppAction) -> Void) {
+func loggingMiddleware(
+    state: AppState,
+    action: AppAction,
+    dispatch: @escaping (AppAction) -> Void,
+    services: ServiceContainer
+) {
     logger.debug("[Middleware] Action dispatched: \(String(describing: action))")
     logger.debug("[Middleware] Selected tab: \(String(describing: state.selectedTab))")
 
