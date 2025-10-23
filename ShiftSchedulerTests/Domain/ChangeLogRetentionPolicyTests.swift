@@ -2,6 +2,7 @@ import Testing
 import Foundation
 @testable import ShiftScheduler
 
+@MainActor
 struct ChangeLogRetentionPolicyTests {
 
     @Test("All retention policies have correct display names")
