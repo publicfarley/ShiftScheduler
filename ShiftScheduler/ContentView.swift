@@ -1,60 +1,40 @@
 import SwiftUI
-import ComposableArchitecture
 
 struct ContentView: View {
-    let todayStore = Store(initialState: TodayFeature.State()) {
-        TodayFeature()
-    }
-
-    let scheduleStore = Store(initialState: ScheduleFeature.State()) {
-        ScheduleFeature()
-    }
-
-    let changeLogStore = Store(initialState: ChangeLogFeature.State()) {
-        ChangeLogFeature()
-    }
-
-    let settingsStore = Store(initialState: SettingsFeature.State()) {
-        SettingsFeature()
-    }
 
     var body: some View {
         TabView {
-            TodayView(store: todayStore)
+            Text("Hello, World!")
                 .tabItem {
                     Label("Today", systemImage: "calendar.badge.clock")
                 }
 
-            ScheduleView(store: scheduleStore)
+            Text("Hello, World!")
                 .tabItem {
                     Label("Calendar", systemImage: "calendar")
                 }
 
-            ShiftTypesView(store: Store(initialState: ShiftTypesFeature.State(), reducer: {
-                ShiftTypesFeature()
-            }))
+            Text("Hello, World!")
                 .tabItem {
                     Label("Shift Types", systemImage: "briefcase")
                 }
 
-            LocationsView(store: Store(initialState: LocationsFeature.State(), reducer: {
-                LocationsFeature()
-            }))
+            Text("Hello, World!")
                 .tabItem {
                     Label("Locations", systemImage: "location")
                 }
 
-            ChangeLogView(store: changeLogStore)
+            Text("Hello, World!")
                 .tabItem {
                     Label("Change Log", systemImage: "clock.arrow.circlepath")
                 }
 
-            SettingsView(store: settingsStore)
+            Text("Hello, World!")
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
 
-            AboutView()
+            Text("Hello, World!")
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }

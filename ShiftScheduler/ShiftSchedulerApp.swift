@@ -6,23 +6,17 @@ private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category
 
 @main
 struct ShiftSchedulerApp: App {
+    // Redux store (parallel to TCA during migration)
+    @State private var reduxStore = Store(
+        state: AppState(),
+        reducer: appReducer,
+        middlewares: [loggingMiddleware]
+    )
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .task {
-                    
-                        let eventStore = EKEventStore()
-                        
-                        let startDate = Date()
-                        let endDate = Calendar.current.date(byAdding: .year, value: 1, to: startDate)!
-                        let calendarId = try! await EventKitClient.liveValue.getOrCreateAppCalendar()
-                        let calendar = eventStore.calendar(withIdentifier: calendarId)!
-                        
-                        let a = EKEventStore.authorizationStatus(for: .event)
-                        
-                        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: [calendar])
-                        let events = eventStore.events(matching: predicate)
-
                     // Run purge when the app becomes active
                     await performBackgroundTasks()
                 }
@@ -39,18 +33,18 @@ struct ShiftSchedulerApp: App {
     }
 
     private func purgeExpiredChangeLogEntries() async {
-        do {
-            let repository = ChangeLogRepository()
-            let retentionManager = UserDefaultsRetentionPolicyManager()
-            let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
-
-            let purgedCount = try await purgeService.purgeIfNeeded()
-
-            if purgedCount > 0 {
-                await logger.debug("Purged \(purgedCount) expired change log entries")
-            }
-        } catch {
-            await logger.error("Failed to purge change log entries: \(error.localizedDescription)")
-        }
+//        do {
+//            let repository = ChangeLogRepository()
+//            let retentionManager = UserDefaultsRetentionPolicyManager()
+//            let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
+//
+//            let purgedCount = try await purgeService.purgeIfNeeded()
+//
+//            if purgedCount > 0 {
+//                await logger.debug("Purged \(purgedCount) expired change log entries")
+//            }
+//        } catch {
+//            await logger.error("Failed to purge change log entries: \(error.localizedDescription)")
+//        }
     }
 }
