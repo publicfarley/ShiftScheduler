@@ -1,44 +1,81 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var reduxStore = Store(
+        state: AppState(),
+        reducer: appReducer,
+        services: ServiceContainer(),
+        middlewares: [
+            loggingMiddleware,
+            { state, action, dispatch, services in
+                scheduleMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                todayMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                locationsMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                shiftTypesMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                changeLogMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            },
+            { state, action, dispatch, services in
+                settingsMiddleware(state: state, action: action, dispatch: dispatch, services: services)
+            }
+        ]
+    )
 
     var body: some View {
-        TabView {
-            Text("Hello, World!")
+        TabView(selection: Binding(
+            get: { reduxStore.state.selectedTab },
+            set: { reduxStore.dispatch(action: .appLifecycle(.tabSelected($0))) }
+        )) {
+            TodayView()
                 .tabItem {
                     Label("Today", systemImage: "calendar.badge.clock")
                 }
+                .tag(Tab.today)
+                .environment(\.reduxStore, reduxStore)
 
-            Text("Hello, World!")
+            ScheduleView()
                 .tabItem {
-                    Label("Calendar", systemImage: "calendar")
+                    Label("Schedule", systemImage: "calendar")
                 }
+                .tag(Tab.schedule)
+                .environment(\.reduxStore, reduxStore)
 
-            Text("Hello, World!")
+            ShiftTypesView()
                 .tabItem {
                     Label("Shift Types", systemImage: "briefcase")
                 }
+                .tag(Tab.shiftTypes)
+                .environment(\.reduxStore, reduxStore)
 
-            Text("Hello, World!")
+            LocationsView()
                 .tabItem {
                     Label("Locations", systemImage: "location")
                 }
+                .tag(Tab.locations)
+                .environment(\.reduxStore, reduxStore)
 
-            Text("Hello, World!")
+            ChangeLogView()
                 .tabItem {
                     Label("Change Log", systemImage: "clock.arrow.circlepath")
                 }
+                .tag(Tab.changeLog)
+                .environment(\.reduxStore, reduxStore)
 
-            Text("Hello, World!")
+            SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-
-            Text("Hello, World!")
-                .tabItem {
-                    Label("About", systemImage: "info.circle")
-                }
+                .tag(Tab.settings)
+                .environment(\.reduxStore, reduxStore)
         }
+        .environment(\.reduxStore, reduxStore)
     }
 }
 

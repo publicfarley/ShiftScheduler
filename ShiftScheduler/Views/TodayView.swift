@@ -60,8 +60,140 @@ struct StatusBadge: View {
 }
 
 struct TodayView: View {
+    @Environment(\.reduxStore) var store
+
     var body: some View {
-        Text("Hello, World!")
+        NavigationView {
+            VStack {
+                if !store.state.schedule.isCalendarAuthorized {
+                    // Calendar Authorization Required
+                    VStack(spacing: 16) {
+                        Image(systemName: "calendar.badge.exclamationmark")
+                            .font(.largeTitle)
+                            .foregroundColor(.red)
+
+                        Text("Calendar Access Required")
+                            .font(.headline)
+
+                        Text("ShiftScheduler needs calendar access to function properly.")
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.secondary)
+
+                        Button("Open Settings") {
+                            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(settingsUrl)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .frame(maxHeight: .infinity, alignment: .center)
+                } else {
+                    // Main Content
+                    ScrollView {
+                        LazyVStack(spacing: 20, pinnedViews: []) {
+                            // Today Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "sun.max.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.orange)
+
+                                        Text(Date(), style: .date)
+                                            .font(.callout)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    if store.state.today.isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    }
+                                }
+
+                                // Display today's shift
+                                let todayShifts = store.state.today.scheduledShifts.filter { shift in
+                                    Calendar.current.isDate(shift.date, inSameDayAs: Date())
+                                }
+
+                                if let shift = todayShifts.first, let shiftType = shift.shiftType {
+                                    TodayShiftCard(shift: shift)
+                                } else {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "calendar.badge.exclamationmark")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.secondary)
+
+                                        VStack(spacing: 4) {
+                                            Text("No shift scheduled")
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+
+                                            Text("Perfect day for rest")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 20)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemBackground))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color(.systemGray5), lineWidth: 1)
+                                            )
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top)
+
+                            // Week Summary Section
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("This Week")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, 16)
+
+                                let weekShifts = store.state.today.scheduledShifts.filter { shift in
+                                    let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+                                    let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+                                    return shift.date >= startOfWeek && shift.date <= endOfWeek
+                                }
+
+                                HStack(spacing: 12) {
+                                    CompactWeekStatView(
+                                        count: weekShifts.count,
+                                        label: "Scheduled",
+                                        color: .blue,
+                                        icon: "calendar"
+                                    )
+                                    CompactWeekStatView(
+                                        count: 0,
+                                        label: "Completed",
+                                        color: .green,
+                                        icon: "checkmark.circle.fill"
+                                    )
+                                }
+                                .padding(.horizontal, 16)
+                            }
+
+                            Spacer(minLength: 100)
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .navigationTitle("Today")
+                    .navigationBarTitleDisplayMode(.large)
+                }
+            }
+            .onAppear {
+                store.dispatch(action: .today(.task))
+            }
+        }
     }
 }
 // MARK: - Enhanced Today Shift Card with Visual Prominence
