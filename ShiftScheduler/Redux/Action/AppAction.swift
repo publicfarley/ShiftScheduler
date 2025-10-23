@@ -248,14 +248,20 @@ enum ShiftTypesAction: Equatable {
     /// Edit button tapped for a shift type
     case editShiftType(ShiftType)
 
+    /// Save shift type (add or edit)
+    case saveShiftType(ShiftType)
+
+    /// Shift type saved
+    case shiftTypeSaved(Result<Void, Error>)
+
     /// Delete button tapped for a shift type
     case deleteShiftType(ShiftType)
 
-    /// Shift types loaded from database
-    case shiftTypesLoaded(Result<[ShiftType], Error>)
-
     /// Shift type deleted
     case shiftTypeDeleted(Result<Void, Error>)
+
+    /// Shift types loaded from database
+    case shiftTypesLoaded(Result<[ShiftType], Error>)
 
     /// Sheet dismissed after save
     case addEditSheetDismissed
@@ -274,6 +280,8 @@ enum ShiftTypesAction: Equatable {
             return lhs == rhs
         case let (.editShiftType(lhs), .editShiftType(rhs)):
             return lhs.id == rhs.id
+        case let (.saveShiftType(lhs), .saveShiftType(rhs)):
+            return lhs.id == rhs.id
         case let (.deleteShiftType(lhs), .deleteShiftType(rhs)):
             return lhs.id == rhs.id
         case let (.shiftTypesLoaded(lhs), .shiftTypesLoaded(rhs)):
@@ -283,7 +291,9 @@ enum ShiftTypesAction: Equatable {
             default:
                 return false
             }
-        case (.shiftTypeDeleted(.success), .shiftTypeDeleted(.success)),
+        case (.shiftTypeSaved(.success), .shiftTypeSaved(.success)),
+             (.shiftTypeSaved(.failure), .shiftTypeSaved(.failure)),
+             (.shiftTypeDeleted(.success), .shiftTypeDeleted(.success)),
              (.shiftTypeDeleted(.failure), .shiftTypeDeleted(.failure)):
             return true
         default:
@@ -308,14 +318,20 @@ enum LocationsAction: Equatable {
     /// Edit button tapped for a location
     case editLocation(Location)
 
+    /// Save location (add or edit)
+    case saveLocation(Location)
+
+    /// Location saved
+    case locationSaved(Result<Void, Error>)
+
     /// Delete button tapped for a location
     case deleteLocation(Location)
 
-    /// Locations loaded from database
-    case locationsLoaded(Result<[Location], Error>)
-
     /// Location deleted
     case locationDeleted(Result<Void, Error>)
+
+    /// Locations loaded from database
+    case locationsLoaded(Result<[Location], Error>)
 
     /// Sheet dismissed
     case addEditSheetDismissed
@@ -334,6 +350,8 @@ enum LocationsAction: Equatable {
             return lhs == rhs
         case let (.editLocation(lhs), .editLocation(rhs)):
             return lhs.id == rhs.id
+        case let (.saveLocation(lhs), .saveLocation(rhs)):
+            return lhs.id == rhs.id
         case let (.deleteLocation(lhs), .deleteLocation(rhs)):
             return lhs.id == rhs.id
         case let (.locationsLoaded(lhs), .locationsLoaded(rhs)):
@@ -343,7 +361,9 @@ enum LocationsAction: Equatable {
             default:
                 return false
             }
-        case (.locationDeleted(.success), .locationDeleted(.success)),
+        case (.locationSaved(.success), .locationSaved(.success)),
+             (.locationSaved(.failure), .locationSaved(.failure)),
+             (.locationDeleted(.success), .locationDeleted(.success)),
              (.locationDeleted(.failure), .locationDeleted(.failure)):
             return true
         default:

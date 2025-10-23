@@ -276,6 +276,20 @@ func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> Shif
         state.showAddEditSheet = true
         state.editingShiftType = shiftType
 
+    case .saveShiftType:
+        state.isLoading = true
+        state.errorMessage = nil
+
+    case .shiftTypeSaved(.success):
+        state.isLoading = false
+        state.showAddEditSheet = false
+        state.editingShiftType = nil
+        state.errorMessage = nil
+
+    case .shiftTypeSaved(.failure(let error)):
+        state.isLoading = false
+        state.errorMessage = "Failed to save shift type: \(error.localizedDescription)"
+
     case .deleteShiftType:
         state.isLoading = true
 
@@ -323,6 +337,20 @@ func locationsReducer(state: LocationsState, action: LocationsAction) -> Locatio
     case .editLocation(let location):
         state.showAddEditSheet = true
         state.editingLocation = location
+
+    case .saveLocation:
+        state.isLoading = true
+        state.errorMessage = nil
+
+    case .locationSaved(.success):
+        state.isLoading = false
+        state.showAddEditSheet = false
+        state.editingLocation = nil
+        state.errorMessage = nil
+
+    case .locationSaved(.failure(let error)):
+        state.isLoading = false
+        state.errorMessage = "Failed to save location: \(error.localizedDescription)"
 
     case .deleteLocation:
         state.isLoading = true

@@ -38,6 +38,20 @@ func locationsMiddleware(
         logger.debug("Editing location: \(location.name)")
         // No middleware side effects
 
+    case .saveLocation(let location):
+        logger.debug("Saving location: \(location.name)")
+        Task {
+            do {
+                try await services.persistenceService.saveLocation(location)
+                dispatch(.locations(.locationSaved(.success(()))))
+                // Refresh after save
+                dispatch(.locations(.refreshLocations))
+            } catch {
+                logger.error("Failed to save location: \(error.localizedDescription)")
+                dispatch(.locations(.locationSaved(.failure(error))))
+            }
+        }
+
     case .deleteLocation(let location):
         logger.debug("Deleting location: \(location.name)")
         Task {
@@ -56,8 +70,29 @@ func locationsMiddleware(
         logger.debug("Add/edit sheet dismissed")
         // No middleware side effects
 
-    case .locationsLoaded, .locationDeleted:
-        logger.debug("No middleware side effects for action: \(String(describing: locationsAction))")
+    case .locationsLoaded:
+        logger.debug("Locations loaded")
         // Handled by reducer only
+
+    case .locationDeleted:
+        logger.debug("Location deleted")
+        // Handled by reducer only
+
+    case .locationSaved:
+        logger.debug("Location saved")
+        // Handled by reducer only
+
+    case .refreshLocations:
+        // Already handled above with case .task
+        logger.debug("Refreshing locations")
+        Task {
+            do {
+                let locations = try await services.persistenceService.loadLocations()
+                dispatch(.locations(.locationsLoaded(.success(locations))))
+            } catch {
+                logger.error("Failed to load locations: \(error.localizedDescription)")
+                dispatch(.locations(.locationsLoaded(.failure(error))))
+            }
+        }
     }
 }

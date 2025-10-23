@@ -38,6 +38,20 @@ func shiftTypesMiddleware(
         logger.debug("Editing shift type: \(shiftType.title)")
         // No middleware side effects
 
+    case .saveShiftType(let shiftType):
+        logger.debug("Saving shift type: \(shiftType.title)")
+        Task {
+            do {
+                try await services.persistenceService.saveShiftType(shiftType)
+                dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
+                // Refresh after save
+                dispatch(.shiftTypes(.refreshShiftTypes))
+            } catch {
+                logger.error("Failed to save shift type: \(error.localizedDescription)")
+                dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+            }
+        }
+
     case .deleteShiftType(let shiftType):
         logger.debug("Deleting shift type: \(shiftType.title)")
         Task {
@@ -56,8 +70,29 @@ func shiftTypesMiddleware(
         logger.debug("Add/edit sheet dismissed")
         // No middleware side effects
 
-    case .shiftTypesLoaded, .shiftTypeDeleted:
-        logger.debug("No middleware side effects for action: \(String(describing: shiftTypesAction))")
+    case .shiftTypesLoaded:
+        logger.debug("Shift types loaded")
         // Handled by reducer only
+
+    case .shiftTypeDeleted:
+        logger.debug("Shift type deleted")
+        // Handled by reducer only
+
+    case .shiftTypeSaved:
+        logger.debug("Shift type saved")
+        // Handled by reducer only
+
+    case .refreshShiftTypes:
+        // Already handled above with case .task
+        logger.debug("Refreshing shift types")
+        Task {
+            do {
+                let shiftTypes = try await services.persistenceService.loadShiftTypes()
+                dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
+            } catch {
+                logger.error("Failed to load shift types: \(error.localizedDescription)")
+                dispatch(.shiftTypes(.shiftTypesLoaded(.failure(error))))
+            }
+        }
     }
 }
