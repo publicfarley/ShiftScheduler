@@ -1,4 +1,7 @@
 import SwiftUI
+import OSLog
+
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "EditShiftTypeView")
 
 struct EditShiftTypeView: View {
     @Environment(\.dismiss) private var dismiss
@@ -259,7 +262,8 @@ struct EditShiftTypeView: View {
             location: location
         )
         // TODO: Persist updatedShiftType using your PersistenceClient or preferred method.
-
+        logger.debug("Update shift type \(updatedShiftType.symbol)")
+        
         dismiss()
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "Middleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Middleware")
 
 /// Logging middleware that logs all dispatched actions and state changes
 /// Useful for debugging Redux flow and understanding action sequences

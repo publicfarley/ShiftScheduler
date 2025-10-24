@@ -1,7 +1,7 @@
 import SwiftUI
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.views", category: "Schedule")
+private let logger = Logger(subsystem: "com.shiftscheduler.views", category: "Schedule")
 
 struct ScheduleView: View {
     @Environment(\.reduxStore) var store

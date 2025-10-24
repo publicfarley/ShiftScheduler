@@ -7,9 +7,7 @@ import Foundation
 @Suite("View Redux Integration Tests - DISABLED")
 @MainActor
 struct ViewReduxIntegrationTests {
-    @Test("Placeholder - view redux integration tests disabled")
-    func testDisabled() {
-        // Redux integration tests are disabled due to API signature mismatches
-        // These tests can be enabled after API definitions are finalized
-    }
+    // DISABLED: Placeholder for view integration tests
+    // Redux integration tests are disabled due to API signature mismatches
+    // These tests can be enabled after API definitions are finalized
 }

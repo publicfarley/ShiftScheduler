@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "ScheduleMiddleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "ScheduleMiddleware")
 
 /// Middleware for Schedule feature side effects
 /// Handles calendar operations, shift loading, and shift switching

@@ -2,7 +2,7 @@ import Foundation
 import EventKit
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux.services", category: "CalendarService")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux.services", category: "CalendarService")
 
 /// Production implementation of CalendarServiceProtocol
 /// Uses EventKit to access calendar data and load shifts

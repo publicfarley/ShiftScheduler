@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux.services", category: "PersistenceService")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux.services", category: "PersistenceService")
 
 /// Production implementation of PersistenceServiceProtocol
 /// Manages all data persistence operations using repositories

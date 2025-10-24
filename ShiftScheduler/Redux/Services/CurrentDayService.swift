@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux.services", category: "CurrentDayService")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux.services", category: "CurrentDayService")
 
 /// Production implementation of CurrentDayServiceProtocol
 /// Provides date and time utilities for the Redux store

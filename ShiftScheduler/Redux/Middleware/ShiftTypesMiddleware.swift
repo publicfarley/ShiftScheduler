@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "ShiftTypesMiddleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "ShiftTypesMiddleware")
 
 /// Middleware for Shift Types feature side effects
 /// Handles loading, saving, and deleting shift types
@@ -81,18 +81,5 @@ func shiftTypesMiddleware(
     case .shiftTypeSaved:
         logger.debug("Shift type saved")
         // Handled by reducer only
-
-    case .refreshShiftTypes:
-        // Already handled above with case .task
-        logger.debug("Refreshing shift types")
-        Task {
-            do {
-                let shiftTypes = try await services.persistenceService.loadShiftTypes()
-                dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
-            } catch {
-                logger.error("Failed to load shift types: \(error.localizedDescription)")
-                dispatch(.shiftTypes(.shiftTypesLoaded(.failure(error))))
-            }
-        }
     }
 }

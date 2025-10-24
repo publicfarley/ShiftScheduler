@@ -4,7 +4,7 @@ import Foundation
 /// Mock implementation of ChangeLogRepositoryProtocol for testing
 /// Note: This is a basic stub that satisfies the protocol but doesn't actually store data
 /// For testing, use MockPersistenceService instead which provides full mock functionality
-final class MockChangeLogRepository: ChangeLogRepositoryProtocol {
+final class MockChangeLogRepository: ChangeLogRepositoryProtocol, @unchecked Sendable {
     private var entries: [ChangeLogEntry] = []
     private(set) var saveCallCount = 0
     private(set) var fetchAllCallCount = 0

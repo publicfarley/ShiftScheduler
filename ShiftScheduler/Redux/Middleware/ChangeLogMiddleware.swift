@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "ChangeLogMiddleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "ChangeLogMiddleware")
 
 /// Middleware for Change Log feature side effects
 /// Handles loading, displaying, and managing change log entries

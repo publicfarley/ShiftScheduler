@@ -1,7 +1,20 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "Reducer")
+// MARK: - Logging Helper
+
+/// Thread-safe logger wrapper for reducer logging
+/// Uses nonisolated(unsafe) since logging is a benign side effect
+private struct LoggerHelper {
+    nonisolated(unsafe) private static let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Reducer")
+
+    nonisolated static func debug(_ message: String) {
+        // Safely log without MainActor isolation
+        DispatchQueue.main.async {
+            logger.debug("\(message, privacy: .public)")
+        }
+    }
+}
 
 // MARK: - App Root Reducer
 
@@ -44,14 +57,14 @@ func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppStat
 
     switch action {
     case .onAppear:
-        logger.debug("App appeared")
+        LoggerHelper.debug("App appeared")
 
     case .tabSelected(let tab):
-        logger.debug("Tab selected: \(String(describing: tab))")
+        LoggerHelper.debug("Tab selected: \(String(describing: tab))")
         state.selectedTab = tab
 
     case .userProfileUpdated(let profile):
-        logger.debug("User profile updated: \(profile.displayName)")
+        LoggerHelper.debug("User profile updated: \(profile.displayName)")
         state.userProfile = profile
     }
 
@@ -259,15 +272,15 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
     case .filterDateRangeChanged(let startDate, let endDate):
         state.filterDateRangeStart = startDate
         state.filterDateRangeEnd = endDate
-        logger.debug("Date range filter changed: \(String(describing: startDate)) to \(String(describing: endDate))")
+        LoggerHelper.debug("Date range filter changed: \(String(describing: startDate)) to \(String(describing: endDate))")
 
     case .filterLocationChanged(let location):
         state.filterSelectedLocation = location
-        logger.debug("Location filter changed to: \(location?.name ?? "None")")
+        LoggerHelper.debug("Location filter changed to: \(location?.name ?? "None")")
 
     case .filterShiftTypeChanged(let shiftType):
         state.filterSelectedShiftType = shiftType
-        logger.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
+        LoggerHelper.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
 
     case .clearFilters:
         state.filterDateRangeStart = nil
@@ -276,7 +289,7 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
         state.filterSelectedShiftType = nil
         state.searchText = ""
         state.showFilterSheet = false
-        logger.debug("All filters cleared")
+        LoggerHelper.debug("All filters cleared")
     }
 
     return state

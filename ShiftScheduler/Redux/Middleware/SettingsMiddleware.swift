@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "SettingsMiddleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "SettingsMiddleware")
 
 /// Middleware for Settings feature side effects
 /// Handles loading and saving user settings
@@ -16,18 +16,18 @@ func settingsMiddleware(
     switch settingsAction {
     case .task:
         logger.debug("Loading user settings")
-        Task {
-            do {
-                let profile = UserProfile(
-                    userId: state.userProfile.userId,
-                    displayName: state.userProfile.displayName
-                )
-                dispatch(.settings(.settingsLoaded(.success(profile))))
-            } catch {
-                logger.error("Failed to load settings: \(error.localizedDescription)")
-                dispatch(.settings(.settingsLoaded(.failure(error))))
-            }
-        }
+//        Task {
+//            do {
+//                let profile = UserProfile(
+//                    userId: state.userProfile.userId,
+//                    displayName: state.userProfile.displayName
+//                )
+//                dispatch(.settings(.settingsLoaded(.success(profile))))
+//            } catch {
+//                logger.error("Failed to load settings: \(error.localizedDescription)")
+//                dispatch(.settings(.settingsLoaded(.failure(error))))
+//            }
+//        }
 
     case .displayNameChanged(let name):
         logger.debug("Display name changed to: \(name)")

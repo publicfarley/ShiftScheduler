@@ -58,42 +58,42 @@ struct CurrentDayServiceTests {
         #expect(result == startOfToday)
     }
 
-    @Test("Placeholder: getTodayDate returns same as getCurrentDate - DISABLED - Flaky with live dates")
-    func testGetTodayDateReturnsSameAsGetCurrentDate() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: getTodayDate returns same as getCurrentDate
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testGetTodayDateReturnsSameAsGetCurrentDate() {
     }
 
-    @Test("Placeholder: getTomorrowDate returns date one day after today - DISABLED - Flaky with live dates")
-    func testGetTomorrowDateReturnsNextDay() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: getTomorrowDate returns date one day after today
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testGetTomorrowDateReturnsNextDay() {
     }
 
-    @Test("Placeholder: getYesterdayDate returns date one day before today - DISABLED - Flaky with live dates")
-    func testGetYesterdayDateReturnsPreviousDay() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: getYesterdayDate returns date one day before today
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testGetYesterdayDateReturnsPreviousDay() {
     }
 
     // MARK: - Tests: Date Comparison Methods
 
-    @Test("Placeholder: isToday correctly identifies today - DISABLED - Flaky with live dates")
-    func testIsTodayIdentifiesToday() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: isToday correctly identifies today
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testIsTodayIdentifiesToday() {
     }
 
-    @Test("Placeholder: isTomorrow correctly identifies tomorrow - DISABLED - Flaky with live dates")
-    func testIsTomorrowIdentifiesTomorrow() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: isTomorrow correctly identifies tomorrow
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testIsTomorrowIdentifiesTomorrow() {
     }
 
-    @Test("Placeholder: isYesterday correctly identifies yesterday - DISABLED - Flaky with live dates")
-    func testIsYesterdayIdentifiesYesterday() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: isYesterday correctly identifies yesterday
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testIsYesterdayIdentifiesYesterday() {
     }
 
     // MARK: - Tests: Week/Month Calculations
@@ -157,7 +157,6 @@ struct CurrentDayServiceTests {
         let testDate = Self.testDate
 
         // When
-        let startOfMonth = service.getStartOfMonth(for: testDate)
         let endOfMonth = service.getEndOfMonth(for: testDate)
 
         // Then
@@ -169,43 +168,43 @@ struct CurrentDayServiceTests {
 
     // MARK: - Tests: Day Calculations
 
-    @Test("Placeholder: daysBetween calculates correct days between dates - DISABLED - Flaky with live dates")
-    func testDaysBetweenCalculatesCorrectly() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: daysBetween calculates correct days between dates
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testDaysBetweenCalculatesCorrectly() {
     }
 
-    @Test("Placeholder: daysBetween handles negative differences - DISABLED - Flaky with live dates")
-    func testDaysBetweenHandlesNegativeDifference() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: daysBetween handles negative differences
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testDaysBetweenHandlesNegativeDifference() {
     }
 
-    @Test("Placeholder: daysBetween returns zero for same day - DISABLED - Flaky with live dates")
-    func testDaysBetweenReturnZeroForSameDay() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: daysBetween returns zero for same day
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testDaysBetweenReturnZeroForSameDay() {
     }
 
     // MARK: - Tests: Time Utilities
 
-    @Test("Placeholder: getCurrentTime returns valid time - DISABLED - Flaky with live dates")
-    func testGetCurrentTimeReturnsValidTime() {
-        // This test uses live dates which makes it flaky
-        // Placeholder for future implementation with fixed test dates
+    // DISABLED: getCurrentTime returns valid time
+    // This test uses live dates which makes it flaky
+    // Placeholder for future implementation with fixed test dates
+    private func testGetCurrentTimeReturnsValidTime() {
     }
 
     // MARK: - Tests: Formatting
 
-    @Test("Placeholder: formatDate returns properly formatted date - DISABLED - Flaky with locale")
-    func testFormatDateReturnsFormattedDate() {
-        // This test is flaky due to locale/formatting differences
-        // Placeholder for future implementation with fixed test data
+    // DISABLED: formatDate returns properly formatted date
+    // This test is flaky due to locale/formatting differences
+    // Placeholder for future implementation with fixed test data
+    private func testFormatDateReturnsFormattedDate() {
     }
 
-    @Test("Placeholder: formatTime returns valid time format - DISABLED - Flaky with locale")
-    func testFormatTimeReturnsValidFormat() {
-        // This test is flaky due to locale/formatting differences
-        // Placeholder for future implementation with fixed test data
+    // DISABLED: formatTime returns valid time format
+    // This test is flaky due to locale/formatting differences
+    // Placeholder for future implementation with fixed test data
+    private func testFormatTimeReturnsValidFormat() {
     }
 }

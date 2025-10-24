@@ -1,7 +1,7 @@
 import SwiftUI
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.views", category: "ScheduleFilterSheet")
+private let logger = Logger(subsystem: "com.shiftscheduler.views", category: "ScheduleFilterSheet")
 
 /// Filter sheet view for Schedule view
 /// Allows users to filter shifts by date range, location, and shift type

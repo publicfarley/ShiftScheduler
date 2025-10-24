@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "LocationsMiddleware")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "LocationsMiddleware")
 
 /// Middleware for Locations feature side effects
 /// Handles loading, saving, and deleting locations
@@ -81,18 +81,5 @@ func locationsMiddleware(
     case .locationSaved:
         logger.debug("Location saved")
         // Handled by reducer only
-
-    case .refreshLocations:
-        // Already handled above with case .task
-        logger.debug("Refreshing locations")
-        Task {
-            do {
-                let locations = try await services.persistenceService.loadLocations()
-                dispatch(.locations(.locationsLoaded(.success(locations))))
-            } catch {
-                logger.error("Failed to load locations: \(error.localizedDescription)")
-                dispatch(.locations(.locationsLoaded(.failure(error))))
-            }
-        }
     }
 }

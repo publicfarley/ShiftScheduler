@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private let logger = os.Logger(subsystem: "com.shiftscheduler.redux.services", category: "ShiftSwitchService")
+private let logger = Logger(subsystem: "com.shiftscheduler.redux.services", category: "ShiftSwitchService")
 
 /// Production implementation of ShiftSwitchServiceProtocol
 /// Handles shift switching operations and change log recording
