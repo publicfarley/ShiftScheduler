@@ -262,7 +262,7 @@ struct EditShiftTypeView: View {
             location: location
         )
         // TODO: Persist updatedShiftType using your PersistenceClient or preferred method.
-        logger.debug("Update shift type \(updatedShiftType.symbol)")
+        // logger.debug("Update shift type \(updatedShiftType.symbol)")
         
         dismiss()
     }

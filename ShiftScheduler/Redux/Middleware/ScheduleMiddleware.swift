@@ -15,14 +15,14 @@ func scheduleMiddleware(
 
     switch scheduleAction {
     case .task:
-        logger.debug("Schedule task started")
+        // logger.debug("Schedule task started")
         // Check authorization
         Task {
             do {
                 let authorized = try await services.calendarService.requestCalendarAccess()
                 dispatch(.schedule(.authorizationChecked(authorized)))
             } catch {
-                logger.error("Failed to check authorization: \(error.localizedDescription)")
+        // logger.error("Failed to check authorization: \(error.localizedDescription)")
                 dispatch(.schedule(.authorizationChecked(false)))
             }
         }
@@ -35,47 +35,51 @@ func scheduleMiddleware(
                 let authorized = try await services.calendarService.isCalendarAuthorized()
                 dispatch(.schedule(.authorizationChecked(authorized)))
             } catch {
-                logger.error("Failed to check authorization: \(error.localizedDescription)")
+        // logger.error("Failed to check authorization: \(error.localizedDescription)")
                 dispatch(.schedule(.authorizationChecked(false)))
             }
         }
 
     case .loadShifts:
-        logger.debug("Loading shifts for selected date: \(state.schedule.selectedDate.formatted())")
+        // logger.debug("Loading shifts for selected date: \(state.schedule.selectedDate.formatted())")
         Task {
             do {
                 let shifts = try await services.calendarService.loadShiftsForCurrentMonth()
                 dispatch(.schedule(.shiftsLoaded(.success(shifts))))
             } catch {
-                logger.error("Failed to load shifts: \(error.localizedDescription)")
+        // logger.error("Failed to load shifts: \(error.localizedDescription)")
                 dispatch(.schedule(.shiftsLoaded(.failure(error))))
             }
         }
 
     case .selectedDateChanged(let date):
-        logger.debug("Selected date changed to: \(date.formatted())")
+        // logger.debug("Selected date changed to: \(date.formatted())")
         // Load shifts for new date will be handled by the reducer triggering loadShifts
 
+    break
     case .searchTextChanged(let text):
-        logger.debug("Search text changed to: \(text)")
+        // logger.debug("Search text changed to: \(text)")
         // No middleware side effects needed
 
+    break
     case .addShiftButtonTapped:
-        logger.debug("Add shift button tapped")
+        // logger.debug("Add shift button tapped")
         // No middleware side effects needed
 
+    break
     case .deleteShift(let shift):
-        logger.debug("Deleting shift: \(shift.eventIdentifier)")
+        // logger.debug("Deleting shift: \(shift.eventIdentifier)")
         // TODO: Implement shift deletion via calendar service
         // For now, just complete the action
         dispatch(.schedule(.shiftDeleted(.success(()))))
 
     case .switchShiftTapped:
-        logger.debug("Switch shift tapped")
+        // logger.debug("Switch shift tapped")
         // No middleware side effects needed - handled by reducer
 
+    break
     case .performSwitchShift(let shift, let newShiftType, let reason):
-        logger.debug("Performing shift switch from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title)")
+        // logger.debug("Performing shift switch from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title) on \(shift.date.formatted())")
         Task {
             do {
                 // Create snapshots of old and new shift types
@@ -106,21 +110,21 @@ func scheduleMiddleware(
                     redo: [] // Clear redo stack on new operation
                 )
 
-                logger.debug("Shift switched successfully. Change log entry and undo/redo stacks saved.")
+        // logger.debug("Shift \(shift.eventIdentifier) switched to \(newShiftType.title). Undo stack: \(undoStack.count), Redo stack: 0")
                 dispatch(.schedule(.shiftSwitched(.success(entry))))
 
                 // Reload shifts after switch to refresh from calendar
                 dispatch(.schedule(.loadShifts))
             } catch {
-                logger.error("Failed to switch shift: \(error.localizedDescription)")
+        // logger.error("Failed to switch shift: \(error.localizedDescription)")
                 dispatch(.schedule(.shiftSwitched(.failure(error))))
             }
         }
 
     case .undo:
-        logger.debug("Undo requested")
+        // logger.debug("Undo requested")
         guard !state.schedule.undoStack.isEmpty else {
-            logger.debug("Undo stack is empty")
+        // logger.debug("Undo stack is empty")
             dispatch(.schedule(.undoCompleted(.failure(NSError(domain: "Undo", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nothing to undo"])))))
             return
         }
@@ -141,22 +145,22 @@ func scheduleMiddleware(
                         redo: redoStack
                     )
 
-                    logger.debug("Undo completed. Operation reversed.")
+        // logger.debug("Undo completed. Operation reversed.")
                 }
 
                 // Reload shifts to refresh UI
                 dispatch(.schedule(.loadShifts))
                 dispatch(.schedule(.undoCompleted(.success(()))))
             } catch {
-                logger.error("Failed to undo: \(error.localizedDescription)")
+        // logger.error("Failed to undo: \(error.localizedDescription)")
                 dispatch(.schedule(.undoCompleted(.failure(error))))
             }
         }
 
     case .redo:
-        logger.debug("Redo requested")
+        // logger.debug("Redo requested")
         guard !state.schedule.redoStack.isEmpty else {
-            logger.debug("Redo stack is empty")
+        // logger.debug("Redo stack is empty")
             dispatch(.schedule(.redoCompleted(.failure(NSError(domain: "Redo", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nothing to redo"])))))
             return
         }
@@ -177,14 +181,14 @@ func scheduleMiddleware(
                         redo: redoStack
                     )
 
-                    logger.debug("Redo completed. Operation reapplied.")
+        // logger.debug("Redo completed. Operation reapplied.")
                 }
 
                 // Reload shifts to refresh UI
                 dispatch(.schedule(.loadShifts))
                 dispatch(.schedule(.redoCompleted(.success(()))))
             } catch {
-                logger.error("Failed to redo: \(error.localizedDescription)")
+        // logger.error("Failed to redo: \(error.localizedDescription)")
                 dispatch(.schedule(.redoCompleted(.failure(error))))
             }
         }
@@ -192,19 +196,21 @@ func scheduleMiddleware(
     // MARK: - Filter Actions
 
     case .filterSheetToggled(let show):
-        logger.debug("Filter sheet toggled: \(show)")
+        // logger.debug("Filter sheet toggled: \(show)")
         // No middleware side effects - handled by reducer
 
+    break
     case .filterDateRangeChanged(let startDate, let endDate):
-        logger.debug("Date range filter applied: \(String(describing: startDate)) to \(String(describing: endDate))")
+        // logger.debug("Date range filter applied: \(String(describing: startDate)) to \(String(describing: endDate))")
         // Load shifts for the selected date range
+    break
         if let start = startDate, let end = endDate {
             Task {
                 do {
                     let shifts = try await services.calendarService.loadShifts(from: start, to: end)
                     dispatch(.schedule(.shiftsLoaded(.success(shifts))))
                 } catch {
-                    logger.error("Failed to load shifts for date range: \(error.localizedDescription)")
+        // logger.error("Failed to load shifts for date range: \(error.localizedDescription)")
                     dispatch(.schedule(.shiftsLoaded(.failure(error))))
                 }
             }
@@ -214,19 +220,21 @@ func scheduleMiddleware(
         }
 
     case .filterLocationChanged(let location):
-        logger.debug("Location filter changed to: \(location?.name ?? "None")")
+        // logger.debug("Location filter changed to: \(location?.name ?? "None")")
         // No middleware side effects - filtering handled in state
 
+    break
     case .filterShiftTypeChanged(let shiftType):
-        logger.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
+        // logger.debug("Shift type filter changed to: \(shiftType?.title ?? "None")")
         // No middleware side effects - filtering handled in state
 
+    break
     case .clearFilters:
-        logger.debug("Filters cleared - reloading all shifts")
+        // logger.debug("Filters cleared - reloading all shifts")
         dispatch(.schedule(.loadShifts))
 
     case .authorizationChecked, .shiftDeleted, .shiftSwitched, .shiftsLoaded, .stacksRestored, .undoCompleted, .redoCompleted:
-        logger.debug("No middleware side effects for action: \(String(describing: scheduleAction))")
         // These actions are handled by the reducer only
+    break
     }
 }

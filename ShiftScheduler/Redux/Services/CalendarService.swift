@@ -34,16 +34,16 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         }
 
         let hasAccess = try await eventStore.requestFullAccessToEvents()
-        logger.debug("Calendar access requested: \(hasAccess)")
+        // logger.debug("Calendar access requested: \(hasAccess)")
         return hasAccess
     }
 
     func loadShifts(from startDate: Date, to endDate: Date) async throws -> [ScheduledShift] {
-        logger.debug("Loading shifts from \(startDate.formatted()) to \(endDate.formatted())")
+        // logger.debug("Loading shifts from \(startDate.formatted()) to \(endDate.formatted())")
 
         // Check authorization
         guard try await isCalendarAuthorized() else {
-            logger.error("Calendar not authorized")
+        // logger.error("Calendar not authorized")
             throw CalendarServiceError.notAuthorized
         }
 
@@ -52,7 +52,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
         let events = eventStore.events(matching: predicate)
 
-        logger.debug("Loaded \(events.count) events from calendar")
+        // logger.debug("Loaded \(events.count) events from calendar")
 
         // Convert events to scheduled shifts
         var shifts: [ScheduledShift] = []
@@ -64,7 +64,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             shifts.append(shift)
         }
 
-        logger.debug("Converted to \(shifts.count) scheduled shifts")
+        // logger.debug("Converted to \(shifts.count) scheduled shifts")
         return shifts.sorted { $0.date < $1.date }
     }
 
@@ -91,14 +91,14 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Extract shift type ID from event notes
         guard let notes = event.notes,
               let shiftTypeId = UUID(uuidString: notes) else {
-            logger.debug("Event '\(event.title)' has no valid shift type ID in notes")
+        // logger.debug("Event '\(event.title)' has no valid shift type ID in notes")
             return nil
         }
 
         // Load shift type from repository
         let shiftTypes = try await shiftTypeRepository.fetchAll()
         guard let shiftType = shiftTypes.first(where: { $0.id == shiftTypeId }) else {
-            logger.warning("Shift type \(shiftTypeId) not found for event '\(event.title)'")
+        // logger.warning("Shift type \(shiftTypeId) not found for event '\(event.title)'")
             return nil
         }
 

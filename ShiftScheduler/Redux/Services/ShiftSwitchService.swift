@@ -27,7 +27,7 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
         to newShiftType: ShiftType,
         reason: String?
     ) async throws -> ChangeLogEntry {
-        logger.debug("Switching shift from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title)")
+        // logger.debug("Switching shift from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title)")
 
         // Validate the switch is possible
         guard try await canSwitchShift(shift, to: newShiftType) else {
@@ -54,12 +54,12 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
         // Record the change in change log
         try await persistenceService.addChangeLogEntry(entry)
 
-        logger.debug("Successfully switched shift and recorded entry: \(entry.id)")
+        // logger.debug("Successfully switched shift and recorded entry: \(entry.id)")
         return entry
     }
 
     func deleteShift(_ shift: ScheduledShift) async throws -> ChangeLogEntry {
-        logger.debug("Deleting shift: \(shift.shiftType?.title ?? "unknown")")
+        // logger.debug("Deleting shift: \(shift.shiftType?.title ?? "unknown")")
 
         // Create snapshot of deleted shift
         let deletedSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
@@ -80,26 +80,26 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
         // Record the change in change log
         try await persistenceService.addChangeLogEntry(entry)
 
-        logger.debug("Successfully deleted shift and recorded entry: \(entry.id)")
+        // logger.debug("Successfully deleted shift and recorded entry: \(entry.id)")
         return entry
     }
 
     func undoOperation(_ operation: ChangeLogEntry) async throws {
-        logger.debug("Undoing operation: \(operation.id)")
+        // logger.debug("Undoing operation: \(operation.id)")
 
         // For now, just log the operation
         // TODO: Implement actual undo logic based on change type
     }
 
     func redoOperation(_ operation: ChangeLogEntry) async throws {
-        logger.debug("Redoing operation: \(operation.id)")
+        // logger.debug("Redoing operation: \(operation.id)")
 
         // For now, just log the operation
         // TODO: Implement actual redo logic based on change type
     }
 
     func canSwitchShift(_ shift: ScheduledShift, to newShiftType: ShiftType) async throws -> Bool {
-        logger.debug("Validating shift switch")
+        // logger.debug("Validating shift switch")
 
         // Basic validation: can't switch to the same type
         if shift.shiftType?.id == newShiftType.id {

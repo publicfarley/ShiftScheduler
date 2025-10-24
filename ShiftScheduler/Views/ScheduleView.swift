@@ -206,7 +206,7 @@ struct ScheduleView: View {
     }
 
     private func clearAllFilters() {
-        logger.debug("Clearing all filters")
+        // logger.debug("Clearing all filters")
         store.dispatch(action: .schedule(.clearFilters))
     }
 }

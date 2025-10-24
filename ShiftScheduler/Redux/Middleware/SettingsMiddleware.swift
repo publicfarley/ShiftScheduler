@@ -15,7 +15,7 @@ func settingsMiddleware(
 
     switch settingsAction {
     case .task:
-        logger.debug("Loading user settings")
+        // logger.debug("Loading user settings")
 //        Task {
 //            do {
 //                let profile = UserProfile(
@@ -29,12 +29,14 @@ func settingsMiddleware(
 //            }
 //        }
 
+    break
     case .displayNameChanged(let name):
-        logger.debug("Display name changed to: \(name)")
+        // logger.debug("Display name changed to: \(name)")
         // No middleware side effects - reducer handles it
 
+    break
     case .saveSettings:
-        logger.debug("Saving settings")
+        // logger.debug("Saving settings")
         Task {
             do {
                 let profile = UserProfile(
@@ -46,17 +48,19 @@ func settingsMiddleware(
                 // Update app-level user profile
                 dispatch(.appLifecycle(.userProfileUpdated(profile)))
             } catch {
-                logger.error("Failed to save settings: \(error.localizedDescription)")
+        // logger.error("Failed to save settings: \(error.localizedDescription)")
                 dispatch(.settings(.settingsSaved(.failure(error))))
             }
         }
 
     case .clearUnsavedChanges:
-        logger.debug("Clearing unsaved changes flag")
+        // logger.debug("Clearing unsaved changes flag")
         // No middleware side effects
 
+    break
     case .settingsLoaded, .settingsSaved:
-        logger.debug("No middleware side effects for action: \(String(describing: settingsAction))")
+        // logger.debug("No middleware side effects for action: \(String(describing: settingsAction))")
         // Handled by reducer only
+    break
     }
 }

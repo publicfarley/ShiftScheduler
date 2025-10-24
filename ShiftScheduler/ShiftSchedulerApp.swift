@@ -47,7 +47,7 @@ struct ShiftSchedulerApp: App {
     // MARK: - Background Tasks
 
     private func performBackgroundTasks() async {
-        logger.debug("Running background tasks...")
+        // logger.debug("Running background tasks...")
 
         // Run change log purge if needed
         await purgeExpiredChangeLogEntries()

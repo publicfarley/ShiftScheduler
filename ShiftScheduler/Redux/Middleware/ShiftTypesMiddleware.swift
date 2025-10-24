@@ -15,31 +15,34 @@ func shiftTypesMiddleware(
 
     switch shiftTypesAction {
     case .task, .refreshShiftTypes:
-        logger.debug("Loading shift types")
+        // logger.debug("Loading shift types")
         Task {
             do {
                 let shiftTypes = try await services.persistenceService.loadShiftTypes()
                 dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
             } catch {
-                logger.error("Failed to load shift types: \(error.localizedDescription)")
+        // logger.error("Failed to load shift types: \(error.localizedDescription)")
                 dispatch(.shiftTypes(.shiftTypesLoaded(.failure(error))))
             }
         }
 
     case .searchTextChanged(let text):
-        logger.debug("Search text changed: \(text)")
+        // logger.debug("Search text changed: \(text)")
         // No middleware side effects
 
+    break
     case .addButtonTapped:
-        logger.debug("Add shift type button tapped")
+        // logger.debug("Add shift type button tapped")
         // No middleware side effects
 
+    break
     case .editShiftType(let shiftType):
-        logger.debug("Editing shift type: \(shiftType.title)")
+        // logger.debug("Editing shift type: \(shiftType.title)")
         // No middleware side effects
 
+    break
     case .saveShiftType(let shiftType):
-        logger.debug("Saving shift type: \(shiftType.title)")
+        // logger.debug("Saving shift type: \(shiftType.title)")
         Task {
             do {
                 try await services.persistenceService.saveShiftType(shiftType)
@@ -47,13 +50,13 @@ func shiftTypesMiddleware(
                 // Refresh after save
                 dispatch(.shiftTypes(.refreshShiftTypes))
             } catch {
-                logger.error("Failed to save shift type: \(error.localizedDescription)")
+        // logger.error("Failed to save shift type: \(error.localizedDescription)")
                 dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
             }
         }
 
     case .deleteShiftType(let shiftType):
-        logger.debug("Deleting shift type: \(shiftType.title)")
+        // logger.debug("Deleting shift type: \(shiftType.title)")
         Task {
             do {
                 try await services.persistenceService.deleteShiftType(id: shiftType.id)
@@ -61,25 +64,18 @@ func shiftTypesMiddleware(
                 // Refresh after delete
                 dispatch(.shiftTypes(.refreshShiftTypes))
             } catch {
-                logger.error("Failed to delete shift type: \(error.localizedDescription)")
+        // logger.error("Failed to delete shift type: \(error.localizedDescription)")
                 dispatch(.shiftTypes(.shiftTypeDeleted(.failure(error))))
             }
         }
 
     case .addEditSheetDismissed:
-        logger.debug("Add/edit sheet dismissed")
+        // logger.debug("Add/edit sheet dismissed")
         // No middleware side effects
 
-    case .shiftTypesLoaded:
-        logger.debug("Shift types loaded")
+    break
+    case .shiftTypesLoaded, .shiftTypeDeleted, .shiftTypeSaved:
         // Handled by reducer only
-
-    case .shiftTypeDeleted:
-        logger.debug("Shift type deleted")
-        // Handled by reducer only
-
-    case .shiftTypeSaved:
-        logger.debug("Shift type saved")
-        // Handled by reducer only
+    break
     }
 }

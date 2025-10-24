@@ -133,7 +133,7 @@ struct ScheduleFilterSheetView: View {
     }
 
     private func applyFilters() {
-        logger.debug("Applying filters: dates \(String(describing: startDate))-\(String(describing: endDate)), location: \(selectedLocation?.name ?? "None"), type: \(selectedShiftType?.title ?? "None")")
+        // logger.debug("Applying filters: dates \(String(describing: startDate))-\(String(describing: endDate)), location: \(selectedLocation?.name ?? "None"), type: \(selectedShiftType?.title ?? "None")")
 
         // Dispatch filter actions
         if let start = startDate, let end = endDate {

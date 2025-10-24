@@ -1,25 +1,9 @@
 import Foundation
 import Observation
-import OSLog
 
 /// Middleware type for handling side effects
 /// Receives current state, action, dispatch closure, and service container
 typealias Middleware = @MainActor @Sendable (AppState, AppAction, @escaping (AppAction) -> Void, ServiceContainer) -> Void
-
-// MARK: - Logging Helper
-
-/// Thread-safe logger wrapper for Store logging
-/// Uses nonisolated(unsafe) since logging is a benign side effect
-private struct StoreLoggerHelper {
-    nonisolated(unsafe) private static let logger = os.Logger(subsystem: "com.shiftscheduler.redux", category: "Store")
-
-    nonisolated static func debug(_ message: String) {
-        // Safely log without MainActor isolation
-        DispatchQueue.main.async {
-            logger.debug("\(message, privacy: .public)")
-        }
-    }
-}
 
 /// Redux Store - Single source of truth for application state
 /// Implements unidirectional data flow: dispatch(action) -> reducer -> state -> UI
@@ -66,7 +50,7 @@ class Store {
     /// - Parameter action: The action to dispatch
     func dispatch(action: AppAction) {
         let actionDesc = String(describing: action)
-        StoreLoggerHelper.debug("[Redux] Dispatching action: \(actionDesc)")
+        // ReduxLogger.debug("[Redux] Dispatching action: \(actionDesc)")
 
         // Phase 1: Update state with reducer (pure, synchronous)
         state = reducer(state, action)

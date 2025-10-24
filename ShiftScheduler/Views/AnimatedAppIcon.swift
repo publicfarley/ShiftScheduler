@@ -114,7 +114,7 @@ struct AnimatedAppIcon: View {
     private func startFloatingAnimation() {
         // Check for reduced motion preference
         if UIAccessibility.isReduceMotionEnabled {
-            logger.debug("Reduced motion enabled, skipping icon animations")
+        // logger.debug("Reduced motion enabled, skipping icon animations")
             return
         }
 
@@ -135,11 +135,11 @@ struct AnimatedAppIcon: View {
 
     private func triggerBurstAnimation() {
         guard !UIAccessibility.isReduceMotionEnabled else {
-            logger.debug("Reduced motion enabled, skipping burst animation")
+        // logger.debug("Reduced motion enabled, skipping burst animation")
             return
         }
 
-        logger.debug("Triggering burst animation")
+        // logger.debug("Triggering burst animation")
 
         // Scale bounce
         withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
