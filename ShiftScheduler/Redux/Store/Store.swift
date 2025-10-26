@@ -3,7 +3,7 @@ import Observation
 
 /// Middleware type for handling side effects
 /// Receives current state, action, dispatch closure, and service container
-typealias Middleware = @MainActor @Sendable (AppState, AppAction, @escaping (AppAction) -> Void, ServiceContainer) -> Void
+typealias Middleware = @MainActor @Sendable (AppState, AppAction, @escaping @MainActor (AppAction) -> Void, ServiceContainer) -> Void
 
 /// Redux Store - Single source of truth for application state
 /// Implements unidirectional data flow: dispatch(action) -> reducer -> state -> UI
@@ -56,8 +56,13 @@ class Store {
         state = reducer(state, action)
 
         // Phase 2: Execute middlewares for side effects (can be asynchronous)
+        // Create a dispatch closure that properly captures self for recursive dispatch
+        let dispatchAction: @MainActor @Sendable (AppAction) -> Void = { [weak self] newAction in
+            self?.dispatch(action: newAction)
+        }
+
         middlewares.forEach { middleware in
-            middleware(state, action, dispatch, services)
+            middleware(state, action, dispatchAction, services)
         }
     }
 }

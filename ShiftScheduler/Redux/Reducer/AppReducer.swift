@@ -4,6 +4,7 @@ import Foundation
 
 /// Root reducer that delegates to feature reducers
 /// Composes all feature reducers into a single pure function
+@MainActor
 func appReducer(state: AppState, action: AppAction) -> AppState {
     var state = state
 
@@ -36,6 +37,7 @@ func appReducer(state: AppState, action: AppAction) -> AppState {
 // MARK: - App Lifecycle Reducer
 
 /// Handles app-level lifecycle actions (init, tab selection, profile updates)
+@MainActor
 func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppState {
     var state = state
 
@@ -59,6 +61,7 @@ func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppStat
 // MARK: - Today Reducer
 
 /// Handles Today feature state updates
+@MainActor
 func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
     var state = state
 
@@ -141,6 +144,7 @@ func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
 // MARK: - Schedule Reducer
 
 /// Handles Schedule feature state updates with complex undo/redo logic
+@MainActor
 func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleState {
     var state = state
 
@@ -285,6 +289,7 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 // MARK: - Shift Types Reducer
 
 /// Handles Shift Types feature state updates
+@MainActor
 func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> ShiftTypesState {
     var state = state
 
@@ -347,6 +352,7 @@ func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> Shif
 // MARK: - Locations Reducer
 
 /// Handles Locations feature state updates
+@MainActor
 func locationsReducer(state: LocationsState, action: LocationsAction) -> LocationsState {
     var state = state
 
@@ -409,6 +415,7 @@ func locationsReducer(state: LocationsState, action: LocationsAction) -> Locatio
 // MARK: - Change Log Reducer
 
 /// Handles Change Log feature state updates
+@MainActor
 func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeLogState {
     var state = state
 
@@ -456,6 +463,7 @@ func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeL
 // MARK: - Settings Reducer
 
 /// Handles Settings feature state updates
+@MainActor
 func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsState {
     var state = state
 
