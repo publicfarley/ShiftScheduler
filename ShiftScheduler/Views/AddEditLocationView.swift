@@ -25,9 +25,14 @@ struct AddEditLocationView: View {
                 Section("Location Details") {
                     TextField("Name", text: $name)
                         .textInputAutocapitalization(.words)
+                }
 
-                    TextField("Address", text: $address)
+                Section("Address") {
+                    TextEditor(text: $address)
+                        .frame(height: 90) // Approximately 3 lines of text
                         .textInputAutocapitalization(.sentences)
+                        .lineLimit(3...)
+                        .scrollContentBackground(.hidden)
                 }
 
                 if let error = store.state.locations.errorMessage {
@@ -69,6 +74,7 @@ struct AddEditLocationView: View {
                 }
             }
             .dismissKeyboardOnTap()
+            .interactiveDismissDisabled(false)
         }
     }
 

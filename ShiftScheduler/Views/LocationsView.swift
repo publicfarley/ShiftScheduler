@@ -105,7 +105,13 @@ struct LocationsView: View {
                         }
                     }
                 }
-                .sheet(isPresented: .constant(store.state.locations.showAddEditSheet)) {
+                .sheet(
+                    isPresented: .constant(store.state.locations.showAddEditSheet),
+                       
+                    onDismiss: {
+                        store.dispatch(action: .locations(.addEditSheetDismissed))
+                    }
+                ) {
                     AddEditLocationView(
                         isPresented: .constant(store.state.locations.showAddEditSheet),
                         location: store.state.locations.editingLocation
@@ -145,19 +151,23 @@ struct LocationCard: View {
                         .font(.headline)
                         .lineLimit(1)
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text(location.address)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "location.fill")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.top, 1) // Align with top of text
+                            Text(location.address)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Image(systemName: "chevron.right")
+                Image(systemName: "pencil")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
