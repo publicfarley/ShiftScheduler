@@ -55,7 +55,8 @@ struct ToastModifier: ViewModifier {
                         generator.notificationOccurred(toast.feedbackType)
 
                         // Auto-dismiss after duration
-                        DispatchQueue.main.asyncAfter(deadline: .now() + toast.duration) {
+                        Task {
+                            try await Task.sleep(nanoseconds: UInt64(toast.duration * Double(NSEC_PER_SEC)))
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 self.toast = nil
                             }

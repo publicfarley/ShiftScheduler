@@ -146,7 +146,8 @@ struct AnimatedAppIcon: View {
             scale = 1.3
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        Task {
+            try await Task.sleep(nanoseconds: UInt64(0.15 * Double(NSEC_PER_SEC)))
             withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                 scale = 1.0
             }
@@ -182,7 +183,8 @@ struct AnimatedAppIcon: View {
         }
 
         // Clean up particles
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+        Task {
+            try await Task.sleep(nanoseconds: UInt64(0.6 * Double(NSEC_PER_SEC)))
             showParticles = false
             particles = []
         }

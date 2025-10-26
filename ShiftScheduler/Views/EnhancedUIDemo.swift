@@ -193,7 +193,8 @@ struct AnimationsDemoView: View {
                             scale = 0.95
                         }
 
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        Task {
+                            try await Task.sleep(nanoseconds: UInt64(0.1 * Double(NSEC_PER_SEC)))
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 scale = 1.0
                             }

@@ -441,7 +441,8 @@ struct EnhancedTodayShiftCard: View {
                 isPressed = true
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            Task {
+                try await Task.sleep(nanoseconds: UInt64(0.15 * Double(NSEC_PER_SEC)))
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isPressed = false
                 }
@@ -667,7 +668,8 @@ struct TodayShiftCard: View {
                 isPressed = true
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task {
+                try await Task.sleep(nanoseconds: UInt64(0.1 * Double(NSEC_PER_SEC)))
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                     isPressed = false
                 }

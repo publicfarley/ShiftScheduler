@@ -84,7 +84,8 @@ struct ParticleEffect: View {
     private func animateParticle(at index: Int) {
         let delay = Double(index) * 0.1
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        Task {
+            try await Task.sleep(nanoseconds: UInt64(delay * Double(NSEC_PER_SEC)))
             withAnimation(
                 .easeInOut(duration: animationDuration)
                 .repeatForever(autoreverses: true)
