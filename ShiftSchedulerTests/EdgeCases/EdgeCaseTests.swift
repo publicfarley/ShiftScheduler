@@ -41,7 +41,12 @@ struct EdgeCaseTests {
     @Test("Empty scheduled shifts list handles correctly")
     func testEmptyScheduledShiftsList() {
         // Given
-        let store = Store(state: AppState(), reducer: appReducer)
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: []
+        )
 
         // When
         let shifts = store.state.schedule.filteredShifts
@@ -341,7 +346,12 @@ struct EdgeCaseTests {
     @Test("App state with all empty substates")
     func testAppStateWithEmptySubstates() {
         // Given
-        let store = Store(state: AppState(), reducer: appReducer)
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: []
+        )
 
         // When
         let state = store.state

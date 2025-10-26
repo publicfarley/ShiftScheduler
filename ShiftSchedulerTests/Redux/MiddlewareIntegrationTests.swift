@@ -10,7 +10,7 @@ struct MiddlewareIntegrationTests {
     // MARK: - Helpers
 
     /// Basic logging middleware for testing
-    static let loggingMiddleware: Middleware = { _, action, _, _ in
+    static let loggingMiddleware: Middleware<AppState, AppAction> = { _, action, _, _ in
         // Simply logs that middleware was called
         _ = String(describing: action)
     }
@@ -24,7 +24,8 @@ struct MiddlewareIntegrationTests {
         let store = Store(
             state: initialState,
             reducer: appReducer,
-            services: ServiceContainer()
+            services: ServiceContainer(),
+            middlewares: []
         )
 
         // When
@@ -38,7 +39,7 @@ struct MiddlewareIntegrationTests {
     func testStoreDispatchCallsMiddleware() {
         // Given
         var middlewareCalled = false
-        let testMiddleware: Middleware = { _, _, _, _ in
+        let testMiddleware: Middleware<AppState, AppAction> = { _, _, _, _ in
             middlewareCalled = true
         }
 
@@ -62,13 +63,14 @@ struct MiddlewareIntegrationTests {
     func testLoggingMiddlewareLogsActions() {
         // Given
         var loggedActions: [String] = []
-        let loggingMiddleware: Middleware = { _, action, _, _ in
+        let loggingMiddleware: Middleware<AppState, AppAction> = { _, action, _, _ in
             loggedActions.append(String(describing: action))
         }
 
         let store = Store(
             state: AppState(),
             reducer: appReducer,
+            services: ServiceContainer(),
             middlewares: [loggingMiddleware]
         )
 
@@ -86,21 +88,22 @@ struct MiddlewareIntegrationTests {
         // Given
         var executionOrder: [Int] = []
 
-        let middleware1: Middleware = { _, _, _, _ in
+        let middleware1: Middleware<AppState, AppAction> = { _, _, _, _ in
             executionOrder.append(1)
         }
 
-        let middleware2: Middleware = { _, _, _, _ in
+        let middleware2: Middleware<AppState, AppAction> = { _, _, _, _ in
             executionOrder.append(2)
         }
 
-        let middleware3: Middleware = { _, _, _, _ in
+        let middleware3: Middleware<AppState, AppAction> = { _, _, _, _ in
             executionOrder.append(3)
         }
 
         let store = Store(
             state: AppState(),
             reducer: appReducer,
+            services: ServiceContainer(),
             middlewares: [middleware1, middleware2, middleware3]
         )
 
@@ -139,7 +142,7 @@ struct MiddlewareIntegrationTests {
     func testMiddlewareErrorHandlingPreventStateCorruption() {
         // Given
         var errorHandled = false
-        let errorHandlingMiddleware: Middleware = { _, _, _, _ in
+        let errorHandlingMiddleware: Middleware<AppState, AppAction> = { _, _, _, _ in
             do {
                 errorHandled = true
             }
@@ -148,6 +151,7 @@ struct MiddlewareIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
+            services: ServiceContainer(),
             middlewares: [errorHandlingMiddleware]
         )
 
@@ -166,7 +170,7 @@ struct MiddlewareIntegrationTests {
     func testServiceContainerAccessibleInMiddleware() {
         // Given
         var serviceContainerAccessed = false
-        let testMiddleware: Middleware = { _, _, _, services in
+        let testMiddleware: Middleware<AppState, AppAction> = { @MainActor _, _, services, _  in
             _ = services.calendarService
             _ = services.persistenceService
             _ = services.currentDayService
@@ -193,14 +197,15 @@ struct MiddlewareIntegrationTests {
     func testMiddlewareCanDispatchNewActions() {
         // Given
         var newActionDispatched = false
-        let dispatchMiddleware: Middleware = { _, _, dispatch, _ in
-            dispatch(.appLifecycle(.tabSelected(.schedule)))
+        let dispatchMiddleware: Middleware<AppState, AppAction> = { _, _, _, dispatch in
+            await dispatch(.appLifecycle(.tabSelected(.schedule)))
             newActionDispatched = true
         }
 
         let store = Store(
             state: AppState(),
             reducer: appReducer,
+            services: ServiceContainer(),
             middlewares: [dispatchMiddleware]
         )
 

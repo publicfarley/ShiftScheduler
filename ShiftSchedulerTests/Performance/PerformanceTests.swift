@@ -13,7 +13,13 @@ struct PerformanceTests {
     @Test("Store dispatch completes in reasonable time")
     func testStoreDispatchPerformance() {
         // Given
-        let store = Store(state: AppState(), reducer: appReducer)
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: []
+        )
+        
         let iterations = 1000
         let startTime = Date()
 

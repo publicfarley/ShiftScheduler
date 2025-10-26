@@ -4,8 +4,6 @@ import Foundation
 
 /// Root reducer that delegates to feature reducers
 /// Composes all feature reducers into a single pure function
-//nonisolated public let appReducer: AReducer<AppState_, AppAction_> = { state, action in AppState_() }
-
 nonisolated func appReducer(state: AppState, action: AppAction) -> AppState {
     var state = state
 
