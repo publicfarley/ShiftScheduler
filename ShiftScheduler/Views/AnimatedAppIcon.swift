@@ -147,7 +147,7 @@ struct AnimatedAppIcon: View {
         }
 
         Task {
-            try await Task.sleep(nanoseconds: UInt64(0.15 * Double(NSEC_PER_SEC)))
+            try await Task.sleep(nanoseconds: 0.15.nanoseconds)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                 scale = 1.0
             }
@@ -184,7 +184,7 @@ struct AnimatedAppIcon: View {
 
         // Clean up particles
         Task {
-            try await Task.sleep(nanoseconds: UInt64(0.6 * Double(NSEC_PER_SEC)))
+            try await Task.sleep(nanoseconds: 0.6.nanoseconds)
             showParticles = false
             particles = []
         }

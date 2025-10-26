@@ -228,7 +228,7 @@ struct EnhancedShiftCard: View {
             }
 
             Task {
-                try await Task.sleep(nanoseconds: UInt64(0.1 * Double(NSEC_PER_SEC)))
+                try await Task.sleep(nanoseconds: 0.1.nanoseconds)
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                     isPressed = false
                 }
