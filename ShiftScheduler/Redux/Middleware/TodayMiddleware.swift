@@ -8,40 +8,36 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "To
 func todayMiddleware(
     state: AppState,
     action: AppAction,
-    dispatch: @escaping (AppAction) -> Void,
-    services: ServiceContainer
-) {
+    services: ServiceContainer,
+    dispatch: Dispatcher<AppAction>,
+) async {
     guard case .today(let todayAction) = action else { return }
 
     switch todayAction {
     case .task:
         // logger.debug("Today task started")
         // Load shifts for next 30 days
-        Task {
             do {
                 let shifts = try await services.calendarService.loadShiftsForNext30Days()
-                dispatch(.today(.shiftsLoaded(.success(shifts))))
+                await dispatch(.today(.shiftsLoaded(.success(shifts))))
                 // Update cached shifts after loading
-                dispatch(.today(.updateCachedShifts))
-                dispatch(.today(.updateUndoRedoStates))
+                await dispatch(.today(.updateCachedShifts))
+                await dispatch(.today(.updateUndoRedoStates))
             } catch {
         // logger.error("Failed to load shifts: \(error.localizedDescription)")
-                dispatch(.today(.shiftsLoaded(.failure(error))))
+                await dispatch(.today(.shiftsLoaded(.failure(error))))
             }
-        }
 
     case .loadShifts:
         // logger.debug("Loading shifts for Today view")
-        Task {
             do {
                 let shifts = try await services.calendarService.loadShiftsForNext30Days()
-                dispatch(.today(.shiftsLoaded(.success(shifts))))
-                dispatch(.today(.updateCachedShifts))
+                await dispatch(.today(.shiftsLoaded(.success(shifts))))
+                await dispatch(.today(.updateCachedShifts))
             } catch {
         // logger.error("Failed to load shifts: \(error.localizedDescription)")
-                dispatch(.today(.shiftsLoaded(.failure(error))))
+                await dispatch(.today(.shiftsLoaded(.failure(error))))
             }
-        }
 
     case .switchShiftTapped(let shift):
         // logger.debug("Switch shift tapped for: \(shift.eventIdentifier)")
@@ -50,7 +46,6 @@ func todayMiddleware(
 
     case .performSwitchShift(let shift, let newShiftType, let reason):
         // logger.debug("Performing shift switch from \(shift.shiftType?.title ?? "unknown") to \(newShiftType.title) on \(shift.date.formatted())")
-        Task {
             do {
                 // Create snapshots of old and new shift types
                 let oldSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
@@ -70,18 +65,17 @@ func todayMiddleware(
                 )
 
                 // Persist the change log entry
-                try await services.persistenceService.addChangeLogEntry(entry)
+                    try await services.persistenceService.addChangeLogEntry(entry)
 
                 // logger.debug("Shift \(shift.eventIdentifier) switched to \(newShiftType.title). Entry \(entry.id) saved.")
-                dispatch(.today(.shiftSwitched(.success(()))))
+                await dispatch(.today(.shiftSwitched(.success(()))))
 
                 // Reload shifts after switch to refresh from calendar
-                dispatch(.today(.loadShifts))
+                await dispatch(.today(.loadShifts))
             } catch {
         // logger.error("Failed to switch shift: \(error.localizedDescription)")
-                dispatch(.today(.shiftSwitched(.failure(error))))
+                await dispatch(.today(.shiftSwitched(.failure(error))))
             }
-        }
 
     case .toastMessageCleared:
         // logger.debug("Toast message cleared")

@@ -8,23 +8,21 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Sh
 func shiftTypesMiddleware(
     state: AppState,
     action: AppAction,
-    dispatch: @escaping (AppAction) -> Void,
-    services: ServiceContainer
-) {
+    services: ServiceContainer,
+    dispatch: Dispatcher<AppAction>,
+) async {
     guard case .shiftTypes(let shiftTypesAction) = action else { return }
 
     switch shiftTypesAction {
     case .task, .refreshShiftTypes:
         // logger.debug("Loading shift types")
-        Task {
             do {
                 let shiftTypes = try await services.persistenceService.loadShiftTypes()
-                dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
+                await dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
             } catch {
         // logger.error("Failed to load shift types: \(error.localizedDescription)")
-                dispatch(.shiftTypes(.shiftTypesLoaded(.failure(error))))
+                await dispatch(.shiftTypes(.shiftTypesLoaded(.failure(error))))
             }
-        }
 
     case .searchTextChanged(let text):
         // logger.debug("Search text changed: \(text)")
@@ -43,31 +41,27 @@ func shiftTypesMiddleware(
     break
     case .saveShiftType(let shiftType):
         // logger.debug("Saving shift type: \(shiftType.title)")
-        Task {
             do {
                 try await services.persistenceService.saveShiftType(shiftType)
-                dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
+                await dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
                 // Refresh after save
-                dispatch(.shiftTypes(.refreshShiftTypes))
+                await dispatch(.shiftTypes(.refreshShiftTypes))
             } catch {
         // logger.error("Failed to save shift type: \(error.localizedDescription)")
-                dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+                await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
             }
-        }
 
     case .deleteShiftType(let shiftType):
         // logger.debug("Deleting shift type: \(shiftType.title)")
-        Task {
             do {
                 try await services.persistenceService.deleteShiftType(id: shiftType.id)
-                dispatch(.shiftTypes(.shiftTypeDeleted(.success(()))))
+                await dispatch(.shiftTypes(.shiftTypeDeleted(.success(()))))
                 // Refresh after delete
-                dispatch(.shiftTypes(.refreshShiftTypes))
+                await dispatch(.shiftTypes(.refreshShiftTypes))
             } catch {
         // logger.error("Failed to delete shift type: \(error.localizedDescription)")
-                dispatch(.shiftTypes(.shiftTypeDeleted(.failure(error))))
+                await dispatch(.shiftTypes(.shiftTypeDeleted(.failure(error))))
             }
-        }
 
     case .addEditSheetDismissed:
         // logger.debug("Add/edit sheet dismissed")

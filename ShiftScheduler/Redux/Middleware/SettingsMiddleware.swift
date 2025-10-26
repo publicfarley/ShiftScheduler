@@ -8,9 +8,9 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Se
 func settingsMiddleware(
     state: AppState,
     action: AppAction,
-    dispatch: @escaping (AppAction) -> Void,
-    services: ServiceContainer
-) {
+    services: ServiceContainer,
+    dispatch: Dispatcher<AppAction>,
+) async {
     guard case .settings(let settingsAction) = action else { return }
 
     switch settingsAction {
@@ -22,10 +22,10 @@ func settingsMiddleware(
 //                    userId: state.userProfile.userId,
 //                    displayName: state.userProfile.displayName
 //                )
-//                dispatch(.settings(.settingsLoaded(.success(profile))))
+//                await dispatch(.settings(.settingsLoaded(.success(profile))))
 //            } catch {
 //                logger.error("Failed to load settings: \(error.localizedDescription)")
-//                dispatch(.settings(.settingsLoaded(.failure(error))))
+//                await dispatch(.settings(.settingsLoaded(.failure(error))))
 //            }
 //        }
 
@@ -37,21 +37,19 @@ func settingsMiddleware(
     break
     case .saveSettings:
         // logger.debug("Saving settings")
-        Task {
             do {
                 let profile = UserProfile(
                     userId: state.userProfile.userId,
                     displayName: state.settings.displayName
                 )
-                try await services.persistenceService.saveUserProfile(profile)
-                dispatch(.settings(.settingsSaved(.success(()))))
+                    try await services.persistenceService.saveUserProfile(profile)
+                await dispatch(.settings(.settingsSaved(.success(()))))
                 // Update app-level user profile
-                dispatch(.appLifecycle(.userProfileUpdated(profile)))
+                await dispatch(.appLifecycle(.userProfileUpdated(profile)))
             } catch {
         // logger.error("Failed to save settings: \(error.localizedDescription)")
-                dispatch(.settings(.settingsSaved(.failure(error))))
+                await dispatch(.settings(.settingsSaved(.failure(error))))
             }
-        }
 
     case .clearUnsavedChanges:
         // logger.debug("Clearing unsaved changes flag")

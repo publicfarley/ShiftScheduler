@@ -4,8 +4,9 @@ import Foundation
 
 /// Root reducer that delegates to feature reducers
 /// Composes all feature reducers into a single pure function
-@MainActor
-func appReducer(state: AppState, action: AppAction) -> AppState {
+//nonisolated public let appReducer: AReducer<AppState_, AppAction_> = { state, action in AppState_() }
+
+nonisolated func appReducer(state: AppState, action: AppAction) -> AppState {
     var state = state
 
     switch action {
@@ -37,8 +38,7 @@ func appReducer(state: AppState, action: AppAction) -> AppState {
 // MARK: - App Lifecycle Reducer
 
 /// Handles app-level lifecycle actions (init, tab selection, profile updates)
-@MainActor
-func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppState {
+nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppState {
     var state = state
 
     switch action {
@@ -61,8 +61,7 @@ func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppStat
 // MARK: - Today Reducer
 
 /// Handles Today feature state updates
-@MainActor
-func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
+nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
     var state = state
 
     switch action {
@@ -92,11 +91,11 @@ func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
         state.isLoading = false
         state.showSwitchShiftSheet = false
         state.selectedShift = nil
-        state.toastMessage = .success("Shift switched successfully")
+        //state.toastMessage = .success("Shift switched successfully")
 
     case .shiftSwitched(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
+       // state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
 
     case .toastMessageCleared:
         state.toastMessage = nil
@@ -144,8 +143,7 @@ func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
 // MARK: - Schedule Reducer
 
 /// Handles Schedule feature state updates with complex undo/redo logic
-@MainActor
-func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleState {
+nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleState {
     var state = state
 
     switch action {
@@ -177,11 +175,11 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 
     case .shiftDeleted(.success):
         state.isLoading = false
-        state.toastMessage = .success("Shift deleted")
+        //state.toastMessage = .success("Shift deleted")
 
     case .shiftDeleted(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Failed to delete shift: \(error.localizedDescription)")
+       // state.toastMessage = .error("Failed to delete shift: \(error.localizedDescription)")
 
     case .switchShiftTapped:
         break // UI handles sheet presentation
@@ -191,13 +189,13 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 
     case .shiftSwitched(.success(let operation)):
         state.isLoading = false
-        state.toastMessage = .success("Shift switched successfully")
+        //state.toastMessage = .success("Shift switched successfully")
         state.undoStack.append(operation)
         state.redoStack.removeAll()
 
     case .shiftSwitched(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
+        //state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
 
     case .shiftsLoaded(.success(let shifts)):
         state.isLoading = false
@@ -217,7 +215,7 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 
     case .undo:
         guard !state.undoStack.isEmpty else {
-            state.toastMessage = .error("No operation to undo")
+            //state.toastMessage = .error("No operation to undo")
             return state
         }
         state.isLoading = true
@@ -228,15 +226,15 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
             let operation = state.undoStack.removeLast()
             state.redoStack.append(operation)
         }
-        state.toastMessage = .success("Undo successful")
+        //state.toastMessage = .success("Undo successful")
 
     case .undoCompleted(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Undo failed: \(error.localizedDescription)")
+        //state.toastMessage = .error("Undo failed: \(error.localizedDescription)")
 
     case .redo:
         guard !state.redoStack.isEmpty else {
-            state.toastMessage = .error("No operation to redo")
+            //state.toastMessage = .error("No operation to redo")
             return state
         }
         state.isLoading = true
@@ -247,11 +245,11 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
             let operation = state.redoStack.removeLast()
             state.undoStack.append(operation)
         }
-        state.toastMessage = .success("Redo successful")
+        //state.toastMessage = .success("Redo successful")
 
     case .redoCompleted(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Redo failed: \(error.localizedDescription)")
+        //state.toastMessage = .error("Redo failed: \(error.localizedDescription)")
 
     // MARK: - Filter Actions
 
@@ -289,8 +287,7 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 // MARK: - Shift Types Reducer
 
 /// Handles Shift Types feature state updates
-@MainActor
-func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> ShiftTypesState {
+nonisolated func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> ShiftTypesState {
     var state = state
 
     switch action {
@@ -352,8 +349,7 @@ func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAction) -> Shif
 // MARK: - Locations Reducer
 
 /// Handles Locations feature state updates
-@MainActor
-func locationsReducer(state: LocationsState, action: LocationsAction) -> LocationsState {
+nonisolated func locationsReducer(state: LocationsState, action: LocationsAction) -> LocationsState {
     var state = state
 
     switch action {
@@ -415,8 +411,7 @@ func locationsReducer(state: LocationsState, action: LocationsAction) -> Locatio
 // MARK: - Change Log Reducer
 
 /// Handles Change Log feature state updates
-@MainActor
-func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeLogState {
+nonisolated func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeLogState {
     var state = state
 
     switch action {
@@ -450,11 +445,11 @@ func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeL
 
     case .purgeCompleted(.success):
         state.isLoading = false
-        state.toastMessage = .success("Old entries purged")
+        //state.toastMessage = .success("Old entries purged")
 
     case .purgeCompleted(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Purge failed: \(error.localizedDescription)")
+        //state.toastMessage = .error("Purge failed: \(error.localizedDescription)")
     }
 
     return state
@@ -463,8 +458,7 @@ func changeLogReducer(state: ChangeLogState, action: ChangeLogAction) -> ChangeL
 // MARK: - Settings Reducer
 
 /// Handles Settings feature state updates
-@MainActor
-func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsState {
+nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsState {
     var state = state
 
     switch action {
@@ -481,11 +475,11 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
     case .settingsSaved(.success):
         state.isLoading = false
         state.hasUnsavedChanges = false
-        state.toastMessage = .success("Settings saved")
+        //state.toastMessage = .success("Settings saved")
 
     case .settingsSaved(.failure(let error)):
         state.isLoading = false
-        state.toastMessage = .error("Failed to save: \(error.localizedDescription)")
+        //state.toastMessage = .error("Failed to save: \(error.localizedDescription)")
 
     case .settingsLoaded(.success(let profile)):
         state.isLoading = false

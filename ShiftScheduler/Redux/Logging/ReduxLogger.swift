@@ -5,7 +5,7 @@ import OSLog
 /// Provides consistent logging across Store, Reducers, Middleware, and Services
 /// All logging goes through this single point for centralized control
 struct ReduxLogger {
-    private nonisolated(unsafe) static let logger = os.Logger(
+    private nonisolated static let logger = os.Logger(
         subsystem: "com.shiftscheduler.redux",
         category: "Redux"
     )

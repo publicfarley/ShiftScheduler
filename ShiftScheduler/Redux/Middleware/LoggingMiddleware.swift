@@ -8,9 +8,9 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Mi
 func loggingMiddleware(
     state: AppState,
     action: AppAction,
-    dispatch: @escaping (AppAction) -> Void,
-    services: ServiceContainer
-) {
+    services: ServiceContainer,
+    dispatch: @escaping Dispatcher<AppAction>
+) async {
     // logger.debug("[Middleware] Action dispatched: \(String(describing: action))")
     // logger.debug("[Middleware] Selected tab: \(String(describing: state.selectedTab))")
 

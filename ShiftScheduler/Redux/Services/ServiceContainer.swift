@@ -3,7 +3,7 @@ import Foundation
 /// Central service container providing all Redux middleware dependencies
 /// Implements factory pattern for service creation and management
 /// NO SINGLETONS - All services are injected via this container
-final class ServiceContainer {
+public final class ServiceContainer {
     // MARK: - Stored Properties (Lazy Initialized Services)
 
     private lazy var _calendarService: CalendarServiceProtocol = CalendarService()
