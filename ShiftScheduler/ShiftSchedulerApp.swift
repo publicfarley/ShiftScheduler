@@ -39,8 +39,9 @@ struct ShiftSchedulerApp: App {
                         .transition(.opacity)
                         .zIndex(1)
                         .onAppear {
-                            // Hide splash screen after 3.5 seconds
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                            Task {
+                                // Hide splash screen after 3.5 seconds
+                                try await Task.sleep(nanoseconds: UInt64(3.5 * Double(NSEC_PER_SEC)))
                                 withAnimation(.easeOut(duration: 0.5)) {
                                     showSplash = false
                                 }
