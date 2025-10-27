@@ -27,4 +27,13 @@ protocol CalendarServiceProtocol: Sendable {
 
     /// Load raw shift data for tomorrow only
     func loadShiftDataForTomorrow() async throws -> [ScheduledShiftData]
+
+    /// Create a new all-day shift event in the calendar
+    /// - Parameters:
+    ///   - date: The date for the shift (all-day event)
+    ///   - shiftType: The shift type to create
+    ///   - notes: Optional notes for the event
+    /// - Returns: ScheduledShift with the EventKit event identifier
+    /// - Throws: CalendarError if creation fails or duplicate shift exists
+    func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift
 }

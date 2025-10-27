@@ -128,6 +128,59 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return try await loadShiftData(from: tomorrow, to: dayAfterTomorrow)
     }
 
+    func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift {
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Check for duplicate shifts on the same date
+        let startDate = Calendar.current.startOfDay(for: date)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+
+        let existingShifts = try await loadShifts(from: startDate, to: endDate)
+        if existingShifts.contains(where: { $0.shiftType?.id == shiftType.id }) {
+            throw ScheduleError.duplicateShift(date: startDate)
+        }
+
+        // Create new all-day event
+        let event = EKEvent(eventStore: eventStore)
+        event.title = shiftType.title
+        event.startDate = startDate
+        event.endDate = startDate  // All-day events: end date is same as start date
+        event.isAllDay = true
+        event.location = shiftType.location.name
+        event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
+
+        if let additionalNotes = notes, !additionalNotes.isEmpty {
+            event.notes = (event.notes ?? "") + "\n---\n" + additionalNotes
+        }
+
+        // Add to default calendar
+        let calendar = eventStore.defaultCalendarForNewEvents
+        guard let calendar = calendar else {
+            throw CalendarServiceError.eventConversionFailed("No default calendar available")
+        }
+
+        // Save event to the default calendar
+        event.calendar = calendar
+        do {
+            try eventStore.save(event, span: .thisEvent)
+        } catch {
+            throw ScheduleError.calendarEventCreationFailed(error.localizedDescription)
+        }
+
+        // Return the created shift
+        let shift = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: event.eventIdentifier,
+            shiftType: shiftType,
+            date: startDate
+        )
+
+        return shift
+    }
+
     // MARK: - Private Helpers
 
     /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)

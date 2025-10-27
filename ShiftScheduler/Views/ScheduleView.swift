@@ -65,10 +65,19 @@ struct ScheduleView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 if store.state.schedule.isCalendarAuthorized {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        addShiftButton
+                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         filterButton
                     }
                 }
+            }
+            .sheet(isPresented: .constant(store.state.schedule.showAddShiftSheet)) {
+                AddShiftModalView(
+                    availableShiftTypes: store.state.shiftTypes.shiftTypes,
+                    preselectedDate: store.state.schedule.selectedDate
+                )
             }
             .sheet(isPresented: .constant(store.state.schedule.showFilterSheet)) {
                 ScheduleFilterSheetView()
@@ -217,6 +226,13 @@ struct ScheduleView: View {
         .foregroundColor(.blue)
         .cornerRadius(6)
         .padding(.horizontal)
+    }
+
+    private var addShiftButton: some View {
+        Button(action: { store.dispatch(action: .schedule(.addShiftSheetToggled(true))) }) {
+            Image(systemName: "plus.circle")
+                .foregroundColor(.primary)
+        }
     }
 
     private var filterButton: some View {

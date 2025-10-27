@@ -74,4 +74,29 @@ final class MockCalendarService: CalendarServiceProtocol {
         let dayAfterTomorrow = Calendar.current.date(byAdding: .day, value: 1, to: tomorrow) ?? tomorrow
         return try await loadShiftData(from: tomorrow, to: dayAfterTomorrow)
     }
+
+    func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Check for duplicate shifts
+        let startDate = Calendar.current.startOfDay(for: date)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+
+        if mockShifts.contains(where: { $0.shiftType?.id == shiftType.id && $0.date == startDate }) {
+            throw ScheduleError.duplicateShift(date: startDate)
+        }
+
+        // Create and add mock shift
+        let shift = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: UUID().uuidString,
+            shiftType: shiftType,
+            date: startDate
+        )
+
+        mockShifts.append(shift)
+        return shift
+    }
 }

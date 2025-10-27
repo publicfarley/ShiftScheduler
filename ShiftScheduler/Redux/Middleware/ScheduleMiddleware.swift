@@ -78,16 +78,28 @@ func scheduleMiddleware(
         // No middleware side effects needed
         break
 
-    case .addShift(let date, let shiftType, let location, let startTime, let notes):
-        // TODO: Implement add shift via calendar service
-        // For now, dispatch success
-        let newShift = ScheduledShift(
-            id: UUID(),
-            eventIdentifier: UUID().uuidString,
-            shiftType: shiftType,
-            date: date
-        )
-        await dispatch(.schedule(.addShiftResponse(.success(newShift))))
+    case .addShift(let date, let shiftType, _, let _, let notes):
+        // Create shift event in calendar via CalendarService
+        do {
+            let notesForEvent = notes.isEmpty ? nil : notes
+            let createdShift = try await services.calendarService.createShiftEvent(
+                date: date,
+                shiftType: shiftType,
+                notes: notesForEvent
+            )
+            // logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
+
+            // Reload shifts to refresh the UI
+            await dispatch(.schedule(.addShiftResponse(.success(createdShift))))
+            await dispatch(.schedule(.loadShifts))
+        } catch let error as ScheduleError {
+            // logger.error("Failed to create shift: \(error.localizedDescription)")
+            await dispatch(.schedule(.addShiftResponse(.failure(error))))
+        } catch {
+            // logger.error("Failed to create shift: \(error.localizedDescription)")
+            let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
+            await dispatch(.schedule(.addShiftResponse(.failure(scheduleError))))
+        }
 
     case .addShiftResponse:
         // Handled by reducer
