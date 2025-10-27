@@ -16,31 +16,15 @@ func todayMiddleware(
     switch todayAction {
     case .task:
         // logger.debug("Today task started")
-        // Load shifts for next 30 days
-            do {
-                let shifts = try await services.calendarService.loadShiftsForNext30Days()
-                await dispatch(.today(.shiftsLoaded(.success(shifts))))
-                // Update cached shifts after loading
-                await dispatch(.today(.updateCachedShifts))
-                await dispatch(.today(.updateUndoRedoStates))
-            } catch {
-        // logger.error("Failed to load shifts: \(error.localizedDescription)")
-                await dispatch(.today(.shiftsLoaded(.failure(error))))
-            }
+        // Load shifts for today and tomorrow from EventKit
+        await loadTodayAndTomorrowShifts(services: services, dispatch: dispatch)
 
     case .loadShifts:
         // logger.debug("Loading shifts for Today view")
-            do {
-                let shifts = try await services.calendarService.loadShiftsForNext30Days()
-                await dispatch(.today(.shiftsLoaded(.success(shifts))))
-                await dispatch(.today(.updateCachedShifts))
-            } catch {
-        // logger.error("Failed to load shifts: \(error.localizedDescription)")
-                await dispatch(.today(.shiftsLoaded(.failure(error))))
-            }
+        await loadTodayAndTomorrowShifts(services: services, dispatch: dispatch)
 
-    case .switchShiftTapped(let shift):
-        // logger.debug("Switch shift tapped for: \(shift.eventIdentifier)")
+    case .switchShiftTapped:
+        // logger.debug("Switch shift tapped")
         // No middleware side effects - UI will handle sheet presentation
         break
 
@@ -101,5 +85,46 @@ func todayMiddleware(
         // logger.debug("No middleware side effects for action: \(String(describing: todayAction))")
         break
         // Handled by reducer only
+    }
+}
+
+// MARK: - Private Helper Functions
+
+/// Load shifts for today and tomorrow from EventKit
+/// Implements the data transformation pipeline:
+/// EventKit events → ScheduledShiftData (reification) → ScheduledShift (domain object)
+private func loadTodayAndTomorrowShifts(
+    services: ServiceContainer,
+    dispatch: Dispatcher<AppAction>
+) async {
+    do {
+        // Step 1: Load raw shift data from EventKit for today and tomorrow
+        let todayShiftData = try await services.calendarService.loadShiftDataForToday()
+        let tomorrowShiftData = try await services.calendarService.loadShiftDataForTomorrow()
+
+        // Combine today and tomorrow data
+        let allShiftData = todayShiftData + tomorrowShiftData
+
+        // Step 2: Load ShiftTypes to look up during conversion
+        let shiftTypes = try await services.persistenceService.loadShiftTypes()
+
+        // Step 3: Transform ScheduledShiftData → ScheduledShift using ShiftType lookup
+        let shifts = allShiftData.compactMap { shiftData -> ScheduledShift? in
+            // Find matching ShiftType by ID
+            let matchingShiftType = shiftTypes.first { $0.id == shiftData.shiftTypeId }
+
+            // Create ScheduledShift from data and ShiftType
+            return ScheduledShift(from: shiftData, shiftType: matchingShiftType)
+        }
+
+        // logger.debug("Loaded \(shifts.count) shifts for today and tomorrow")
+        await dispatch(.today(.shiftsLoaded(.success(shifts))))
+
+        // Update cached shifts after loading
+        await dispatch(.today(.updateCachedShifts))
+        await dispatch(.today(.updateUndoRedoStates))
+    } catch {
+        // logger.error("Failed to load today/tomorrow shifts: \(error.localizedDescription)")
+        await dispatch(.today(.shiftsLoaded(.failure(error))))
     }
 }

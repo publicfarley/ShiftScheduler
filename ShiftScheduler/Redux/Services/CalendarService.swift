@@ -85,7 +85,69 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return try await loadShifts(from: startDate, to: endDate)
     }
 
+    /// Load shift data (before conversion to domain objects) for a date range
+    /// Returns ScheduledShiftData which contains raw EventKit information
+    func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Fetch events from calendar
+        let calendars = eventStore.calendars(for: .event)
+        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
+        let events = eventStore.events(matching: predicate)
+
+        // Convert events to ScheduledShiftData (reification step)
+        var shiftDataArray: [ScheduledShiftData] = []
+
+        for event in events {
+            guard let shiftData = convertEventToShiftData(event) else {
+                continue
+            }
+            shiftDataArray.append(shiftData)
+        }
+
+        return shiftDataArray.sorted { $0.date < $1.date }
+    }
+
+    /// Load shift data for today only
+    func loadShiftDataForToday() async throws -> [ScheduledShiftData] {
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+
+        return try await loadShiftData(from: today, to: tomorrow)
+    }
+
+    /// Load shift data for tomorrow only
+    func loadShiftDataForTomorrow() async throws -> [ScheduledShiftData] {
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let dayAfterTomorrow = Calendar.current.date(byAdding: .day, value: 1, to: tomorrow) ?? tomorrow
+
+        return try await loadShiftData(from: tomorrow, to: dayAfterTomorrow)
+    }
+
     // MARK: - Private Helpers
+
+    /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)
+    /// This is the first step of the data transformation pipeline
+    private func convertEventToShiftData(_ event: EKEvent) -> ScheduledShiftData? {
+        // Extract shift type ID from event notes
+        guard let notes = event.notes,
+              let shiftTypeId = UUID(uuidString: notes) else {
+            // logger.debug("Event '\(event.title)' has no valid shift type ID in notes")
+            return nil
+        }
+
+        return ScheduledShiftData(
+            eventIdentifier: event.eventIdentifier,
+            shiftTypeId: shiftTypeId,
+            date: Calendar.current.startOfDay(for: event.startDate),
+            title: event.title,
+            location: event.location
+        )
+    }
 
     private func convertEventToShift(_ event: EKEvent) async throws -> ScheduledShift? {
         // Extract shift type ID from event notes

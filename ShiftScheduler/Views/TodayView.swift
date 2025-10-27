@@ -175,6 +175,29 @@ struct TodayView: View {
                             .padding(.horizontal, 16)
                             .padding(.top)
 
+                            // Tomorrow Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "sun.max.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.orange)
+
+                                    Text("Tomorrow")
+                                        .font(.callout)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                // Display tomorrow's shift
+                                let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
+                                    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                                    return Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
+                                }
+
+                                TodayShiftCard(shift: tomorrowShifts.first)
+                            }
+                            .padding(.horizontal, 16)
+
                             // Week Summary Section
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("This Week")

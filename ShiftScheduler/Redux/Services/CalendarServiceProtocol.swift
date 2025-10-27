@@ -17,4 +17,14 @@ protocol CalendarServiceProtocol: Sendable {
 
     /// Load shifts for the current month
     func loadShiftsForCurrentMonth() async throws -> [ScheduledShift]
+
+    /// Load raw shift data (ScheduledShiftData) from EventKit for a date range
+    /// This returns data before conversion to domain objects
+    func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData]
+
+    /// Load raw shift data for today only
+    func loadShiftDataForToday() async throws -> [ScheduledShiftData]
+
+    /// Load raw shift data for tomorrow only
+    func loadShiftDataForTomorrow() async throws -> [ScheduledShiftData]
 }

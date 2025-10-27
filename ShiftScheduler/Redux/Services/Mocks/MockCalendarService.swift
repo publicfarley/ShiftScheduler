@@ -44,4 +44,34 @@ final class MockCalendarService: CalendarServiceProtocol {
         }
         return mockShifts
     }
+
+    var mockShiftData: [ScheduledShiftData] = []
+
+    func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        return mockShiftData.filter { data in
+            data.date >= startDate && data.date <= endDate
+        }
+    }
+
+    func loadShiftDataForToday() async throws -> [ScheduledShiftData] {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        return try await loadShiftData(from: today, to: tomorrow)
+    }
+
+    func loadShiftDataForTomorrow() async throws -> [ScheduledShiftData] {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let dayAfterTomorrow = Calendar.current.date(byAdding: .day, value: 1, to: tomorrow) ?? tomorrow
+        return try await loadShiftData(from: tomorrow, to: dayAfterTomorrow)
+    }
 }
