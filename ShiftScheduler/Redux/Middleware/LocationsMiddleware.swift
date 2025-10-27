@@ -54,15 +54,29 @@ func locationsMiddleware(
 
     case .deleteLocation(let location):
         // logger.debug("Deleting location: \(location.name)")
-            do {
-                try await services.persistenceService.deleteLocation(id: location.id)
-                await dispatch(.locations(.locationDeleted(.success(()))))
-                // Refresh after delete
-                await dispatch(.locations(.refreshLocations))
-            } catch {
-        // logger.error("Failed to delete location: \(error.localizedDescription)")
-                await dispatch(.locations(.locationDeleted(.failure(error))))
-            }
+
+        // Check if location is used by any shift types
+        let shiftTypesUsingLocation = state.shiftTypes.shiftTypes.filter { shiftType in
+            shiftType.location.id == location.id
+        }
+
+        if !shiftTypesUsingLocation.isEmpty {
+            let count = shiftTypesUsingLocation.count
+            let message = "This location is used by \(count) shift type\(count == 1 ? "" : "s"). Remove those shift types first, then delete this location."
+            let error = NSError(domain: "LocationDeletionError", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+            await dispatch(.locations(.locationDeleted(.failure(error))))
+            return
+        }
+
+        do {
+            try await services.persistenceService.deleteLocation(id: location.id)
+            await dispatch(.locations(.locationDeleted(.success(()))))
+            // Refresh after delete
+            await dispatch(.locations(.refreshLocations))
+        } catch {
+    // logger.error("Failed to delete location: \(error.localizedDescription)")
+            await dispatch(.locations(.locationDeleted(.failure(error))))
+        }
 
     case .addEditSheetDismissed:
         // logger.debug("Add/edit sheet dismissed")

@@ -105,7 +105,12 @@ struct ShiftTypesView: View {
                         }
                     }
                 }
-                .sheet(isPresented: .constant(store.state.shiftTypes.showAddEditSheet)) {
+                .sheet(
+                    isPresented: .constant(store.state.shiftTypes.showAddEditSheet),
+                    onDismiss: {
+                        store.dispatch(action: .shiftTypes(.addEditSheetDismissed))
+                    }
+                ) {
                     AddEditShiftTypeView(
                         isPresented: .constant(store.state.shiftTypes.showAddEditSheet),
                         shiftType: store.state.shiftTypes.editingShiftType
@@ -156,6 +161,16 @@ struct ShiftTypeCard: View {
                         Text(shiftType.timeRangeString)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(shiftType.location.name)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

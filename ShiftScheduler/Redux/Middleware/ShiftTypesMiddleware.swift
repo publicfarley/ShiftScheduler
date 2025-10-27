@@ -41,15 +41,51 @@ func shiftTypesMiddleware(
     break
     case .saveShiftType(let shiftType):
         // logger.debug("Saving shift type: \(shiftType.title)")
-            do {
-                try await services.persistenceService.saveShiftType(shiftType)
-                await dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
-                // Refresh after save
-                await dispatch(.shiftTypes(.refreshShiftTypes))
-            } catch {
-        // logger.error("Failed to save shift type: \(error.localizedDescription)")
+
+        // Validate symbol uniqueness (case-insensitive)
+        let duplicateSymbols = state.shiftTypes.shiftTypes.filter { existing in
+            existing.symbol.uppercased() == shiftType.symbol.uppercased() &&
+            existing.id != shiftType.id
+        }
+
+        if !duplicateSymbols.isEmpty {
+            let errorMessage = "A shift type with symbol '\(shiftType.symbol)' already exists."
+            let error = NSError(domain: "ValidationError", code: 1, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+            await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+            return
+        }
+
+        // Validate location exists
+        let locationExists = state.locations.locations.contains { location in
+            location.id == shiftType.location.id
+        }
+
+        if !locationExists {
+            let errorMessage = "Selected location no longer exists. Please select another location."
+            let error = NSError(domain: "ValidationError", code: 2, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+            await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+            return
+        }
+
+        // Validate time range (end time must be after start time)
+        if case .scheduled(let from, let to) = shiftType.duration {
+            if from.toDate() >= to.toDate() {
+                let errorMessage = "End time must be after start time."
+                let error = NSError(domain: "ValidationError", code: 3, userInfo: [NSLocalizedDescriptionKey: errorMessage])
                 await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+                return
             }
+        }
+
+        do {
+            try await services.persistenceService.saveShiftType(shiftType)
+            await dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
+            // Refresh after save
+            await dispatch(.shiftTypes(.refreshShiftTypes))
+        } catch {
+    // logger.error("Failed to save shift type: \(error.localizedDescription)")
+            await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+        }
 
     case .deleteShiftType(let shiftType):
         // logger.debug("Deleting shift type: \(shiftType.title)")

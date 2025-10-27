@@ -5,6 +5,8 @@ struct LocationsView: View {
     @State private var searchText = ""
     @State private var showDeleteConfirmation = false
     @State private var locationToDelete: Location?
+    @State private var showDeletionPreventedAlert = false
+    @State private var deletionPreventionMessage = ""
 
     var filteredLocations: [Location] {
         if searchText.isEmpty {
@@ -128,6 +130,20 @@ struct LocationsView: View {
                 } message: {
                     if let location = locationToDelete {
                         Text("Are you sure you want to delete \"\(location.name)\"? This action cannot be undone.")
+                    }
+                }
+                .alert("Cannot Delete Location", isPresented: $showDeletionPreventedAlert) {
+                    Button("OK", role: .cancel) {
+                        showDeletionPreventedAlert = false
+                        deletionPreventionMessage = ""
+                    }
+                } message: {
+                    Text(deletionPreventionMessage)
+                }
+                .onChange(of: store.state.locations.errorMessage) { oldValue, newValue in
+                    if let message = newValue, message.contains("is used by") {
+                        deletionPreventionMessage = message
+                        showDeletionPreventedAlert = true
                     }
                 }
                 .onAppear {
