@@ -65,8 +65,8 @@ struct AddEditShiftTypeView: View {
                     TextField("Symbol (e.g., M, N, D)", text: $symbol)
                         .textInputAutocapitalization(.characters)
                         .onChange(of: symbol) { oldValue, newValue in
-                            if newValue.count > 3 {
-                                symbol = String(newValue.prefix(3))
+                            if newValue.count > 20 {
+                                symbol = String(newValue.prefix(20))
                             }
                         }
 
