@@ -8,11 +8,57 @@ struct ScheduleView: View {
 
     var body: some View {
         NavigationView {
-            ZStack {
-                if !store.state.schedule.isCalendarAuthorized {
-                    authorizationRequiredView
-                } else {
-                    scheduleContentView
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    if !store.state.schedule.isCalendarAuthorized {
+                        authorizationRequiredView
+                    } else {
+                        scheduleContentView
+                    }
+                }
+
+                // Success Toast
+                if store.state.schedule.showSuccessToast, let message = store.state.schedule.successMessage {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.headline)
+                                .foregroundColor(.green)
+
+                            Text(message)
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            Button(action: { store.dispatch(action: .schedule(.dismissSuccessToast)) }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .background(Color.green.opacity(0.1))
+                    .border(Color.green, width: 1)
+                    .cornerRadius(12)
+                    .padding(16)
+                    .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
+                                           removal: .move(edge: .top).combined(with: .opacity)))
+                    .onAppear {
+                        // Auto-dismiss after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            withAnimation {
+                                store.dispatch(action: .schedule(.dismissSuccessToast))
+                            }
+                        }
+                    }
+                }
+
+                // Loading Overlay
+                if store.state.schedule.isLoading || store.state.schedule.isRestoringStacks {
+                    LoadingOverlayView(message: nil)
                 }
             }
             .navigationTitle("Schedule")
@@ -27,6 +73,10 @@ struct ScheduleView: View {
             .sheet(isPresented: .constant(store.state.schedule.showFilterSheet)) {
                 ScheduleFilterSheetView()
             }
+            .errorAlert(error: Binding(
+                get: { store.state.schedule.currentError },
+                set: { _ in store.dispatch(action: .schedule(.dismissError)) }
+            ))
             .onAppear {
                 store.dispatch(action: .schedule(.task))
             }
