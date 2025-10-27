@@ -182,7 +182,7 @@ struct ShiftTypeCard: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Image(systemName: "chevron.right")
+                Image(systemName: "pencil")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
