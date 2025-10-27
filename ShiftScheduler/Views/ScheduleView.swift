@@ -73,6 +73,11 @@ struct ScheduleView: View {
             .sheet(isPresented: .constant(store.state.schedule.showFilterSheet)) {
                 ScheduleFilterSheetView()
             }
+            .sheet(isPresented: .constant(store.state.schedule.showShiftDetail)) {
+                if let selectedShift = store.state.schedule.selectedShiftForDetail {
+                    ShiftDetailsView(shift: selectedShift)
+                }
+            }
             .errorAlert(error: Binding(
                 get: { store.state.schedule.currentError },
                 set: { _ in store.dispatch(action: .schedule(.dismissError)) }
@@ -253,6 +258,9 @@ struct ScheduleView: View {
         .background(Color(.systemGray6))
         .cornerRadius(10)
         .padding(.horizontal)
+        .onTapGesture {
+            store.dispatch(action: .schedule(.shiftTapped(shift)))
+        }
     }
 
     private func clearAllFilters() {
