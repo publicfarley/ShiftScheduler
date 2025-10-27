@@ -167,6 +167,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     switch action {
     case .task:
         state.isLoading = true
+        state.isRestoringStacks = true
 
     case .checkAuthorization:
         break // Handled by middleware
@@ -177,6 +178,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     case .loadShifts:
         state.isLoading = true
         state.errorMessage = nil
+        state.currentError = nil
 
     case .selectedDateChanged(let date):
         state.selectedDate = date
@@ -185,55 +187,126 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     case .searchTextChanged(let text):
         state.searchText = text
 
+    // MARK: - Detail View
+
+    case .shiftTapped(let shift):
+        state.selectedShiftForDetail = shift
+        state.showShiftDetail = true
+
+    case .shiftDetailDismissed:
+        state.showShiftDetail = false
+        state.selectedShiftForDetail = nil
+
+    // MARK: - Add Shift
+
+    case .addShiftSheetToggled(let show):
+        state.showAddShiftSheet = show
+
     case .addShiftButtonTapped:
         state.showAddShiftSheet = true
 
+    case .addShift:
+        state.isAddingShift = true
+        state.currentError = nil
+
+    case .addShiftResponse(.success):
+        state.isAddingShift = false
+        state.showAddShiftSheet = false
+        state.successMessage = "Shift added successfully"
+        state.showSuccessToast = true
+
+    case .addShiftResponse(.failure(let error)):
+        state.isAddingShift = false
+        state.currentError = error
+
+    // MARK: - Delete Shift
+
+    case .deleteShiftRequested(let shift):
+        state.deleteConfirmationShift = shift
+
+    case .deleteShiftConfirmed:
+        guard let _ = state.deleteConfirmationShift else { break }
+        state.isDeletingShift = true
+
+    case .deleteShiftCancelled:
+        state.deleteConfirmationShift = nil
+
     case .deleteShift:
-        state.isLoading = true
+        state.isDeletingShift = true
+        state.currentError = nil
 
     case .shiftDeleted(.success):
-        state.isLoading = false
-        //state.toastMessage = .success("Shift deleted")
+        state.isDeletingShift = false
+        state.deleteConfirmationShift = nil
+        state.successMessage = "Shift deleted"
+        state.showSuccessToast = true
 
     case .shiftDeleted(.failure(let error)):
-        state.isLoading = false
-       // state.toastMessage = .error("Failed to delete shift: \(error.localizedDescription)")
+        state.isDeletingShift = false
+        state.currentError = error
+
+    // MARK: - Switch Shift
+
+    case .switchShiftSheetToggled(let show):
+        state.showSwitchShiftSheet = show
 
     case .switchShiftTapped:
-        break // UI handles sheet presentation
+        state.showSwitchShiftSheet = true
 
     case .performSwitchShift:
-        state.isLoading = true
+        state.isSwitchingShift = true
+        state.currentError = nil
 
     case .shiftSwitched(.success(let operation)):
-        state.isLoading = false
-        //state.toastMessage = .success("Shift switched successfully")
+        state.isSwitchingShift = false
+        state.showSwitchShiftSheet = false
+        state.successMessage = "Shift switched successfully"
+        state.showSuccessToast = true
         state.undoStack.append(operation)
         state.redoStack.removeAll()
 
     case .shiftSwitched(.failure(let error)):
-        state.isLoading = false
-        //state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
+        state.isSwitchingShift = false
+        state.currentError = error
+
+    // MARK: - Load Shifts
 
     case .shiftsLoaded(.success(let shifts)):
         state.isLoading = false
+        state.isRestoringStacks = false
         state.scheduledShifts = shifts
         state.errorMessage = nil
+        state.currentError = nil
 
     case .shiftsLoaded(.failure(let error)):
         state.isLoading = false
+        state.isRestoringStacks = false
         state.errorMessage = error.localizedDescription
 
+    // MARK: - Stack Restoration
+
+    case .restoreUndoRedoStacks:
+        state.isRestoringStacks = true
+
     case .stacksRestored(.success(let stacks)):
+        state.isRestoringStacks = false
         state.undoStack = stacks.undo
         state.redoStack = stacks.redo
+        state.stacksRestored = true
 
     case .stacksRestored(.failure(let error)):
+        state.isRestoringStacks = false
         state.errorMessage = "Failed to restore undo/redo: \(error.localizedDescription)"
+
+    case .undoRedoStackRestoreFailed(let error):
+        state.isRestoringStacks = false
+        state.currentError = error
+
+    // MARK: - Undo/Redo
 
     case .undo:
         guard !state.undoStack.isEmpty else {
-            //state.toastMessage = .error("No operation to undo")
+            state.currentError = .undoStackEmpty
             return state
         }
         state.isLoading = true
@@ -244,15 +317,16 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
             let operation = state.undoStack.removeLast()
             state.redoStack.append(operation)
         }
-        //state.toastMessage = .success("Undo successful")
+        state.successMessage = "Undo successful"
+        state.showSuccessToast = true
 
     case .undoCompleted(.failure(let error)):
         state.isLoading = false
-        //state.toastMessage = .error("Undo failed: \(error.localizedDescription)")
+        state.errorMessage = "Undo failed: \(error.localizedDescription)"
 
     case .redo:
         guard !state.redoStack.isEmpty else {
-            //state.toastMessage = .error("No operation to redo")
+            state.currentError = .redoStackEmpty
             return state
         }
         state.isLoading = true
@@ -263,11 +337,21 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
             let operation = state.redoStack.removeLast()
             state.undoStack.append(operation)
         }
-        //state.toastMessage = .success("Redo successful")
+        state.successMessage = "Redo successful"
+        state.showSuccessToast = true
 
     case .redoCompleted(.failure(let error)):
         state.isLoading = false
-        //state.toastMessage = .error("Redo failed: \(error.localizedDescription)")
+        state.errorMessage = "Redo failed: \(error.localizedDescription)"
+
+    // MARK: - Feedback
+
+    case .dismissError:
+        state.currentError = nil
+
+    case .dismissSuccessToast:
+        state.showSuccessToast = false
+        state.successMessage = nil
 
     // MARK: - Filter Actions
 
@@ -277,17 +361,12 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     case .filterDateRangeChanged(let startDate, let endDate):
         state.filterDateRangeStart = startDate
         state.filterDateRangeEnd = endDate
-        let startStr = startDate?.formatted(date: .abbreviated, time: .omitted) ?? "nil"
-        let endStr = endDate?.formatted(date: .abbreviated, time: .omitted) ?? "nil"
-        // ReduxLogger.debug("Date range filter applied: \(startStr) to \(endStr)")
 
     case .filterLocationChanged(let location):
         state.filterSelectedLocation = location
-        // ReduxLogger.debug("Location filter set to: \(location?.name ?? "All Locations") (id: \(location?.id.uuidString.prefix(8) ?? "none"))")
 
     case .filterShiftTypeChanged(let shiftType):
         state.filterSelectedShiftType = shiftType
-        // ReduxLogger.debug("Shift type filter set to: \(shiftType?.title ?? "All Shift Types") (symbol: \(shiftType?.symbol ?? "none"))")
 
     case .clearFilters:
         state.filterDateRangeStart = nil
@@ -296,7 +375,6 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.filterSelectedShiftType = nil
         state.searchText = ""
         state.showFilterSheet = false
-        // ReduxLogger.debug("All filters cleared")
     }
 
     return state

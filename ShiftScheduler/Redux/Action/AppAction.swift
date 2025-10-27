@@ -174,14 +174,49 @@ enum ScheduleAction: Equatable {
     /// Search text changed
     case searchTextChanged(String)
 
+    // MARK: - Detail View Actions
+
+    /// User tapped a shift to view details
+    case shiftTapped(ScheduledShift)
+
+    /// Detail sheet was dismissed
+    case shiftDetailDismissed
+
+    // MARK: - Add Shift Actions
+
+    /// Add shift sheet toggle
+    case addShiftSheetToggled(Bool)
+
     /// Add shift button tapped
     case addShiftButtonTapped
+
+    /// User requested to add a new shift
+    case addShift(date: Date, shiftType: ShiftType, location: Location?, startTime: Date, notes: String)
+
+    /// Handle add shift result
+    case addShiftResponse(Result<ScheduledShift, ScheduleError>)
+
+    // MARK: - Delete Shift Actions
+
+    /// User requested to delete a shift
+    case deleteShiftRequested(ScheduledShift)
+
+    /// User confirmed shift deletion
+    case deleteShiftConfirmed
+
+    /// User cancelled shift deletion
+    case deleteShiftCancelled
 
     /// Shift deleted
     case deleteShift(ScheduledShift)
 
     /// Handle shift deleted result
-    case shiftDeleted(Result<Void, Error>)
+    case shiftDeleted(Result<Void, ScheduleError>)
+
+    // MARK: - Switch Shift Actions
+
+    /// Switch shift sheet toggle
+    case switchShiftSheetToggled(Bool)
 
     /// User tapped to switch a shift
     case switchShiftTapped(ScheduledShift)
@@ -190,13 +225,25 @@ enum ScheduleAction: Equatable {
     case performSwitchShift(ScheduledShift, ShiftType, String?)
 
     /// Handle shift switch result
-    case shiftSwitched(Result<ChangeLogEntry, Error>)
+    case shiftSwitched(Result<ChangeLogEntry, ScheduleError>)
+
+    // MARK: - Load Shifts
 
     /// Shifts loaded from calendar
     case shiftsLoaded(Result<[ScheduledShift], Error>)
 
+    // MARK: - Stack Restoration
+
+    /// Restore undo/redo stacks from persistence
+    case restoreUndoRedoStacks
+
     /// Handle undo/redo stacks restored from persistence
     case stacksRestored(Result<(undo: [ChangeLogEntry], redo: [ChangeLogEntry]), Error>)
+
+    /// Handle undo/redo stacks restoration failure
+    case undoRedoStackRestoreFailed(ScheduleError)
+
+    // MARK: - Undo/Redo Operations
 
     /// Undo operation
     case undo
@@ -209,6 +256,14 @@ enum ScheduleAction: Equatable {
 
     /// Handle redo result
     case redoCompleted(Result<Void, Error>)
+
+    // MARK: - Feedback Actions
+
+    /// Dismiss current error
+    case dismissError
+
+    /// Dismiss success toast
+    case dismissSuccessToast
 
     // MARK: - Filter Actions
 
@@ -231,9 +286,15 @@ enum ScheduleAction: Equatable {
         switch (lhs, rhs) {
         case (.task, .task), (.checkAuthorization, .checkAuthorization),
              (.loadShifts, .loadShifts),
+             (.shiftDetailDismissed, .shiftDetailDismissed),
              (.addShiftButtonTapped, .addShiftButtonTapped),
+             (.deleteShiftCancelled, .deleteShiftCancelled),
+             (.deleteShiftConfirmed, .deleteShiftConfirmed),
              (.undo, .undo), (.redo, .redo),
-             (.clearFilters, .clearFilters):
+             (.dismissError, .dismissError),
+             (.dismissSuccessToast, .dismissSuccessToast),
+             (.clearFilters, .clearFilters),
+             (.restoreUndoRedoStacks, .restoreUndoRedoStacks):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs
@@ -241,14 +302,45 @@ enum ScheduleAction: Equatable {
             return lhs == rhs
         case let (.searchTextChanged(lhs), .searchTextChanged(rhs)):
             return lhs == rhs
+        case let (.shiftTapped(lhs), .shiftTapped(rhs)):
+            return lhs.id == rhs.id
+        case let (.addShiftSheetToggled(lhs), .addShiftSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.addShift(dateL, typeL, locL, timeL, notesL), .addShift(dateR, typeR, locR, timeR, notesR)):
+            return dateL == dateR && typeL.id == typeR.id && locL?.id == locR?.id && timeL == timeR && notesL == notesR
+        case let (.addShiftResponse(lhs), .addShiftResponse(rhs)):
+            switch (lhs, rhs) {
+            case (.success, .success), (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case let (.deleteShiftRequested(lhs), .deleteShiftRequested(rhs)):
+            return lhs.id == rhs.id
         case let (.deleteShift(lhs), .deleteShift(rhs)):
             return lhs.eventIdentifier == rhs.eventIdentifier
+        case let (.shiftDeleted(lhs), .shiftDeleted(rhs)):
+            switch (lhs, rhs) {
+            case (.success, .success), (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case let (.switchShiftSheetToggled(lhs), .switchShiftSheetToggled(rhs)):
+            return lhs == rhs
         case let (.switchShiftTapped(lhs), .switchShiftTapped(rhs)):
             return lhs.eventIdentifier == rhs.eventIdentifier
         case let (.performSwitchShift(lhs, newLhs, reasonLhs), .performSwitchShift(rhs, newRhs, reasonRhs)):
             return lhs.eventIdentifier == rhs.eventIdentifier &&
                    newLhs.id == newRhs.id &&
                    reasonLhs == reasonRhs
+        case let (.shiftSwitched(lhs), .shiftSwitched(rhs)):
+            switch (lhs, rhs) {
+            case (.success, .success), (.failure, .failure):
+                return true
+            default:
+                return false
+            }
         case let (.shiftsLoaded(lhs), .shiftsLoaded(rhs)):
             switch (lhs, rhs) {
             case (.success, .success), (.failure, .failure):
@@ -265,14 +357,12 @@ enum ScheduleAction: Equatable {
             default:
                 return false
             }
-        case (.shiftDeleted(.success), .shiftDeleted(.success)),
-             (.shiftSwitched(.success), .shiftSwitched(.success)),
-             (.undoCompleted(.success), .undoCompleted(.success)),
-             (.redoCompleted(.success), .redoCompleted(.success)):
+        case let (.undoRedoStackRestoreFailed(lhs), .undoRedoStackRestoreFailed(rhs)):
+            return lhs == rhs
+        case (.undoCompleted(.success), .undoCompleted(.success)),
+             (.undoCompleted(.failure), .undoCompleted(.failure)):
             return true
-        case (.shiftDeleted(.failure), .shiftDeleted(.failure)),
-             (.shiftSwitched(.failure), .shiftSwitched(.failure)),
-             (.undoCompleted(.failure), .undoCompleted(.failure)),
+        case (.redoCompleted(.success), .redoCompleted(.success)),
              (.redoCompleted(.failure), .redoCompleted(.failure)):
             return true
         case let (.filterSheetToggled(lhs), .filterSheetToggled(rhs)):

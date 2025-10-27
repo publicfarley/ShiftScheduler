@@ -87,14 +87,17 @@ struct ScheduleState: Equatable {
     /// The currently selected date
     var selectedDate: Date = Date()
 
-    /// Loading state
+    /// General loading state
     var isLoading: Bool = false
 
     /// Calendar authorization state
     var isCalendarAuthorized: Bool = false
 
-    /// Error message if any
+    /// Error message (legacy string-based)
     var errorMessage: String? = nil
+
+    /// Typed error for better handling
+    var currentError: ScheduleError? = nil
 
     /// Search/filter text
     var searchText: String = ""
@@ -110,6 +113,45 @@ struct ScheduleState: Equatable {
 
     /// Redo stack for shift switching operations
     var redoStack: [ChangeLogEntry] = []
+
+    // MARK: - Granular Loading States
+
+    /// Loading state for adding a shift
+    var isAddingShift: Bool = false
+
+    /// Loading state for deleting a shift
+    var isDeletingShift: Bool = false
+
+    /// Loading state for switching a shift
+    var isSwitchingShift: Bool = false
+
+    /// Loading state for restoring undo/redo stacks
+    var isRestoringStacks: Bool = false
+
+    // MARK: - Success Feedback
+
+    /// Success message to display
+    var successMessage: String? = nil
+
+    /// Whether to show success toast
+    var showSuccessToast: Bool = false
+
+    // MARK: - Detail View State
+
+    /// Selected shift for detail view
+    var selectedShiftForDetail: ScheduledShift? = nil
+
+    /// Whether detail view is shown
+    var showShiftDetail: Bool = false
+
+    /// Whether switch shift sheet is shown
+    var showSwitchShiftSheet: Bool = false
+
+    /// Shift to confirm deletion for
+    var deleteConfirmationShift: ScheduledShift? = nil
+
+    /// Whether stacks have been restored from persistence
+    var stacksRestored: Bool = false
 
     // MARK: - Filter State
 
