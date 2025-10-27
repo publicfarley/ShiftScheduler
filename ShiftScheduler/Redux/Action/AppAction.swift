@@ -57,6 +57,37 @@ enum AppLifecycleAction: Equatable {
 
     /// User profile was updated
     case userProfileUpdated(UserProfile)
+
+    /// Verify calendar access on app startup
+    case verifyCalendarAccessOnStartup
+
+    /// Calendar access verification completed
+    case calendarAccessVerified(Bool)
+
+    /// Request calendar access from user
+    case requestCalendarAccess
+
+    /// Calendar access request completed
+    case calendarAccessRequested(Result<Bool, Error>)
+
+    static func == (lhs: AppLifecycleAction, rhs: AppLifecycleAction) -> Bool {
+        switch (lhs, rhs) {
+        case (.onAppear, .onAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
+             (.requestCalendarAccess, .requestCalendarAccess):
+            return true
+        case let (.tabSelected(a), .tabSelected(b)):
+            return a == b
+        case let (.userProfileUpdated(a), .userProfileUpdated(b)):
+            return a.userId == b.userId
+        case let (.calendarAccessVerified(a), .calendarAccessVerified(b)):
+            return a == b
+        case (.calendarAccessRequested(.success), .calendarAccessRequested(.success)),
+             (.calendarAccessRequested(.failure), .calendarAccessRequested(.failure)):
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 // MARK: - Today Feature Actions

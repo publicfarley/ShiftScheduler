@@ -65,7 +65,7 @@ struct TodayView: View {
     var body: some View {
         NavigationView {
             VStack {
-                if !store.state.schedule.isCalendarAuthorized {
+                if !store.state.isCalendarAuthorized && store.state.isCalendarAuthorizationVerified {
                     // Calendar Authorization Required
                     VStack(spacing: 16) {
                         Image(systemName: "calendar.badge.exclamationmark")

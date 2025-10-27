@@ -9,6 +9,12 @@ struct AppState: Equatable {
     /// User profile information
     var userProfile: UserProfile = UserProfile(userId: UUID(), displayName: "User")
 
+    /// Calendar authorization status
+    var isCalendarAuthorized: Bool = false
+
+    /// Whether calendar authorization has been verified on startup
+    var isCalendarAuthorizationVerified: Bool = false
+
     // MARK: - Feature States
 
     /// Today feature state

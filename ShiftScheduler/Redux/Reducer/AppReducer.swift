@@ -51,6 +51,26 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
     case .userProfileUpdated(let profile):
         // ReduxLogger.debug("User profile updated: \(profile.displayName)")
         state.userProfile = profile
+
+    case .verifyCalendarAccessOnStartup:
+        // Middleware will handle the actual verification
+        break
+
+    case .calendarAccessVerified(let isAuthorized):
+        state.isCalendarAuthorized = isAuthorized
+        state.isCalendarAuthorizationVerified = true
+
+    case .requestCalendarAccess:
+        // Middleware will handle the request
+        break
+
+    case .calendarAccessRequested(.success(let isAuthorized)):
+        state.isCalendarAuthorized = isAuthorized
+        state.isCalendarAuthorizationVerified = true
+
+    case .calendarAccessRequested(.failure):
+        // Keep previous state, user can retry
+        state.isCalendarAuthorizationVerified = true
     }
 
     return state

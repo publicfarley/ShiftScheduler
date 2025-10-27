@@ -13,6 +13,7 @@ struct ShiftSchedulerApp: App {
         services: ServiceContainer(),
         middlewares: [
             loggingMiddleware,
+            appStartupMiddleware,
             scheduleMiddleware,
             todayMiddleware,
             locationsMiddleware,
