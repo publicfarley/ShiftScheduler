@@ -172,6 +172,13 @@ struct ShiftTypeCard: View {
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
+
+                    if !shiftType.shiftDescription.isEmpty {
+                        Text(shiftType.shiftDescription)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
