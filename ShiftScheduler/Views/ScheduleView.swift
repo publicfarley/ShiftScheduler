@@ -258,40 +258,13 @@ struct ScheduleView: View {
     }
 
     private func shiftCard(for shift: ScheduledShift) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(shift.shiftType?.title ?? "Unknown Shift")
-                        .font(.headline)
-                    HStack(spacing: 8) {
-                        Image(systemName: "mappin.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                        Text(shift.shiftType?.location.name ?? "Unknown Location")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(shift.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    if let symbol = shift.shiftType?.symbol {
-                        Text(symbol)
-                            .font(.title3)
-                    }
-                }
+        UnifiedShiftCard(
+            shift: shift,
+            onTap: {
+                store.dispatch(action: .schedule(.shiftTapped(shift)))
             }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
+        )
         .padding(.horizontal)
-        .onTapGesture {
-            store.dispatch(action: .schedule(.shiftTapped(shift)))
-        }
     }
 
     private func clearAllFilters() {
