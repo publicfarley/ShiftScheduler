@@ -256,7 +256,12 @@ struct TodayView: View {
                     .navigationBarTitleDisplayMode(.large)
                 }
             }
-            .sheet(isPresented: .constant(store.state.today.showSwitchShiftSheet)) {
+            .sheet(
+                isPresented: .constant(store.state.today.showSwitchShiftSheet),
+                onDismiss: {
+                    store.dispatch(action: .today(.switchShiftSheetDismissed))
+                }
+            ) {
                 if let shift = store.state.today.selectedShift {
                     ShiftChangeSheet(currentShift: shift, feature: .today)
                 }

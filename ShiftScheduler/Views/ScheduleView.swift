@@ -95,10 +95,20 @@ struct ScheduleView: View {
                     preselectedDate: store.state.schedule.selectedDate
                 )
             }
-            .sheet(isPresented: .constant(store.state.schedule.showFilterSheet)) {
+            .sheet(
+                isPresented: .constant(store.state.schedule.showFilterSheet),
+                onDismiss: {
+                    store.dispatch(action: .schedule(.filterSheetToggled(false)))
+                }
+            ) {
                 ScheduleFilterSheetView()
             }
-            .sheet(isPresented: .constant(store.state.schedule.showShiftDetail)) {
+            .sheet(
+                isPresented: .constant(store.state.schedule.showShiftDetail),
+                onDismiss: {
+                    store.dispatch(action: .schedule(.shiftDetailDismissed))
+                }
+            ) {
                 if let selectedShift = store.state.schedule.selectedShiftForDetail {
                     ShiftDetailsView(shift: selectedShift)
                 }
