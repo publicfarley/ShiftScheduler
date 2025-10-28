@@ -5,7 +5,6 @@ import SwiftUI
 /// Allows viewing shift details and performing actions (switch, delete)
 struct ShiftDetailsView: View {
     @Environment(\.reduxStore) var store
-    @Environment(\.dismiss) var dismiss
 
     let shift: ScheduledShift
 
@@ -219,7 +218,7 @@ struct ShiftDetailsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.dispatch(action: .schedule(.shiftDetailDismissed))
                     }
                 }
 
@@ -228,7 +227,6 @@ struct ShiftDetailsView: View {
                         .font(.headline)
                 }
             }
-            .interactiveDismissDisabled(false)
         }
         .sheet(isPresented: $showingSwitchSheet) {
             ShiftChangeSheet(currentShift: shift, feature: .schedule)
@@ -238,7 +236,7 @@ struct ShiftDetailsView: View {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 store.dispatch(action: .schedule(.deleteShift(shift)))
-                dismiss()
+                store.dispatch(action: .schedule(.shiftDetailDismissed))
             }
         } message: {
             Text("This shift will be permanently deleted. This action cannot be undone.")
