@@ -185,7 +185,7 @@ struct UnifiedShiftCard: View {
             }
 
             Task {
-                try await Task.sleep(nanoseconds: 0.1.nanoseconds)
+                try await Task.sleep(nanoseconds: 0.1.seconds)
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                     isPressed = false
                 }

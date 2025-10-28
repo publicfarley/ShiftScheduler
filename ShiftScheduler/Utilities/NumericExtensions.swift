@@ -5,10 +5,10 @@ extension Double {
     ///
     /// Example:
     /// ```swift
-    /// try await Task.sleep(nanoseconds: 0.1.nanoseconds)  // Sleep for 100ms
-    /// try await Task.sleep(nanoseconds: 3.5.nanoseconds)  // Sleep for 3.5 seconds
+    /// try await Task.sleep(nanoseconds: 0.1.seconds)  // Sleep for 100ms
+    /// try await Task.sleep(nanoseconds: 3.5.seconds)  // Sleep for 3.5 seconds
     /// ```
-    var nanoseconds: UInt64 {
+    var seconds: UInt64 {
         UInt64(self * Double(NSEC_PER_SEC))
     }
 }

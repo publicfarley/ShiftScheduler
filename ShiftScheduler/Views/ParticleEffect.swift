@@ -85,7 +85,7 @@ struct ParticleEffect: View {
         let delay = Double(index) * 0.1
 
         Task {
-            try await Task.sleep(nanoseconds: delay.nanoseconds)
+            try await Task.sleep(nanoseconds: delay.seconds)
             withAnimation(
                 .easeInOut(duration: animationDuration)
                 .repeatForever(autoreverses: true)
