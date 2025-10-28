@@ -223,6 +223,12 @@ struct ShiftDetailsView: View {
             .background(Color(.systemGray6))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
                 ToolbarItem(placement: .principal) {
                     Text("Shift Details")
                         .font(.headline)
