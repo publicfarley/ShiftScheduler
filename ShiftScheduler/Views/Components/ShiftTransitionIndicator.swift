@@ -7,7 +7,7 @@ struct ShiftTransitionIndicator: View {
     let toShift: ShiftType?
 
     @State private var animateGlow = false
-    @State private var animateRotation = false
+    @State private var swayRotation: Double = 0
 
     private var fromColor: Color {
         ShiftColorPalette.colorForShift(fromShift)
@@ -19,7 +19,7 @@ struct ShiftTransitionIndicator: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // Arrow icon with gradient
+            // Arrow icon with gradient - sways downward left to right
             Image(systemName: "arrow.down.circle.fill")
                 .font(.system(size: 32))
                 .foregroundStyle(
@@ -30,7 +30,7 @@ struct ShiftTransitionIndicator: View {
                     )
                 )
                 .shadow(color: toColor.opacity(animateGlow ? 0.6 : 0.3), radius: 8)
-                .rotationEffect(.degrees(animateRotation ? 360 : 0))
+                .rotationEffect(.degrees(swayRotation))
                 .scaleEffect(animateGlow ? 1.05 : 1.0)
 
             // Label
@@ -52,10 +52,12 @@ struct ShiftTransitionIndicator: View {
                 animateGlow = true
             }
 
-            // Very slow rotation for subtle movement
-            withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
-                animateRotation = true
+            // Gentle swaying motion between -30 and 30 degrees (pointing downward)
+            withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
+                swayRotation = 30
             }
+            // Start from the opposite side
+            swayRotation = -30
         }
         .accessibilityLabel("Transition indicator")
         .accessibilityHint("Shows you are switching from one shift to another")

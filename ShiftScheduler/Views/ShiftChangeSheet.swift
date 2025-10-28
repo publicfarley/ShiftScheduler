@@ -257,6 +257,11 @@ struct ShiftChangeSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 28) {
+                    // Shift date header
+                    shiftDateHeader
+                        .offset(y: showCurrentShift ? 0 : 30)
+                        .opacity(showCurrentShift ? 1 : 0)
+
                     // Current shift preview with entrance animation
                     currentShiftSection
                         .offset(y: showCurrentShift ? 0 : 30)
@@ -352,6 +357,41 @@ struct ShiftChangeSheet: View {
     }
 
     // MARK: - View Components
+
+    private var shiftDateHeader: some View {
+        VStack(spacing: 8) {
+            Text(currentShift.date, style: .date)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            ShiftColorPalette.colorForShift(currentShift.shiftType),
+                            ShiftColorPalette.colorForShift(currentShift.shiftType).opacity(0.7)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+
+            Text(currentShift.date.formatted(date: .complete, time: .omitted))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(
+                            ShiftColorPalette.colorForShift(currentShift.shiftType).opacity(0.2),
+                            lineWidth: 1
+                        )
+                }
+        }
+    }
 
     private var currentShiftSection: some View {
         VStack(alignment: .leading, spacing: 12) {
