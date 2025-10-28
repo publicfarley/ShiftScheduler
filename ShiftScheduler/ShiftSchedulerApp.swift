@@ -27,18 +27,9 @@ struct ShiftSchedulerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                ContentView(reduxStore: reduxStore)
-                    .task {
-                        // Run purge when the app becomes active
-                        await performBackgroundTasks()
-                    }
-                    .opacity(showSplash ? 0 : 1)
-
+            Group {
                 if showSplash {
                     SplashScreenView()
-                        .transition(.opacity)
-                        .zIndex(1)
                         .onAppear {
                             Task {
                                 // Hide splash screen after 3.5 seconds
@@ -48,6 +39,13 @@ struct ShiftSchedulerApp: App {
                                 }
                             }
                         }
+                } else {
+                    ContentView(reduxStore: reduxStore)
+                        .task {
+                            // Run purge when the app becomes active
+                            await performBackgroundTasks()
+                        }
+                        .transition(.opacity)
                 }
             }
         }
