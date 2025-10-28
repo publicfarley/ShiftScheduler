@@ -42,7 +42,7 @@ struct ShiftSchedulerApp: App {
                         .onAppear {
                             Task {
                                 // Hide splash screen after 3.5 seconds
-                                try await Task.sleep(nanoseconds: 3.5.seconds)
+                                try await Task.sleep(seconds: 3.5)
                                 withAnimation(.easeOut(duration: 0.5)) {
                                     showSplash = false
                                 }

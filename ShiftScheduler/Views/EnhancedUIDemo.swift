@@ -194,7 +194,7 @@ struct AnimationsDemoView: View {
                         }
 
                         Task {
-                            try await Task.sleep(nanoseconds: 0.1.seconds)
+                            try await Task.sleep(seconds: 0.1)
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 scale = 1.0
                             }

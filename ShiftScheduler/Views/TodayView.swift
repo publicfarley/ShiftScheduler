@@ -272,7 +272,7 @@ struct TodayView: View {
                 tomorrowCardOpacity = 0
 
                 // Small delay to ensure view hierarchy is ready
-                try? await Task.sleep(nanoseconds: 0.05.seconds)
+                try? await Task.sleep(seconds: 0.05)
 
                 // Animate Today card from left
                 if !reduceMotion {
@@ -286,7 +286,7 @@ struct TodayView: View {
                 }
 
                 // Delay for Tomorrow card animation
-                try? await Task.sleep(nanoseconds: tomorrowCardAnimationDelay.seconds)
+                try? await Task.sleep(seconds: tomorrowCardAnimationDelay)
 
                 // Animate Tomorrow card from right
                 if !reduceMotion {
@@ -520,7 +520,7 @@ struct EnhancedTodayShiftCard: View {
             }
 
             Task {
-                try await Task.sleep(nanoseconds: 0.15.seconds)
+                try await Task.sleep(seconds: 0.15)
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isPressed = false
                 }
