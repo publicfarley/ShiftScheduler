@@ -51,6 +51,13 @@ func todayMiddleware(
                 // Persist the change log entry
                     try await services.persistenceService.addChangeLogEntry(entry)
 
+                // Update the calendar event with the new shift type
+                try await services.calendarService.updateShiftEvent(
+                    eventIdentifier: shift.eventIdentifier,
+                    newShiftType: newShiftType,
+                    date: shift.date
+                )
+
                 // logger.debug("Shift \(shift.eventIdentifier) switched to \(newShiftType.title). Entry \(entry.id) saved.")
                 await dispatch(.today(.shiftSwitched(.success(()))))
 

@@ -99,4 +99,23 @@ final class MockCalendarService: CalendarServiceProtocol {
         mockShifts.append(shift)
         return shift
     }
+
+    func updateShiftEvent(eventIdentifier: String, newShiftType: ShiftType, date: Date) async throws {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Find the shift to update
+        guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Update the shift with the new shift type
+        mockShifts[index] = ScheduledShift(
+            id: mockShifts[index].id,
+            eventIdentifier: mockShifts[index].eventIdentifier,
+            shiftType: newShiftType,
+            date: mockShifts[index].date
+        )
+    }
 }

@@ -167,6 +167,13 @@ func scheduleMiddleware(
             // Persist the change log entry
             try await services.persistenceService.addChangeLogEntry(entry)
 
+            // Update the calendar event with the new shift type
+            try await services.calendarService.updateShiftEvent(
+                eventIdentifier: shift.eventIdentifier,
+                newShiftType: newShiftType,
+                date: shift.date
+            )
+
             // Save updated undo/redo stacks
             var undoStack = state.schedule.undoStack
             undoStack.append(entry)

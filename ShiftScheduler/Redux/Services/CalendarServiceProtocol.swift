@@ -36,4 +36,12 @@ protocol CalendarServiceProtocol: Sendable {
     /// - Returns: ScheduledShift with the EventKit event identifier
     /// - Throws: CalendarError if creation fails or duplicate shift exists
     func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift
+
+    /// Update an existing shift event in the calendar with a new shift type
+    /// - Parameters:
+    ///   - eventIdentifier: The EventKit event identifier of the shift to update
+    ///   - newShiftType: The new shift type to apply
+    ///   - date: The date of the shift being updated
+    /// - Throws: CalendarError if the event cannot be found or update fails
+    func updateShiftEvent(eventIdentifier: String, newShiftType: ShiftType, date: Date) async throws -> Void
 }

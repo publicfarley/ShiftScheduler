@@ -181,6 +181,45 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return shift
     }
 
+    func updateShiftEvent(eventIdentifier: String, newShiftType: ShiftType, date: Date) async throws {
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Fetch the event by identifier
+        guard let event = eventStore.event(withIdentifier: eventIdentifier) else {
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Update event with new shift type information
+        event.title = newShiftType.title
+        event.location = newShiftType.location.name
+
+        // Update the shift type ID in the notes
+        // Preserve any additional notes that might have been added
+        let notes = event.notes ?? ""
+        let noteLines = notes.split(separator: "\n", omittingEmptySubsequences: false)
+
+        // Check if notes contain the separator
+        if let separatorIndex = noteLines.firstIndex(of: "---") {
+            // Preserve additional notes after separator
+            let additionalNotes = noteLines[(separatorIndex + 1)...]
+            event.notes = newShiftType.id.uuidString + "\n---\n" + additionalNotes.joined(separator: "\n")
+        } else {
+            // No additional notes, just update the shift type ID
+            event.notes = newShiftType.id.uuidString
+        }
+
+        // Save the updated event
+        do {
+            try eventStore.save(event, span: .thisEvent)
+            logger.debug("Updated shift event \(eventIdentifier) with shift type \(newShiftType.title)")
+        } catch {
+            throw CalendarServiceError.eventConversionFailed("Failed to save updated event: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Private Helpers
 
     /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)
