@@ -112,8 +112,9 @@ struct ScheduleView: View {
                     store.dispatch(action: .schedule(.shiftDetailDismissed))
                 }
             ) {
-                if let selectedShift = store.state.schedule.selectedShiftForDetail {
-                    ShiftDetailsView(shift: selectedShift)
+                if let shiftId = store.state.schedule.selectedShiftId {
+                    ShiftDetailsView(initialShiftId: shiftId)
+                        .environment(\.reduxStore, store)
                 }
             }
             .errorAlert(error: Binding(
