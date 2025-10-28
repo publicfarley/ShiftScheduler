@@ -69,8 +69,10 @@ struct TodayView: View {
     private let tomorrowCardAnimationDuration: Double = 0.6
 
     // MARK: - Animation State
-    @State private var showTodayCard = false
-    @State private var showTomorrowCard = false
+    @State private var todayCardOffset: CGFloat = -400
+    @State private var todayCardOpacity: Double = 0
+    @State private var tomorrowCardOffset: CGFloat = 400
+    @State private var tomorrowCardOpacity: Double = 0
 
     var body: some View {
         NavigationView {
@@ -103,143 +105,115 @@ struct TodayView: View {
                     ScrollView {
                         LazyVStack(spacing: 20, pinnedViews: []) {
                             // Today Section
-                            if showTodayCard {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    HStack {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "sun.max.fill")
-                                                .font(.title2)
-                                                .foregroundColor(.orange)
-
-                                            Text(Date(), style: .date)
-                                                .font(.callout)
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(.secondary)
-                                        }
-
-                                        Spacer()
-
-                                        if store.state.today.isLoading {
-                                            ProgressView()
-                                                .scaleEffect(0.8)
-                                        }
-                                    }
-
-                                    // Display today's shift
-                                    let todayShifts = store.state.today.scheduledShifts.filter { shift in
-                                        Calendar.current.isDate(shift.date, inSameDayAs: Date())
-                                    }
-
-                                    if let shift = todayShifts.first {
-                                        VStack(spacing: 12) {
-                                            UnifiedShiftCard(shift: shift, onTap: nil)
-
-                                            Button(action: {
-                                                store.dispatch(action: .today(.switchShiftTapped(shift)))
-                                            }) {
-                                                HStack(spacing: 8) {
-                                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                                    Text("Switch Shift")
-                                                        .fontWeight(.semibold)
-                                                }
-                                                .frame(maxWidth: .infinity)
-                                                .padding(.vertical, 12)
-                                                .background(
-                                                    LinearGradient(
-                                                        colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
-                                                )
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
-                                            }
-                                        }
-                                    } else {
-                                        VStack(spacing: 12) {
-                                            Image(systemName: "calendar.badge.exclamationmark")
-                                                .font(.largeTitle)
-                                                .foregroundColor(.secondary)
-
-                                            VStack(spacing: 4) {
-                                                Text("No shift scheduled")
-                                                    .font(.headline)
-                                                    .foregroundColor(.primary)
-
-                                                Text("Perfect day for rest")
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 20)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color(.systemBackground))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color(.systemGray4), lineWidth: 2)
-                                                )
-                                                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-                                        )
-                                    }
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.top)
-                                .transition(
-                                    reduceMotion
-                                        ? .opacity
-                                        : .asymmetric(
-                                            insertion: .move(edge: .leading).combined(with: .opacity),
-                                            removal: .opacity
-                                        )
-                                )
-                                .animation(
-                                    reduceMotion
-                                        ? .easeInOut(duration: 0.1)
-                                        : .easeOut(duration: todayCardAnimationDuration),
-                                    value: showTodayCard
-                                )
-                            }
-
-                            // Tomorrow Section
-                            if showTomorrowCard {
-                                VStack(alignment: .leading, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack {
                                     HStack(spacing: 8) {
                                         Image(systemName: "sun.max.fill")
                                             .font(.title2)
                                             .foregroundColor(.orange)
 
-                                        Text("Tomorrow")
+                                        Text(Date(), style: .date)
                                             .font(.callout)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.secondary)
                                     }
 
-                                    // Display tomorrow's shift
-                                    let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
-                                        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                                        return Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
-                                    }
+                                    Spacer()
 
-                                    UnifiedShiftCard(shift: tomorrowShifts.first, onTap: nil)
+                                    if store.state.today.isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    }
                                 }
-                                .padding(.horizontal, 16)
-                                .transition(
-                                    reduceMotion
-                                        ? .opacity
-                                        : .asymmetric(
-                                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .opacity
-                                        )
-                                )
-                                .animation(
-                                    reduceMotion
-                                        ? .easeInOut(duration: 0.1)
-                                        : .easeOut(duration: tomorrowCardAnimationDuration).delay(tomorrowCardAnimationDelay),
-                                    value: showTomorrowCard
-                                )
+
+                                // Display today's shift
+                                let todayShifts = store.state.today.scheduledShifts.filter { shift in
+                                    Calendar.current.isDate(shift.date, inSameDayAs: Date())
+                                }
+
+                                if let shift = todayShifts.first {
+                                    VStack(spacing: 12) {
+                                        UnifiedShiftCard(shift: shift, onTap: nil)
+
+                                        Button(action: {
+                                            store.dispatch(action: .today(.switchShiftTapped(shift)))
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "arrow.triangle.2.circlepath")
+                                                Text("Switch Shift")
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .foregroundColor(.white)
+                                            .cornerRadius(10)
+                                        }
+                                    }
+                                } else {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "calendar.badge.exclamationmark")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.secondary)
+
+                                        VStack(spacing: 4) {
+                                            Text("No shift scheduled")
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+
+                                            Text("Perfect day for rest")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 20)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemBackground))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color(.systemGray4), lineWidth: 2)
+                                            )
+                                            .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                                    )
+                                }
                             }
+                            .padding(.horizontal, 16)
+                            .padding(.top)
+                            .offset(x: todayCardOffset)
+                            .opacity(todayCardOpacity)
+
+                            // Tomorrow Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "sun.max.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.orange)
+
+                                    Text("Tomorrow")
+                                        .font(.callout)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                // Display tomorrow's shift
+                                let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
+                                    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                                    return Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
+                                }
+
+                                UnifiedShiftCard(shift: tomorrowShifts.first, onTap: nil)
+                            }
+                            .padding(.horizontal, 16)
+                            .offset(x: tomorrowCardOffset)
+                            .opacity(tomorrowCardOpacity)
 
                             // Week Summary Section
                             VStack(alignment: .leading, spacing: 10) {
@@ -287,15 +261,19 @@ struct TodayView: View {
             .onAppear {
                 store.dispatch(action: .today(.task))
 
-                // Trigger Today card animation immediately
-                withAnimation(.easeOut(duration: todayCardAnimationDuration)) {
-                    showTodayCard = true
+                // Animate Today card from left with a small delay to ensure render
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.spring(response: todayCardAnimationDuration, dampingFraction: 0.7, blendDuration: 0)) {
+                        todayCardOffset = 0
+                        todayCardOpacity = 1
+                    }
                 }
 
-                // Trigger Tomorrow card animation after delay
+                // Animate Tomorrow card from right with a slightly longer delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + tomorrowCardAnimationDelay) {
-                    withAnimation(.easeOut(duration: tomorrowCardAnimationDuration)) {
-                        showTomorrowCard = true
+                    withAnimation(.spring(response: tomorrowCardAnimationDuration, dampingFraction: 0.7, blendDuration: 0)) {
+                        tomorrowCardOffset = 0
+                        tomorrowCardOpacity = 1
                     }
                 }
             }
