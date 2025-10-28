@@ -49,6 +49,13 @@ struct ContentView: View {
                 }
                 .tag(Tab.settings)
                 .environment(\.reduxStore, reduxStore)
+
+            AboutView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
+                .tag(Tab.about)
+                .environment(\.reduxStore, reduxStore)
         }
         .environment(\.reduxStore, reduxStore)
         .onAppear {
