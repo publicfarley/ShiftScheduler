@@ -30,7 +30,7 @@ struct AboutView: View {
                     .padding(.bottom, 30)
 
                     // App name with staggered animation
-                    Text("WorkEvents")
+                    Text("Shift Scheduler")
                         .font(.system(size: 48, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
