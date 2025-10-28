@@ -209,6 +209,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.showShiftDetail = false
         state.selectedShiftId = nil
         state.selectedShiftForDetail = nil
+        state.showSwitchShiftSheet = false
 
     // MARK: - Add Shift
 
@@ -277,8 +278,6 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isSwitchingShift = false
         state.showSwitchShiftSheet = false
         state.showShiftDetail = false
-        state.selectedShiftId = nil
-        state.selectedShiftForDetail = nil
         state.successMessage = "Shift switched successfully"
         state.showSuccessToast = true
         state.undoStack.append(operation)
