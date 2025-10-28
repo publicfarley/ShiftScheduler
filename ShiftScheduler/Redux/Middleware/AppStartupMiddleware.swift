@@ -52,6 +52,31 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         // State updates handled by reducer, no middleware action needed
         break
 
+    case .loadInitialData:
+        // Load locations and shift types from persistent storage
+        do {
+            // Load locations
+            let locations = try await services.persistenceService.loadLocations()
+            logger.debug("Loaded \(locations.count) locations")
+            await dispatch(.locations(.locationsLoaded(.success(locations))))
+
+            // Load shift types
+            let shiftTypes = try await services.persistenceService.loadShiftTypes()
+            logger.debug("Loaded \(shiftTypes.count) shift types")
+            await dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
+
+            // Mark initialization as complete
+            await dispatch(.appLifecycle(.initializationComplete(.success(()))))
+        } catch {
+            logger.error("Failed to load initial data: \(error.localizedDescription)")
+            // Still mark as complete so app shows content (empty state is ok)
+            await dispatch(.appLifecycle(.initializationComplete(.failure(error))))
+        }
+
+    case .initializationComplete:
+        // State updates handled by reducer, no middleware action needed
+        break
+
     case .tabSelected, .userProfileUpdated:
         // Not handled by this middleware
         break

@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Beautiful animated splash screen with whimsical symbol animations
 struct SplashScreenView: View {
+    @Environment(\.reduxStore) var store
+
     @State private var isAnimating = false
     @State private var showTitle = false
     @State private var symbolScale: CGFloat = 0.5
@@ -119,6 +121,8 @@ struct SplashScreenView: View {
         }
         .onAppear {
             startAnimations()
+            // Load locations and shift types during splash screen
+            store.dispatch(action: .appLifecycle(.loadInitialData))
         }
     }
 

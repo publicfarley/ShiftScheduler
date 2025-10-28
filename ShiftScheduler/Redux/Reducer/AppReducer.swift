@@ -71,6 +71,17 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
     case .calendarAccessRequested(.failure):
         // Keep previous state, user can retry
         state.isCalendarAuthorizationVerified = true
+
+    case .loadInitialData:
+        // Middleware will handle loading locations and shift types
+        break
+
+    case .initializationComplete(.success):
+        state.isInitializationComplete = true
+
+    case .initializationComplete(.failure):
+        // Even on failure, mark as complete so we show content
+        state.isInitializationComplete = true
     }
 
     return state

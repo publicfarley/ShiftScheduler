@@ -15,6 +15,9 @@ struct AppState: Equatable {
     /// Whether calendar authorization has been verified on startup
     var isCalendarAuthorizationVerified: Bool = false
 
+    /// Whether app initialization is complete (locations and shift types loaded)
+    var isInitializationComplete: Bool = false
+
     // MARK: - Feature States
 
     /// Today feature state

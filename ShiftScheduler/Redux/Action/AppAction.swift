@@ -70,10 +70,16 @@ enum AppLifecycleAction: Equatable {
     /// Calendar access request completed
     case calendarAccessRequested(Result<Bool, Error>)
 
+    /// Load initial data (locations and shift types) on app startup
+    case loadInitialData
+
+    /// Initial data loading completed
+    case initializationComplete(Result<Void, Error>)
+
     static func == (lhs: AppLifecycleAction, rhs: AppLifecycleAction) -> Bool {
         switch (lhs, rhs) {
         case (.onAppear, .onAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
-             (.requestCalendarAccess, .requestCalendarAccess):
+             (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData):
             return true
         case let (.tabSelected(a), .tabSelected(b)):
             return a == b
@@ -83,6 +89,9 @@ enum AppLifecycleAction: Equatable {
             return a == b
         case (.calendarAccessRequested(.success), .calendarAccessRequested(.success)),
              (.calendarAccessRequested(.failure), .calendarAccessRequested(.failure)):
+            return true
+        case (.initializationComplete(.success), .initializationComplete(.success)),
+             (.initializationComplete(.failure), .initializationComplete(.failure)):
             return true
         default:
             return false
