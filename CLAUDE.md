@@ -168,6 +168,127 @@ Without keyboard dismissal:
 - Use the TCA_PHASE2B_TASK_CHECKLIST.md file as the official project task list
 - SwiftData is banned from this project and should never be used. This poject uses JSON based persistence.
 
+## Swift Concurrency & Modern Async/Await Patterns
+
+**CRITICAL: Use `Task` and `async`/`await` instead of `DispatchQueue`**
+
+`DispatchQueue` is legacy GCD API. In modern Swift (especially Swift 6 with strict concurrency), use `Task` and `async`/`await` for all async work.
+
+### Pattern Replacements
+
+**Running work asynchronously:**
+```swift
+// ❌ OLD - DispatchQueue
+DispatchQueue.global().async {
+    doSomeWork()
+}
+
+// ✅ NEW - Task
+Task {
+    await doSomeWork()
+}
+
+// With priority
+Task(priority: .background) {
+    await doSomeWork()
+}
+```
+
+**Switching to main thread:**
+```swift
+// ❌ OLD - DispatchQueue
+DispatchQueue.main.async {
+    updateUI()
+}
+
+// ✅ NEW - MainActor
+await MainActor.run {
+    updateUI()
+}
+
+// Or mark function @MainActor for automatic dispatch
+@MainActor
+func updateUI() { ... }
+```
+
+**Creating background/detached work:**
+```swift
+// ❌ OLD - DispatchQueue
+DispatchQueue.global(qos: .background).async {
+    backgroundTask()
+}
+
+// ✅ NEW - Task.detached
+Task.detached(priority: .background) {
+    await backgroundTask()
+}
+```
+
+**Parallel work:**
+```swift
+// ❌ OLD - DispatchQueue
+DispatchQueue.concurrentPerform(iterations: 10) { i in
+    process(i)
+}
+
+// ✅ NEW - withTaskGroup
+await withTaskGroup(of: Void.self) { group in
+    for i in 0..<10 {
+        group.addTask {
+            await process(i)
+        }
+    }
+}
+```
+
+**Delayed execution (replacing DispatchQueue.main.asyncAfter):**
+```swift
+// ❌ OLD
+DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+    updateUI()
+}
+
+// ✅ NEW - Task.sleep with async/await
+Task {
+    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+    await MainActor.run {
+        updateUI()
+    }
+}
+
+// In structured context (like .task modifier)
+.task {
+    try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+    // ... perform work
+}
+```
+
+### When DispatchQueue is Still Acceptable
+
+- Interoperating with **legacy APIs** that require a GCD queue
+- **Low-level performance tuning** (rare in modern Swift code)
+- **Thread affinity control** when explicitly needed (very rare)
+
+### Benefits of Task/async/await over DispatchQueue
+
+- ✅ **Structured concurrency** - Built-in task hierarchy and cancellation
+- ✅ **Clear syntax** - Linear code flow, easier to reason about
+- ✅ **Automatic priority propagation** - Subtasks inherit parent priority
+- ✅ **Better error handling** - throws work naturally with async/await
+- ✅ **Deterministic cleanup** - Guaranteed task completion before scope exit
+- ✅ **Swift 6 compatibility** - Works with strict concurrency checking
+
+### Summary
+
+| Need | Use |
+|------|-----|
+| Run async code | `Task { ... }` |
+| Ensure code runs on main thread | `await MainActor.run { ... }` |
+| Background work | `Task(priority: .background)` |
+| Parallel subtasks | `withTaskGroup` |
+| Delayed execution | `Task.sleep(nanoseconds:)` |
+| Shared mutable state safely | `actor` |
+
 ## Singleton Removal & TCA Migration Status
 
 ### Completed Work (October 22, 2025)
