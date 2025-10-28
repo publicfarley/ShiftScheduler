@@ -73,12 +73,6 @@ struct ShiftDetailsView: View {
                         HStack {
                             StatusBadge(status: shiftStatus)
                             Spacer()
-
-                            Button(action: { dismiss() }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.gray.opacity(0.6))
-                            }
                         }
 
                         HStack(spacing: 16) {
@@ -234,6 +228,7 @@ struct ShiftDetailsView: View {
                         .font(.headline)
                 }
             }
+            .interactiveDismissDisabled(false)
         }
         .sheet(isPresented: $showingSwitchSheet) {
             ShiftChangeSheet(currentShift: shift, feature: .schedule)
