@@ -295,13 +295,7 @@ struct ShiftChangeSheet: View {
             .dismissKeyboardOnTap()
             .navigationTitle("Switch Shift")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
+            .interactiveDismissDisabled(false)
             .alert("Switch Shift?", isPresented: $showConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Switch") {
@@ -491,26 +485,16 @@ struct ShiftChangeSheet: View {
     }
 
     private var actionButtons: some View {
-        HStack(spacing: 16) {
-            GlassActionButton(
-                title: "Cancel",
-                icon: "xmark",
-                action: {
-                    dismiss()
-                }
-            )
-
-            GradientActionButton(
-                title: "Switch Shift",
-                icon: "arrow.triangle.2.circlepath",
-                shiftType: selectedShiftType,
-                isEnabled: selectedShiftType != nil && !isProcessing,
-                isLoading: isProcessing,
-                action: {
-                    showConfirmation = true
-                }
-            )
-        }
+        GradientActionButton(
+            title: "Switch Shift",
+            icon: "arrow.triangle.2.circlepath",
+            shiftType: selectedShiftType,
+            isEnabled: selectedShiftType != nil && !isProcessing,
+            isLoading: isProcessing,
+            action: {
+                showConfirmation = true
+            }
+        )
     }
 
     private var successToast: some View {
@@ -587,7 +571,7 @@ struct ShiftChangeSheet: View {
         }
 
         // Dismiss after a delay
-        try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+        try? await Task.sleep(seconds: 1.5)
         await MainActor.run {
             dismiss()
         }
