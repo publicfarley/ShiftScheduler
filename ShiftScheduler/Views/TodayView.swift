@@ -61,6 +61,12 @@ struct StatusBadge: View {
 
 struct TodayView: View {
     @Environment(\.reduxStore) var store
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+
+    // MARK: - Animation Constants
+    private let todayCardAnimationDuration: Double = 0.6
+    private let tomorrowCardAnimationDelay: Double = 0.2
+    private let tomorrowCardAnimationDuration: Double = 0.6
 
     var body: some View {
         NavigationView {
@@ -174,6 +180,20 @@ struct TodayView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.top)
+                            .transition(
+                                reduceMotion
+                                    ? .opacity
+                                    : .asymmetric(
+                                        insertion: .move(edge: .leading).combined(with: .opacity),
+                                        removal: .opacity
+                                    )
+                            )
+                            .animation(
+                                reduceMotion
+                                    ? .easeInOut(duration: 0.1)
+                                    : .easeOut(duration: todayCardAnimationDuration),
+                                value: store.state.today.scheduledShifts
+                            )
 
                             // Tomorrow Section
                             VStack(alignment: .leading, spacing: 16) {
@@ -197,6 +217,20 @@ struct TodayView: View {
                                 UnifiedShiftCard(shift: tomorrowShifts.first, onTap: nil)
                             }
                             .padding(.horizontal, 16)
+                            .transition(
+                                reduceMotion
+                                    ? .opacity
+                                    : .asymmetric(
+                                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal: .opacity
+                                    )
+                            )
+                            .animation(
+                                reduceMotion
+                                    ? .easeInOut(duration: 0.1)
+                                    : .easeOut(duration: tomorrowCardAnimationDuration).delay(tomorrowCardAnimationDelay),
+                                value: store.state.today.scheduledShifts
+                            )
 
                             // Week Summary Section
                             VStack(alignment: .leading, spacing: 10) {
