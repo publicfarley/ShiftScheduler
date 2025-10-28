@@ -15,20 +15,22 @@ func scheduleMiddleware(
 
     switch scheduleAction {
     case .task:
-        // logger.debug("Schedule task started")
+        logger.debug("Schedule task started")
         // Restore undo/redo stacks first
         await dispatch(.schedule(.restoreUndoRedoStacks))
 
         // Check authorization
         do {
             let authorized = try await services.calendarService.requestCalendarAccess()
+            logger.debug("Calendar access checked: \(authorized)")
             await dispatch(.schedule(.authorizationChecked(authorized)))
         } catch {
-            // logger.error("Failed to check authorization: \(error.localizedDescription)")
+            logger.error("Failed to check authorization: \(error.localizedDescription)")
             await dispatch(.schedule(.authorizationChecked(false)))
         }
 
         // Load shifts
+        logger.debug("Dispatching loadShifts")
         await dispatch(.schedule(.loadShifts))
 
     case .checkAuthorization:
@@ -41,12 +43,13 @@ func scheduleMiddleware(
         }
 
     case .loadShifts:
-        // logger.debug("Loading shifts for current month")
+        logger.debug("Loading shifts for current month")
         do {
             let shifts = try await services.calendarService.loadShiftsForCurrentMonth()
+            logger.debug("Successfully loaded \(shifts.count) shifts")
             await dispatch(.schedule(.shiftsLoaded(.success(shifts))))
         } catch {
-            // logger.error("Failed to load shifts: \(error.localizedDescription)")
+            logger.error("Failed to load shifts: \(error.localizedDescription)")
             await dispatch(.schedule(.shiftsLoaded(.failure(error))))
         }
 

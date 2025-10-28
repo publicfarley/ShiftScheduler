@@ -39,11 +39,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     }
 
     func loadShifts(from startDate: Date, to endDate: Date) async throws -> [ScheduledShift] {
-        // logger.debug("Loading shifts from \(startDate.formatted()) to \(endDate.formatted())")
+        logger.debug("Loading shifts from \(startDate.formatted()) to \(endDate.formatted())")
 
         // Check authorization
         guard try await isCalendarAuthorized() else {
-        // logger.error("Calendar not authorized")
+            logger.error("Calendar not authorized")
             throw CalendarServiceError.notAuthorized
         }
 
@@ -52,19 +52,20 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
         let events = eventStore.events(matching: predicate)
 
-        // logger.debug("Loaded \(events.count) events from calendar")
+        logger.debug("Loaded \(events.count) events from calendar")
 
         // Convert events to scheduled shifts
         var shifts: [ScheduledShift] = []
 
         for event in events {
             guard let shift = try await convertEventToShift(event) else {
+                logger.debug("Failed to convert event: \(event.title)")
                 continue
             }
             shifts.append(shift)
         }
 
-        // logger.debug("Converted to \(shifts.count) scheduled shifts")
+        logger.debug("Converted to \(shifts.count) scheduled shifts")
         return shifts.sorted { $0.date < $1.date }
     }
 
@@ -129,6 +130,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     }
 
     func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift {
+        logger.debug("Creating shift event for \(shiftType.title) on \(date.formatted())")
+
         // Check authorization
         guard try await isCalendarAuthorized() else {
             throw CalendarServiceError.notAuthorized
@@ -154,7 +157,10 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         if let additionalNotes = notes, !additionalNotes.isEmpty {
             event.notes = (event.notes ?? "") + "\n---\n" + additionalNotes
+            logger.debug("Shift has notes: \(additionalNotes)")
         }
+
+        logger.debug("Event notes before save: \(event.notes ?? "nil")")
 
         // Add to default calendar
         let calendar = eventStore.defaultCalendarForNewEvents
@@ -166,7 +172,9 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         event.calendar = calendar
         do {
             try eventStore.save(event, span: .thisEvent)
+            logger.debug("Event saved successfully with identifier: \(event.eventIdentifier)")
         } catch {
+            logger.error("Failed to save event: \(error.localizedDescription)")
             throw ScheduleError.calendarEventCreationFailed(error.localizedDescription)
         }
 
@@ -226,9 +234,34 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     /// This is the first step of the data transformation pipeline
     private func convertEventToShiftData(_ event: EKEvent) -> ScheduledShiftData? {
         // Extract shift type ID from event notes
-        guard let notes = event.notes,
-              let shiftTypeId = UUID(uuidString: notes) else {
-            // logger.debug("Event '\(event.title)' has no valid shift type ID in notes")
+        // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
+        guard let notes = event.notes else {
+            logger.debug("Event '\(event.title)' has no notes")
+            return nil
+        }
+
+        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
+
+        var shiftTypeIdString: String = ""
+        // Try different possible separators
+        let possibleSeparators = ["\n---\n", "---", "\n--\n", " --- "]
+
+        for separator in possibleSeparators {
+            if let separatorRange = notes.range(of: separator) {
+                shiftTypeIdString = String(notes[..<separatorRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)'")
+                break
+            }
+        }
+
+        if shiftTypeIdString.isEmpty {
+            // No separator found - entire note string should be the shift type ID
+            shiftTypeIdString = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            logger.debug("Event '\(event.title)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
+        }
+
+        guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
+            logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")
             return nil
         }
 
@@ -243,16 +276,41 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
     private func convertEventToShift(_ event: EKEvent) async throws -> ScheduledShift? {
         // Extract shift type ID from event notes
-        guard let notes = event.notes,
-              let shiftTypeId = UUID(uuidString: notes) else {
-        // logger.debug("Event '\(event.title)' has no valid shift type ID in notes")
+        // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
+        guard let notes = event.notes else {
+            logger.debug("Event '\(event.title)' has no notes")
+            return nil
+        }
+
+        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
+
+        var shiftTypeIdString: String = ""
+        // Try different possible separators
+        let possibleSeparators = ["\n---\n", "---", "\n--\n", " --- "]
+
+        for separator in possibleSeparators {
+            if let separatorRange = notes.range(of: separator) {
+                shiftTypeIdString = String(notes[..<separatorRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)'")
+                break
+            }
+        }
+
+        if shiftTypeIdString.isEmpty {
+            // No separator found - entire note string should be the shift type ID
+            shiftTypeIdString = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            logger.debug("Event '\(event.title)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
+        }
+
+        guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
+            logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")
             return nil
         }
 
         // Load shift type from repository
         let shiftTypes = try await shiftTypeRepository.fetchAll()
         guard let shiftType = shiftTypes.first(where: { $0.id == shiftTypeId }) else {
-        // logger.warning("Shift type \(shiftTypeId) not found for event '\(event.title)'")
+            logger.warning("Shift type \(shiftTypeId) not found for event '\(event.title)'")
             return nil
         }
 

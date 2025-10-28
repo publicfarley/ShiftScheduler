@@ -87,8 +87,8 @@ struct ScheduleState: Equatable {
     /// All scheduled shifts for the current month
     var scheduledShifts: [ScheduledShift] = []
 
-    /// The currently selected date
-    var selectedDate: Date = Date()
+    /// The currently selected date (defaults to today at start of day)
+    var selectedDate: Date = Calendar.current.startOfDay(for: Date())
 
     /// General loading state
     var isLoading: Bool = false

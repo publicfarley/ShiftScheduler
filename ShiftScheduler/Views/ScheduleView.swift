@@ -5,7 +5,7 @@ private let logger = Logger(subsystem: "com.shiftscheduler.views", category: "Sc
 
 struct ScheduleView: View {
     @Environment(\.reduxStore) var store
-    @State private var listOpacity: Double = 0
+    @State private var listOpacity: Double = 1
 
     var body: some View {
         NavigationView {
@@ -122,7 +122,11 @@ struct ScheduleView: View {
                 set: { _ in store.dispatch(action: .schedule(.dismissError)) }
             ))
             .onAppear {
+                logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
                 store.dispatch(action: .schedule(.task))
+            }
+            .onChange(of: store.state.schedule.scheduledShifts) { _, shifts in
+                logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")
             }
         }
         .dismissKeyboardOnTap()
