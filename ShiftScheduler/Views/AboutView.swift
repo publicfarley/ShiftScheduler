@@ -87,7 +87,6 @@ struct AboutView: View {
                             HStack(spacing: 20) {
                                 FeatureBadge(icon: "clock.fill", text: "Time Tracking")
                                 FeatureBadge(icon: "calendar", text: "Calendar Sync")
-                                FeatureBadge(icon: "bell.fill", text: "Reminders")
                             }
                             .padding(.top, 8)
                         }
