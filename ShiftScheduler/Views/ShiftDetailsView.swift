@@ -9,7 +9,6 @@ struct ShiftDetailsView: View {
     let shift: ScheduledShift
 
     @State private var showingDeleteConfirmation = false
-    @State private var showingSwitchSheet = false
 
     private var shiftStatus: ShiftStatus {
         guard let shiftType = shift.shiftType else { return .upcoming }
@@ -174,7 +173,7 @@ struct ShiftDetailsView: View {
 
                     // Action buttons
                     VStack(spacing: 12) {
-                        Button(action: { showingSwitchSheet = true }) {
+                        Button(action: { store.dispatch(action: .schedule(.switchShiftTapped(shift))) }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(.body)
@@ -228,7 +227,9 @@ struct ShiftDetailsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingSwitchSheet) {
+        .sheet(isPresented: .constant(store.state.schedule.showSwitchShiftSheet), onDismiss: {
+            store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
+        }) {
             ShiftChangeSheet(currentShift: shift, feature: .schedule)
                 .environment(\.reduxStore, store)
         }
