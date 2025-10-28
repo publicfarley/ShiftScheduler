@@ -223,7 +223,6 @@ struct ShiftDisplayCard: View {
 
 struct ShiftChangeSheet: View {
     @Environment(\.reduxStore) var store
-    @Environment(\.dismiss) private var dismiss
 
     let currentShift: ScheduledShift
     let feature: ShiftSwitchFeature  // 'today' or 'schedule'
@@ -296,6 +295,13 @@ struct ShiftChangeSheet: View {
             .navigationTitle("Switch Shift")
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled(false)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        handleDismiss()
+                    }
+                }
+            }
             .alert("Switch Shift?", isPresented: $showConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Switch") {
@@ -342,14 +348,6 @@ struct ShiftChangeSheet: View {
             withAnimation(AnimationPresets.accessible(AnimationPresets.standardSpring).delay(0.5)) {
                 showActionButtons = true
             }
-        }
-        .onChange(of: store.state.today.showSwitchShiftSheet) { _, newValue in
-            if !newValue && feature == .today {
-                dismiss()
-            }
-        }
-        .onChange(of: store.state.schedule.scheduledShifts) { _, _ in
-            // No dismissal needed - sheet handles its own state
         }
     }
 
@@ -573,7 +571,18 @@ struct ShiftChangeSheet: View {
         // Dismiss after a delay
         try? await Task.sleep(seconds: 1.5)
         await MainActor.run {
-            dismiss()
+            handleDismiss()
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func handleDismiss() {
+        switch feature {
+        case .today:
+            store.dispatch(action: .today(.switchShiftSheetDismissed))
+        case .schedule:
+            store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
         }
     }
 }
