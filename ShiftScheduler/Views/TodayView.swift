@@ -1755,3 +1755,79 @@ struct CompactWeekStatView: View {
     }
 }
 
+// MARK: - Preview
+#Preview("Today View with Animations") {
+    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
+
+    // Create multiple shift types for visual variety
+    let morningShift = ShiftType(
+        id: UUID(),
+        symbol: "🌅",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 6, minute: 0),
+            to: HourMinuteTime(hour: 14, minute: 0)
+        ),
+        title: "Morning Shift",
+        description: "Early morning shift with team briefing",
+        location: sampleLocation
+    )
+
+    let eveningShift = ShiftType(
+        id: UUID(),
+        symbol: "🌆",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 14, minute: 0),
+            to: HourMinuteTime(hour: 22, minute: 0)
+        ),
+        title: "Evening Shift",
+        description: "Evening shift with handover",
+        location: sampleLocation
+    )
+
+    // Today's shift
+    let todayShift = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: morningShift,
+        date: Date()
+    )
+
+    // Tomorrow's shift
+    let tomorrowDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    let tomorrowShift = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: eveningShift,
+        date: tomorrowDate
+    )
+
+    // Create preview store with sample data
+    let previewStore: Store = {
+        var state = AppState()
+        state.today.scheduledShifts = [todayShift, tomorrowShift]
+        state.today.isLoading = false
+        state.isCalendarAuthorized = true
+        state.isCalendarAuthorizationVerified = true
+        state.locations.locations = [sampleLocation]
+        state.shiftTypes.shiftTypes = [morningShift, eveningShift]
+
+        return Store(
+            state: state,
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: [
+                scheduleMiddleware,
+                todayMiddleware,
+                locationsMiddleware,
+                shiftTypesMiddleware,
+                changeLogMiddleware,
+                settingsMiddleware,
+                loggingMiddleware
+            ]
+        )
+    }()
+
+    TodayView()
+        .environment(\.reduxStore, previewStore)
+}
+
