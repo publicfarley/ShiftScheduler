@@ -138,6 +138,9 @@ struct ScheduleState: Equatable {
 
     // MARK: - Detail View State
 
+    /// Selected shift ID for detail view (used to track which shift is being viewed)
+    var selectedShiftId: UUID? = nil
+
     /// Selected shift for detail view
     var selectedShiftForDetail: ScheduledShift? = nil
 

@@ -190,11 +190,13 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     // MARK: - Detail View
 
     case .shiftTapped(let shift):
+        state.selectedShiftId = shift.id
         state.selectedShiftForDetail = shift
         state.showShiftDetail = true
 
     case .shiftDetailDismissed:
         state.showShiftDetail = false
+        state.selectedShiftId = nil
         state.selectedShiftForDetail = nil
 
     // MARK: - Add Shift
@@ -280,6 +282,12 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.scheduledShifts = shifts
         state.errorMessage = nil
         state.currentError = nil
+
+        // Update selectedShiftForDetail if shift ID is tracked and shift exists
+        if let selectedShiftId = state.selectedShiftId,
+           let updatedShift = shifts.first(where: { $0.id == selectedShiftId }) {
+            state.selectedShiftForDetail = updatedShift
+        }
 
     case .shiftsLoaded(.failure(let error)):
         state.isLoading = false

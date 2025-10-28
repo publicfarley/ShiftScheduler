@@ -49,9 +49,12 @@ struct ScheduleView: View {
                                            removal: .move(edge: .top).combined(with: .opacity)))
                     .onAppear {
                         // Auto-dismiss after 3 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                            withAnimation {
-                                store.dispatch(action: .schedule(.dismissSuccessToast))
+                        Task {
+                            try? await Task.sleep(nanoseconds: 3_000_000_000)
+                            await MainActor.run {
+                                withAnimation {
+                                    store.dispatch(action: .schedule(.dismissSuccessToast))
+                                }
                             }
                         }
                     }
