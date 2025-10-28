@@ -105,6 +105,10 @@ func scheduleMiddleware(
         // Handled by reducer
         break
 
+    case .addShiftSheetDismissed:
+        // No middleware side effects needed
+        break
+
     // MARK: - Delete Shift
 
     case .deleteShiftRequested:

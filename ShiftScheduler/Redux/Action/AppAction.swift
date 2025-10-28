@@ -196,6 +196,9 @@ enum ScheduleAction: Equatable {
     /// Handle add shift result
     case addShiftResponse(Result<ScheduledShift, ScheduleError>)
 
+    /// Add shift sheet was dismissed
+    case addShiftSheetDismissed
+
     // MARK: - Delete Shift Actions
 
     /// User requested to delete a shift

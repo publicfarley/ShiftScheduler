@@ -219,6 +219,9 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isAddingShift = false
         state.currentError = error
 
+    case .addShiftSheetDismissed:
+        state.showAddShiftSheet = false
+
     // MARK: - Delete Shift
 
     case .deleteShiftRequested(let shift):

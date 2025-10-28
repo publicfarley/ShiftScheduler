@@ -73,8 +73,23 @@ struct ScheduleView: View {
                     }
                 }
             }
-            .sheet(isPresented: .constant(store.state.schedule.showAddShiftSheet)) {
+            .sheet(isPresented: Binding(
+                get: { store.state.schedule.showAddShiftSheet },
+                set: { isPresented in
+                    if !isPresented {
+                        store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                    }
+                }
+            )) {
                 AddShiftModalView(
+                    isPresented: Binding(
+                        get: { store.state.schedule.showAddShiftSheet },
+                        set: { isPresented in
+                            if !isPresented {
+                                store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                            }
+                        }
+                    ),
                     availableShiftTypes: store.state.shiftTypes.shiftTypes,
                     preselectedDate: store.state.schedule.selectedDate
                 )

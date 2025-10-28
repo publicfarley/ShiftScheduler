@@ -5,7 +5,7 @@ import SwiftUI
 /// Allows selection of date, shift type, and optional notes
 struct AddShiftModalView: View {
     @Environment(\.reduxStore) var store
-    @Environment(\.dismiss) var dismiss
+    @Binding var isPresented: Bool
 
     let availableShiftTypes: [ShiftType]
     var preselectedDate: Date = Date()
@@ -139,7 +139,7 @@ struct AddShiftModalView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        store.dispatch(action: .schedule(.addShiftSheetDismissed))
                     }
                 }
 
@@ -153,6 +153,7 @@ struct AddShiftModalView: View {
             .onAppear {
                 selectedDate = preselectedDate
             }
+            .interactiveDismissDisabled(false)
         }
         .sheet(isPresented: $showDatePicker) {
             DatePickerSheet(selectedDate: $selectedDate)
@@ -173,7 +174,7 @@ struct AddShiftModalView: View {
             notes: finalNotes
         )))
 
-        dismiss()
+        // Sheet will be dismissed by Redux action after success
     }
 }
 
@@ -246,7 +247,7 @@ struct DatePickerSheet: View {
         )
     ]
 
-    AddShiftModalView(availableShiftTypes: sampleShiftTypes)
+    AddShiftModalView(isPresented: .constant(true), availableShiftTypes: sampleShiftTypes)
         .environment(\.reduxStore, previewStore)
 }
 
