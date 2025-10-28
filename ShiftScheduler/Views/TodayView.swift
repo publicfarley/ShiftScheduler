@@ -103,7 +103,7 @@ struct TodayView: View {
                 } else {
                     // Main Content
                     ScrollView {
-                        LazyVStack(spacing: 20, pinnedViews: []) {
+                        VStack(spacing: 20) {
                             // Today Section
                             VStack(alignment: .leading, spacing: 16) {
                                 HStack {
@@ -134,27 +134,30 @@ struct TodayView: View {
                                 if let shift = todayShifts.first {
                                     VStack(spacing: 12) {
                                         UnifiedShiftCard(shift: shift, onTap: nil)
+                                    }
+                                    .offset(x: todayCardOffset)
+                                    .opacity(todayCardOpacity)
 
-                                        Button(action: {
-                                            store.dispatch(action: .today(.switchShiftTapped(shift)))
-                                        }) {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "arrow.triangle.2.circlepath")
-                                                Text("Switch Shift")
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .background(
-                                                LinearGradient(
-                                                    colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .foregroundColor(.white)
-                                            .cornerRadius(10)
+                                    // Switch Shift button - not animated
+                                    Button(action: {
+                                        store.dispatch(action: .today(.switchShiftTapped(shift)))
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "arrow.triangle.2.circlepath")
+                                            Text("Switch Shift")
+                                                .fontWeight(.semibold)
                                         }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .foregroundColor(.white)
+                                        .cornerRadius(10)
                                     }
                                 } else {
                                     VStack(spacing: 12) {
@@ -183,12 +186,12 @@ struct TodayView: View {
                                             )
                                             .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
                                     )
+                                    .offset(x: todayCardOffset)
+                                    .opacity(todayCardOpacity)
                                 }
                             }
                             .padding(.horizontal, 16)
                             .padding(.top)
-                            .offset(x: todayCardOffset)
-                            .opacity(todayCardOpacity)
 
                             // Tomorrow Section
                             VStack(alignment: .leading, spacing: 16) {
@@ -258,23 +261,42 @@ struct TodayView: View {
                     ShiftChangeSheet(currentShift: shift, feature: .today)
                 }
             }
-            .onAppear {
+            .task {
+                // Dispatch Redux action
                 store.dispatch(action: .today(.task))
 
-                // Animate Today card from left with a small delay to ensure render
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                // Reset animation state when view appears
+                todayCardOffset = -400
+                todayCardOpacity = 0
+                tomorrowCardOffset = 400
+                tomorrowCardOpacity = 0
+
+                // Small delay to ensure view hierarchy is ready
+                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+
+                // Animate Today card from left
+                if !reduceMotion {
                     withAnimation(.spring(response: todayCardAnimationDuration, dampingFraction: 0.7, blendDuration: 0)) {
                         todayCardOffset = 0
                         todayCardOpacity = 1
                     }
+                } else {
+                    todayCardOffset = 0
+                    todayCardOpacity = 1
                 }
 
-                // Animate Tomorrow card from right with a slightly longer delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + tomorrowCardAnimationDelay) {
+                // Delay for Tomorrow card animation
+                try? await Task.sleep(nanoseconds: UInt64(tomorrowCardAnimationDelay * 1_000_000_000))
+
+                // Animate Tomorrow card from right
+                if !reduceMotion {
                     withAnimation(.spring(response: tomorrowCardAnimationDuration, dampingFraction: 0.7, blendDuration: 0)) {
                         tomorrowCardOffset = 0
                         tomorrowCardOpacity = 1
                     }
+                } else {
+                    tomorrowCardOffset = 0
+                    tomorrowCardOpacity = 1
                 }
             }
         }
