@@ -5,6 +5,7 @@ private let logger = Logger(subsystem: "com.shiftscheduler.views", category: "Sc
 
 struct ScheduleView: View {
     @Environment(\.reduxStore) var store
+    @State private var listOpacity: Double = 0
 
     var body: some View {
         NavigationView {
@@ -153,11 +154,17 @@ struct ScheduleView: View {
             .padding()
             .background(Color(.systemGray6))
 
-            // Shifts list
-            if store.state.schedule.filteredShifts.isEmpty {
-                emptyStateView
-            } else {
-                shiftsListView
+            // Shifts list or empty state with fade animation
+            Group {
+                if store.state.schedule.filteredShifts.isEmpty {
+                    emptyStateView
+                } else {
+                    shiftsListView
+                }
+            }
+            .opacity(listOpacity)
+            .onChange(of: store.state.schedule.selectedDate) { _, _ in
+                resetListAnimation()
             }
         }
     }
@@ -187,11 +194,25 @@ struct ScheduleView: View {
                 .padding(.horizontal)
 
                 // Shifts
-                ForEach(store.state.schedule.filteredShifts, id: \.id) { shift in
-                    shiftCard(for: shift)
+                VStack(spacing: 12) {
+                    ForEach(store.state.schedule.filteredShifts, id: \.id) { shift in
+                        shiftCard(for: shift)
+                    }
                 }
             }
             .padding(.vertical)
+        }
+    }
+
+    private func resetListAnimation() {
+        listOpacity = 0
+        Task {
+            try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+            await MainActor.run {
+                withAnimation(.easeIn(duration: 0.6)) {
+                    listOpacity = 1
+                }
+            }
         }
     }
 
