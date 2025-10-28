@@ -276,6 +276,9 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     case .shiftSwitched(.success(let operation)):
         state.isSwitchingShift = false
         state.showSwitchShiftSheet = false
+        state.showShiftDetail = false
+        state.selectedShiftId = nil
+        state.selectedShiftForDetail = nil
         state.successMessage = "Shift switched successfully"
         state.showSuccessToast = true
         state.undoStack.append(operation)
