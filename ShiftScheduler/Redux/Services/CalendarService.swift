@@ -10,8 +10,51 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     private let eventStore = EKEventStore()
     private let shiftTypeRepository: ShiftTypeRepository
 
+    /// The app-specific calendar name (matches the bundle identifier)
+    private let appCalendarName = "functioncraft.ShiftScheduler"
+
     init(shiftTypeRepository: ShiftTypeRepository? = nil) {
         self.shiftTypeRepository = shiftTypeRepository ?? ShiftTypeRepository()
+    }
+
+    // MARK: - Calendar Management
+
+    /// Gets or creates the app-specific calendar for storing shift events
+    /// The calendar name matches the app's bundle identifier
+    private func getOrCreateAppCalendar() throws -> EKCalendar {
+        // First, check if the calendar already exists
+        let calendars = eventStore.calendars(for: .event)
+        if let existingCalendar = calendars.first(where: { $0.title == appCalendarName }) {
+            logger.debug("Found existing app calendar: \(self.appCalendarName)")
+            return existingCalendar
+        }
+
+        // Calendar doesn't exist, create it
+        logger.debug("Creating new app calendar: \(self.appCalendarName)")
+        let newCalendar = EKCalendar(for: .event, eventStore: eventStore)
+        newCalendar.title = appCalendarName
+
+        // Set the calendar source (iCloud or local)
+        // Prefer iCloud if available, fallback to local
+        if let iCloudSource = eventStore.sources.first(where: { $0.sourceType == .calDAV }) {
+            newCalendar.source = iCloudSource
+            logger.debug("Using iCloud source for app calendar")
+        } else if let localSource = eventStore.sources.first(where: { $0.sourceType == .local }) {
+            newCalendar.source = localSource
+            logger.debug("Using local source for app calendar")
+        } else {
+            throw CalendarServiceError.eventConversionFailed("No calendar source available")
+        }
+
+        // Save the new calendar
+        do {
+            try eventStore.saveCalendar(newCalendar, commit: true)
+            logger.debug("Successfully created app calendar: \(self.appCalendarName)")
+            return newCalendar
+        } catch {
+            logger.error("Failed to create app calendar: \(error.localizedDescription)")
+            throw CalendarServiceError.eventConversionFailed("Failed to create app calendar: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - CalendarServiceProtocol Implementation
@@ -47,9 +90,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.notAuthorized
         }
 
-        // Fetch events from calendar
-        let calendars = eventStore.calendars(for: .event)
-        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
+        // Get or create the app-specific calendar
+        let appCalendar = try getOrCreateAppCalendar()
+
+        // Fetch events only from the app-specific calendar
+        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: [appCalendar])
         let events = eventStore.events(matching: predicate)
 
         logger.debug("Loaded \(events.count) events from calendar")
@@ -94,9 +139,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.notAuthorized
         }
 
-        // Fetch events from calendar
-        let calendars = eventStore.calendars(for: .event)
-        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendars)
+        // Get or create the app-specific calendar
+        let appCalendar = try getOrCreateAppCalendar()
+
+        // Fetch events only from the app-specific calendar
+        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: [appCalendar])
         let events = eventStore.events(matching: predicate)
 
         // Convert events to ScheduledShiftData (reification step)
@@ -162,14 +209,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         logger.debug("Event notes before save: \(event.notes ?? "nil")")
 
-        // Add to default calendar
-        let calendar = eventStore.defaultCalendarForNewEvents
-        guard let calendar = calendar else {
-            throw CalendarServiceError.eventConversionFailed("No default calendar available")
-        }
+        // Get or create the app-specific calendar
+        let appCalendar = try getOrCreateAppCalendar()
 
-        // Save event to the default calendar
-        event.calendar = calendar
+        // Save event to the app-specific calendar
+        event.calendar = appCalendar
         do {
             try eventStore.save(event, span: .thisEvent)
             logger.debug("Event saved successfully with identifier: \(event.eventIdentifier)")
