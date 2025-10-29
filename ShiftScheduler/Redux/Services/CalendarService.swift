@@ -124,7 +124,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     func loadShiftsForCurrentMonth() async throws -> [ScheduledShift] {
         let today = Date()
         guard let startDate = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: today)),
-              let endDate = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startDate) else {
+              let endDate = Calendar.current.date(byAdding: DateComponents(month: 1), to: startDate) else {
             throw CalendarServiceError.dateCalculationFailed
         }
 
