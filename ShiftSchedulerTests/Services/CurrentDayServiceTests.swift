@@ -58,42 +58,95 @@ struct CurrentDayServiceTests {
         #expect(result == startOfToday)
     }
 
-    // DISABLED: getTodayDate returns same as getCurrentDate
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testGetTodayDateReturnsSameAsGetCurrentDate() {
-    }
-
-    // DISABLED: getTomorrowDate returns date one day after today
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testGetTomorrowDateReturnsNextDay() {
-    }
-
-    // DISABLED: getYesterdayDate returns date one day before today
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testGetYesterdayDateReturnsPreviousDay() {
-    }
-
     // MARK: - Tests: Date Comparison Methods
 
-    // DISABLED: isToday correctly identifies today
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testIsTodayIdentifiesToday() {
+    @Test("isToday correctly identifies today")
+    func testIsTodayIdentifiesToday() {
+        // Given
+        let service = CurrentDayService()
+        let today = Date()
+
+        // When
+        let result = service.isToday(today)
+
+        // Then
+        #expect(result == true)
     }
 
-    // DISABLED: isTomorrow correctly identifies tomorrow
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testIsTomorrowIdentifiesTomorrow() {
+    @Test("isToday returns false for yesterday")
+    func testIsTodayReturnsFalseForYesterday() {
+        // Given
+        let service = CurrentDayService()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+
+        // When
+        let result = service.isToday(yesterday)
+
+        // Then
+        #expect(result == false)
     }
 
-    // DISABLED: isYesterday correctly identifies yesterday
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testIsYesterdayIdentifiesYesterday() {
+    @Test("isToday returns false for tomorrow")
+    func testIsTodayReturnsFalseForTomorrow() {
+        // Given
+        let service = CurrentDayService()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+
+        // When
+        let result = service.isToday(tomorrow)
+
+        // Then
+        #expect(result == false)
+    }
+
+    @Test("isTomorrow correctly identifies tomorrow")
+    func testIsTomorrowIdentifiesTomorrow() {
+        // Given
+        let service = CurrentDayService()
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+
+        // When
+        let result = service.isTomorrow(tomorrow)
+
+        // Then
+        #expect(result == true)
+    }
+
+    @Test("isTomorrow returns false for today")
+    func testIsTomorrowReturnsFalseForToday() {
+        // Given
+        let service = CurrentDayService()
+
+        // When
+        let result = service.isTomorrow(Date())
+
+        // Then
+        #expect(result == false)
+    }
+
+    @Test("isYesterday correctly identifies yesterday")
+    func testIsYesterdayIdentifiesYesterday() {
+        // Given
+        let service = CurrentDayService()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+
+        // When
+        let result = service.isYesterday(yesterday)
+
+        // Then
+        #expect(result == true)
+    }
+
+    @Test("isYesterday returns false for today")
+    func testIsYesterdayReturnsFalseForToday() {
+        // Given
+        let service = CurrentDayService()
+
+        // When
+        let result = service.isYesterday(Date())
+
+        // Then
+        #expect(result == false)
     }
 
     // MARK: - Tests: Week/Month Calculations
@@ -168,43 +221,202 @@ struct CurrentDayServiceTests {
 
     // MARK: - Tests: Day Calculations
 
-    // DISABLED: daysBetween calculates correct days between dates
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testDaysBetweenCalculatesCorrectly() {
+    @Test("daysBetween calculates correct days between dates")
+    func testDaysBetweenCalculatesCorrectly() {
+        // Given
+        let service = CurrentDayService()
+        let date1 = Self.testDate
+        let date2 = Calendar.current.date(byAdding: .day, value: 7, to: date1)!
+
+        // When
+        let days = service.daysBetween(date1, date2)
+
+        // Then
+        #expect(days == 7)
     }
 
-    // DISABLED: daysBetween handles negative differences
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testDaysBetweenHandlesNegativeDifference() {
+    @Test("daysBetween handles negative differences")
+    func testDaysBetweenHandlesNegativeDifference() {
+        // Given
+        let service = CurrentDayService()
+        let date1 = Self.testDate
+        let date2 = Calendar.current.date(byAdding: .day, value: -5, to: date1)!
+
+        // When
+        let days = service.daysBetween(date1, date2)
+
+        // Then
+        #expect(days == -5)
     }
 
-    // DISABLED: daysBetween returns zero for same day
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testDaysBetweenReturnZeroForSameDay() {
+    @Test("daysBetween returns zero for same day")
+    func testDaysBetweenReturnZeroForSameDay() {
+        // Given
+        let service = CurrentDayService()
+        let date = Self.testDate
+
+        // When
+        let days = service.daysBetween(date, date)
+
+        // Then
+        #expect(days == 0)
+    }
+
+    @Test("daysBetween handles multiple weeks")
+    func testDaysBetweenHandlesMultipleWeeks() {
+        // Given
+        let service = CurrentDayService()
+        let date1 = Self.testDate
+        let date2 = Calendar.current.date(byAdding: .day, value: 30, to: date1)!
+
+        // When
+        let days = service.daysBetween(date1, date2)
+
+        // Then
+        #expect(days == 30)
+    }
+
+    @Test("daysBetween ignores time component")
+    func testDaysBetweenIgnoresTimeComponent() {
+        // Given
+        let service = CurrentDayService()
+        let calendar = Calendar.current
+
+        var components1 = calendar.dateComponents([.year, .month, .day], from: Self.testDate)
+        components1.hour = 8
+        components1.minute = 30
+        let date1 = calendar.date(from: components1)!
+
+        var components2 = calendar.dateComponents([.year, .month, .day], from: Self.testDate)
+        components2.day! += 5
+        components2.hour = 20
+        components2.minute = 45
+        let date2 = calendar.date(from: components2)!
+
+        // When
+        let days = service.daysBetween(date1, date2)
+
+        // Then
+        #expect(days == 5)
     }
 
     // MARK: - Tests: Time Utilities
 
-    // DISABLED: getCurrentTime returns valid time
-    // This test uses live dates which makes it flaky
-    // Placeholder for future implementation with fixed test dates
-    private func testGetCurrentTimeReturnsValidTime() {
+    @Test("getCurrentTime returns valid HourMinuteTime")
+    func testGetCurrentTimeReturnsValidTime() {
+        // Given
+        let service = CurrentDayService()
+
+        // When
+        let time = service.getCurrentTime()
+
+        // Then
+        #expect(time.hour >= 0 && time.hour < 24)
+        #expect(time.minute >= 0 && time.minute < 60)
     }
 
-    // MARK: - Tests: Formatting
+    @Test("getCurrentTime hour is within valid range")
+    func testGetCurrentTimeHourIsValid() {
+        // Given
+        let service = CurrentDayService()
 
-    // DISABLED: formatDate returns properly formatted date
-    // This test is flaky due to locale/formatting differences
-    // Placeholder for future implementation with fixed test data
-    private func testFormatDateReturnsFormattedDate() {
+        // When
+        let time = service.getCurrentTime()
+
+        // Then
+        #expect(time.hour >= 0)
+        #expect(time.hour <= 23)
     }
 
-    // DISABLED: formatTime returns valid time format
-    // This test is flaky due to locale/formatting differences
-    // Placeholder for future implementation with fixed test data
-    private func testFormatTimeReturnsValidFormat() {
+    @Test("getCurrentTime minute is within valid range")
+    func testGetCurrentTimeMinuteIsValid() {
+        // Given
+        let service = CurrentDayService()
+
+        // When
+        let time = service.getCurrentTime()
+
+        // Then
+        #expect(time.minute >= 0)
+        #expect(time.minute <= 59)
+    }
+
+    // MARK: - Tests: Month Boundaries
+
+    @Test("getEndOfMonth handles leap years correctly")
+    func testGetEndOfMonthHandlesLeapYears() {
+        // Given
+        let service = CurrentDayService()
+        let calendar = Calendar.current
+
+        // February in leap year (2025 is not a leap year, use 2024)
+        let leapYearFeb = calendar.date(from: DateComponents(year: 2024, month: 2, day: 15))!
+
+        // When
+        let endOfMonth = service.getEndOfMonth(for: leapYearFeb)
+
+        // Then
+        let components = calendar.dateComponents([.day], from: endOfMonth)
+        #expect(components.day == 29)
+    }
+
+    @Test("getEndOfMonth handles 31-day months")
+    func testGetEndOfMonthHandles31DayMonths() {
+        // Given
+        let service = CurrentDayService()
+        let calendar = Calendar.current
+
+        let january = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
+
+        // When
+        let endOfMonth = service.getEndOfMonth(for: january)
+
+        // Then
+        let components = calendar.dateComponents([.day], from: endOfMonth)
+        #expect(components.day == 31)
+    }
+
+    @Test("getEndOfMonth handles 30-day months")
+    func testGetEndOfMonthHandles30DayMonths() {
+        // Given
+        let service = CurrentDayService()
+        let calendar = Calendar.current
+
+        let april = calendar.date(from: DateComponents(year: 2025, month: 4, day: 15))!
+
+        // When
+        let endOfMonth = service.getEndOfMonth(for: april)
+
+        // Then
+        let components = calendar.dateComponents([.day], from: endOfMonth)
+        #expect(components.day == 30)
+    }
+
+    @Test("getTomorrowDate returns date one day after today")
+    func testGetTomorrowDateReturnsNextDay() {
+        // Given
+        let service = CurrentDayService()
+        let today = service.getTodayDate()
+
+        // When
+        let tomorrow = service.getTomorrowDate()
+
+        // Then
+        let components = Calendar.current.dateComponents([.day], from: today, to: tomorrow)
+        #expect(components.day == 1)
+    }
+
+    @Test("getYesterdayDate returns date one day before today")
+    func testGetYesterdayDateReturnsPreviousDay() {
+        // Given
+        let service = CurrentDayService()
+        let today = service.getTodayDate()
+
+        // When
+        let yesterday = service.getYesterdayDate()
+
+        // Then
+        let components = Calendar.current.dateComponents([.day], from: yesterday, to: today)
+        #expect(components.day == 1)
     }
 }
