@@ -360,7 +360,7 @@ struct ShiftChangeSheet: View {
 
     private var shiftDateHeader: some View {
         VStack(spacing: 8) {
-            Text(currentShift.date, style: .date)
+            Text(currentShift.date.formatted(date: .complete, time: .omitted))
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundStyle(
@@ -373,10 +373,6 @@ struct ShiftChangeSheet: View {
                         endPoint: .trailing
                     )
                 )
-
-            Text(currentShift.date.formatted(date: .complete, time: .omitted))
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
@@ -625,4 +621,67 @@ struct ShiftChangeSheet: View {
             store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
         }
     }
+}
+
+#Preview("Shift Change Sheet") {
+    // Sample location and shift types
+    let location = Location(id: UUID(), name: "Preview HQ", address: "123 Main St")
+    let morning = ShiftType(
+        id: UUID(),
+        symbol: "☀️",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 7, minute: 0),
+            to: HourMinuteTime(hour: 15, minute: 0)
+        ),
+        title: "Morning",
+        description: "Morning shift",
+        location: location
+    )
+    let evening = ShiftType(
+        id: UUID(),
+        symbol: "🌙",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 15, minute: 0),
+            to: HourMinuteTime(hour: 23, minute: 0)
+        ),
+        title: "Evening",
+        description: "Evening shift",
+        location: location
+    )
+    let scheduledShift = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: morning,
+        date: Date()
+    )
+    // Build preview store
+    let previewStore: Store = {
+        var state = AppState()
+        state.today.scheduledShifts = [scheduledShift]
+        state.today.isLoading = false
+        state.isCalendarAuthorized = true
+        state.isCalendarAuthorizationVerified = true
+        state.locations.locations = [location]
+        state.shiftTypes.shiftTypes = [morning, evening]
+        return Store(
+            state: state,
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: [
+                scheduleMiddleware,
+                todayMiddleware,
+                locationsMiddleware,
+                shiftTypesMiddleware,
+                changeLogMiddleware,
+                settingsMiddleware,
+                loggingMiddleware
+            ]
+        )
+    }()
+    ShiftChangeSheet(
+        currentShift: scheduledShift,
+        feature: .today
+    )
+    .environment(\.reduxStore, previewStore)
+    .padding()
 }
