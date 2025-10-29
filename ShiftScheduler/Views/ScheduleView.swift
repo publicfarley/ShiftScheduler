@@ -147,6 +147,14 @@ struct ScheduleView: View {
         .dismissKeyboardOnTap()
     }
 
+    // MARK: - Computed Properties
+
+    private var formattedSelectedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMMM d, yyyy"
+        return formatter.string(from: store.state.schedule.selectedDate)
+    }
+
     // MARK: - View Components
 
     private var authorizationRequiredView: some View {
@@ -186,6 +194,13 @@ struct ScheduleView: View {
             )
             .padding()
             .background(Color(.systemGray6))
+
+            // Selected date display
+            Text(formattedSelectedDate)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .padding(.horizontal)
+                .padding(.vertical, 12)
 
             // Shifts list or empty state with fade animation
             Group {
