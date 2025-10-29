@@ -225,6 +225,20 @@ enum ScheduleAction: Equatable {
     /// Handle shift deleted result
     case shiftDeleted(Result<Void, ScheduleError>)
 
+    // MARK: - Overlap Resolution Actions
+
+    /// Overlapping shifts detected when loading from calendar
+    case overlappingShiftsDetected(date: Date, shifts: [ScheduledShift])
+
+    /// User selected which shift to keep from overlapping shifts
+    case resolveOverlap(keepShift: ScheduledShift, deleteShifts: [ScheduledShift])
+
+    /// Overlap resolution completed
+    case overlapResolved(Result<Void, ScheduleError>)
+
+    /// User dismissed overlap resolution dialog
+    case overlapResolutionDismissed
+
     // MARK: - Switch Shift Actions
 
     /// Switch shift sheet toggle
@@ -338,6 +352,19 @@ enum ScheduleAction: Equatable {
             default:
                 return false
             }
+        case let (.overlappingShiftsDetected(dateL, shiftsL), .overlappingShiftsDetected(dateR, shiftsR)):
+            return dateL == dateR && shiftsL.map { $0.id } == shiftsR.map { $0.id }
+        case let (.resolveOverlap(keepL, deleteL), .resolveOverlap(keepR, deleteR)):
+            return keepL.id == keepR.id && deleteL.map { $0.id } == deleteR.map { $0.id }
+        case let (.overlapResolved(lhs), .overlapResolved(rhs)):
+            switch (lhs, rhs) {
+            case (.success, .success), (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case (.overlapResolutionDismissed, .overlapResolutionDismissed):
+            return true
         case let (.switchShiftSheetToggled(lhs), .switchShiftSheetToggled(rhs)):
             return lhs == rhs
         case let (.switchShiftTapped(lhs), .switchShiftTapped(rhs)):

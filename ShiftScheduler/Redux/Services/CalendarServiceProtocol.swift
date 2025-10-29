@@ -44,4 +44,9 @@ protocol CalendarServiceProtocol: Sendable {
     ///   - date: The date of the shift being updated
     /// - Throws: CalendarError if the event cannot be found or update fails
     func updateShiftEvent(eventIdentifier: String, newShiftType: ShiftType, date: Date) async throws -> Void
+
+    /// Delete a shift event from the calendar
+    /// - Parameter eventIdentifier: The EventKit event identifier of the shift to delete
+    /// - Throws: ScheduleError if deletion fails
+    func deleteShiftEvent(eventIdentifier: String) async throws -> Void
 }

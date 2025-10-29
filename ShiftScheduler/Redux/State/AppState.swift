@@ -176,6 +176,17 @@ struct ScheduleState: Equatable {
     /// Whether the filter sheet is visible
     var showFilterSheet: Bool = false
 
+    // MARK: - Overlap Resolution State
+
+    /// Whether overlap resolution dialog is shown
+    var showOverlapResolution: Bool = false
+
+    /// Date with overlapping shifts
+    var overlapDate: Date? = nil
+
+    /// Shifts that overlap on the same date
+    var overlappingShifts: [ScheduledShift] = []
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states

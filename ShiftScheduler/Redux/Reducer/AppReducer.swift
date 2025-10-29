@@ -262,6 +262,34 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isDeletingShift = false
         state.currentError = error
 
+    // MARK: - Overlap Resolution
+
+    case .overlappingShiftsDetected(let date, let shifts):
+        state.showOverlapResolution = true
+        state.overlapDate = date
+        state.overlappingShifts = shifts
+
+    case .resolveOverlap:
+        state.isLoading = true
+        state.currentError = nil
+
+    case .overlapResolved(.success):
+        state.isLoading = false
+        state.showOverlapResolution = false
+        state.overlapDate = nil
+        state.overlappingShifts = []
+        state.successMessage = "Overlap resolved"
+        state.showSuccessToast = true
+
+    case .overlapResolved(.failure(let error)):
+        state.isLoading = false
+        state.currentError = error
+
+    case .overlapResolutionDismissed:
+        state.showOverlapResolution = false
+        state.overlapDate = nil
+        state.overlappingShifts = []
+
     // MARK: - Switch Shift
 
     case .switchShiftSheetToggled(let show):

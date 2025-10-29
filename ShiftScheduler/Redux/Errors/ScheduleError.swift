@@ -7,6 +7,7 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
     case calendarEventCreationFailed(String)
     case calendarEventDeletionFailed(String)
     case duplicateShift(date: Date)
+    case overlappingShifts(date: Date, existingShifts: [String])
     case shiftNotFound
     case persistenceFailed(String)
     case undoStackEmpty
@@ -27,6 +28,10 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
             return "Failed to delete calendar event"
         case .duplicateShift:
             return "A shift already exists on this date"
+        case .overlappingShifts(let date, let shifts):
+            let shiftList = shifts.joined(separator: ", ")
+            let dateStr = date.formatted(date: .abbreviated, time: .omitted)
+            return "Cannot create overlapping shift on \(dateStr). Existing: \(shiftList)"
         case .shiftNotFound:
             return "Shift not found"
         case .persistenceFailed(let reason):
@@ -54,6 +59,8 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
             return "Please check your calendar settings and try again."
         case .duplicateShift:
             return "Delete the existing shift or choose a different date."
+        case .overlappingShifts:
+            return "Only one shift can exist on a given date. Delete the existing shift first."
         case .shiftNotFound:
             return "The shift may have been deleted. Please refresh your calendar."
         case .persistenceFailed:
@@ -86,6 +93,8 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
             return lhsReason == rhsReason
         case let (.duplicateShift(lhsDate), .duplicateShift(rhsDate)):
             return Calendar.current.isDate(lhsDate, inSameDayAs: rhsDate)
+        case let (.overlappingShifts(lhsDate, lhsShifts), .overlappingShifts(rhsDate, rhsShifts)):
+            return Calendar.current.isDate(lhsDate, inSameDayAs: rhsDate) && lhsShifts == rhsShifts
         case let (.persistenceFailed(lhsReason), .persistenceFailed(rhsReason)):
             return lhsReason == rhsReason
         case let (.invalidShiftData(lhsReason), .invalidShiftData(rhsReason)):
