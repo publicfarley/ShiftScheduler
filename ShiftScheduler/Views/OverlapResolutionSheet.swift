@@ -115,7 +115,7 @@ struct OverlapResolutionSheet: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         case .scheduled(let from, let to):
-                            Text("\(from.formatted()) - \(to.formatted())")
+                            Text("\(from.timeString) - \(to.timeString)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -145,7 +145,7 @@ struct OverlapResolutionSheet: View {
         symbol: "🌅",
         duration: .allDay,
         title: "Morning Shift",
-        shiftDescription: "Early morning shift",
+        description: "Early morning shift",
         location: sampleLocation
     )
     let sampleShiftType2 = ShiftType(
@@ -153,7 +153,7 @@ struct OverlapResolutionSheet: View {
         symbol: "🌙",
         duration: .allDay,
         title: "Night Shift",
-        shiftDescription: "Late night shift",
+        description: "Late night shift",
         location: sampleLocation
     )
 
@@ -170,19 +170,18 @@ struct OverlapResolutionSheet: View {
         date: Date()
     )
 
-    return OverlapResolutionSheet(
+    OverlapResolutionSheet(
         date: Date(),
         overlappingShifts: [shift1, shift2]
     )
     .environment(\.reduxStore, Store(
-        initialState: AppState(),
+        state: AppState(),
         reducer: appReducer,
-        middleware: [],
         services: ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
-        )
+        ),
+        middlewares: []
     ))
 }
