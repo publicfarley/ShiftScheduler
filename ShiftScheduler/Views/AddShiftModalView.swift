@@ -1,10 +1,11 @@
 import SwiftUI
 
 // MARK: - Add Shift Modal View
-/// Modal view for adding a new scheduled shift to the calendar
-/// Allows selection of date, shift type, and optional notes
+/// Premium, modern modal view for adding a new scheduled shift
+/// Features glass morphism design, improved interactions, and smooth animations
 struct AddShiftModalView: View {
     @Environment(\.reduxStore) var store
+    @Environment(\.dismiss) var dismiss
     @Binding var isPresented: Bool
 
     let availableShiftTypes: [ShiftType]
@@ -14,6 +15,7 @@ struct AddShiftModalView: View {
     @State private var selectedShiftType: ShiftType?
     @State private var notes: String = ""
     @State private var showDatePicker = false
+    @FocusState private var isNotesFocused: Bool
 
     var isFormValid: Bool {
         selectedShiftType != nil
@@ -23,142 +25,364 @@ struct AddShiftModalView: View {
         selectedDate.formatted(date: .abbreviated, time: .omitted)
     }
 
+    private var relativeDateString: String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(selectedDate) {
+            return "Today"
+        } else if calendar.isDateInTomorrow(selectedDate) {
+            return "Tomorrow"
+        } else if calendar.isDateInYesterday(selectedDate) {
+            return "Yesterday"
+        } else {
+            let components = calendar.dateComponents([.day], from: Date(), to: selectedDate)
+            if let days = components.day {
+                if days > 0 {
+                    return "In \(days) days"
+                } else if days < 0 {
+                    return "\(-days) days ago"
+                }
+            }
+            return ""
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                // MARK: - Date Selection Section
-                Section("Date") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(formattedDate)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.98, green: 0.98, blue: 1.0),
+                        Color(red: 0.95, green: 0.97, blue: 1.0)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
 
-                        Button(action: { showDatePicker.toggle() }) {
-                            HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(.blue)
-                                Text("Change Date")
-                                    .foregroundColor(.blue)
-                                Spacer()
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // MARK: - Date Selection Card
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Shift Date")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
 
-                // MARK: - Shift Type Selection Section
-                Section("Shift Type") {
-                    if availableShiftTypes.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.title3)
-                                .foregroundColor(.orange)
-                            Text("No shift types available")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text("Create a shift type first in Shift Types view")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 12)
-                    } else {
-                        Picker("Select Shift Type", selection: $selectedShiftType) {
-                            Text("Choose a shift type...").tag(nil as ShiftType?)
+                            Button(action: {
+                                showDatePicker.toggle()
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            }) {
+                                HStack(spacing: 12) {
+                                    // Calendar icon with gradient background
+                                    ZStack {
+                                        Circle()
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [.blue.opacity(0.2), .blue.opacity(0.1)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .frame(width: 44, height: 44)
 
-                            ForEach(availableShiftTypes, id: \.id) { shiftType in
-                                HStack(spacing: 8) {
-                                    Text(shiftType.symbol)
-                                        .font(.body)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(shiftType.title)
-                                            .font(.body)
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "mappin.circle.fill")
-                                                .font(.caption2)
-                                            Text(shiftType.location.name)
-                                                .font(.caption)
-                                        }
-                                        .foregroundColor(.secondary)
+                                        Image(systemName: "calendar")
+                                            .font(.title3)
+                                            .foregroundColor(.blue)
                                     }
-                                }
-                                .tag(shiftType as ShiftType?)
-                            }
-                        }
-                        .pickerStyle(.automatic)
 
-                        // Selected shift type details
-                        if let selectedType = selectedShiftType {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Divider()
-                                    .padding(.vertical, 4)
-
-                                HStack(spacing: 8) {
-                                    Image(systemName: "clock.fill")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                    Text(selectedType.startTimeString)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                HStack(spacing: 8) {
-                                    Image(systemName: "mappin.circle.fill")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
-                                    Text(selectedType.location.name)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                if !selectedType.shiftDescription.isEmpty {
+                                    // Date display
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("Description")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
-                                            .textCase(.uppercase)
-                                        Text(selectedType.shiftDescription)
+                                        Text(formattedDate)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+
+                                        Text(relativeDateString)
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                }
-                            }
-                            .padding(.vertical, 8)
-                        }
-                    }
-                }
 
-                // MARK: - Notes Section
-                Section("Notes (Optional)") {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 80)
-                        .font(.body)
+                                    Spacer()
+
+                                    // Chevron indicator
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(
+                                                    LinearGradient(
+                                                        colors: [.blue.opacity(0.3), .clear],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .shadow(
+                                            color: .black.opacity(0.05),
+                                            radius: 8,
+                                            x: 0,
+                                            y: 4
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+
+                            // Graphical DatePicker (shown when expanded)
+                            if showDatePicker {
+                                DatePicker(
+                                    "",
+                                    selection: $selectedDate,
+                                    displayedComponents: [.date]
+                                )
+                                .datePickerStyle(.graphical)
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .strokeBorder(
+                                                    LinearGradient(
+                                                        colors: [.blue.opacity(0.2), .clear],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .scale(scale: 0.95).combined(with: .opacity),
+                                    removal: .scale(scale: 0.98).combined(with: .opacity)
+                                ))
+                            }
+                        }
+
+                        // MARK: - Shift Type Selection Card
+                        if !availableShiftTypes.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Shift Type")
+                                    .font(.headline)
+                                    .foregroundStyle(.secondary)
+
+                                Picker("Select Shift Type", selection: $selectedShiftType) {
+                                    Text("Choose a shift type").tag(nil as ShiftType?)
+
+                                    ForEach(availableShiftTypes, id: \.id) { shiftType in
+                                        HStack(spacing: 8) {
+                                            Text(shiftType.symbol)
+                                            Text(shiftType.title)
+                                            Spacer()
+                                            Text(shiftType.timeRangeString)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .tag(Optional(shiftType))
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(
+                                                    LinearGradient(
+                                                        colors: [
+                                                            ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
+                                                            .clear
+                                                        ],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .shadow(
+                                            color: ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.1),
+                                            radius: 8,
+                                            x: 0,
+                                            y: 4
+                                        )
+                                )
+                                .animation(.easeOut(duration: 0.3), value: selectedShiftType)
+                            }
+                        } else {
+                            // Empty state
+                            VStack(spacing: 12) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.orange)
+                                Text("No Shift Types Available")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text("Create a shift type first in Shift Types view")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(.ultraThinMaterial)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .strokeBorder(.orange.opacity(0.3), lineWidth: 1)
+                                    )
+                            )
+                        }
+
+                        // MARK: - Shift Preview Card
+                        if let shiftType = selectedShiftType {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Shift Preview")
+                                    .font(.headline)
+                                    .foregroundStyle(.secondary)
+
+                                ShiftDisplayCard(
+                                    shiftType: shiftType,
+                                    date: selectedDate,
+                                    label: "New Shift",
+                                    showBadge: true
+                                )
+                                .transition(
+                                    .asymmetric(
+                                        insertion: .scale(scale: 0.95).combined(with: .opacity),
+                                        removal: .scale(scale: 0.98).combined(with: .opacity)
+                                    )
+                                )
+                            }
+                        }
+
+                        // MARK: - Notes Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Notes (Optional)")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+
+                            TextEditor(text: $notes)
+                                .focused($isNotesFocused)
+                                .frame(minHeight: 80, maxHeight: 120)
+                                .padding(12)
+                                .font(.body)
+                                .scrollContentBackground(.hidden)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(
+                                                    isNotesFocused
+                                                        ? ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.5)
+                                                        : Color.clear,
+                                                    lineWidth: 2
+                                                )
+                                        )
+                                        .shadow(
+                                            color: isNotesFocused
+                                                ? ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.15)
+                                                : .clear,
+                                            radius: 8,
+                                            x: 0,
+                                            y: 4
+                                        )
+                                )
+                                .animation(.easeOut(duration: 0.2), value: isNotesFocused)
+                        }
+
+                        // MARK: - Action Buttons
+                        HStack(spacing: 16) {
+                            // Cancel Button
+                            Button(action: {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                            }) {
+                                HStack {
+                                    Image(systemName: "xmark")
+                                        .font(.callout)
+                                    Text("Cancel")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(.secondary.opacity(0.3), lineWidth: 1)
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+
+                            // Save Button
+                            Button(action: {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                handleAddShift()
+                            }) {
+                                HStack {
+                                    if store.state.schedule.isAddingShift {
+                                        ProgressView()
+                                            .tint(.white)
+                                    } else {
+                                        Image(systemName: "checkmark")
+                                            .font(.callout)
+                                    }
+                                    Text("Add Shift")
+                                        .fontWeight(.bold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .foregroundStyle(.white)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: selectedShiftType != nil
+                                                    ? [ShiftColorPalette.colorForShift(selectedShiftType), ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.8)]
+                                                    : [.gray, .gray.opacity(0.8)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .shadow(
+                                            color: ShiftColorPalette.colorForShift(selectedShiftType).opacity(0.3),
+                                            radius: 8,
+                                            x: 0,
+                                            y: 4
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(selectedShiftType == nil || store.state.schedule.isAddingShift)
+                            .opacity(selectedShiftType == nil ? 0.5 : 1.0)
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 24)
                 }
+                .scrollDismissesKeyboard(.immediately)
+                .dismissKeyboardOnTap()
             }
             .navigationTitle("Add Shift")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                    }
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add") {
-                        handleAddShift()
-                    }
-                    .disabled(!isFormValid || store.state.schedule.isAddingShift)
-                }
-            }
             .onAppear {
                 selectedDate = preselectedDate
             }
-            .interactiveDismissDisabled(false)
+            .sheet(isPresented: $showDatePicker) {
+                DatePickerSheet(selectedDate: $selectedDate)
+            }
         }
-        .sheet(isPresented: $showDatePicker) {
-            DatePickerSheet(selectedDate: $selectedDate)
-        }
-        .dismissKeyboardOnTap()
     }
 
     private func handleAddShift() {
@@ -170,11 +394,9 @@ struct AddShiftModalView: View {
             date: selectedDate,
             shiftType: shiftType,
             location: shiftType.location,
-            startTime: Date(),  // Not used for all-day shifts
+            startTime: Date(),
             notes: finalNotes
         )))
-
-        // Sheet will be dismissed by Redux action after success
     }
 }
 
