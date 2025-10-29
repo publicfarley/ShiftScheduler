@@ -117,6 +117,21 @@ struct ScheduleView: View {
                         .environment(\.reduxStore, store)
                 }
             }
+            .sheet(
+                isPresented: .constant(store.state.schedule.showOverlapResolution),
+                onDismiss: {
+                    store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                }
+            ) {
+                if let date = store.state.schedule.overlapDate,
+                   !store.state.schedule.overlappingShifts.isEmpty {
+                    OverlapResolutionSheet(
+                        date: date,
+                        overlappingShifts: store.state.schedule.overlappingShifts
+                    )
+                    .environment(\.reduxStore, store)
+                }
+            }
             .errorAlert(error: Binding(
                 get: { store.state.schedule.currentError },
                 set: { _ in store.dispatch(action: .schedule(.dismissError)) }

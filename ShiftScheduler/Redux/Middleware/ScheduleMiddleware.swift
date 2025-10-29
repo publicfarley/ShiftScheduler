@@ -47,6 +47,19 @@ func scheduleMiddleware(
         do {
             let shifts = try await services.calendarService.loadShiftsForCurrentMonth()
             logger.debug("Successfully loaded \(shifts.count) shifts")
+
+            // Check for overlapping shifts on the same date
+            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
+                Calendar.current.startOfDay(for: shift.date)
+            }
+
+            // Find any dates with multiple shifts
+            if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
+                logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
+                // Dispatch overlap detection - user must resolve
+                await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
+            }
+
             await dispatch(.schedule(.shiftsLoaded(.success(shifts))))
         } catch {
             logger.error("Failed to load shifts: \(error.localizedDescription)")
@@ -128,12 +141,103 @@ func scheduleMiddleware(
         break
 
     case .deleteShift(let shift):
-        // logger.debug("Deleting shift: \(shift.eventIdentifier)")
-        // TODO: Implement shift deletion via calendar service
-        // For now, just complete the action
-        await dispatch(.schedule(.shiftDeleted(.success(()))))
+        logger.debug("Deleting shift: \(shift.eventIdentifier)")
+        do {
+            // Create snapshot of the shift being deleted
+            let oldSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
+
+            // Create change log entry for deletion
+            let entry = ChangeLogEntry(
+                id: UUID(),
+                timestamp: Date(),
+                userId: state.userProfile.userId,
+                userDisplayName: state.userProfile.displayName,
+                changeType: .deleted,
+                scheduledShiftDate: shift.date,
+                oldShiftSnapshot: oldSnapshot,
+                newShiftSnapshot: nil, // No new shift for deletion
+                reason: nil
+            )
+
+            // Persist the change log entry
+            try await services.persistenceService.addChangeLogEntry(entry)
+
+            // Delete the event from calendar
+            try await services.calendarService.deleteShiftEvent(eventIdentifier: shift.eventIdentifier)
+
+            // Save updated undo/redo stacks
+            var undoStack = state.schedule.undoStack
+            undoStack.append(entry)
+            try await services.persistenceService.saveUndoRedoStacks(
+                undo: undoStack,
+                redo: [] // Clear redo stack on new operation
+            )
+
+            logger.debug("Shift deleted successfully")
+            await dispatch(.schedule(.shiftDeleted(.success(()))))
+
+            // Reload shifts after deletion to refresh from calendar
+            await dispatch(.schedule(.loadShifts))
+        } catch {
+            logger.error("Failed to delete shift: \(error.localizedDescription)")
+            let scheduleError = ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
+            await dispatch(.schedule(.shiftDeleted(.failure(scheduleError))))
+        }
 
     case .shiftDeleted:
+        // Handled by reducer
+        break
+
+    // MARK: - Overlap Resolution
+
+    case .overlappingShiftsDetected:
+        // Handled by reducer (shows dialog)
+        break
+
+    case .resolveOverlap(let keepShift, let deleteShifts):
+        logger.debug("Resolving overlap: keeping \(keepShift.eventIdentifier), deleting \(deleteShifts.count) shifts")
+        do {
+            // Delete each overlapping shift except the one to keep
+            for shift in deleteShifts {
+                // Create snapshot of the shift being deleted
+                let oldSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
+
+                // Create change log entry for deletion
+                let entry = ChangeLogEntry(
+                    id: UUID(),
+                    timestamp: Date(),
+                    userId: state.userProfile.userId,
+                    userDisplayName: state.userProfile.displayName,
+                    changeType: .deleted,
+                    scheduledShiftDate: shift.date,
+                    oldShiftSnapshot: oldSnapshot,
+                    newShiftSnapshot: nil,
+                    reason: "Removed to resolve overlapping shifts"
+                )
+
+                // Persist the change log entry
+                try await services.persistenceService.addChangeLogEntry(entry)
+
+                // Delete the event from calendar
+                try await services.calendarService.deleteShiftEvent(eventIdentifier: shift.eventIdentifier)
+            }
+
+            logger.debug("Overlap resolved successfully")
+            await dispatch(.schedule(.overlapResolved(.success(()))))
+
+            // Reload shifts after resolution
+            await dispatch(.schedule(.loadShifts))
+        } catch {
+            logger.error("Failed to resolve overlap: \(error.localizedDescription)")
+            let scheduleError = ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
+            await dispatch(.schedule(.overlapResolved(.failure(scheduleError))))
+        }
+
+    case .overlapResolved:
+        // Handled by reducer
+        break
+
+    case .overlapResolutionDismissed:
         // Handled by reducer
         break
 

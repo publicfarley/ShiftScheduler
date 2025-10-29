@@ -80,12 +80,14 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw error
         }
 
-        // Check for duplicate shifts
+        // Check for overlapping shifts (business rule: no overlaps allowed)
         let startDate = Calendar.current.startOfDay(for: date)
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
-        if mockShifts.contains(where: { $0.shiftType?.id == shiftType.id && $0.date == startDate }) {
-            throw ScheduleError.duplicateShift(date: startDate)
+        let existingShifts = mockShifts.filter { $0.date == startDate }
+        if !existingShifts.isEmpty {
+            let shiftTitles = existingShifts.compactMap { $0.shiftType?.title }
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
         // Create and add mock shift
@@ -110,6 +112,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
+        // Check for overlapping shifts on the same date (excluding the current shift being updated)
+        let startDate = Calendar.current.startOfDay(for: date)
+        let otherShifts = mockShifts.filter { $0.eventIdentifier != eventIdentifier && $0.date == startDate }
+
+        if !otherShifts.isEmpty {
+            let shiftTitles = otherShifts.compactMap { $0.shiftType?.title }
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+        }
+
         // Update the shift with the new shift type
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
@@ -117,5 +128,19 @@ final class MockCalendarService: CalendarServiceProtocol {
             shiftType: newShiftType,
             date: mockShifts[index].date
         )
+    }
+
+    func deleteShiftEvent(eventIdentifier: String) async throws {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Find the shift to delete
+        guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
+            throw ScheduleError.calendarEventDeletionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Remove the shift
+        mockShifts.remove(at: index)
     }
 }

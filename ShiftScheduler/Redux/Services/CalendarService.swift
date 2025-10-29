@@ -137,13 +137,14 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.notAuthorized
         }
 
-        // Check for duplicate shifts on the same date
+        // Check for overlapping shifts on the same date (business rule: no overlaps allowed)
         let startDate = Calendar.current.startOfDay(for: date)
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         let existingShifts = try await loadShifts(from: startDate, to: endDate)
-        if existingShifts.contains(where: { $0.shiftType?.id == shiftType.id }) {
-            throw ScheduleError.duplicateShift(date: startDate)
+        if !existingShifts.isEmpty {
+            let shiftTitles = existingShifts.compactMap { $0.shiftType?.title }
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
         // Create new all-day event
@@ -200,6 +201,18 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
+        // Check for overlapping shifts on the same date (excluding the current shift being updated)
+        let startDate = Calendar.current.startOfDay(for: date)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+
+        let existingShifts = try await loadShifts(from: startDate, to: endDate)
+        let otherShifts = existingShifts.filter { $0.eventIdentifier != eventIdentifier }
+
+        if !otherShifts.isEmpty {
+            let shiftTitles = otherShifts.compactMap { $0.shiftType?.title }
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+        }
+
         // Update event with new shift type information
         event.title = newShiftType.title
         event.location = newShiftType.location.name
@@ -225,6 +238,29 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             logger.debug("Updated shift event \(eventIdentifier) with shift type \(newShiftType.title)")
         } catch {
             throw CalendarServiceError.eventConversionFailed("Failed to save updated event: \(error.localizedDescription)")
+        }
+    }
+
+    func deleteShiftEvent(eventIdentifier: String) async throws {
+        logger.debug("Deleting shift event with identifier: \(eventIdentifier)")
+
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Fetch the event by identifier
+        guard let event = eventStore.event(withIdentifier: eventIdentifier) else {
+            throw ScheduleError.calendarEventDeletionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Delete the event
+        do {
+            try eventStore.remove(event, span: .thisEvent)
+            logger.debug("Successfully deleted shift event \(eventIdentifier)")
+        } catch {
+            logger.error("Failed to delete shift event: \(error.localizedDescription)")
+            throw ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
         }
     }
 
