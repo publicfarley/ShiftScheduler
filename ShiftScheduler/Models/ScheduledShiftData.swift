@@ -8,6 +8,7 @@ struct ScheduledShiftData: Hashable, Equatable, Sendable {
     let date: Date
     let title: String
     let location: String?
+    let notes: String?
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(eventIdentifier)

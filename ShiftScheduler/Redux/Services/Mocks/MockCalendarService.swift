@@ -121,7 +121,8 @@ final class MockCalendarService: CalendarServiceProtocol {
             id: UUID(),
             eventIdentifier: UUID().uuidString,
             shiftType: shiftType,
-            date: startDate
+            date: startDate,
+            notes: notes
         )
 
         mockShifts.append(shift)
@@ -154,7 +155,8 @@ final class MockCalendarService: CalendarServiceProtocol {
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
             shiftType: newShiftType,
-            date: mockShifts[index].date
+            date: mockShifts[index].date,
+            notes: mockShifts[index].notes
         )
     }
 
