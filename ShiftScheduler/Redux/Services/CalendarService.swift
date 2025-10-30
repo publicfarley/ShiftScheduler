@@ -310,19 +310,14 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
     // MARK: - Private Helpers
 
-    /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)
-    /// This is the first step of the data transformation pipeline
-    private func convertEventToShiftData(_ event: EKEvent) -> ScheduledShiftData? {
-        // Extract shift type ID from event notes
-        // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
-        guard let notes = event.notes else {
-            logger.debug("Event '\(event.title)' has no notes")
-            return nil
-        }
-
-        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
-
-        var shiftTypeIdString: String = ""
+    /// Extract shift type ID and user notes from EventKit event notes field
+    /// Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
+    /// - Parameters:
+    ///   - notes: The raw notes string from the EventKit event
+    ///   - eventTitle: The event title (for logging purposes)
+    /// - Returns: A tuple containing the shift type ID string and optional user notes
+    private func extractNotesAndShiftTypeId(from notes: String, eventTitle: String) -> (shiftTypeId: String, userNotes: String?) {
+        var shiftTypeIdString = ""
         var userNotes: String? = nil
 
         // Try different possible separators
@@ -336,7 +331,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
                 let notesAfterSeparator = String(notes[separatorRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
                 userNotes = notesAfterSeparator.isEmpty ? nil : notesAfterSeparator
 
-                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
+                logger.debug("Event '\(eventTitle)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
                 break
             }
         }
@@ -344,8 +339,25 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         if shiftTypeIdString.isEmpty {
             // No separator found - entire note string should be the shift type ID
             shiftTypeIdString = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-            logger.debug("Event '\(event.title)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
+            logger.debug("Event '\(eventTitle)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
         }
+
+        return (shiftTypeIdString, userNotes)
+    }
+
+    /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)
+    /// This is the first step of the data transformation pipeline
+    private func convertEventToShiftData(_ event: EKEvent) -> ScheduledShiftData? {
+        // Extract shift type ID from event notes
+        // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
+        guard let notes = event.notes else {
+            logger.debug("Event '\(event.title)' has no notes")
+            return nil
+        }
+
+        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
+
+        let (shiftTypeIdString, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 
         guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
             logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")
@@ -372,30 +384,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         logger.debug("Event '\(event.title)' full notes: '\(notes)'")
 
-        var shiftTypeIdString: String = ""
-        var userNotes: String? = nil
-
-        // Try different possible separators
-        let possibleSeparators = ["\n---\n", "---", "\n--\n", " --- "]
-
-        for separator in possibleSeparators {
-            if let separatorRange = notes.range(of: separator) {
-                shiftTypeIdString = String(notes[..<separatorRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-
-                // Extract user notes after separator
-                let notesAfterSeparator = String(notes[separatorRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
-                userNotes = notesAfterSeparator.isEmpty ? nil : notesAfterSeparator
-
-                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
-                break
-            }
-        }
-
-        if shiftTypeIdString.isEmpty {
-            // No separator found - entire note string should be the shift type ID
-            shiftTypeIdString = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-            logger.debug("Event '\(event.title)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
-        }
+        let (shiftTypeIdString, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 
         guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
             logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")

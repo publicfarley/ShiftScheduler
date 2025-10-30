@@ -224,7 +224,7 @@ struct UnifiedShiftCard: View {
 }
 
 #Preview {
-    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
+    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St, Suite 100")
     let sampleShiftType = ShiftType(
         id: UUID(),
         symbol: "🌅",
@@ -236,17 +236,47 @@ struct UnifiedShiftCard: View {
         description: "Regular morning shift with breaks",
         location: sampleLocation
     )
+
+    // Shift without notes
     let sampleShift = ScheduledShift(
         id: UUID(),
         eventIdentifier: UUID().uuidString,
         shiftType: sampleShiftType,
-        date: Date()
+        date: Date(),
+        notes: nil
+    )
+
+    // Shift with notes - demonstrates the notes feature
+    let sampleShiftWithNotes = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: sampleShiftType,
+        date: Date(),
+        notes: "Remember to bring safety equipment and laptop. Client meeting at 2 PM."
     )
 
     VStack(spacing: 16) {
+        Text("Shift without notes:")
+            .font(.caption)
+            .foregroundColor(.secondary)
+
         UnifiedShiftCard(shift: sampleShift, onTap: {
             print("Shift tapped!")
         })
+
+        Text("Shift with notes:")
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.top, 8)
+
+        UnifiedShiftCard(shift: sampleShiftWithNotes, onTap: {
+            print("Shift with notes tapped!")
+        })
+
+        Text("Empty state:")
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.top, 8)
 
         UnifiedShiftCard(shift: nil, onTap: nil)
     }

@@ -336,4 +336,188 @@ struct CalendarServiceTests {
         #expect(shifts[1].eventIdentifier == "shift-2")
         #expect(shifts[2].eventIdentifier == "shift-3")
     }
+
+    // MARK: - Notes Extraction Tests
+
+    @Test("createShiftEvent with notes stores notes correctly")
+    func testCreateShiftEventWithNotes() async throws {
+        // Given - Mock service authorized
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let shiftType = Self.createTestShiftType()
+        let date = Calendar.current.startOfDay(for: Date())
+        let testNotes = "Bring laptop and charger"
+
+        // When
+        let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: testNotes)
+
+        // Then - shift should have notes
+        #expect(scheduledShift.notes == testNotes)
+    }
+
+    @Test("createShiftEvent without notes has nil notes")
+    func testCreateShiftEventWithoutNotes() async throws {
+        // Given - Mock service authorized
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let shiftType = Self.createTestShiftType()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create without notes
+        let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
+
+        // Then - notes should be nil
+        #expect(scheduledShift.notes == nil)
+    }
+
+    @Test("createShiftEvent with empty notes has nil notes")
+    func testCreateShiftEventWithEmptyNotes() async throws {
+        // Given - Mock service authorized
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let shiftType = Self.createTestShiftType()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create with empty string notes
+        let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: "")
+
+        // Then - notes should be nil (empty notes are treated as nil)
+        #expect(scheduledShift.notes == nil)
+    }
+
+    @Test("ScheduledShift equality with same notes")
+    func testScheduledShiftEqualityWithSameNotes() {
+        // Given
+        let shiftType = Self.createTestShiftType()
+        let date = Date()
+        let notes = "Test notes"
+
+        let shift1 = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: "event-1",
+            shiftType: shiftType,
+            date: date,
+            notes: notes
+        )
+
+        let shift2 = ScheduledShift(
+            id: shift1.id,
+            eventIdentifier: "event-1",
+            shiftType: shiftType,
+            date: date,
+            notes: notes
+        )
+
+        // Then - shifts should be equal
+        #expect(shift1 == shift2)
+    }
+
+    @Test("ScheduledShift equality with different notes")
+    func testScheduledShiftEqualityWithDifferentNotes() {
+        // Given
+        let shiftType = Self.createTestShiftType()
+        let date = Date()
+
+        let shift1 = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: "event-1",
+            shiftType: shiftType,
+            date: date,
+            notes: "Notes 1"
+        )
+
+        let shift2 = ScheduledShift(
+            id: shift1.id,
+            eventIdentifier: "event-1",
+            shiftType: shiftType,
+            date: date,
+            notes: "Notes 2"
+        )
+
+        // Then - shifts should NOT be equal (different notes)
+        #expect(shift1 != shift2)
+    }
+
+    @Test("ScheduledShift init from ScheduledShiftData with notes")
+    func testScheduledShiftInitFromDataWithNotes() {
+        // Given
+        let shiftTypeId = UUID()
+        let testNotes = "Important shift notes"
+        let shiftData = ScheduledShiftData(
+            eventIdentifier: "test-event",
+            shiftTypeId: shiftTypeId,
+            date: Date(),
+            title: "Test Shift",
+            location: "Test Location",
+            notes: testNotes
+        )
+        let shiftType = Self.createTestShiftType()
+
+        // When
+        let shift = ScheduledShift(from: shiftData, shiftType: shiftType)
+
+        // Then - notes should be preserved
+        #expect(shift.notes == testNotes)
+        #expect(shift.eventIdentifier == "test-event")
+    }
+
+    @Test("ScheduledShift init from ScheduledShiftData without notes")
+    func testScheduledShiftInitFromDataWithoutNotes() {
+        // Given
+        let shiftTypeId = UUID()
+        let shiftData = ScheduledShiftData(
+            eventIdentifier: "test-event",
+            shiftTypeId: shiftTypeId,
+            date: Date(),
+            title: "Test Shift",
+            location: "Test Location",
+            notes: nil
+        )
+        let shiftType = Self.createTestShiftType()
+
+        // When
+        let shift = ScheduledShift(from: shiftData, shiftType: shiftType)
+
+        // Then - notes should be nil
+        #expect(shift.notes == nil)
+    }
+
+    @Test("ScheduledShiftData with notes")
+    func testScheduledShiftDataWithNotes() {
+        // Given
+        let notes = "Shift notes content"
+        let shiftData = ScheduledShiftData(
+            eventIdentifier: "event-123",
+            shiftTypeId: UUID(),
+            date: Date(),
+            title: "Test",
+            location: "Office",
+            notes: notes
+        )
+
+        // Then - notes should be stored
+        #expect(shiftData.notes == notes)
+    }
+
+    @Test("ScheduledShiftData equality ignores notes differences")
+    func testScheduledShiftDataEqualityIgnoresNotes() {
+        // Given - two shift data with same ID but different notes
+        let shiftData1 = ScheduledShiftData(
+            eventIdentifier: "event-123",
+            shiftTypeId: UUID(),
+            date: Date(),
+            title: "Test",
+            location: "Office",
+            notes: "Notes 1"
+        )
+
+        let shiftData2 = ScheduledShiftData(
+            eventIdentifier: "event-123",
+            shiftTypeId: UUID(),
+            date: Date(),
+            title: "Test",
+            location: "Office",
+            notes: "Notes 2"
+        )
+
+        // Then - should be equal (equality based on eventIdentifier only)
+        #expect(shiftData1 == shiftData2)
+    }
 }
