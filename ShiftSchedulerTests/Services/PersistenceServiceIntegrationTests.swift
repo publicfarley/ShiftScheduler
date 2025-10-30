@@ -272,8 +272,8 @@ struct PersistenceServiceIntegrationTests {
         // When
         let count = try await service.purgeOldChangeLogEntries(olderThanDays: 30)
 
-        // Then
-        #expect(count is Int)
+        // Then - purge should return non-negative count of purged entries
+        #expect(count >= 0)
     }
 
     // MARK: - Tests: User Profile Operations
