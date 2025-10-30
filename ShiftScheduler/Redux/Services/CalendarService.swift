@@ -311,7 +311,39 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     // MARK: - Private Helpers
 
     /// Extract shift type ID and user notes from EventKit event notes field
-    /// Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
+    ///
+    /// **Notes Format in EventKit Events:**
+    /// The shift type UUID is stored in the first part of the notes field,
+    /// followed by an optional separator and user notes:
+    /// ```
+    /// "SHIFT_TYPE_UUID\n---\nuser notes"
+    /// ```
+    /// or just:
+    /// ```
+    /// "SHIFT_TYPE_UUID"
+    /// ```
+    ///
+    /// **Supported Separators (in priority order):**
+    /// 1. `\n---\n` (preferred - newline, three dashes, newline)
+    /// 2. `---` (backward compatibility - three dashes only)
+    /// 3. `\n--\n` (alternative - newline, two dashes, newline)
+    /// 4. ` --- ` (with surrounding spaces)
+    ///
+    /// **Why the separator format exists:**
+    /// - The EventKit notes field is our only way to store the shift type ID reference
+    /// - We need to distinguish between the system-managed ID and user-entered notes
+    /// - The separator ensures we can extract both pieces of information reliably
+    ///
+    /// **Edge Cases:**
+    /// - If no separator is found, the entire notes field is treated as the UUID
+    /// - If user enters "---" in their notes, it won't cause issues because we only
+    ///   split on the first occurrence of any separator pattern
+    /// - Empty notes after the separator are treated as `nil` (no user notes)
+    ///
+    /// **Changing the separator format:**
+    /// To change or add separator formats, update the `possibleSeparators` array below.
+    /// Keep existing formats for backward compatibility with old calendar events.
+    ///
     /// - Parameters:
     ///   - notes: The raw notes string from the EventKit event
     ///   - eventTitle: The event title (for logging purposes)

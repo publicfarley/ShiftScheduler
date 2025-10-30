@@ -149,6 +149,8 @@ struct UnifiedShiftCard: View {
                                         .foregroundColor(.secondary)
                                         .lineLimit(3)
                                 }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("Notes: \(notes)")
                             }
                         }
 
