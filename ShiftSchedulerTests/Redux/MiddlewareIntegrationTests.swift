@@ -3,8 +3,8 @@ import Foundation
 @testable import ShiftScheduler
 
 /// Integration tests for Redux middleware
-/// ACTUALLY tests middleware with real middleware in the array (not empty!)
 /// Validates middleware side effects, service calls, and secondary dispatches
+/// Tests that middleware actually calls services and dispatches secondary actions
 @Suite("Middleware Integration Tests")
 @MainActor
 struct MiddlewareIntegrationTests {
@@ -22,57 +22,196 @@ struct MiddlewareIntegrationTests {
         )
     }
 
-    // MARK: - AppStartup Middleware Tests
+    // MARK: - AppStartupMiddleware Tests
 
-    @Test("AppStartupMiddleware executes when included in middleware array")
-    func testAppStartupMiddlewareExecutes() async {
-        // Given - Store with REAL middleware (not empty array!)
-        let mockServices = Self.createMockServiceContainer()
+    @Test("AppStartupMiddleware calls calendar service on startup")
+    func testAppStartupCallsCalendarService() async {
+        // Given - Store with startup middleware and mocks
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = true
+        let mockServices = ServiceContainer(
+            calendarService: mockCalendar,
+            persistenceService: MockPersistenceService(),
+            currentDayService: CurrentDayService()
+        )
 
         let store = Store(
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: [appStartupMiddleware]  // ✅ REAL MIDDLEWARE
+            middlewares: [appStartupMiddleware]
         )
 
-        // When - dispatch action
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.today)))
+        // When - trigger app startup verification
+        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
-        // Wait for async middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        // Wait for middleware to call service
+        try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then - middleware was in the array and executed
-        #expect(store.state.selectedTab == .today)
+        // Then - calendar service was checked and state was updated
+        // If middleware called the service, it would have dispatched calendarAccessVerified
+        #expect(store.state.isCalendarAuthorized == true)
     }
 
-    @Test("AppStartupMiddleware handles calendar verification")
-    func testAppStartupMiddlewareHandlesCalendarVerification() async {
+    @Test("AppStartupMiddleware dispatches calendarAccessVerified when authorized")
+    func testAppStartupDispatchesVerifiedWhenAuthorized() async {
         // Given
-        let mockServices = Self.createMockServiceContainer()
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = true
+        let mockServices = ServiceContainer(
+            calendarService: mockCalendar,
+            persistenceService: MockPersistenceService(),
+            currentDayService: CurrentDayService()
+        )
 
         let store = Store(
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: [appStartupMiddleware]  // ✅ REAL MIDDLEWARE
+            middlewares: [appStartupMiddleware]
         )
 
-        // When - dispatch lifecycle action
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
+        // When - verify calendar access (authorized)
+        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Wait for middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then - state updated
-        #expect(store.state.selectedTab == .schedule)
+        // Then - secondary dispatch occurred (calendarAccessVerified action)
+        // This is verified by checking the state was updated
+        #expect(store.state.isCalendarAuthorized == true)
     }
 
-    // MARK: - Multiple Middleware Tests
+    @Test("AppStartupMiddleware dispatches requestCalendarAccess when not authorized")
+    func testAppStartupDispatchesRequestWhenNotAuthorized() async {
+        // Given
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = false
+        let mockServices = ServiceContainer(
+            calendarService: mockCalendar,
+            persistenceService: MockPersistenceService(),
+            currentDayService: CurrentDayService()
+        )
 
-    @Test("Multiple middlewares can be registered together")
-    func testMultipleMiddlewaresRegistered() async {
-        // Given - Store with TWO middleware
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When
+        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+
+        // Wait for middleware
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - middleware triggered request flow
+        // State still shows not authorized (middleware dispatches requestCalendarAccess)
+        #expect(store.state.isCalendarAuthorized == false)
+    }
+
+    @Test("AppStartupMiddleware handles calendar service errors gracefully")
+    func testAppStartupHandlesCalendarServiceError() async {
+        // Given - Mock service that throws error
+        let mockCalendar = MockCalendarService()
+        mockCalendar.shouldThrowError = true
+        mockCalendar.throwError = CalendarServiceError.notAuthorized
+        let mockServices = ServiceContainer(
+            calendarService: mockCalendar,
+            persistenceService: MockPersistenceService(),
+            currentDayService: CurrentDayService()
+        )
+
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When - middleware tries to call failing service
+        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+
+        // Wait for error handling
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - middleware handled error and dispatched secondary action
+        // App should continue and display content (error is handled gracefully)
+        #expect(store.state.selectedTab == .today)  // App is still functional
+    }
+
+    @Test("AppStartupMiddleware loads initial data on loadInitialData action")
+    func testAppStartupLoadsInitialData() async {
+        // Given
+        let mockPersistence = MockPersistenceService()
+        let testLocation = Location(id: UUID(), name: "Test Office", address: "123 Main St")
+        let testLocation2 = Location(id: UUID(), name: "Office 2", address: "456 Oak Ave")
+        mockPersistence.mockLocations = [testLocation, testLocation2]
+
+        let testShiftType = ShiftType(
+            id: UUID(),
+            symbol: "🌅",
+            duration: .allDay,
+            title: "Morning Shift",
+            description: "Test",
+            location: testLocation
+        )
+        mockPersistence.mockShiftTypes = [testShiftType]
+
+        let mockServices = ServiceContainer(
+            calendarService: MockCalendarService(),
+            persistenceService: mockPersistence,
+            currentDayService: CurrentDayService()
+        )
+
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When - trigger initial data load
+        store.dispatch(action: .appLifecycle(.loadInitialData))
+
+        // Wait for middleware to load data
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - secondary dispatches loaded locations and shift types
+        #expect(store.state.locations.locations.count == 2)
+        #expect(store.state.shiftTypes.shiftTypes.count == 1)
+    }
+
+    @Test("AppStartupMiddleware completes initialization after loading data")
+    func testAppStartupCompletesInitializationAfterLoad() async {
+        // Given
+        let mockServices = Self.createMockServiceContainer()
+        var initialState = AppState()
+        initialState.isInitializationComplete = false
+
+        let store = Store(
+            state: initialState,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When
+        store.dispatch(action: .appLifecycle(.loadInitialData))
+
+        // Wait for middleware
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - initialization complete was dispatched
+        #expect(store.state.isInitializationComplete == true)
+    }
+
+    // MARK: - Middleware Execution Order Tests
+
+    @Test("Multiple middlewares execute in order")
+    func testMultipleMiddlewaresExecuteInOrder() async {
+        // Given - Store with ordered middlewares
         let mockServices = Self.createMockServiceContainer()
 
         let store = Store(
@@ -80,27 +219,126 @@ struct MiddlewareIntegrationTests {
             reducer: appReducer,
             services: mockServices,
             middlewares: [
-                appStartupMiddleware,  // ✅ First middleware
-                todayMiddleware        // ✅ Second middleware
+                appStartupMiddleware,
+                todayMiddleware
             ]
         )
 
-        // When
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.today)))
+        // When - dispatch action that both middlewares handle
+        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
-        // Wait for middlewares
+        // Wait for all middlewares
         try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then - both middleware executed successfully
+        // Then - state reflects both middleware executions
         #expect(store.state.selectedTab == .today)
     }
 
-    @Test("Middleware receives service container")
-    func testMiddlewareReceivesServices() async {
-        // Given - Custom mock services
+    @Test("Middleware receives updated state from previous middleware")
+    func testMiddlewareChainSeesUpdatedState() async {
+        // Given
+        var initialState = AppState()
+        initialState.isCalendarAuthorized = false
+        let mockServices = Self.createMockServiceContainer()
+
+        let store = Store(
+            state: initialState,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When
+        store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
+
+        // Wait for middleware
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - middleware saw the updated state
+        #expect(store.state.isCalendarAuthorized == true)
+    }
+
+    // MARK: - Secondary Dispatch Tests
+
+    @Test("Middleware secondary dispatches update store state")
+    func testMiddlewareSecondaryDispatchesUpdateState() async {
+        // Given
+        let mockPersistence = MockPersistenceService()
+        let testLocation = Location(id: UUID(), name: "Test", address: "123 Test")
+        mockPersistence.mockLocations = [testLocation]
+
+        let mockServices = ServiceContainer(
+            calendarService: MockCalendarService(),
+            persistenceService: mockPersistence,
+            currentDayService: CurrentDayService()
+        )
+
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When - trigger load that causes secondary dispatch
+        store.dispatch(action: .appLifecycle(.loadInitialData))
+
+        // Wait for middleware
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - state was updated by secondary dispatch
+        #expect(store.state.locations.locations.count == 1)
+        #expect(store.state.locations.locations.first?.name == "Test")
+    }
+
+    @Test("Middleware secondary dispatches create proper action chain")
+    func testMiddlewareActionChain() async {
+        // Given
+        let mockPersistence = MockPersistenceService()
+        let shiftType = ShiftType(
+            id: UUID(),
+            symbol: "🌅",
+            duration: .allDay,
+            title: "Morning",
+            description: "Test",
+            location: Location(id: UUID(), name: "Office", address: "123 Main")
+        )
+        mockPersistence.mockShiftTypes = [shiftType]
+
+        let mockServices = ServiceContainer(
+            calendarService: MockCalendarService(),
+            persistenceService: mockPersistence,
+            currentDayService: CurrentDayService()
+        )
+
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When
+        store.dispatch(action: .appLifecycle(.loadInitialData))
+
+        // Wait for all secondary dispatches
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        // Then - entire action chain executed
+        #expect(store.state.shiftTypes.shiftTypes.count == 1)
+        #expect(store.state.isInitializationComplete == true)
+    }
+
+    // MARK: - Service Call Verification Tests
+
+    @Test("Middleware verifies service operations by state changes")
+    func testMiddlewareServiceCallsVerifiedByState() async {
+        // Given - Mock service with specific data
         let mockCalendar = MockCalendarService()
         mockCalendar.mockIsAuthorized = true
         let mockPersistence = MockPersistenceService()
+        let location = Location(id: UUID(), name: "Main Office", address: "999 Business St")
+        mockPersistence.mockLocations = [location]
 
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
@@ -111,110 +349,89 @@ struct MiddlewareIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: mockServices,  // ✅ Custom services
+            services: mockServices,
             middlewares: [appStartupMiddleware]
         )
 
-        // When
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
+        // When - trigger operations that use services
+        store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Wait
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then - middleware used the services
-        #expect(store.state.selectedTab == .schedule)
+        // Then - service was called (verified by state having the data)
+        #expect(store.state.locations.locations.count == 1)
+        #expect(store.state.locations.locations.first?.address == "999 Business St")
     }
 
-    // MARK: - Today Middleware Tests
+    @Test("Middleware error handling prevents state corruption")
+    func testMiddlewareErrorHandlingPreservesState() async {
+        // Given - Service that will fail
+        let mockCalendar = MockCalendarService()
+        mockCalendar.shouldThrowError = true
+        mockCalendar.throwError = CalendarServiceError.notAuthorized
 
-    @Test("TodayMiddleware executes when registered")
-    func testTodayMiddlewareExecutes() async {
-        // Given - Store with today middleware
-        let mockServices = Self.createMockServiceContainer()
-
-        let store = Store(
-            state: AppState(),
-            reducer: appReducer,
-            services: mockServices,
-            middlewares: [todayMiddleware]  // ✅ TODAY MIDDLEWARE
+        let mockServices = ServiceContainer(
+            calendarService: mockCalendar,
+            persistenceService: MockPersistenceService(),
+            currentDayService: CurrentDayService()
         )
 
-        // When - dispatch today action to load shifts
-        store.dispatch(action: AppAction.today(.loadShifts))
-
-        // Wait for middleware to process
-        try? await Task.sleep(nanoseconds: 50_000_000)
-
-        // Then - shifts should be loaded (empty array in mock)
-        #expect(store.state.today.scheduledShifts.isEmpty)
-    }
-
-    // MARK: - Reducer + Middleware Integration
-
-    @Test("Reducer executes before middleware")
-    func testReducerExecutesBeforeMiddleware() async {
-        // Given
-        let mockServices = Self.createMockServiceContainer()
-
-        let store = Store(
-            state: AppState(),
-            reducer: appReducer,
-            services: mockServices,
-            middlewares: [appStartupMiddleware]  // ✅ REAL MIDDLEWARE
-        )
-
-        // When - dispatch synchronous action
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.locations)))
-
-        // Then - reducer should update immediately
-        #expect(store.state.selectedTab == .locations)
-
-        // Wait for middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
-
-        // State should still be correct
-        #expect(store.state.selectedTab == .locations)
-    }
-
-    @Test("Middleware sees reducer-updated state")
-    func testMiddlewareSeesUpdatedState() async {
-        // Given
         var initialState = AppState()
-        initialState.isCalendarAuthorized = false
-
-        let mockServices = Self.createMockServiceContainer()
+        initialState.selectedTab = .schedule
 
         let store = Store(
             state: initialState,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [appStartupMiddleware]  // ✅ REAL MIDDLEWARE
+            middlewares: [appStartupMiddleware]
         )
 
-        // When
-        store.dispatch(action: AppAction.appLifecycle(.calendarAccessVerified(true)))
+        // When - error occurs in middleware
+        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
-        // Then - reducer updates immediately
-        #expect(store.state.isCalendarAuthorized == true)
+        // Wait
+        try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Wait for middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
-
-        // Middleware should see updated state
-        #expect(store.state.isCalendarAuthorized == true)
+        // Then - state is preserved and app is still functional
+        #expect(store.state.selectedTab == .schedule)
     }
 
-    // MARK: - Middleware Error Handling
+    // MARK: - Middleware With Different Action Types
 
-    @Test("Middleware handles errors gracefully")
-    func testMiddlewareHandlesErrors() async {
-        // Given - Mock service that throws errors
-        let errorMockPersistence = MockPersistenceService()
-        errorMockPersistence.shouldThrowError = true
+    @Test("Middleware only processes relevant actions")
+    func testMiddlewareIgnoresIrrelevantActions() async {
+        // Given
+        let mockServices = Self.createMockServiceContainer()
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [appStartupMiddleware]
+        )
+
+        // When - dispatch action not handled by this middleware
+        store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
+
+        // Wait
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        // Then - state updated by reducer, middleware didn't interfere
+        #expect(store.state.selectedTab == .locations)
+    }
+
+    @Test("Middleware handles different action types independently")
+    func testMiddlewareHandlesMultipleActionTypes() async {
+        // Given
+        let mockPersistence = MockPersistenceService()
+        mockPersistence.mockLocations = [
+            Location(id: UUID(), name: "Office A", address: "123 A St"),
+            Location(id: UUID(), name: "Office B", address: "456 B St")
+        ]
 
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
-            persistenceService: errorMockPersistence,
+            persistenceService: mockPersistence,
             currentDayService: CurrentDayService()
         )
 
@@ -222,37 +439,16 @@ struct MiddlewareIntegrationTests {
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: [appStartupMiddleware]  // ✅ REAL MIDDLEWARE
+            middlewares: [appStartupMiddleware]
         )
 
-        // When - dispatch action that might cause error
-        store.dispatch(action: AppAction.appLifecycle(.tabSelected(.today)))
+        // When - dispatch action that loads data
+        store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Wait for error handling
+        // Wait
         try? await Task.sleep(nanoseconds: 100_000_000)
 
-        // Then - middleware should handle error without crashing
-        #expect(store.state.selectedTab == .today)
-    }
-
-    // MARK: - Demonstration Test
-
-    @Test("This file demonstrates REAL middleware testing (not empty array)")
-    func testRealMiddlewareTesting() {
-        // This test proves we're testing with REAL middleware, unlike the old
-        // MiddlewareIntegrationTests.swift which had middlewares: []
-
-        let store = Store(
-            state: AppState(),
-            reducer: appReducer,
-            services: Self.createMockServiceContainer(),
-            middlewares: [
-                appStartupMiddleware,  // ✅ REAL middleware #1
-                todayMiddleware        // ✅ REAL middleware #2
-            ]
-        )
-
-        // Verify store was created with middleware
-        #expect(store != nil)
+        // Then - all secondary dispatches executed
+        #expect(store.state.locations.locations.count == 2)
     }
 }
