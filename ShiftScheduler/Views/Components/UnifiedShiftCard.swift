@@ -114,7 +114,7 @@ struct UnifiedShiftCard: View {
                                     .fill(cardColor.opacity(0.08))
                             )
 
-                            // Location
+                            // Location name
                             let location = shiftType.location
                             HStack(spacing: 4) {
                                 Image(systemName: "location")
@@ -123,6 +123,32 @@ struct UnifiedShiftCard: View {
                                 Text(location.name)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                            }
+
+                            // Location address
+                            if !location.address.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "mappin.and.ellipse")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(location.address)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                            }
+
+                            // User notes
+                            if let notes = shift.notes, !notes.isEmpty {
+                                HStack(alignment: .top, spacing: 4) {
+                                    Image(systemName: "note.text")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(notes)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(3)
+                                }
                             }
                         }
 

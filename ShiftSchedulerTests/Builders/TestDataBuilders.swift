@@ -152,15 +152,18 @@ struct ScheduledShiftBuilder {
     let id: UUID
     let date: Date
     let shiftType: ShiftType
+    let notes: String?
 
     init(
         id: UUID = UUID(),
         date: Date = Date(),
-        shiftType: ShiftType? = nil
+        shiftType: ShiftType? = nil,
+        notes: String? = nil
     ) {
         self.id = id
         self.date = date
         self.shiftType = shiftType ?? ShiftTypeBuilder().build()
+        self.notes = notes
     }
 
     func build() -> ScheduledShift {
@@ -168,7 +171,8 @@ struct ScheduledShiftBuilder {
             id: id,
             eventIdentifier: "Dummy",
             shiftType: shiftType,
-            date: date
+            date: date,
+            notes: notes
         )
     }
 

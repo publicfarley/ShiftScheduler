@@ -323,13 +323,20 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         logger.debug("Event '\(event.title)' full notes: '\(notes)'")
 
         var shiftTypeIdString: String = ""
+        var userNotes: String? = nil
+
         // Try different possible separators
         let possibleSeparators = ["\n---\n", "---", "\n--\n", " --- "]
 
         for separator in possibleSeparators {
             if let separatorRange = notes.range(of: separator) {
                 shiftTypeIdString = String(notes[..<separatorRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)'")
+
+                // Extract user notes after separator
+                let notesAfterSeparator = String(notes[separatorRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                userNotes = notesAfterSeparator.isEmpty ? nil : notesAfterSeparator
+
+                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
                 break
             }
         }
@@ -350,7 +357,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             shiftTypeId: shiftTypeId,
             date: Calendar.current.startOfDay(for: event.startDate),
             title: event.title,
-            location: event.location
+            location: event.location,
+            notes: userNotes
         )
     }
 
@@ -365,13 +373,20 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         logger.debug("Event '\(event.title)' full notes: '\(notes)'")
 
         var shiftTypeIdString: String = ""
+        var userNotes: String? = nil
+
         // Try different possible separators
         let possibleSeparators = ["\n---\n", "---", "\n--\n", " --- "]
 
         for separator in possibleSeparators {
             if let separatorRange = notes.range(of: separator) {
                 shiftTypeIdString = String(notes[..<separatorRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)'")
+
+                // Extract user notes after separator
+                let notesAfterSeparator = String(notes[separatorRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                userNotes = notesAfterSeparator.isEmpty ? nil : notesAfterSeparator
+
+                logger.debug("Event '\(event.title)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
                 break
             }
         }
@@ -398,7 +413,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             id: UUID(uuidString: event.eventIdentifier) ?? UUID(),
             eventIdentifier: event.eventIdentifier,
             shiftType: shiftType,
-            date: Calendar.current.startOfDay(for: event.startDate)
+            date: Calendar.current.startOfDay(for: event.startDate),
+            notes: userNotes
         )
 
         return shift
