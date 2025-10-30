@@ -232,6 +232,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     case .addShiftResponse(.failure(let error)):
         state.isAddingShift = false
         state.currentError = error
+        state.showAddShiftSheet = true  // Keep sheet open to allow retry
 
     case .addShiftSheetDismissed:
         state.showAddShiftSheet = false
@@ -466,6 +467,7 @@ nonisolated func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAct
     case .shiftTypeSaved(.failure(let error)):
         state.isLoading = false
         state.errorMessage = "Failed to save shift type: \(error.localizedDescription)"
+        state.showAddEditSheet = true  // Keep sheet open to allow retry
 
     case .deleteShiftType:
         state.isLoading = true
@@ -528,6 +530,7 @@ nonisolated func locationsReducer(state: LocationsState, action: LocationsAction
     case .locationSaved(.failure(let error)):
         state.isLoading = false
         state.errorMessage = "Failed to save location: \(error.localizedDescription)"
+        state.showAddEditSheet = true  // Keep sheet open to allow retry
 
     case .deleteLocation:
         state.isLoading = true
@@ -597,7 +600,7 @@ nonisolated func changeLogReducer(state: ChangeLogState, action: ChangeLogAction
 
     case .purgeCompleted(.failure(let error)):
         state.isLoading = false
-        //state.toastMessage = .error("Purge failed: \(error.localizedDescription)")
+        state.errorMessage = "Failed to purge entries: \(error.localizedDescription)"
     }
 
     return state
