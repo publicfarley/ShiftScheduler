@@ -764,10 +764,152 @@ ForEach(store.state.feature.items) { item in
 - [ ] Priority 4B: Reducer State Transition Tests (pure function tests)
 - [ ] Priority 4C: Middleware Integration Tests (Redux flow validation)
 - [ ] Priority 4D: View Interaction Tests (SwiftUI user workflow testing)
+- [ ] Priority 4E: Test Quality Improvements (based on TEST_QUALITY_REVIEW.md)
+
+---
+
+#### Phase 4 Priority 4E: Test Quality Improvements 🔄 PENDING
+**Date:** October 30, 2025
+**Based on:** TEST_QUALITY_REVIEW.md comprehensive test quality review
+**Overall Goal:** Raise test quality from C- to B+ (74 hours total effort)
+
+**Test Quality Review Findings:**
+- **Current Grade:** C- (would be D+ without edge case and performance tests)
+- **Critical Issues:**
+  - 4 test suites completely disabled (27% of test files)
+  - Tests that don't test behavior (type checking instead of assertions)
+  - Lack of test isolation (file I/O, device calendar dependencies)
+  - Mislabeled tests (MiddlewareIntegrationTests doesn't test middleware)
+  - Missing critical coverage (actual middleware logic, error scenarios, concurrency)
+
+**Phase 4E-1: Critical Fixes** (18 hours) - HIGHEST PRIORITY
+*Must complete before moving to 4B/4C/4D*
+
+**1.1 Fix or Delete Disabled Tests** (4 hours)
+- [ ] Delete ChangeLogPurgeServiceTests.swift (feature no longer exists)
+- [ ] Delete UndoRedoPersistenceTests.swift (feature no longer exists)
+- [ ] Fix API signature mismatches in ReducerTests.swift
+- [ ] Fix API signature mismatches in ReduxIntegrationTests.swift
+- [ ] Fix main actor isolation issues in ShiftColorPaletteTests.swift
+- **Rule:** Never check in disabled tests - fix or delete immediately
+
+**1.2 Fix Mislabeled MiddlewareIntegrationTests** (8 hours)
+- [ ] Rename current MiddlewareIntegrationTests.swift → ReducerIntegrationTests.swift
+- [ ] Create NEW MiddlewareIntegrationTests.swift that actually tests middleware
+- [ ] Test with real middleware in the middlewares array (not empty array)
+- [ ] Verify service calls are made
+- [ ] Test secondary dispatches from middleware
+- [ ] Test error handling in middleware
+- [ ] Test middleware execution order
+
+**1.3 Rewrite CalendarServiceTests to Test Behavior** (6 hours)
+- [ ] Remove type-checking tests (`#expect(isAuthorized is Bool)` is useless)
+- [ ] Test actual return values (true/false, specific shift data)
+- [ ] Create separate tests for error scenarios
+- [ ] Use MockCalendarService instead of device-dependent calendar
+- [ ] Never catch and ignore errors unless testing error handling
+- [ ] Fix typo in test name: `testIsCalendarAuthorizedReturnsBo` → `testIsCalendarAuthorizedReturnsBool`
+
+**Phase 4E-2: Test Quality & Isolation** (14 hours)
+
+**2.1 Separate Unit Tests from Integration Tests** (8 hours)
+- [ ] Rename PersistenceServiceTests.swift → PersistenceServiceIntegrationTests.swift
+- [ ] Create NEW PersistenceServiceUnitTests.swift that uses mocks
+- [ ] Add proper setup/teardown with temporary directories to integration tests
+- [ ] Ensure integration tests clean up after themselves
+- [ ] Test service logic without file I/O in unit tests
+
+**2.2 Complete MockPersistenceServiceTests** (1 hour)
+- [ ] Fix incomplete error configuration test (currently only checks flag, not behavior)
+- [ ] Verify operations actually throw when `shouldThrowError` is true
+- [ ] Test all CRUD operations throw when configured
+
+**2.3 Fix Date Determinism Issues** (3 hours)
+- [ ] Replace `Date()` with fixed dates in ChangeLogRetentionPolicyTests
+- [ ] Replace `Date()` with fixed dates in EdgeCaseTests where used
+- [ ] Ensure all tests use deterministic dates for reproducibility
+- [ ] Use pattern: `Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))`
+
+**2.4 Add Test Teardown to Integration Tests** (2 hours)
+- [ ] Use temporary directories in all integration tests
+- [ ] Add cleanup in deinit or teardown methods
+- [ ] Ensure tests don't interfere with each other
+
+**Phase 4E-3: Additional Test Coverage** (36 hours)
+*Complete after 4B/4C/4D original priorities*
+
+**3.1 Add Error Scenario Tests** (12 hours)
+- [ ] CalendarService error handling (EventKit permission denied, etc.)
+- [ ] PersistenceService file I/O errors (disk full, permission denied)
+- [ ] CurrentDayService invalid date handling
+- [ ] All middleware error handling paths
+- [ ] Error propagation through Redux flow
+
+**3.2 Add Concurrency Tests** (8 hours)
+- [ ] Create new ConcurrencyTests.swift file
+- [ ] Test parallel dispatches to Redux store
+- [ ] Test race conditions in state updates
+- [ ] Validate Sendable compliance
+- [ ] Test actor isolation correctness
+
+**3.3 Add Real Middleware Integration Tests** (16 hours)
+- [ ] Test ScheduleMiddleware with real calendar service calls
+- [ ] Test TodayMiddleware with real service calls
+- [ ] Test LocationsMiddleware CRUD operations
+- [ ] Test ShiftTypesMiddleware CRUD operations
+- [ ] Test ChangeLogMiddleware purge logic
+- [ ] Test SettingsMiddleware profile updates
+- [ ] Verify service call patterns
+- [ ] Test secondary dispatch chains
+- [ ] Test state updates during async operations
+
+**Phase 4E-4: Infrastructure Improvements** (6 hours)
+*Complete last - polish and documentation*
+
+**4.1 Clean Up TestDataBuilders** (1 hour)
+- [ ] Remove dead code: `tes()` function (lines 94-96 in TestDataBuilders.swift)
+- [ ] Remove unused parameters from ScheduledShiftBuilder (status, notes)
+- [ ] Review @MainActor necessity on value type structs
+
+**4.2 Separate Performance Tests** (3 hours)
+- [ ] Move to separate test target (optional execution)
+- [ ] Add environment variable for threshold adjustment (different hardware)
+- [ ] Add skip conditions for CI environments
+- [ ] Pattern: `@Test(.disabled(if: ProcessInfo.processInfo.environment["SKIP_PERF_TESTS"] == "1"))`
+
+**4.3 Add Test Documentation** (2 hours)
+- [ ] Create ShiftSchedulerTests/README.md
+- [ ] Document how to run unit tests only
+- [ ] Document how to run integration tests
+- [ ] Document how to run performance tests
+- [ ] Document what each test suite covers
+- [ ] Document how to add new tests
+- [ ] Include test naming conventions and best practices
+
+**Success Metrics:**
+- ✅ Zero disabled tests in codebase
+- ✅ All tests test actual behavior (not type checking)
+- ✅ Unit tests use mocks (no file I/O)
+- ✅ Integration tests have proper cleanup
+- ✅ All tests deterministic (fixed dates)
+- ✅ Test grade improved from C- to B+
+
+**Execution Strategy:**
+- **Week 1:** Priority 4E-1 (Critical Fixes) - 18 hours
+- **Week 2:** Priority 4E-2 (Quality & Isolation) - 14 hours
+- **Week 3-4:** Complete original 4B/4C/4D priorities
+- **Week 5-6:** Priority 4E-3 (Additional Coverage) - 36 hours
+- **Week 7:** Priority 4E-4 (Infrastructure) - 6 hours
+
+**Reference Document:** `/Users/farley/Documents/code/projects/swift/ShiftScheduler/TEST_QUALITY_REVIEW.md`
+
+**Status:** 🔄 Pending - Ready to start with Priority 4E-1.1 (Delete disabled tests)
+
+---
 
 **Build Status:**
 - ✅ Phase 0-4 (Priority 1-3): Zero errors
 - ✅ Phase 4 Priority 4A (Service Tests): 75+ tests implemented and passing
 - ⚠️ 1 minor AppIntents warning (non-critical)
 - ✅ Shift switching with undo/redo fully functional
-- Ready for Phase 4 Priority 4B - Reducer Tests
+- 🎯 Ready to start Phase 4 Priority 4E-1 (Critical Test Quality Fixes)
