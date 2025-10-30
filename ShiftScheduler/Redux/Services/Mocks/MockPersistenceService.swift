@@ -12,9 +12,32 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     var shouldThrowError: Bool = false
     var throwError: Error?
 
+    // MARK: - Call Tracking for Testing
+
+    private(set) var loadShiftTypesCallCount = 0
+    private(set) var saveShiftTypeCallCount = 0
+    private(set) var deleteShiftTypeCallCount = 0
+    private(set) var loadLocationsCallCount = 0
+    private(set) var saveLocationCallCount = 0
+    private(set) var deleteLocationCallCount = 0
+    private(set) var loadChangeLogEntriesCallCount = 0
+    private(set) var addChangeLogEntryCallCount = 0
+    private(set) var deleteChangeLogEntryCallCount = 0
+    private(set) var purgeOldChangeLogEntriesCallCount = 0
+    private(set) var loadUndoRedoStacksCallCount = 0
+    private(set) var saveUndoRedoStacksCallCount = 0
+    private(set) var loadUserProfileCallCount = 0
+    private(set) var saveUserProfileCallCount = 0
+
+    var lastDeletedShiftTypeId: UUID?
+    var lastDeletedLocationId: UUID?
+    var lastDeletedChangeLogEntryId: UUID?
+    var lastPurgeOldEntriesDays: Int?
+
     // MARK: - Shift Types
 
     func loadShiftTypes() async throws -> [ShiftType] {
+        loadShiftTypesCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -22,6 +45,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func saveShiftType(_ shiftType: ShiftType) async throws {
+        saveShiftTypeCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -30,6 +54,8 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func deleteShiftType(id: UUID) async throws {
+        deleteShiftTypeCallCount += 1
+        lastDeletedShiftTypeId = id
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -39,6 +65,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     // MARK: - Locations
 
     func loadLocations() async throws -> [Location] {
+        loadLocationsCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -46,6 +73,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func saveLocation(_ location: Location) async throws {
+        saveLocationCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -54,6 +82,8 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func deleteLocation(id: UUID) async throws {
+        deleteLocationCallCount += 1
+        lastDeletedLocationId = id
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -63,6 +93,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     // MARK: - Change Log
 
     func loadChangeLogEntries() async throws -> [ChangeLogEntry] {
+        loadChangeLogEntriesCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -70,6 +101,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func addChangeLogEntry(_ entry: ChangeLogEntry) async throws {
+        addChangeLogEntryCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -77,6 +109,8 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func deleteChangeLogEntry(id: UUID) async throws {
+        deleteChangeLogEntryCallCount += 1
+        lastDeletedChangeLogEntryId = id
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -84,6 +118,8 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func purgeOldChangeLogEntries(olderThanDays: Int) async throws -> Int {
+        purgeOldChangeLogEntriesCallCount += 1
+        lastPurgeOldEntriesDays = olderThanDays
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -96,6 +132,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     // MARK: - Undo/Redo Stacks
 
     func loadUndoRedoStacks() async throws -> (undo: [ChangeLogEntry], redo: [ChangeLogEntry]) {
+        loadUndoRedoStacksCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -103,6 +140,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func saveUndoRedoStacks(undo: [ChangeLogEntry], redo: [ChangeLogEntry]) async throws {
+        saveUndoRedoStacksCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -113,6 +151,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     // MARK: - User Profile
 
     func loadUserProfile() async throws -> UserProfile {
+        loadUserProfileCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -120,6 +159,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     }
 
     func saveUserProfile(_ profile: UserProfile) async throws {
+        saveUserProfileCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }

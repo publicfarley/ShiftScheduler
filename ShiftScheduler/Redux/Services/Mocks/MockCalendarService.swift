@@ -8,7 +8,24 @@ final class MockCalendarService: CalendarServiceProtocol {
     var shouldThrowError: Bool = false
     var throwError: Error?
 
+    // MARK: - Call Tracking for Testing
+
+    private(set) var isCalendarAuthorizedCallCount = 0
+    private(set) var requestCalendarAccessCallCount = 0
+    private(set) var loadShiftsCallCount = 0
+    private(set) var loadShiftsForNext30DaysCallCount = 0
+    private(set) var loadShiftsForCurrentMonthCallCount = 0
+    private(set) var loadShiftDataCallCount = 0
+    private(set) var createShiftEventCallCount = 0
+    private(set) var updateShiftEventCallCount = 0
+    private(set) var deleteShiftEventCallCount = 0
+
+    var lastLoadShiftsRange: (from: Date, to: Date)?
+    var lastCreateShiftEventData: (date: Date, shiftType: ShiftType)?
+    var lastUpdateShiftEventData: (eventId: String, shiftType: ShiftType)?
+
     func isCalendarAuthorized() async throws -> Bool {
+        isCalendarAuthorizedCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -16,6 +33,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func requestCalendarAccess() async throws -> Bool {
+        requestCalendarAccessCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -23,6 +41,8 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func loadShifts(from startDate: Date, to endDate: Date) async throws -> [ScheduledShift] {
+        loadShiftsCallCount += 1
+        lastLoadShiftsRange = (startDate, endDate)
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -32,6 +52,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func loadShiftsForNext30Days() async throws -> [ScheduledShift] {
+        loadShiftsForNext30DaysCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -39,6 +60,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func loadShiftsForCurrentMonth() async throws -> [ScheduledShift] {
+        loadShiftsForCurrentMonthCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -48,6 +70,8 @@ final class MockCalendarService: CalendarServiceProtocol {
     var mockShiftData: [ScheduledShiftData] = []
 
     func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {
+        loadShiftDataCallCount += 1
+        lastLoadShiftsRange = (startDate, endDate)
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -76,6 +100,8 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func createShiftEvent(date: Date, shiftType: ShiftType, notes: String?) async throws -> ScheduledShift {
+        createShiftEventCallCount += 1
+        lastCreateShiftEventData = (date, shiftType)
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -103,6 +129,8 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func updateShiftEvent(eventIdentifier: String, newShiftType: ShiftType, date: Date) async throws {
+        updateShiftEventCallCount += 1
+        lastUpdateShiftEventData = (eventIdentifier, newShiftType)
         if shouldThrowError, let error = throwError {
             throw error
         }
@@ -131,6 +159,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func deleteShiftEvent(eventIdentifier: String) async throws {
+        deleteShiftEventCallCount += 1
         if shouldThrowError, let error = throwError {
             throw error
         }
