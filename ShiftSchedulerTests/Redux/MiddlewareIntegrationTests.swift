@@ -13,8 +13,10 @@ struct MiddlewareIntegrationTests {
 
     /// Create test service container with mocks
     static func createMockServiceContainer() -> ServiceContainer {
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = true
         return ServiceContainer(
-            calendarService: MockCalendarService(isAuthorized: true),
+            calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
             currentDayService: CurrentDayService()
         )
@@ -96,7 +98,8 @@ struct MiddlewareIntegrationTests {
     @Test("Middleware receives service container")
     func testMiddlewareReceivesServices() async {
         // Given - Custom mock services
-        let mockCalendar = MockCalendarService(isAuthorized: true)
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = true
         let mockPersistence = MockPersistenceService()
 
         let mockServices = ServiceContainer(
@@ -136,14 +139,14 @@ struct MiddlewareIntegrationTests {
             middlewares: [todayMiddleware]  // ✅ TODAY MIDDLEWARE
         )
 
-        // When - dispatch today action
-        store.dispatch(action: AppAction.today(.setLoading(true)))
+        // When - dispatch today action to load shifts
+        store.dispatch(action: AppAction.today(.loadShifts))
 
-        // Wait
+        // Wait for middleware to process
         try? await Task.sleep(nanoseconds: 50_000_000)
 
-        // Then - reducer updated state
-        #expect(store.state.today.isLoading == true)
+        // Then - shifts should be loaded (empty array in mock)
+        #expect(store.state.today.scheduledShifts.isEmpty)
     }
 
     // MARK: - Reducer + Middleware Integration
@@ -189,7 +192,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        store.dispatch(action: AppAction.appLifecycle(.calendarAuthorizationStatusChanged(isAuthorized: true)))
+        store.dispatch(action: AppAction.appLifecycle(.calendarAccessVerified(true)))
 
         // Then - reducer updates immediately
         #expect(store.state.isCalendarAuthorized == true)

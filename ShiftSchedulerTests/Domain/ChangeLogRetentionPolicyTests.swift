@@ -26,7 +26,9 @@ struct ChangeLogRetentionPolicyTests {
         let policy = ChangeLogRetentionPolicy.days30
         let cutoff = try #require(policy.cutoffDate)
 
-        let expectedCutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+        // Use current date but allow 1 day tolerance for test execution time
+        let now = Date()
+        let expectedCutoff = Calendar.current.date(byAdding: .day, value: -30, to: now)!
         let daysDifference = Calendar.current.dateComponents([.day], from: cutoff, to: expectedCutoff).day ?? 0
 
         // Should be within 1 day (accounting for execution time)
@@ -38,7 +40,9 @@ struct ChangeLogRetentionPolicyTests {
         let policy = ChangeLogRetentionPolicy.days90
         let cutoff = try #require(policy.cutoffDate)
 
-        let expectedCutoff = Calendar.current.date(byAdding: .day, value: -90, to: Date())!
+        // Use current date but allow 1 day tolerance for test execution time
+        let now = Date()
+        let expectedCutoff = Calendar.current.date(byAdding: .day, value: -90, to: now)!
         let daysDifference = Calendar.current.dateComponents([.day], from: cutoff, to: expectedCutoff).day ?? 0
 
         #expect(abs(daysDifference) <= 1)
@@ -49,7 +53,9 @@ struct ChangeLogRetentionPolicyTests {
         let policy = ChangeLogRetentionPolicy.months6
         let cutoff = try #require(policy.cutoffDate)
 
-        let expectedCutoff = Calendar.current.date(byAdding: .month, value: -6, to: Date())!
+        // Use current date but allow 1 day tolerance for test execution time
+        let now = Date()
+        let expectedCutoff = Calendar.current.date(byAdding: .month, value: -6, to: now)!
         let daysDifference = Calendar.current.dateComponents([.day], from: cutoff, to: expectedCutoff).day ?? 0
 
         #expect(abs(daysDifference) <= 1)
@@ -60,7 +66,9 @@ struct ChangeLogRetentionPolicyTests {
         let policy = ChangeLogRetentionPolicy.year1
         let cutoff = try #require(policy.cutoffDate)
 
-        let expectedCutoff = Calendar.current.date(byAdding: .year, value: -1, to: Date())!
+        // Use current date but allow 1 day tolerance for test execution time
+        let now = Date()
+        let expectedCutoff = Calendar.current.date(byAdding: .year, value: -1, to: now)!
         let daysDifference = Calendar.current.dateComponents([.day], from: cutoff, to: expectedCutoff).day ?? 0
 
         #expect(abs(daysDifference) <= 1)
@@ -71,7 +79,9 @@ struct ChangeLogRetentionPolicyTests {
         let policy = ChangeLogRetentionPolicy.years2
         let cutoff = try #require(policy.cutoffDate)
 
-        let expectedCutoff = Calendar.current.date(byAdding: .year, value: -2, to: Date())!
+        // Use current date but allow 1 day tolerance for test execution time
+        let now = Date()
+        let expectedCutoff = Calendar.current.date(byAdding: .year, value: -2, to: now)!
         let daysDifference = Calendar.current.dateComponents([.day], from: cutoff, to: expectedCutoff).day ?? 0
 
         #expect(abs(daysDifference) <= 1)

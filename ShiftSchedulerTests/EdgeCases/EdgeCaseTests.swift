@@ -193,7 +193,7 @@ struct EdgeCaseTests {
     func testLargeNumberOfChangeLogEntries() {
         // Given
         let service = MockPersistenceService()
-        let baseDate = Date()
+        let baseDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
         service.mockChangeLogEntries = (0..<10000).map { index in
             ChangeLogEntryBuilder(
                 id: UUID(),

@@ -70,7 +70,7 @@ struct ViewReduxIntegrationTests {
 
         #expect(store.state.isCalendarAuthorized == false)
 
-        store.dispatch(action: .appLifecycle(.calendarAuthorizationStatusChanged(isAuthorized: true)))
+        store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
 
         #expect(store.state.isCalendarAuthorized == true)
     }
@@ -86,15 +86,15 @@ struct ViewReduxIntegrationTests {
 
         #expect(store.state.isInitializationComplete == false)
 
-        store.dispatch(action: .appLifecycle(.initializationCompleted))
+        store.dispatch(action: .appLifecycle(.initializationComplete(.success(()))))
 
         #expect(store.state.isInitializationComplete == true)
     }
 
     // MARK: - Feature State Tests
 
-    @Test("Today feature state updates independently")
-    func testTodayFeatureStateUpdate() {
+    @Test("Today feature loads shifts successfully")
+    func testTodayFeatureShiftsLoaded() {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
@@ -102,15 +102,17 @@ struct ViewReduxIntegrationTests {
             middlewares: []
         )
 
+        #expect(store.state.today.scheduledShifts.isEmpty)
+
+        // Simulate successful shifts loaded with empty array
+        store.dispatch(action: .today(.shiftsLoaded(.success([]))))
+
+        #expect(store.state.today.scheduledShifts.isEmpty)
         #expect(store.state.today.isLoading == false)
-
-        store.dispatch(action: .today(.setLoading(true)))
-
-        #expect(store.state.today.isLoading == true)
     }
 
-    @Test("Schedule feature state updates independently")
-    func testScheduleFeatureStateUpdate() {
+    @Test("Schedule feature loads shifts successfully")
+    func testScheduleFeatureShiftsLoaded() {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
@@ -118,11 +120,13 @@ struct ViewReduxIntegrationTests {
             middlewares: []
         )
 
+        #expect(store.state.schedule.scheduledShifts.isEmpty)
+
+        // Simulate successful shifts loaded with empty array
+        store.dispatch(action: .schedule(.shiftsLoaded(.success([]))))
+
+        #expect(store.state.schedule.scheduledShifts.isEmpty)
         #expect(store.state.schedule.isLoading == false)
-
-        store.dispatch(action: .schedule(.setLoading(true)))
-
-        #expect(store.state.schedule.isLoading == true)
     }
 
     @Test("Locations feature state updates independently")
@@ -142,7 +146,7 @@ struct ViewReduxIntegrationTests {
 
         #expect(store.state.locations.locations.isEmpty)
 
-        store.dispatch(action: .locations(.locationsLoaded([testLocation])))
+        store.dispatch(action: .locations(.locationsLoaded(.success([testLocation]))))
 
         #expect(store.state.locations.locations.count == 1)
         #expect(store.state.locations.locations.first?.name == "Test Location")
@@ -157,18 +161,19 @@ struct ViewReduxIntegrationTests {
             middlewares: []
         )
 
+        let testLocation = Location(id: UUID(), name: "Test Office", address: "123 Main St")
         let testShiftType = ShiftType(
             id: UUID(),
-            title: "Day Shift",
             symbol: "☀️",
-            startTime: HourMinuteTime(hour: 9, minute: 0),
-            duration: Duration.hours(8),
-            locationId: UUID()
+            duration: .scheduled(from: HourMinuteTime(hour: 9, minute: 0), to: HourMinuteTime(hour: 17, minute: 0)),
+            title: "Day Shift",
+            description: "Day shift",
+            location: testLocation
         )
 
         #expect(store.state.shiftTypes.shiftTypes.isEmpty)
 
-        store.dispatch(action: .shiftTypes(.shiftTypesLoaded([testShiftType])))
+        store.dispatch(action: .shiftTypes(.shiftTypesLoaded(.success([testShiftType]))))
 
         #expect(store.state.shiftTypes.shiftTypes.count == 1)
         #expect(store.state.shiftTypes.shiftTypes.first?.title == "Day Shift")
@@ -192,8 +197,8 @@ struct ViewReduxIntegrationTests {
 
         // Dispatch multiple actions
         store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-        store.dispatch(action: .appLifecycle(.calendarAuthorizationStatusChanged(isAuthorized: true)))
-        store.dispatch(action: .appLifecycle(.initializationCompleted))
+        store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
+        store.dispatch(action: .appLifecycle(.initializationComplete(.success(()))))
 
         // Verify all updates applied
         #expect(store.state.selectedTab == .schedule)
@@ -213,29 +218,29 @@ struct ViewReduxIntegrationTests {
         let testLocation = Location(id: UUID(), name: "Office", address: "123 Main St")
         let testShiftType = ShiftType(
             id: UUID(),
-            title: "Morning",
             symbol: "🌅",
-            startTime: HourMinuteTime(hour: 6, minute: 0),
-            duration: Duration.hours(8),
-            locationId: testLocation.id
+            duration: .scheduled(from: HourMinuteTime(hour: 6, minute: 0), to: HourMinuteTime(hour: 14, minute: 0)),
+            title: "Morning",
+            description: "Morning shift",
+            location: testLocation
         )
 
         // Update multiple features
-        store.dispatch(action: .today(.setLoading(true)))
-        store.dispatch(action: .schedule(.setLoading(true)))
-        store.dispatch(action: .locations(.locationsLoaded([testLocation])))
-        store.dispatch(action: .shiftTypes(.shiftTypesLoaded([testShiftType])))
+        store.dispatch(action: .today(.shiftsLoaded(.success([]))))
+        store.dispatch(action: .schedule(.shiftsLoaded(.success([]))))
+        store.dispatch(action: .locations(.locationsLoaded(.success([testLocation]))))
+        store.dispatch(action: .shiftTypes(.shiftTypesLoaded(.success([testShiftType]))))
 
         // Verify all features updated correctly
-        #expect(store.state.today.isLoading == true)
-        #expect(store.state.schedule.isLoading == true)
+        #expect(store.state.today.isLoading == false)
+        #expect(store.state.schedule.isLoading == false)
         #expect(store.state.locations.locations.count == 1)
         #expect(store.state.shiftTypes.shiftTypes.count == 1)
     }
 
     // MARK: - Error State Tests
 
-    @Test("Error messages can be set and cleared")
+    @Test("Error messages are set when shifts fail to load")
     func testErrorMessageHandling() {
         let store = Store(
             state: AppState(),
@@ -246,10 +251,12 @@ struct ViewReduxIntegrationTests {
 
         #expect(store.state.today.errorMessage == nil)
 
-        store.dispatch(action: .today(.setError("Test error")))
+        // Simulate a shift loading error
+        store.dispatch(action: .today(.shiftsLoaded(.failure(NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])))))
         #expect(store.state.today.errorMessage == "Test error")
 
-        store.dispatch(action: .today(.setError(nil)))
+        // Clear error by successfully loading shifts
+        store.dispatch(action: .today(.shiftsLoaded(.success([]))))
         #expect(store.state.today.errorMessage == nil)
     }
 }

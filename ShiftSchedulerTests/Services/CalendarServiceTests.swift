@@ -39,7 +39,7 @@ struct CalendarServiceTests {
     @Test("isCalendarAuthorized returns true when authorized")
     func testIsCalendarAuthorizedWhenAuthorized() async throws {
         // Given - Mock service configured as authorized
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
 
         // When
         let isAuthorized = try await mockService.isCalendarAuthorized()
@@ -51,7 +51,7 @@ struct CalendarServiceTests {
     @Test("isCalendarAuthorized returns false when not authorized")
     func testIsCalendarAuthorizedWhenNotAuthorized() async throws {
         // Given - Mock service configured as NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
         // When
         let isAuthorized = try await mockService.isCalendarAuthorized()
@@ -63,7 +63,7 @@ struct CalendarServiceTests {
     @Test("requestCalendarAccess returns true when user grants access")
     func testRequestCalendarAccessGranted() async throws {
         // Given - Mock service that will grant access
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
         // When - request access
         let hasAccess = try await mockService.requestCalendarAccess()
@@ -77,7 +77,7 @@ struct CalendarServiceTests {
     @Test("loadShifts returns empty array when no shifts exist")
     func testLoadShiftsReturnsEmptyArray() async throws {
         // Given - Mock service with no shifts
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         mockService.mockShifts = []  // Explicitly empty
 
         let startDate = Calendar.current.startOfDay(for: Date())
@@ -94,12 +94,12 @@ struct CalendarServiceTests {
     @Test("loadShifts returns scheduled shifts when they exist")
     func testLoadShiftsReturnsScheduledShifts() async throws {
         // Given - Mock service with test shifts
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let testShift = ScheduledShift(
             id: UUID(),
-            date: Date(),
+            eventIdentifier: "test-event-123",
             shiftType: nil,
-            eventIdentifier: "test-event-123"
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
@@ -117,7 +117,7 @@ struct CalendarServiceTests {
     @Test("loadShifts throws error when not authorized")
     func testLoadShiftsThrowsWhenNotAuthorized() async throws {
         // Given - Mock service NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
         let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
@@ -131,12 +131,12 @@ struct CalendarServiceTests {
     @Test("loadShiftsForCurrentMonth loads shifts for current month")
     func testLoadShiftsForCurrentMonth() async throws {
         // Given - Mock service with shifts
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let testShift = ScheduledShift(
             id: UUID(),
-            date: Date(),
+            eventIdentifier: "monthly-shift",
             shiftType: nil,
-            eventIdentifier: "monthly-shift"
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
@@ -151,12 +151,12 @@ struct CalendarServiceTests {
     @Test("loadShiftsForNext30Days loads shifts for next 30 days")
     func testLoadShiftsForNext30Days() async throws {
         // Given - Mock service with shifts
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let testShift = ScheduledShift(
             id: UUID(),
-            date: Date(),
+            eventIdentifier: "future-shift",
             shiftType: nil,
-            eventIdentifier: "future-shift"
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
@@ -173,11 +173,13 @@ struct CalendarServiceTests {
     @Test("loadShiftData returns shift data array")
     func testLoadShiftDataReturnsData() async throws {
         // Given - Mock service with shift data
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let testShiftData = ScheduledShiftData(
             eventIdentifier: "data-event",
+            shiftTypeId: UUID(),
             date: Date(),
-            shiftTypeId: UUID()
+            title: "Test Shift",
+            location: "Test Location"
         )
         mockService.mockShiftData = [testShiftData]
 
@@ -195,7 +197,7 @@ struct CalendarServiceTests {
     @Test("loadShiftData throws error when not authorized")
     func testLoadShiftDataThrowsWhenNotAuthorized() async throws {
         // Given - Mock service NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
         let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
@@ -211,35 +213,35 @@ struct CalendarServiceTests {
     @Test("createShiftEvent creates event successfully")
     func testCreateShiftEventSucceeds() async throws {
         // Given - Mock service authorized
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
         let date = Calendar.current.startOfDay(for: Date())
 
         // When
-        let eventId = try await mockService.createShiftEvent(shiftType: shiftType, date: date)
+        let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
 
-        // Then - should return event identifier
-        #expect(eventId != nil)
-        #expect(!eventId.isEmpty)
+        // Then - should return scheduled shift
+        #expect(scheduledShift.eventIdentifier.isEmpty == false)
+        #expect(scheduledShift.date == date)
     }
 
     @Test("createShiftEvent throws error when not authorized")
     func testCreateShiftEventThrowsWhenNotAuthorized() async throws {
         // Given - Mock service NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
         let shiftType = Self.createTestShiftType()
         let date = Date()
 
         // When/Then - should throw error
         await #expect(throws: CalendarServiceError.self) {
-            try await mockService.createShiftEvent(shiftType: shiftType, date: date)
+            try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
         }
     }
 
     @Test("updateShiftEvent updates event successfully")
     func testUpdateShiftEventSucceeds() async throws {
         // Given - Mock service authorized
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let eventId = "test-event-update"
         let newShiftType = Self.createTestShiftType(title: "Updated Shift")
         let date = Date()
@@ -258,7 +260,7 @@ struct CalendarServiceTests {
     @Test("updateShiftEvent throws error when not authorized")
     func testUpdateShiftEventThrowsWhenNotAuthorized() async throws {
         // Given - Mock service NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
         let eventId = "test-event"
         let shiftType = Self.createTestShiftType()
         let date = Date()
@@ -276,7 +278,7 @@ struct CalendarServiceTests {
     @Test("deleteShiftEvent deletes event successfully")
     func testDeleteShiftEventSucceeds() async throws {
         // Given - Mock service authorized
-        let mockService = MockCalendarService(isAuthorized: true)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let eventId = "test-event-delete"
 
         // When - should not throw
@@ -289,7 +291,7 @@ struct CalendarServiceTests {
     @Test("deleteShiftEvent throws error when not authorized")
     func testDeleteShiftEventThrowsWhenNotAuthorized() async throws {
         // Given - Mock service NOT authorized
-        let mockService = MockCalendarService(isAuthorized: false)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
         let eventId = "test-event"
 
         // When/Then - should throw error
@@ -316,10 +318,10 @@ struct CalendarServiceTests {
     @Test("Multiple shifts can be loaded at once")
     func testLoadMultipleShifts() async throws {
         // Given - Mock service with multiple shifts
-        let mockService = MockCalendarService(isAuthorized: true)
-        let shift1 = ScheduledShift(id: UUID(), date: Date(), shiftType: nil, eventIdentifier: "shift-1")
-        let shift2 = ScheduledShift(id: UUID(), date: Date(), shiftType: nil, eventIdentifier: "shift-2")
-        let shift3 = ScheduledShift(id: UUID(), date: Date(), shiftType: nil, eventIdentifier: "shift-3")
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "shift-1", shiftType: nil, date: Date())
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "shift-2", shiftType: nil, date: Date())
+        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "shift-3", shiftType: nil, date: Date())
         mockService.mockShifts = [shift1, shift2, shift3]
 
         let startDate = Calendar.current.startOfDay(for: Date())

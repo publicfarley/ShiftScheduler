@@ -109,15 +109,216 @@ struct MockPersistenceServiceTests {
 
     // MARK: - Tests: Error Handling
 
-    @Test("Service can be configured to throw errors")
-    func testServiceErrorConfiguration() async throws {
+    @Test("Shift type operations throw when error configured")
+    func testShiftTypeOperationsThrowWhenErrorConfigured() async throws {
         // Given
         let service = MockPersistenceService()
+        let testError = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
         service.shouldThrowError = true
+        service.throwError = testError
 
-        // When - Service is configured to throw
-        // Then - shouldThrowError flag is set for test use
-        #expect(service.shouldThrowError)
+        let location = Location(id: UUID(), name: "Test", address: "")
+        let shiftType = ShiftType(
+            id: UUID(),
+            symbol: "test",
+            duration: .allDay,
+            title: "Test",
+            description: "Test",
+            location: location
+        )
+
+        // When/Then - loadShiftTypes throws
+        var didThrow = false
+        do {
+            _ = try await service.loadShiftTypes()
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 1)
+        }
+        #expect(didThrow, "loadShiftTypes should throw when error configured")
+
+        // When/Then - saveShiftType throws
+        didThrow = false
+        do {
+            try await service.saveShiftType(shiftType)
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 1)
+        }
+        #expect(didThrow, "saveShiftType should throw when error configured")
+
+        // When/Then - deleteShiftType throws
+        didThrow = false
+        do {
+            try await service.deleteShiftType(id: UUID())
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 1)
+        }
+        #expect(didThrow, "deleteShiftType should throw when error configured")
+    }
+
+    @Test("Location operations throw when error configured")
+    func testLocationOperationsThrowWhenErrorConfigured() async throws {
+        // Given
+        let service = MockPersistenceService()
+        let testError = NSError(domain: "TestError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        service.shouldThrowError = true
+        service.throwError = testError
+
+        let location = Location(id: UUID(), name: "Test", address: "123 Test St")
+
+        // When/Then - loadLocations throws
+        var didThrow = false
+        do {
+            _ = try await service.loadLocations()
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 2)
+        }
+        #expect(didThrow, "loadLocations should throw when error configured")
+
+        // When/Then - saveLocation throws
+        didThrow = false
+        do {
+            try await service.saveLocation(location)
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 2)
+        }
+        #expect(didThrow, "saveLocation should throw when error configured")
+
+        // When/Then - deleteLocation throws
+        didThrow = false
+        do {
+            try await service.deleteLocation(id: UUID())
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 2)
+        }
+        #expect(didThrow, "deleteLocation should throw when error configured")
+    }
+
+    @Test("Change log operations throw when error configured")
+    func testChangeLogOperationsThrowWhenErrorConfigured() async throws {
+        // Given
+        let service = MockPersistenceService()
+        let testError = NSError(domain: "TestError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        service.shouldThrowError = true
+        service.throwError = testError
+
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let entry = ChangeLogEntry(
+            id: UUID(),
+            timestamp: fixedDate,
+            userId: UUID(),
+            userDisplayName: "Test",
+            changeType: .switched,
+            scheduledShiftDate: fixedDate,
+            oldShiftSnapshot: nil,
+            newShiftSnapshot: nil,
+            reason: "Test"
+        )
+
+        // When/Then - loadChangeLogEntries throws
+        var didThrow = false
+        do {
+            _ = try await service.loadChangeLogEntries()
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 3)
+        }
+        #expect(didThrow, "loadChangeLogEntries should throw when error configured")
+
+        // When/Then - addChangeLogEntry throws
+        didThrow = false
+        do {
+            try await service.addChangeLogEntry(entry)
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 3)
+        }
+        #expect(didThrow, "addChangeLogEntry should throw when error configured")
+
+        // When/Then - deleteChangeLogEntry throws
+        didThrow = false
+        do {
+            try await service.deleteChangeLogEntry(id: UUID())
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 3)
+        }
+        #expect(didThrow, "deleteChangeLogEntry should throw when error configured")
+
+        // When/Then - purgeOldChangeLogEntries throws
+        didThrow = false
+        do {
+            _ = try await service.purgeOldChangeLogEntries(olderThanDays: 30)
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 3)
+        }
+        #expect(didThrow, "purgeOldChangeLogEntries should throw when error configured")
+    }
+
+    @Test("User profile operations throw when error configured")
+    func testUserProfileOperationsThrowWhenErrorConfigured() async throws {
+        // Given
+        let service = MockPersistenceService()
+        let testError = NSError(domain: "TestError", code: 4, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        service.shouldThrowError = true
+        service.throwError = testError
+
+        let profile = UserProfile(userId: UUID(), displayName: "Test")
+
+        // When/Then - loadUserProfile throws
+        var didThrow = false
+        do {
+            _ = try await service.loadUserProfile()
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 4)
+        }
+        #expect(didThrow, "loadUserProfile should throw when error configured")
+
+        // When/Then - saveUserProfile throws
+        didThrow = false
+        do {
+            try await service.saveUserProfile(profile)
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 4)
+        }
+        #expect(didThrow, "saveUserProfile should throw when error configured")
+    }
+
+    @Test("Undo/Redo stack operations throw when error configured")
+    func testUndoRedoStackOperationsThrowWhenErrorConfigured() async throws {
+        // Given
+        let service = MockPersistenceService()
+        let testError = NSError(domain: "TestError", code: 5, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        service.shouldThrowError = true
+        service.throwError = testError
+
+        // When/Then - loadUndoRedoStacks throws
+        var didThrow = false
+        do {
+            _ = try await service.loadUndoRedoStacks()
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 5)
+        }
+        #expect(didThrow, "loadUndoRedoStacks should throw when error configured")
+
+        // When/Then - saveUndoRedoStacks throws
+        didThrow = false
+        do {
+            try await service.saveUndoRedoStacks(undo: [], redo: [])
+        } catch {
+            didThrow = true
+            #expect((error as NSError).code == 5)
+        }
+        #expect(didThrow, "saveUndoRedoStacks should throw when error configured")
     }
 
     // MARK: - Tests: Change Log Operations
@@ -127,13 +328,14 @@ struct MockPersistenceServiceTests {
         // Given
         let service = MockPersistenceService()
         let userId = UUID()
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
         let entry = ChangeLogEntry(
             id: UUID(),
-            timestamp: Date(),
+            timestamp: fixedDate,
             userId: userId,
             userDisplayName: "Test User",
             changeType: .switched,
-            scheduledShiftDate: Date(),
+            scheduledShiftDate: fixedDate,
             oldShiftSnapshot: nil,
             newShiftSnapshot: nil,
             reason: "Testing"
@@ -153,13 +355,14 @@ struct MockPersistenceServiceTests {
         // Given
         let service = MockPersistenceService()
         let userId = UUID()
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
         let entry = ChangeLogEntry(
             id: UUID(),
-            timestamp: Date(),
+            timestamp: fixedDate,
             userId: userId,
             userDisplayName: "Test User",
             changeType: .deleted,
-            scheduledShiftDate: Date(),
+            scheduledShiftDate: fixedDate,
             oldShiftSnapshot: nil,
             newShiftSnapshot: nil,
             reason: "Shift removed"
