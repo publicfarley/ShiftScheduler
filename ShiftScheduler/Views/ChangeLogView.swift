@@ -3,6 +3,9 @@ import SwiftUI
 struct ChangeLogView: View {
     @Environment(\.reduxStore) var store
 
+    // Current date for relative time calculations (deterministic)
+    private let currentDate = Date()
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -66,10 +69,10 @@ struct ChangeLogView: View {
     // MARK: - Change Log Entries
 
     private var changeLogEntriesView: some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             ForEach(Array(store.state.changeLog.filteredEntries.enumerated()), id: \.element.id) { index, entry in
                 VStack(spacing: 0) {
-                    EnhancedChangeLogCard(entry: entry)
+                    EnhancedChangeLogCard(entry: entry, currentDate: currentDate)
 
                     // Timeline connector (except for last item)
                     if index < store.state.changeLog.filteredEntries.count - 1 {
@@ -85,8 +88,9 @@ struct ChangeLogView: View {
 
 struct EnhancedChangeLogCard: View {
     let entry: ChangeLogEntry
+    let currentDate: Date
 
-    private var changeTypeColor: Color {
+    var changeTypeColor: Color {
         switch entry.changeType {
         case .switched: return .blue
         case .deleted: return .red
@@ -96,7 +100,7 @@ struct EnhancedChangeLogCard: View {
         }
     }
 
-    private var changeTypeIcon: String {
+    var changeTypeIcon: String {
         switch entry.changeType {
         case .switched: return "arrow.triangle.2.circlepath"
         case .deleted: return "trash.fill"
@@ -264,9 +268,8 @@ struct EnhancedChangeLogCard: View {
 
     // MARK: - Relative Time String
 
-    private func relativeTimeString(from date: Date) -> String {
-        let now = Date()
-        let interval = now.timeIntervalSince(date)
+    func relativeTimeString(from date: Date) -> String {
+        let interval = currentDate.timeIntervalSince(date)
 
         if interval < 60 {
             return "Just now"
@@ -316,6 +319,8 @@ struct ChangeTypeBadge: View {
                 .fontWeight(.bold)
                 .foregroundColor(.primary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(changeType.displayName) operation")
     }
 }
 
@@ -351,18 +356,30 @@ struct ShiftComparisonView: View {
     }
 }
 
+// MARK: - Single Shift View (Deleted/Created)
+
+struct SingleShiftView: View {
+    let shift: ShiftSnapshot
+    let label: String
+    let color: Color
+
+    var body: some View {
+        ShiftSnapshotCard(snapshot: shift, label: label, color: color)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color(.systemGray6).opacity(0.5))
+            )
+    }
+}
+
 // MARK: - Deleted Shift View
 
 struct DeletedShiftView: View {
     let shift: ShiftSnapshot
 
     var body: some View {
-        ShiftSnapshotCard(snapshot: shift, label: "Deleted", color: .red)
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemGray6).opacity(0.5))
-            )
+        SingleShiftView(shift: shift, label: "Deleted", color: .red)
     }
 }
 
@@ -372,12 +389,7 @@ struct CreatedShiftView: View {
     let shift: ShiftSnapshot
 
     var body: some View {
-        ShiftSnapshotCard(snapshot: shift, label: "Created", color: .green)
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemGray6).opacity(0.5))
-            )
+        SingleShiftView(shift: shift, label: "Created", color: .green)
     }
 }
 
@@ -491,6 +503,7 @@ struct TimelineConnector: View {
                 .frame(width: 6, height: 6)
         }
         .padding(.vertical, 6)
+        .accessibilityHidden(true) // Decorative only
     }
 }
 
