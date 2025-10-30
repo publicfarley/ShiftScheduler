@@ -91,10 +91,6 @@ struct ShiftTypeBuilder {
         self.location = location ?? LocationBuilder().build()
     }
 
-    func tes() -> HourMinuteTime {
-        HourMinuteTime(hour: 9, minute: 0)
-    }
-    
     func build() -> ShiftType {
         ShiftType(
             id: id,
@@ -156,21 +152,15 @@ struct ScheduledShiftBuilder {
     let id: UUID
     let date: Date
     let shiftType: ShiftType
-    let status: ShiftStatus
-    let notes: String
 
     init(
         id: UUID = UUID(),
         date: Date = Date(),
-        shiftType: ShiftType? = nil,
-        status: ShiftStatus = .upcoming,
-        notes: String = ""
+        shiftType: ShiftType? = nil
     ) {
         self.id = id
         self.date = date
         self.shiftType = shiftType ?? ShiftTypeBuilder().build()
-        self.status = status
-        self.notes = notes
     }
 
     func build() -> ScheduledShift {
