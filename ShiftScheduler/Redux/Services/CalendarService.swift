@@ -194,14 +194,38 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
-        // Create new all-day event
+        // Create event with correct timing based on shift duration
         let event = EKEvent(eventStore: eventStore)
         event.title = shiftType.title
-        event.startDate = startDate
-        event.endDate = startDate  // All-day events: end date is same as start date
-        event.isAllDay = true
         event.location = shiftType.location.name
         event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
+
+        // Set event dates based on whether shift is all-day or scheduled with specific times
+        if shiftType.duration.isAllDay {
+            // All-day event
+            event.startDate = startDate
+            event.endDate = startDate  // All-day events: end date is same as start date
+            event.isAllDay = true
+        } else {
+            // Scheduled event with specific start and end times
+            event.isAllDay = false
+
+            // Extract start and end times from the shift duration
+            if let startTime = shiftType.duration.startTime,
+               let endTime = shiftType.duration.endTime {
+                // Convert HourMinuteTime to actual Date objects on the specified date
+                event.startDate = startTime.toDate(on: startDate)
+                event.endDate = endTime.toDate(on: startDate)
+
+                logger.debug("Created scheduled event from \(startTime.timeString) to \(endTime.timeString)")
+            } else {
+                // Fallback: if we can't extract times, treat as all-day
+                logger.warning("Could not extract times from scheduled shift, falling back to all-day")
+                event.startDate = startDate
+                event.endDate = startDate
+                event.isAllDay = true
+            }
+        }
 
         if let additionalNotes = notes, !additionalNotes.isEmpty {
             event.notes = (event.notes ?? "") + "\n---\n" + additionalNotes
@@ -260,6 +284,34 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Update event with new shift type information
         event.title = newShiftType.title
         event.location = newShiftType.location.name
+
+        // Update event timing based on the new shift type's duration
+        if newShiftType.duration.isAllDay {
+            // Update to all-day event
+            event.startDate = startDate
+            event.endDate = startDate  // All-day events: end date is same as start date
+            event.isAllDay = true
+            logger.debug("Updated to all-day event")
+        } else {
+            // Update to scheduled event with specific start and end times
+            event.isAllDay = false
+
+            // Extract start and end times from the shift duration
+            if let startTime = newShiftType.duration.startTime,
+               let endTime = newShiftType.duration.endTime {
+                // Convert HourMinuteTime to actual Date objects on the specified date
+                event.startDate = startTime.toDate(on: startDate)
+                event.endDate = endTime.toDate(on: startDate)
+
+                logger.debug("Updated to scheduled event from \(startTime.timeString) to \(endTime.timeString)")
+            } else {
+                // Fallback: if we can't extract times, treat as all-day
+                logger.warning("Could not extract times from scheduled shift, falling back to all-day")
+                event.startDate = startDate
+                event.endDate = startDate
+                event.isAllDay = true
+            }
+        }
 
         // Update the shift type ID in the notes
         // Preserve any additional notes that might have been added
