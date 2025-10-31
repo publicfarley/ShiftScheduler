@@ -200,32 +200,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         event.location = shiftType.location.name
         event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
 
-        // Set event dates based on whether shift is all-day or scheduled with specific times
-        if shiftType.duration.isAllDay {
-            // All-day event
-            event.startDate = startDate
-            event.endDate = startDate  // All-day events: end date is same as start date
-            event.isAllDay = true
-        } else {
-            // Scheduled event with specific start and end times
-            event.isAllDay = false
-
-            // Extract start and end times from the shift duration
-            if let startTime = shiftType.duration.startTime,
-               let endTime = shiftType.duration.endTime {
-                // Convert HourMinuteTime to actual Date objects on the specified date
-                event.startDate = startTime.toDate(on: startDate)
-                event.endDate = endTime.toDate(on: startDate)
-
-                logger.debug("Created scheduled event from \(startTime.timeString) to \(endTime.timeString)")
-            } else {
-                // Fallback: if we can't extract times, treat as all-day
-                logger.warning("Could not extract times from scheduled shift, falling back to all-day")
-                event.startDate = startDate
-                event.endDate = startDate
-                event.isAllDay = true
-            }
-        }
+        // Configure event dates using shared helper
+        configureEventDates(event, shiftType: shiftType, baseDate: startDate)
 
         if let additionalNotes = notes, !additionalNotes.isEmpty {
             event.notes = (event.notes ?? "") + "\n---\n" + additionalNotes
@@ -285,33 +261,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         event.title = newShiftType.title
         event.location = newShiftType.location.name
 
-        // Update event timing based on the new shift type's duration
-        if newShiftType.duration.isAllDay {
-            // Update to all-day event
-            event.startDate = startDate
-            event.endDate = startDate  // All-day events: end date is same as start date
-            event.isAllDay = true
-            logger.debug("Updated to all-day event")
-        } else {
-            // Update to scheduled event with specific start and end times
-            event.isAllDay = false
-
-            // Extract start and end times from the shift duration
-            if let startTime = newShiftType.duration.startTime,
-               let endTime = newShiftType.duration.endTime {
-                // Convert HourMinuteTime to actual Date objects on the specified date
-                event.startDate = startTime.toDate(on: startDate)
-                event.endDate = endTime.toDate(on: startDate)
-
-                logger.debug("Updated to scheduled event from \(startTime.timeString) to \(endTime.timeString)")
-            } else {
-                // Fallback: if we can't extract times, treat as all-day
-                logger.warning("Could not extract times from scheduled shift, falling back to all-day")
-                event.startDate = startDate
-                event.endDate = startDate
-                event.isAllDay = true
-            }
-        }
+        // Configure event dates using shared helper
+        configureEventDates(event, shiftType: newShiftType, baseDate: startDate)
 
         // Update the shift type ID in the notes
         // Preserve any additional notes that might have been added
@@ -361,6 +312,40 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     }
 
     // MARK: - Private Helpers
+
+    /// Configure event dates based on shift type duration
+    /// - Parameters:
+    ///   - event: The EKEvent to configure
+    ///   - shiftType: The shift type defining the duration
+    ///   - baseDate: The base date for the shift (should be start of day)
+    private func configureEventDates(_ event: EKEvent, shiftType: ShiftType, baseDate: Date) {
+        if shiftType.duration.isAllDay {
+            // All-day event
+            event.startDate = baseDate
+            event.endDate = baseDate  // All-day events: end date is same as start date
+            event.isAllDay = true
+            logger.debug("Configured as all-day event")
+        } else {
+            // Scheduled event with specific start and end times
+            event.isAllDay = false
+
+            // Extract start and end times from the shift duration
+            if let startTime = shiftType.duration.startTime,
+               let endTime = shiftType.duration.endTime {
+                // Convert HourMinuteTime to actual Date objects on the specified date
+                event.startDate = startTime.toDate(on: baseDate)
+                event.endDate = endTime.toDate(on: baseDate)
+
+                logger.debug("Configured scheduled event from \(startTime.timeString) to \(endTime.timeString)")
+            } else {
+                // Fallback: if we can't extract times, treat as all-day
+                logger.warning("Could not extract times from scheduled shift, falling back to all-day")
+                event.startDate = baseDate
+                event.endDate = baseDate
+                event.isAllDay = true
+            }
+        }
+    }
 
     /// Extract shift type ID and user notes from EventKit event notes field
     ///
