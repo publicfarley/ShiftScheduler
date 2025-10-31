@@ -169,10 +169,8 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
 
     case .editNotesSheetToggled(let show):
         state.showEditNotesSheet = show
-        if !show {
-            // Clear notes when closing sheet
-            state.quickActionsNotes = ""
-        }
+        // Don't clear quickActionsNotes here - it's needed by middleware to persist
+        // Notes will be re-initialized from shift.notes when sheet reopens
 
     case .quickActionsNotesChanged(let notes):
         state.quickActionsNotes = notes
