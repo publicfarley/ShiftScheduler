@@ -24,6 +24,22 @@ final class MockCalendarService: CalendarServiceProtocol {
     var lastCreateShiftEventData: (date: Date, shiftType: ShiftType)?
     var lastUpdateShiftEventData: (eventId: String, shiftType: ShiftType)?
 
+    // MARK: - Event Timing Tracking (for testing scheduled vs all-day events)
+
+    /// Tracks whether the last created event was all-day or scheduled
+    private(set) var lastCreatedEventIsAllDay: Bool?
+    /// Tracks the start time of the last created event
+    private(set) var lastCreatedEventStartTime: Date?
+    /// Tracks the end time of the last created event
+    private(set) var lastCreatedEventEndTime: Date?
+
+    /// Tracks whether the last updated event was all-day or scheduled
+    private(set) var lastUpdatedEventIsAllDay: Bool?
+    /// Tracks the start time of the last updated event
+    private(set) var lastUpdatedEventStartTime: Date?
+    /// Tracks the end time of the last updated event
+    private(set) var lastUpdatedEventEndTime: Date?
+
     func isCalendarAuthorized() async throws -> Bool {
         isCalendarAuthorizedCallCount += 1
         if shouldThrowError, let error = throwError {
@@ -116,6 +132,28 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
+        // Track event timing details for testing
+        if shiftType.duration.isAllDay {
+            lastCreatedEventIsAllDay = true
+            lastCreatedEventStartTime = startDate
+            lastCreatedEventEndTime = startDate
+        } else {
+            lastCreatedEventIsAllDay = false
+            if let startTime = shiftType.duration.startTime,
+               let endTime = shiftType.duration.endTime {
+                let eventStartTime = startTime.toDate(on: startDate)
+                var eventEndTime = endTime.toDate(on: startDate)
+
+                // Handle overnight shifts: if end time is before or equal to start time, shift crosses midnight
+                if eventEndTime <= eventStartTime {
+                    eventEndTime = Calendar.current.date(byAdding: .day, value: 1, to: eventEndTime) ?? eventEndTime
+                }
+
+                lastCreatedEventStartTime = eventStartTime
+                lastCreatedEventEndTime = eventEndTime
+            }
+        }
+
         // Create and add mock shift
         let shift = ScheduledShift(
             id: UUID(),
@@ -148,6 +186,28 @@ final class MockCalendarService: CalendarServiceProtocol {
         if !otherShifts.isEmpty {
             let shiftTitles = otherShifts.compactMap { $0.shiftType?.title }
             throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+        }
+
+        // Track event timing details for testing
+        if newShiftType.duration.isAllDay {
+            lastUpdatedEventIsAllDay = true
+            lastUpdatedEventStartTime = startDate
+            lastUpdatedEventEndTime = startDate
+        } else {
+            lastUpdatedEventIsAllDay = false
+            if let startTime = newShiftType.duration.startTime,
+               let endTime = newShiftType.duration.endTime {
+                let eventStartTime = startTime.toDate(on: startDate)
+                var eventEndTime = endTime.toDate(on: startDate)
+
+                // Handle overnight shifts: if end time is before or equal to start time, shift crosses midnight
+                if eventEndTime <= eventStartTime {
+                    eventEndTime = Calendar.current.date(byAdding: .day, value: 1, to: eventEndTime) ?? eventEndTime
+                }
+
+                lastUpdatedEventStartTime = eventStartTime
+                lastUpdatedEventEndTime = eventEndTime
+            }
         }
 
         // Update the shift with the new shift type

@@ -333,10 +333,20 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             if let startTime = shiftType.duration.startTime,
                let endTime = shiftType.duration.endTime {
                 // Convert HourMinuteTime to actual Date objects on the specified date
-                event.startDate = startTime.toDate(on: baseDate)
-                event.endDate = endTime.toDate(on: baseDate)
+                let startDate = startTime.toDate(on: baseDate)
+                var endDate = endTime.toDate(on: baseDate)
 
-                logger.debug("Configured scheduled event from \(startTime.timeString) to \(endTime.timeString)")
+                // Handle overnight shifts: if end time is before or equal to start time, shift crosses midnight
+                // Add one day to the end date in this case (e.g., 10:00 PM - 2:00 AM)
+                if endDate <= startDate {
+                    endDate = Calendar.current.date(byAdding: .day, value: 1, to: endDate) ?? endDate
+                    logger.debug("Configured overnight scheduled event from \(startTime.timeString) to \(endTime.timeString) (next day)")
+                } else {
+                    logger.debug("Configured scheduled event from \(startTime.timeString) to \(endTime.timeString)")
+                }
+
+                event.startDate = startDate
+                event.endDate = endDate
             } else {
                 // Fallback: if we can't extract times, treat as all-day
                 logger.warning("Could not extract times from scheduled shift, falling back to all-day")

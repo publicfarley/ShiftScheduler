@@ -669,4 +669,272 @@ struct CalendarServiceTests {
         #expect(notesComponents.count == 2)
         #expect(notesComponents.last?.contains("\n") == true) // Multiline preserved
     }
+
+    // MARK: - Scheduled Shift Event Tests (Issue #1)
+
+    @Test("createShiftEvent creates scheduled event with specific times (not all-day)")
+    func testCreateScheduledShiftEvent() async throws {
+        // Given - Mock service authorized with scheduled shift type
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let scheduledDuration = ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 9, minute: 0),
+            to: HourMinuteTime(hour: 17, minute: 0)
+        )
+        let shiftType = Self.createTestShiftType(
+            title: "Day Shift",
+            duration: scheduledDuration
+        )
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create shift event
+        let shift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: shiftType,
+            notes: nil
+        )
+
+        // Then - verify event was created with scheduled times (not all-day)
+        #expect(shift.eventIdentifier.isEmpty == false)
+        #expect(mockService.lastCreatedEventIsAllDay == false)
+
+        // Verify correct times were set
+        let expectedStartTime = HourMinuteTime(hour: 9, minute: 0).toDate(on: date)
+        let expectedEndTime = HourMinuteTime(hour: 17, minute: 0).toDate(on: date)
+        #expect(mockService.lastCreatedEventStartTime == expectedStartTime)
+        #expect(mockService.lastCreatedEventEndTime == expectedEndTime)
+    }
+
+    @Test("createShiftEvent creates all-day event when shift type is all-day")
+    func testCreateAllDayShiftEvent() async throws {
+        // Given - Mock service authorized with all-day shift type
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let allDayDuration = ShiftDuration.allDay
+        let shiftType = Self.createTestShiftType(
+            title: "All Day Shift",
+            duration: allDayDuration
+        )
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create shift event
+        let shift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: shiftType,
+            notes: nil
+        )
+
+        // Then - verify event was created as all-day
+        #expect(shift.eventIdentifier.isEmpty == false)
+        #expect(mockService.lastCreatedEventIsAllDay == true)
+        #expect(mockService.lastCreatedEventStartTime == date)
+        #expect(mockService.lastCreatedEventEndTime == date)
+    }
+
+    @Test("updateShiftEvent updates from all-day to scheduled times")
+    func testUpdateShiftEventFromAllDayToScheduled() async throws {
+        // Given - Mock service with existing all-day shift
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // Create an all-day shift first
+        let allDayShiftType = Self.createTestShiftType(
+            title: "All Day Shift",
+            duration: .allDay
+        )
+        let existingShift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: allDayShiftType,
+            notes: nil
+        )
+
+        // Verify it was created as all-day
+        #expect(mockService.lastCreatedEventIsAllDay == true)
+
+        // When - update to scheduled shift
+        let scheduledDuration = ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 8, minute: 30),
+            to: HourMinuteTime(hour: 16, minute: 30)
+        )
+        let scheduledShiftType = Self.createTestShiftType(
+            title: "Morning Shift",
+            duration: scheduledDuration
+        )
+
+        try await mockService.updateShiftEvent(
+            eventIdentifier: existingShift.eventIdentifier,
+            newShiftType: scheduledShiftType,
+            date: date
+        )
+
+        // Then - verify event was updated to scheduled times
+        #expect(mockService.lastUpdatedEventIsAllDay == false)
+
+        let expectedStartTime = HourMinuteTime(hour: 8, minute: 30).toDate(on: date)
+        let expectedEndTime = HourMinuteTime(hour: 16, minute: 30).toDate(on: date)
+        #expect(mockService.lastUpdatedEventStartTime == expectedStartTime)
+        #expect(mockService.lastUpdatedEventEndTime == expectedEndTime)
+    }
+
+    @Test("updateShiftEvent updates from scheduled to all-day")
+    func testUpdateShiftEventFromScheduledToAllDay() async throws {
+        // Given - Mock service with existing scheduled shift
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // Create a scheduled shift first
+        let scheduledDuration = ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 9, minute: 0),
+            to: HourMinuteTime(hour: 17, minute: 0)
+        )
+        let scheduledShiftType = Self.createTestShiftType(
+            title: "Day Shift",
+            duration: scheduledDuration
+        )
+        let existingShift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: scheduledShiftType,
+            notes: nil
+        )
+
+        // Verify it was created as scheduled
+        #expect(mockService.lastCreatedEventIsAllDay == false)
+
+        // When - update to all-day shift
+        let allDayShiftType = Self.createTestShiftType(
+            title: "All Day Shift",
+            duration: .allDay
+        )
+
+        try await mockService.updateShiftEvent(
+            eventIdentifier: existingShift.eventIdentifier,
+            newShiftType: allDayShiftType,
+            date: date
+        )
+
+        // Then - verify event was updated to all-day
+        #expect(mockService.lastUpdatedEventIsAllDay == true)
+        #expect(mockService.lastUpdatedEventStartTime == date)
+        #expect(mockService.lastUpdatedEventEndTime == date)
+    }
+
+    @Test("createShiftEvent handles overnight shifts correctly")
+    func testCreateOvernightShiftEvent() async throws {
+        // Given - Mock service authorized with overnight shift (10 PM - 2 AM)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let overnightDuration = ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 22, minute: 0),  // 10:00 PM
+            to: HourMinuteTime(hour: 2, minute: 0)      // 2:00 AM
+        )
+        let shiftType = Self.createTestShiftType(
+            title: "Night Shift",
+            duration: overnightDuration
+        )
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create overnight shift event
+        let shift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: shiftType,
+            notes: nil
+        )
+
+        // Then - verify event was created with correct overnight times
+        #expect(shift.eventIdentifier.isEmpty == false)
+        #expect(mockService.lastCreatedEventIsAllDay == false)
+
+        // Verify start time is on the base date
+        let expectedStartTime = HourMinuteTime(hour: 22, minute: 0).toDate(on: date)
+        #expect(mockService.lastCreatedEventStartTime == expectedStartTime)
+
+        // Verify end time is on the NEXT day (because shift crosses midnight)
+        let rawEndTime = HourMinuteTime(hour: 2, minute: 0).toDate(on: date)
+        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        #expect(mockService.lastCreatedEventEndTime == expectedEndTime)
+
+        // Verify end time is after start time
+        #expect(mockService.lastCreatedEventEndTime! > mockService.lastCreatedEventStartTime!)
+    }
+
+    @Test("updateShiftEvent handles overnight shifts correctly")
+    func testUpdateToOvernightShiftEvent() async throws {
+        // Given - Mock service with existing day shift
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // Create a regular day shift first
+        let dayShiftType = Self.createTestShiftType(
+            title: "Day Shift",
+            duration: .scheduled(
+                from: HourMinuteTime(hour: 9, minute: 0),
+                to: HourMinuteTime(hour: 17, minute: 0)
+            )
+        )
+        let existingShift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: dayShiftType,
+            notes: nil
+        )
+
+        // When - update to overnight shift (11 PM - 7 AM)
+        let overnightShiftType = Self.createTestShiftType(
+            title: "Night Shift",
+            duration: .scheduled(
+                from: HourMinuteTime(hour: 23, minute: 0),  // 11:00 PM
+                to: HourMinuteTime(hour: 7, minute: 0)      // 7:00 AM
+            )
+        )
+
+        try await mockService.updateShiftEvent(
+            eventIdentifier: existingShift.eventIdentifier,
+            newShiftType: overnightShiftType,
+            date: date
+        )
+
+        // Then - verify event was updated with overnight times
+        #expect(mockService.lastUpdatedEventIsAllDay == false)
+
+        let expectedStartTime = HourMinuteTime(hour: 23, minute: 0).toDate(on: date)
+        #expect(mockService.lastUpdatedEventStartTime == expectedStartTime)
+
+        // End time should be on next day
+        let rawEndTime = HourMinuteTime(hour: 7, minute: 0).toDate(on: date)
+        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        #expect(mockService.lastUpdatedEventEndTime == expectedEndTime)
+
+        // Verify end time is after start time
+        #expect(mockService.lastUpdatedEventEndTime! > mockService.lastUpdatedEventStartTime!)
+    }
+
+    @Test("createShiftEvent handles edge case: midnight to midnight (24-hour shift)")
+    func testCreate24HourShiftEvent() async throws {
+        // Given - Mock service authorized with 24-hour shift (midnight to midnight)
+        let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
+        let fullDayDuration = ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 0, minute: 0),   // Midnight
+            to: HourMinuteTime(hour: 0, minute: 0)      // Midnight next day
+        )
+        let shiftType = Self.createTestShiftType(
+            title: "24-Hour Shift",
+            duration: fullDayDuration
+        )
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // When - create 24-hour shift event
+        let shift = try await mockService.createShiftEvent(
+            date: date,
+            shiftType: shiftType,
+            notes: nil
+        )
+
+        // Then - verify event spans to next day (end time = start time means overnight)
+        #expect(shift.eventIdentifier.isEmpty == false)
+        #expect(mockService.lastCreatedEventIsAllDay == false)
+
+        let expectedStartTime = HourMinuteTime(hour: 0, minute: 0).toDate(on: date)
+        #expect(mockService.lastCreatedEventStartTime == expectedStartTime)
+
+        // End time should be 24 hours later (next day at midnight)
+        let rawEndTime = HourMinuteTime(hour: 0, minute: 0).toDate(on: date)
+        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        #expect(mockService.lastCreatedEventEndTime == expectedEndTime)
+    }
 }
