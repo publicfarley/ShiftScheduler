@@ -26,23 +26,45 @@ struct ShiftTypesView: View {
 
                     if filteredShiftTypes.isEmpty && !store.state.shiftTypes.isLoading {
                         // Empty state
-                        VStack(spacing: 16) {
-                            Image(systemName: "calendar.badge.plus")
-                                .font(.system(size: 48))
-                                .foregroundColor(.gray)
-                            Text("No Shift Types")
-                                .font(.headline)
-                            Text(searchText.isEmpty ? "Add your first shift type to get started" : "No shift types match your search")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
+                        VStack(spacing: 20) {
+                            Spacer()
+
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.purple.opacity(0.2), Color.pink.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 100, height: 100)
+
+                                Image(systemName: "calendar.badge.plus")
+                                    .font(.system(size: 44))
+                                    .foregroundColor(.purple)
+                            }
+
+                            VStack(spacing: 8) {
+                                Text("No Shift Types")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+
+                                Text(searchText.isEmpty ? "Add your first shift type to get started" : "No shift types match your search")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
+                            }
+
+                            Spacer()
                         }
-                        .frame(maxHeight: .infinity)
-                        .padding()
+                        .frame(maxWidth: .infinity)
                     } else {
                         // Shift types list
                         ScrollView {
-                            VStack(spacing: 12) {
+                            VStack(spacing: 16) {
                                 ForEach(filteredShiftTypes) { shiftType in
                                     ShiftTypeCard(shiftType: shiftType)
                                         .onTapGesture {
@@ -142,54 +164,154 @@ struct ShiftTypesView: View {
 struct ShiftTypeCard: View {
     let shiftType: ShiftType
 
+    private let accentColor = Color.purple
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 0) {
+            // Card Content
+            VStack(alignment: .leading, spacing: 14) {
+                // Header with symbol and title
+                HStack(alignment: .center, spacing: 12) {
+                    // Shift symbol badge
+                    Text(shiftType.symbol)
+                        .font(.title2)
+                        .frame(width: 50, height: 50)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [accentColor.opacity(0.15), accentColor.opacity(0.08)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [accentColor.opacity(0.4), accentColor.opacity(0.2)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 2
+                                        )
+                                )
+                                .shadow(color: accentColor.opacity(0.2), radius: 4, x: 0, y: 2)
+                        )
+
+                    // Shift title
+                    Text(shiftType.title)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    // Edit indicator
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(accentColor.opacity(0.6))
+                }
+
+                // Shift details section
+                VStack(alignment: .leading, spacing: 10) {
+                    // Time range
                     HStack(spacing: 8) {
-                        Text(shiftType.symbol)
-                            .font(.title3)
-                        Text(shiftType.title)
-                            .font(.headline)
-                            .lineLimit(1)
-                    }
-
-                    HStack(spacing: 4) {
                         Image(systemName: "clock.fill")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .foregroundColor(accentColor)
+                            .frame(width: 24)
+
                         Text(shiftType.timeRangeString)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
                     }
 
-                    HStack(spacing: 4) {
+                    // Location
+                    HStack(spacing: 8) {
                         Image(systemName: "location.fill")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .foregroundColor(accentColor)
+                            .frame(width: 24)
+
                         Text(shiftType.location.name)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
                             .lineLimit(1)
                     }
 
+                    // Description (if present)
                     if !shiftType.shiftDescription.isEmpty {
-                        Text(shiftType.shiftDescription)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "text.alignleft")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                Text("Description")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Text(shiftType.shiftDescription)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                                .lineLimit(2)
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color(.systemGray6))
+                                )
+                        }
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-
-                Image(systemName: "pencil")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(accentColor.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(accentColor.opacity(0.15), lineWidth: 1)
+                        )
+                )
             }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [accentColor.opacity(0.3), accentColor.opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
+                    )
+                    .shadow(color: accentColor.opacity(0.1), radius: 8, x: 0, y: 4)
+            )
+
+            // Bottom accent bar
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [accentColor.opacity(0.6), accentColor.opacity(0.3)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(height: 3)
+                .cornerRadius(1.5)
+                .padding(.horizontal, 16)
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
     }
 }
 
