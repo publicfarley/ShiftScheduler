@@ -134,31 +134,12 @@ struct TodayView: View {
                                 if let shift = todayShifts.first {
                                     VStack(spacing: 12) {
                                         UnifiedShiftCard(shift: shift, onTap: nil)
+
+                                        // Quick Actions Section
+                                        QuickActionsView(shift: shift)
                                     }
                                     .offset(x: todayCardOffset)
                                     .opacity(todayCardOpacity)
-
-                                    // Switch Shift button - not animated
-                                    Button(action: {
-                                        store.dispatch(action: .today(.switchShiftTapped(shift)))
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "arrow.triangle.2.circlepath")
-                                            Text("Switch Shift")
-                                                .fontWeight(.semibold)
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .foregroundColor(.white)
-                                        .cornerRadius(10)
-                                    }
                                 } else {
                                     VStack(spacing: 12) {
                                         Image(systemName: "calendar.badge.exclamationmark")

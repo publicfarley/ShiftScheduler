@@ -78,6 +78,15 @@ struct TodayState: Equatable {
 
     /// Selected shift for switching operations
     var selectedShift: ScheduledShift? = nil
+
+    /// Sheet presentation for editing shift notes
+    var showEditNotesSheet: Bool = false
+
+    /// Notes being edited for today's shift
+    var quickActionsNotes: String = ""
+
+    /// Shift awaiting deletion confirmation
+    var deleteShiftConfirmationShift: ScheduledShift? = nil
 }
 
 // MARK: - Schedule State

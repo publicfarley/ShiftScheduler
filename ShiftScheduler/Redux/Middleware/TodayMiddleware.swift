@@ -92,6 +92,86 @@ func todayMiddleware(
         // logger.debug("No middleware side effects for action: \(String(describing: todayAction))")
         break
         // Handled by reducer only
+
+    // MARK: - Quick Actions
+
+    case .editNotesSheetToggled(let show):
+        guard !show else { break }  // Only process when sheet is closing
+        // logger.debug("Edit notes sheet dismissed - persisting notes changes")
+
+        guard let todayShift = state.today.todayShift else { break }
+        let updatedNotes = state.today.quickActionsNotes
+
+        do {
+            // Update the shift's notes in persistence
+            let updatedShift = ScheduledShift(
+                id: todayShift.id,
+                eventIdentifier: todayShift.eventIdentifier,
+                shiftType: todayShift.shiftType,
+                date: todayShift.date,
+                notes: updatedNotes
+            )
+
+            // Persist the updated shift (or just the notes change)
+            // Note: For now, this is a placeholder. If ScheduledShifts don't persist notes,
+            // we'll need to create a separate notes storage mechanism
+            // logger.debug("Notes updated for shift \(todayShift.id): \(updatedNotes)")
+        }
+        break
+
+    case .quickActionsNotesChanged:
+        // logger.debug("Notes changed in quick actions editor")
+        // Notes will be persisted when sheet is dismissed
+        break
+
+    case .deleteShiftRequested:
+        // logger.debug("Delete shift requested")
+        // No middleware side effects - reducer handles confirmation state
+        break
+
+    case .deleteShiftConfirmed:
+        guard let shiftToDelete = state.today.deleteShiftConfirmationShift else { break }
+        // logger.debug("Delete shift confirmed for \(shiftToDelete.id)")
+        do {
+            // Create change log entry for deletion
+            let deletionSnapshot = shiftToDelete.shiftType.map { ShiftSnapshot(from: $0) }
+            let entry = ChangeLogEntry(
+                id: UUID(),
+                timestamp: Date(),
+                userId: state.userProfile.userId,
+                userDisplayName: state.userProfile.displayName,
+                changeType: .deleted,
+                scheduledShiftDate: shiftToDelete.date,
+                oldShiftSnapshot: deletionSnapshot,
+                newShiftSnapshot: nil,
+                reason: nil
+            )
+
+            // Persist the change log entry
+            try await services.persistenceService.addChangeLogEntry(entry)
+
+            // Delete the shift from calendar
+            try await services.calendarService.deleteShiftEvent(eventIdentifier: shiftToDelete.eventIdentifier)
+
+            // logger.debug("Shift \(shiftToDelete.eventIdentifier) deleted. Entry \(entry.id) saved.")
+            await dispatch(.today(.shiftDeleted(.success(()))))
+
+            // Reload shifts to refresh from calendar
+            await dispatch(.today(.loadShifts))
+        } catch {
+            // logger.error("Failed to delete shift: \(error.localizedDescription)")
+            await dispatch(.today(.shiftDeleted(.failure(error))))
+        }
+
+    case .deleteShiftCancelled:
+        // logger.debug("Delete shift cancelled")
+        // No middleware side effects - reducer handles cancellation
+        break
+
+    case .shiftDeleted:
+        // logger.debug("Shift deletion completed")
+        // No additional middleware side effects - reducer and middleware dispatch handle it
+        break
     }
 }
 

@@ -164,6 +164,36 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
         // Undo/redo disabled for now (future implementation)
         state.canUndo = false
         state.canRedo = false
+
+    // MARK: - Quick Actions
+
+    case .editNotesSheetToggled(let show):
+        state.showEditNotesSheet = show
+        if !show {
+            // Clear notes when closing sheet
+            state.quickActionsNotes = ""
+        }
+
+    case .quickActionsNotesChanged(let notes):
+        state.quickActionsNotes = notes
+
+    case .deleteShiftRequested(let shift):
+        state.deleteShiftConfirmationShift = shift
+
+    case .deleteShiftConfirmed:
+        // Middleware will handle the actual deletion
+        break
+
+    case .deleteShiftCancelled:
+        state.deleteShiftConfirmationShift = nil
+
+    case .shiftDeleted(.success):
+        state.deleteShiftConfirmationShift = nil
+        // Toast message will be handled by middleware dispatch
+
+    case .shiftDeleted(.failure(let error)):
+        state.deleteShiftConfirmationShift = nil
+        state.errorMessage = "Failed to delete shift: \(error.localizedDescription)"
     }
 
     return state

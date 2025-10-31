@@ -133,13 +133,35 @@ enum TodayAction: Equatable {
     /// Update undo/redo button states
     case updateUndoRedoStates
 
+    // MARK: - Quick Actions
+
+    /// Show/hide edit notes sheet
+    case editNotesSheetToggled(Bool)
+
+    /// Notes text changed in edit notes sheet
+    case quickActionsNotesChanged(String)
+
+    /// User requested to delete today's shift
+    case deleteShiftRequested(ScheduledShift)
+
+    /// User confirmed shift deletion
+    case deleteShiftConfirmed
+
+    /// User cancelled shift deletion
+    case deleteShiftCancelled
+
+    /// Shift deleted
+    case shiftDeleted(Result<Void, Error>)
+
     static func == (lhs: TodayAction, rhs: TodayAction) -> Bool {
         switch (lhs, rhs) {
         case (.task, .task), (.loadShifts, .loadShifts),
              (.toastMessageCleared, .toastMessageCleared),
              (.switchShiftSheetDismissed, .switchShiftSheetDismissed),
              (.updateCachedShifts, .updateCachedShifts),
-             (.updateUndoRedoStates, .updateUndoRedoStates):
+             (.updateUndoRedoStates, .updateUndoRedoStates),
+             (.deleteShiftConfirmed, .deleteShiftConfirmed),
+             (.deleteShiftCancelled, .deleteShiftCancelled):
             return true
         case let (.shiftsLoaded(a), .shiftsLoaded(b)):
             switch (a, b) {
@@ -154,6 +176,15 @@ enum TodayAction: Equatable {
             return aShift.id == bShift.id && aType.id == bType.id && aReason == bReason
         case (.shiftSwitched(.success), .shiftSwitched(.success)),
              (.shiftSwitched(.failure), .shiftSwitched(.failure)):
+            return true
+        case let (.editNotesSheetToggled(lhs), .editNotesSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.quickActionsNotesChanged(lhs), .quickActionsNotesChanged(rhs)):
+            return lhs == rhs
+        case let (.deleteShiftRequested(lhs), .deleteShiftRequested(rhs)):
+            return lhs.id == rhs.id
+        case (.shiftDeleted(.success), .shiftDeleted(.success)),
+             (.shiftDeleted(.failure), .shiftDeleted(.failure)):
             return true
         default:
             return false
