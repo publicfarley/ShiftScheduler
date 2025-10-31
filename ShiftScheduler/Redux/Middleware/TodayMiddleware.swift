@@ -97,25 +97,24 @@ func todayMiddleware(
 
     case .editNotesSheetToggled(let show):
         guard !show else { break }  // Only process when sheet is closing
-        // logger.debug("Edit notes sheet dismissed - persisting notes changes")
+        logger.debug("Edit notes sheet dismissed - persisting notes changes")
 
         guard let todayShift = state.today.todayShift else { break }
         let updatedNotes = state.today.quickActionsNotes
 
         do {
-            // Update the shift's notes in persistence
-            let updatedShift = ScheduledShift(
-                id: todayShift.id,
+            // Update the shift's notes in the calendar event
+            try await services.calendarService.updateShiftNotes(
                 eventIdentifier: todayShift.eventIdentifier,
-                shiftType: todayShift.shiftType,
-                date: todayShift.date,
                 notes: updatedNotes
             )
 
-            // Persist the updated shift (or just the notes change)
-            // Note: For now, this is a placeholder. If ScheduledShifts don't persist notes,
-            // we'll need to create a separate notes storage mechanism
-            // logger.debug("Notes updated for shift \(todayShift.id): \(updatedNotes)")
+            logger.debug("Notes updated for shift \(todayShift.eventIdentifier): \(updatedNotes)")
+
+            // Reload shifts to get the updated notes from calendar
+            await dispatch(.today(.loadShifts))
+        } catch {
+            logger.error("Failed to update shift notes: \(error.localizedDescription)")
         }
         break
 

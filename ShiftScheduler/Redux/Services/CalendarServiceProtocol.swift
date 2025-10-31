@@ -49,4 +49,11 @@ protocol CalendarServiceProtocol: Sendable {
     /// - Parameter eventIdentifier: The EventKit event identifier of the shift to delete
     /// - Throws: ScheduleError if deletion fails
     func deleteShiftEvent(eventIdentifier: String) async throws -> Void
+
+    /// Update shift notes in an existing calendar event
+    /// - Parameters:
+    ///   - eventIdentifier: The EventKit event identifier of the shift to update
+    ///   - notes: The new notes to set (empty string clears notes)
+    /// - Throws: CalendarError if the event cannot be found or update fails
+    func updateShiftNotes(eventIdentifier: String, notes: String) async throws -> Void
 }

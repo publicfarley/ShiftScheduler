@@ -19,10 +19,12 @@ final class MockCalendarService: CalendarServiceProtocol {
     private(set) var createShiftEventCallCount = 0
     private(set) var updateShiftEventCallCount = 0
     private(set) var deleteShiftEventCallCount = 0
+    private(set) var updateShiftNotesCallCount = 0
 
     var lastLoadShiftsRange: (from: Date, to: Date)?
     var lastCreateShiftEventData: (date: Date, shiftType: ShiftType)?
     var lastUpdateShiftEventData: (eventId: String, shiftType: ShiftType)?
+    var lastUpdateShiftNotesData: (eventId: String, notes: String)?
 
     // MARK: - Event Timing Tracking (for testing scheduled vs all-day events)
 
@@ -233,5 +235,27 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Remove the shift
         mockShifts.remove(at: index)
+    }
+
+    func updateShiftNotes(eventIdentifier: String, notes: String) async throws {
+        updateShiftNotesCallCount += 1
+        lastUpdateShiftNotesData = (eventIdentifier, notes)
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Find the shift to update
+        guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Update the shift with new notes
+        mockShifts[index] = ScheduledShift(
+            id: mockShifts[index].id,
+            eventIdentifier: mockShifts[index].eventIdentifier,
+            shiftType: mockShifts[index].shiftType,
+            date: mockShifts[index].date,
+            notes: notes.isEmpty ? nil : notes
+        )
     }
 }

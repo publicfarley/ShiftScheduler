@@ -311,6 +311,44 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         }
     }
 
+    func updateShiftNotes(eventIdentifier: String, notes: String) async throws {
+        logger.debug("Updating notes for shift event with identifier: \(eventIdentifier)")
+
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Fetch the event by identifier
+        guard let event = eventStore.event(withIdentifier: eventIdentifier) else {
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Extract the shift type ID from current notes
+        let currentNotes = event.notes ?? ""
+        let (shiftTypeIdString, _) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
+
+        // Update notes while preserving shift type ID
+        if notes.isEmpty {
+            // If notes are empty, just store the shift type ID
+            event.notes = shiftTypeIdString
+        } else {
+            // Store both shift type ID and user notes
+            event.notes = shiftTypeIdString + "\n---\n" + notes
+        }
+
+        logger.debug("Updated notes to: \(event.notes ?? "nil")")
+
+        // Save the updated event
+        do {
+            try eventStore.save(event, span: .thisEvent)
+            logger.debug("Successfully updated notes for shift event \(eventIdentifier)")
+        } catch {
+            logger.error("Failed to update shift notes: \(error.localizedDescription)")
+            throw CalendarServiceError.eventConversionFailed("Failed to save updated notes: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Private Helpers
 
     /// Configure event dates based on shift type duration
