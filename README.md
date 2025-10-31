@@ -1,8 +1,8 @@
 # ShiftScheduler - iOS Shift Management App
 
-A modern iOS shift scheduling application built with SwiftUI and The Composable Architecture (TCA).
+A modern iOS shift scheduling application built with SwiftUI and Redux architecture for unidirectional data flow and predictable state management.
 
-**Current Status:** Phase 2B Complete (TCA Migration 85%, Overall 65%)
+**Current Status:** Phase 4 In Progress (Redux Architecture Complete, Testing 75%)
 
 ---
 
@@ -23,10 +23,9 @@ A modern iOS shift scheduling application built with SwiftUI and The Composable 
   - Time estimates for each phase
 
 ### 🏗️ Architecture & Design
-- **[CLAUDE.md](CLAUDE.md)** - Project conventions and best practices
-- **[TCA_PHASE2B_TASK_CHECKLIST.md](TCA_PHASE2B_TASK_CHECKLIST.md)** - Detailed task breakdown
-- **[TCA_PHASE2_SUMMARY.md](TCA_PHASE2_SUMMARY.md)** - Phase 2 completion summary
-- **[TCA_MIGRATION_PHASE1.md](TCA_MIGRATION_PHASE1.md)** - Phase 1 technical details
+- **[CLAUDE.md](CLAUDE.md)** - Project conventions, Redux architecture, and best practices
+- **[Redux Architecture Guide](#redux-architecture)** - State management patterns and middleware
+- **[Phase Documentation](#-phase-status)** - Redux phase progression (Phase 0-4)
 
 ### 🎨 Visual Design
 - **[STATUS_REPORT.md](STATUS_REPORT.md)** - Visual UI enhancement project status
@@ -40,50 +39,64 @@ A modern iOS shift scheduling application built with SwiftUI and The Composable 
 
 ## 🎯 Current Project Status
 
-### TCA Migration (Main Track)
-- ✅ **Phase 1** - Foundation complete
-- ✅ **Phase 2A** - Initial views migrated
-- ✅ **Phase 2B** - Complex views migrated + integration tests
-- 🟡 **Phase 3** - Performance testing (pending, 2-3 hours)
-- 🟡 **Phase 4** - Final verification (pending, 1 hour)
+### Redux Architecture (Main Track)
+- ✅ **Phase 0** - Removed TCA, created Redux foundation (Store, AppState, AppAction)
+- ✅ **Phase 1** - Redux foundation with logging middleware
+- ✅ **Phase 2** - Service layer and 6 feature middlewares
+- ✅ **Phase 3** - View layer with 6 feature views connected
+- ✅ **Phase 4 Priority 1** - Full CRUD operations (Add/Edit/Delete for Locations & Shift Types)
+- ✅ **Phase 4 Priority 2** - Calendar filtering, date range selection, search
+- ✅ **Phase 4 Priority 3** - Shift switching with undo/redo middleware
+- 🟡 **Phase 4 Priority 4** - Testing (Service unit tests 75+ implemented, Priority 4E in progress)
 
-**Completion: 85%** (All 9 views using TCA stores ✅)
+**Completion: 90%** (All Redux phases operational, testing in progress ✅)
 
-### Visual UI Enhancement (Secondary Track)
-- ✅ **Phase 1** - Foundation review
-- ✅ **Phase 2A** - ShiftTypeCard component
-- ✅ **Phase 2B** - Location color system
-- 🟡 **Phase 2C** - LocationCard component (pending, 1.5-2 hours)
-- 🟡 **Phase 3-5** - View updates and refinements
+### Test Coverage
+- ✅ Service layer tests: 75+ tests implemented
+- ✅ Integration tests: Shift switching, calendar operations, persistence
+- 🟡 Reducer state tests: Foundation ready
+- 🟡 Middleware integration tests: In progress
+- 🟡 View interaction tests: Pending
 
-**Completion: 43%**
+**Test Completion: 75%**
 
-### Overall Project: **65%**
+### Overall Project: **88%**
 
 ---
 
 ## 🏃 Next Steps
 
-### Recommended: TCA Performance Testing
-**Estimated Time:** 2-3 hours
+### Priority: Complete Redux Phase 4 Testing
+**Estimated Time:** 40+ hours (Phase 4E breakdown)
 ```
-1. Create performance tests for 1000+ shifts
-2. Profile scroll and search performance
-3. Optimize bottlenecks if identified
-4. Document performance baselines
+Phase 4E-1: Critical Test Quality Fixes (18 hours)
+  • Fix/delete disabled test suites
+  • Rename and rewrite MiddlewareIntegrationTests
+  • Rewrite CalendarServiceTests for actual behavior
+
+Phase 4E-2: Test Quality & Isolation (14 hours)
+  • Separate unit/integration test files
+  • Add proper teardown/cleanup
+  • Fix date determinism issues
+
+Phase 4E-3: Additional Test Coverage (36 hours)
+  • Error scenario tests
+  • Concurrency tests
+  • Real middleware integration tests
+
+Phase 4E-4: Infrastructure & Docs (6 hours)
+  • Clean up test infrastructure
+  • Separate performance tests
+  • Add test documentation
 ```
 
-See: [PROJECT_PHASE_SCHEDULE.md](PROJECT_PHASE_SCHEDULE.md) → Phase 3
+See: [CLAUDE.md](CLAUDE.md) → Phase 4 Priority 4E section
 
-### Alternative: Visual Enhancement
-**Estimated Time:** 1.5-2 hours
-```
-1. Create EnhancedLocationCard component
-2. Add to LocationsView
-3. Test with multiple locations
-```
-
-See: [STATUS_REPORT.md](STATUS_REPORT.md) → Phase 2C
+### After Testing: Production Ready
+- [ ] Final bug fixes from test coverage
+- [ ] Performance optimization if needed
+- [ ] Documentation review
+- [ ] Release v1.0
 
 ---
 
@@ -91,45 +104,54 @@ See: [STATUS_REPORT.md](STATUS_REPORT.md) → Phase 2C
 
 ```
 ShiftScheduler/
-├── Domain/                 # Core domain models
-│   ├── Domain.swift       # Location, ShiftType, ScheduledShift
-│   ├── Aggregates.swift   # ShiftCatalog, Schedule
+├── Redux/                  # Redux architecture (state management)
+│   ├── Store.swift         # @Observable @MainActor single source of truth
+│   ├── AppState.swift      # 7 feature states combined
+│   ├── AppAction.swift     # 60+ action types across all features
+│   ├── AppReducer.swift    # Pure state transformation logic
+│   └── Middleware/         # Async side effects handlers
+│       ├── LoggingMiddleware.swift
+│       ├── ScheduleMiddleware.swift
+│       ├── TodayMiddleware.swift
+│       ├── LocationsMiddleware.swift
+│       ├── ShiftTypesMiddleware.swift
+│       ├── ChangeLogMiddleware.swift
+│       └── SettingsMiddleware.swift
+│
+├── Domain/                 # Core domain models (DDD)
+│   ├── Domain.swift        # Location, ShiftType, ScheduledShift
+│   ├── Aggregates.swift    # ShiftCatalog, Schedule
 │   └── ...
 │
-├── Features/              # TCA Reducers (state management)
-│   ├── TodayFeature.swift
-│   ├── ScheduleFeature.swift
-│   ├── ShiftTypesFeature.swift
-│   ├── LocationsFeature.swift
-│   ├── SettingsFeature.swift
-│   ├── ChangeLogFeature.swift
-│   └── ...
+├── Services/               # Service protocols & implementations
+│   ├── CalendarServiceProtocol
+│   ├── PersistenceServiceProtocol
+│   ├── ShiftSwitchServiceProtocol
+│   ├── CurrentDayServiceProtocol
+│   └── ServiceContainer.swift (dependency injection)
 │
-├── Dependencies/          # TCA Dependency Clients
-│   ├── CalendarClient.swift
-│   ├── PersistenceClient.swift
-│   ├── ShiftSwitchClient.swift
-│   └── ...
-│
-├── Views/                 # SwiftUI Views (all TCA-based)
+├── Views/                  # SwiftUI Views (Redux-connected)
+│   ├── ContentView.swift
 │   ├── TodayView.swift
 │   ├── ScheduleView.swift
 │   ├── ShiftTypesView.swift
 │   ├── LocationsView.swift
-│   ├── Components/       # Reusable components
-│   └── ...
+│   ├── SettingsView.swift
+│   ├── ChangeLogView.swift
+│   ├── Components/         # Reusable UI components
+│   └── Utilities/          # KeyboardDismissal, Modifiers
 │
-└── Services/             # Legacy services (being replaced)
-    ├── CalendarService.swift
-    ├── ShiftSwitchService.swift
+└── Utilities/              # Shared helpers
+    ├── Redux environment
+    ├── Error handling
     └── ...
 
 ShiftSchedulerTests/
-├── Features/            # Feature unit tests
-├── Integration/         # Feature integration tests (NEW)
-├── Domain/              # Domain model tests
-├── Mocks/               # Mock implementations
-└── ...
+├── Services/              # Service unit & integration tests (75+ tests)
+├── Redux/                 # Reducer and middleware tests
+├── Domain/                # Domain model tests
+├── Mocks/                 # Mock service implementations
+└── Helpers/               # Test data builders
 ```
 
 ---
@@ -179,28 +201,33 @@ xcodebuild -project ShiftScheduler.xcodeproj \
 
 ## ✨ Key Architecture Decisions
 
-### TCA (The Composable Architecture)
-- All views use `@Bindable var store: StoreOf<Feature>`
-- No direct singleton access from views
-- 100% of business logic in features
-- Testable, composable, and predictable
+### Redux Pattern
+- **Single Source of Truth**: @Observable @MainActor Store holds all AppState
+- **Unidirectional Data Flow**: Action → Reducer → Middleware → State → UI
+- **Pure Reducers**: All state mutations are deterministic and testable
+- **Middleware for Side Effects**: Calendar ops, persistence, async tasks
+- **No Singletons**: All services injected via ServiceContainer
 
 ### Swift 6 Concurrency
 - Strict concurrency checking enabled
-- All async code properly handles Sendable
-- No global mutable state (only actors)
+- All async code uses Task/async/await (no DispatchQueue)
+- No global mutable state (services are stateless)
 - Data races eliminated at compile time
+- @MainActor enforcement for UI updates
 
-### Dependency Injection
-- All external services wrapped as TCA dependencies
-- Mockable for testing
-- Easily swappable implementations
+### Service Layer (Dependency Injection)
+- All external operations through protocols
+- Production implementations: Calendar, Persistence, ShiftSwitch, CurrentDay
+- Mock implementations for testing
+- ServiceContainer for centralized dependency injection
+- Easily testable with mock services
 
 ### Testing Strategy
 - Swift Testing framework (not XCTest)
-- Feature unit tests for all reducers
-- Integration tests for feature composition
-- Performance tests for optimization
+- Service unit tests (75+ implemented)
+- Integration tests for middleware & services
+- Reducer state transition tests
+- Mock services for isolation
 
 ---
 
@@ -208,28 +235,35 @@ xcodebuild -project ShiftScheduler.xcodeproj \
 
 | Metric | Value |
 |--------|-------|
-| Views Using TCA | 9/9 (100%) ✅ |
-| Features Implemented | 8+ |
-| Unit Tests | 16+ |
-| Integration Tests | 14+ |
-| Lines of Production Code | 8,000+ |
-| Test Coverage | >80% |
+| Redux Architecture | 100% ✅ |
+| Views Connected to Store | 6/6 (100%) ✅ |
+| Middleware Features | 6 complete ✅ |
+| Service Protocols | 4 complete ✅ |
+| Service Tests | 75+ (Service layer) ✅ |
+| Total Tests | 100+ (all frameworks) |
+| Lines of Production Code | 12,000+ |
+| Test Coverage | 75% (Phase 4 in progress) |
 | Compilation Warnings | 0 |
 | Swift Concurrency Warnings | 0 |
+| Architecture Pattern | Redux (unidirectional) ✅ |
+| Testing Framework | Swift Testing (not XCTest) ✅ |
 
 ---
 
 ## 🎯 Success Criteria
 
-- ✅ All views use TCA stores
-- ✅ Zero singleton access from views
-- ✅ 100% of business logic in features
-- ✅ All features unit tested (>80% coverage)
-- ✅ Integration tests passing
-- ✅ Performance acceptable (<1s load time)
+- ✅ Redux architecture implemented with Store, AppState, AppAction, AppReducer
+- ✅ All 6 views connected to Redux store
+- ✅ All 6 feature middlewares implementing side effects
+- ✅ Full CRUD operations (Add/Edit/Delete) for Locations and Shift Types
+- ✅ Calendar integration with filtering and search
+- ✅ Shift switching with undo/redo capability
+- ✅ 75+ service layer tests implemented
+- ✅ No singletons in Redux/view layer
+- ✅ Swift 6 concurrency throughout (Task/async/await)
 - ✅ Compiles with zero warnings
-- ⏳ Visual refresh complete
-- ⏳ Ready for production
+- 🟡 Phase 4 testing completion (in progress)
+- ⏳ Production ready (after testing complete)
 
 ---
 
@@ -237,11 +271,14 @@ xcodebuild -project ShiftScheduler.xcodeproj \
 
 | Commit | Date | Description |
 |--------|------|-------------|
-| `8a0d81f` | Oct 22 | Phase schedule & quick start docs |
-| `15a7fad` | Oct 22 | Task 12: Integration tests |
-| `b65ed7d` | Oct 22 | ChangeLogView TCA migration |
-| `20f1c46` | Oct 21 | ScheduleFeature TCA reducer |
-| `e4b9e61` | Oct 21 | ShiftTypesFeature TCA reducer |
+| `2a525a4` | Oct 29 | Phase 4A: Service unit tests (75+ tests) |
+| `2b7c6ba` | Oct 24 | Phase 4 Priority 3: Shift switching with undo/redo |
+| `d6ae0a3` | Oct 23 | Phase 4 Priority 1: Full CRUD operations |
+| `474f043` | Oct 23 | Phase 3: View layer & navigation (6 views) |
+| `45844ce` | Oct 23 | Phase 2: Service layer & 6 middlewares |
+| `8a00c66` | Oct 23 | Phase 1: Redux foundation with logging |
+| `8506de5` | Oct 22 | TCA: Quick Actions feature |
+| `2c3f2f2` | Oct 22 | TCA: Merge shift all-day event fix |
 
 See full history: `git log --oneline | head -20`
 
@@ -249,27 +286,31 @@ See full history: `git log --oneline | head -20`
 
 ## 🤝 Contributing
 
-Follow patterns in [CLAUDE.md](CLAUDE.md):
-- Use `@Observable` macro for state management
-- No forced unwraps (`!`)
-- Protocol-oriented dependencies
-- Comprehensive error handling
-- Keyboard dismissal for input forms
+Follow Redux patterns in [CLAUDE.md](CLAUDE.md):
+- **Dispatch actions** for all user interactions: `store.dispatch(action: .feature(.action))`
+- **Reducers** transform state deterministically
+- **Middleware** handles side effects (calendar, persistence, async)
+- **Services** injected via protocols (testable mocks)
+- **No forced unwraps** (`!`) - use safe unwrapping
+- **Swift 6 concurrency** - use Task/async/await, not DispatchQueue
+- **Keyboard dismissal** for all text input views
+- **@MainActor** for UI operations
 
 ---
 
 ## 📞 Questions?
 
 Refer to:
-1. **Architecture:** See [CLAUDE.md](CLAUDE.md)
-2. **TCA Migration:** See [TCA_MIGRATION_PHASE1.md](TCA_MIGRATION_PHASE1.md)
-3. **Current Status:** See [PROJECT_PHASE_SCHEDULE.md](PROJECT_PHASE_SCHEDULE.md)
+1. **Redux Architecture:** See [CLAUDE.md](CLAUDE.md) → Redux Architecture section
+2. **Middleware & Services:** See [CLAUDE.md](CLAUDE.md) → Phase 2 & Service Layer
+3. **Phase Progress:** See [CLAUDE.md](CLAUDE.md) → Redux Architecture Migration
 4. **Next Steps:** See [QUICK_START.md](QUICK_START.md)
+5. **Swift 6 Concurrency:** See [CLAUDE.md](CLAUDE.md) → Swift 6 Concurrency & Async/Await
 
 ---
 
-**Project Last Updated:** October 22, 2025
-**Phase Schedule Last Updated:** October 22, 2025
-**Documentation Status:** Complete and Persistent ✅
+**Project Last Updated:** October 31, 2025
+**Redux Architecture:** Phases 0-4 Complete (Testing in Progress) 🚀
+**Documentation Status:** Current and Accurate ✅
 
 Start with [QUICK_START.md](QUICK_START.md) →
