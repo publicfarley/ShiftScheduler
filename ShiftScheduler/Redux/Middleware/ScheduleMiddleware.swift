@@ -484,5 +484,10 @@ func scheduleMiddleware(
     case .shiftsLoadedAroundMonth:
         // Handled by reducer
         break
+
+    case .jumpToToday:
+        // No middleware side effects needed - reducer handles state update
+        // Animation is handled by SwiftUI's @State in CustomCalendarView
+        break
     }
 }

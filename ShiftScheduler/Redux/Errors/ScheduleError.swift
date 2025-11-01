@@ -15,6 +15,7 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
     case invalidShiftData(String)
     case stackRestorationFailed(String)
     case shiftSwitchFailed(String)
+    case unknown(String)
 
     // MARK: - LocalizedError Implementation
 
@@ -46,6 +47,8 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
             return "Failed to restore undo/redo history: \(reason)"
         case .shiftSwitchFailed(let reason):
             return "Failed to switch shift: \(reason)"
+        case .unknown(let reason):
+            return "An unknown error occurred: \(reason)"
         }
     }
 
@@ -75,6 +78,8 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
             return "Undo/redo history could not be restored. Your recent operations are still available."
         case .shiftSwitchFailed:
             return "Please ensure the shift type is valid and try again."
+        case .unknown:
+            return "A technical error occurred. Please try again."
         }
     }
 

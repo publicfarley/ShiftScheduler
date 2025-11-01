@@ -350,6 +350,9 @@ enum ScheduleAction: Equatable {
     /// Handle shifts loaded around month result (includes range info)
     case shiftsLoadedAroundMonth(Result<(shifts: [ScheduledShift], rangeStart: Date, rangeEnd: Date), Error>)
 
+    /// Jump to today's date in the calendar (animated)
+    case jumpToToday
+
     static func == (lhs: ScheduleAction, rhs: ScheduleAction) -> Bool {
         switch (lhs, rhs) {
         case (.task, .task), (.checkAuthorization, .checkAuthorization),
@@ -362,7 +365,8 @@ enum ScheduleAction: Equatable {
              (.dismissError, .dismissError),
              (.dismissSuccessToast, .dismissSuccessToast),
              (.clearFilters, .clearFilters),
-             (.restoreUndoRedoStacks, .restoreUndoRedoStacks):
+             (.restoreUndoRedoStacks, .restoreUndoRedoStacks),
+             (.jumpToToday, .jumpToToday):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs

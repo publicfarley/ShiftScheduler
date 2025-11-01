@@ -75,7 +75,10 @@ struct ScheduleView: View {
                         addShiftButton
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        filterButton
+                        HStack(spacing: 16) {
+                            todayButton
+                            filterButton
+                        }
                     }
                 }
             }
@@ -317,6 +320,17 @@ struct ScheduleView: View {
     private var addShiftButton: some View {
         Button(action: { store.dispatch(action: .schedule(.addShiftSheetToggled(true))) }) {
             Image(systemName: "plus.circle")
+                .foregroundColor(.primary)
+        }
+    }
+
+    private var todayButton: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                store.dispatch(action: .schedule(.jumpToToday))
+            }
+        }) {
+            Image(systemName: "calendar.badge.clock")
                 .foregroundColor(.primary)
         }
     }

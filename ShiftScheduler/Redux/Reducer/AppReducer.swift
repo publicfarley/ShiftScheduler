@@ -478,6 +478,14 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isLoadingAdditionalShifts = false
         state.currentError = error as? ScheduleError ?? .unknown(error.localizedDescription)
         state.isLoading = false
+
+    // MARK: - Navigation
+
+    case .jumpToToday:
+        let today = Calendar.current.startOfDay(for: Date())
+        state.selectedDate = today
+        state.displayedMonth = today
+        state.searchText = ""
     }
 
     return state
