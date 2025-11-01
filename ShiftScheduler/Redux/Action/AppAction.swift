@@ -339,6 +339,17 @@ enum ScheduleAction: Equatable {
     /// Clear all active filters
     case clearFilters
 
+    // MARK: - Sliding Window Actions
+
+    /// User navigated to a different month in the calendar view
+    case displayedMonthChanged(Date)
+
+    /// Load shifts centered around a specific month (for range fault handling)
+    case loadShiftsAroundMonth(Date, monthOffset: Int)
+
+    /// Handle shifts loaded around month result (includes range info)
+    case shiftsLoadedAroundMonth(Result<(shifts: [ScheduledShift], rangeStart: Date, rangeEnd: Date), Error>)
+
     static func == (lhs: ScheduleAction, rhs: ScheduleAction) -> Bool {
         switch (lhs, rhs) {
         case (.task, .task), (.checkAuthorization, .checkAuthorization),
@@ -443,6 +454,13 @@ enum ScheduleAction: Equatable {
             return lhs?.id == rhs?.id
         case let (.filterShiftTypeChanged(lhs), .filterShiftTypeChanged(rhs)):
             return lhs?.id == rhs?.id
+        case let (.displayedMonthChanged(lhs), .displayedMonthChanged(rhs)):
+            return lhs == rhs
+        case let (.loadShiftsAroundMonth(lhsDate, lhsOffset), .loadShiftsAroundMonth(rhsDate, rhsOffset)):
+            return lhsDate == rhsDate && lhsOffset == rhsOffset
+        case (.shiftsLoadedAroundMonth(.success), .shiftsLoadedAroundMonth(.success)),
+             (.shiftsLoadedAroundMonth(.failure), .shiftsLoadedAroundMonth(.failure)):
+            return true
         default:
             return false
         }

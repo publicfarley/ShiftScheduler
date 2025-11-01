@@ -456,6 +456,28 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.filterSelectedShiftType = nil
         state.searchText = ""
         state.showFilterSheet = false
+
+    // MARK: - Sliding Window Actions
+
+    case .displayedMonthChanged(let newMonth):
+        state.displayedMonth = newMonth
+        // Fault detection happens in middleware
+
+    case .loadShiftsAroundMonth:
+        state.isLoadingAdditionalShifts = true
+        // Actual loading happens in middleware
+
+    case .shiftsLoadedAroundMonth(.success(let result)):
+        state.isLoadingAdditionalShifts = false
+        state.scheduledShifts = result.shifts
+        state.loadedRangeStart = result.rangeStart
+        state.loadedRangeEnd = result.rangeEnd
+        state.isLoading = false
+
+    case .shiftsLoadedAroundMonth(.failure(let error)):
+        state.isLoadingAdditionalShifts = false
+        state.currentError = error as? ScheduleError ?? .unknown(error.localizedDescription)
+        state.isLoading = false
     }
 
     return state

@@ -29,9 +29,9 @@ func scheduleMiddleware(
             await dispatch(.schedule(.authorizationChecked(false)))
         }
 
-        // Load shifts
-        logger.debug("Dispatching loadShifts")
-        await dispatch(.schedule(.loadShifts))
+        // Load shifts around the currently displayed month (which defaults to today's month)
+        logger.debug("Dispatching loadShiftsAroundMonth for initial load")
+        await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
 
     case .checkAuthorization:
         do {
@@ -105,9 +105,9 @@ func scheduleMiddleware(
             )
             // logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
 
-            // Reload shifts to refresh the UI
+            // Reload shifts to refresh the UI (around the displayed month)
             await dispatch(.schedule(.addShiftResponse(.success(createdShift))))
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch let error as ScheduleError {
             // logger.error("Failed to create shift: \(error.localizedDescription)")
             await dispatch(.schedule(.addShiftResponse(.failure(error))))
@@ -177,7 +177,7 @@ func scheduleMiddleware(
             await dispatch(.schedule(.shiftDeleted(.success(()))))
 
             // Reload shifts after deletion to refresh from calendar
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch {
             logger.error("Failed to delete shift: \(error.localizedDescription)")
             let scheduleError = ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
@@ -226,7 +226,7 @@ func scheduleMiddleware(
             await dispatch(.schedule(.overlapResolved(.success(()))))
 
             // Reload shifts after resolution
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch {
             logger.error("Failed to resolve overlap: \(error.localizedDescription)")
             let scheduleError = ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
@@ -293,7 +293,7 @@ func scheduleMiddleware(
             await dispatch(.schedule(.shiftSwitched(.success(entry))))
 
             // Reload shifts after switch to refresh from calendar
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch {
             // logger.error("Failed to switch shift: \(error.localizedDescription)")
             let scheduleError = ScheduleError.shiftSwitchFailed(error.localizedDescription)
@@ -353,7 +353,7 @@ func scheduleMiddleware(
             }
 
             // Reload shifts to refresh UI
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
             await dispatch(.schedule(.undoCompleted(.success(()))))
         } catch {
             // logger.error("Failed to undo: \(error.localizedDescription)")
@@ -379,7 +379,7 @@ func scheduleMiddleware(
             }
 
             // Reload shifts to refresh UI
-            await dispatch(.schedule(.loadShifts))
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
             await dispatch(.schedule(.redoCompleted(.success(()))))
         } catch {
             // logger.error("Failed to redo: \(error.localizedDescription)")
@@ -426,10 +426,62 @@ func scheduleMiddleware(
         break
 
     case .clearFilters:
-        // Reload all shifts
-        await dispatch(.schedule(.loadShifts))
+        // Reload all shifts around the currently displayed month
+        await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
 
     case .authorizationChecked:
+        // Handled by reducer
+        break
+
+    // MARK: - Sliding Window Actions
+
+    case .displayedMonthChanged(let newMonth):
+        // Fault detection: Check if we've hit the edge of our loaded range
+        guard let rangeStart = state.schedule.loadedRangeStart,
+              let rangeEnd = state.schedule.loadedRangeEnd else {
+            // No range loaded yet, this must be initial navigation
+            logger.debug("No loaded range yet, skipping fault detection")
+            break
+        }
+
+        // Get the first and last month of loaded range
+        let firstLoadedMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: rangeStart)) ?? rangeStart
+        let lastLoadedMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: rangeEnd)) ?? rangeEnd
+        let displayedMonthStart = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: newMonth)) ?? newMonth
+
+        // Fault triggered if we're viewing the first or last month of loaded range
+        if displayedMonthStart <= firstLoadedMonth || displayedMonthStart >= lastLoadedMonth {
+            logger.debug("Range fault detected - user navigated to edge month: \(newMonth.formatted(.dateTime.year().month()))")
+            logger.debug("Current range: \(rangeStart.formatted()) to \(rangeEnd.formatted())")
+            logger.debug("Loading ±6 months around \(newMonth.formatted(.dateTime.year().month()))")
+            await dispatch(.schedule(.loadShiftsAroundMonth(newMonth, monthOffset: 6)))
+        }
+
+    case .loadShiftsAroundMonth(let pivotMonth, let monthOffset):
+        logger.debug("Loading shifts around month: \(pivotMonth.formatted(.dateTime.year().month())) (±\(monthOffset) months)")
+        do {
+            let result = try await services.calendarService.loadShiftsAroundMonth(pivotMonth, monthOffset: monthOffset)
+            logger.debug("Successfully loaded \(result.shifts.count) shifts")
+            logger.debug("New range: \(result.rangeStart.formatted()) to \(result.rangeEnd.formatted())")
+
+            // Check for overlapping shifts on the same date
+            let shiftsGroupedByDate = Dictionary(grouping: result.shifts) { shift in
+                Calendar.current.startOfDay(for: shift.date)
+            }
+
+            // Find any dates with multiple shifts
+            if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
+                logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
+                await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
+            }
+
+            await dispatch(.schedule(.shiftsLoadedAroundMonth(.success((shifts: result.shifts, rangeStart: result.rangeStart, rangeEnd: result.rangeEnd)))))
+        } catch {
+            logger.error("Failed to load shifts around month: \(error.localizedDescription)")
+            await dispatch(.schedule(.shiftsLoadedAroundMonth(.failure(error))))
+        }
+
+    case .shiftsLoadedAroundMonth:
         // Handled by reducer
         break
     }

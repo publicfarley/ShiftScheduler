@@ -196,6 +196,20 @@ struct ScheduleState: Equatable {
     /// Shifts that overlap on the same date
     var overlappingShifts: [ScheduledShift] = []
 
+    // MARK: - Sliding Window State
+
+    /// The start date of the currently loaded shift data range
+    var loadedRangeStart: Date? = nil
+
+    /// The end date of the currently loaded shift data range
+    var loadedRangeEnd: Date? = nil
+
+    /// The month currently being displayed in the calendar view
+    var displayedMonth: Date = Calendar.current.startOfDay(for: Date())
+
+    /// Loading state for fetching additional shifts (during range fault)
+    var isLoadingAdditionalShifts: Bool = false
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states

@@ -16,6 +16,7 @@ struct CustomCalendarView: View {
     let scheduledDates: Set<Date>
 
     @State private var currentMonth = Date()
+    @Environment(\.reduxStore) var store
 
     private let calendar = Calendar.current
     private let dateFormatter: DateFormatter = {
@@ -92,6 +93,10 @@ struct CustomCalendarView: View {
             if !calendar.isDate(newDate, equalTo: currentMonth, toGranularity: .month) {
                 currentMonth = newDate
             }
+        }
+        .onChange(of: currentMonth) { _, newMonth in
+            // Notify Redux that the displayed month changed (for fault detection)
+            store.dispatch(action: .schedule(.displayedMonthChanged(newMonth)))
         }
     }
 

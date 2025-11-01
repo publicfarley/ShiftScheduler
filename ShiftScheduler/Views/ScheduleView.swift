@@ -63,6 +63,8 @@ struct ScheduleView: View {
                 // Loading Overlay
                 if store.state.schedule.isLoading || store.state.schedule.isRestoringStacks {
                     LoadingOverlayView(message: nil)
+                } else if store.state.schedule.isLoadingAdditionalShifts {
+                    LoadingOverlayView(message: "Loading additional shifts...")
                 }
             }
             .navigationTitle("Schedule")

@@ -22,6 +22,13 @@ protocol CalendarServiceProtocol: Sendable {
     /// This is useful for calendar views that allow navigation to past/future months
     func loadShiftsForExtendedRange() async throws -> [ScheduledShift]
 
+    /// Load shifts centered around a specific month (for sliding window)
+    /// - Parameters:
+    ///   - pivotMonth: The month to center the data range around
+    ///   - monthOffset: Number of months before and after pivot month to load (default: 6)
+    /// - Returns: Tuple of shifts and the actual date range loaded (rangeStart, rangeEnd)
+    func loadShiftsAroundMonth(_ pivotMonth: Date, monthOffset: Int) async throws -> (shifts: [ScheduledShift], rangeStart: Date, rangeEnd: Date)
+
     /// Load raw shift data (ScheduledShiftData) from EventKit for a date range
     /// This returns data before conversion to domain objects
     func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData]

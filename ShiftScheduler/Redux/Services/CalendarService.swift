@@ -142,6 +142,22 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return try await loadShifts(from: startDate, to: endDate)
     }
 
+    func loadShiftsAroundMonth(_ pivotMonth: Date, monthOffset: Int = 6) async throws -> (shifts: [ScheduledShift], rangeStart: Date, rangeEnd: Date) {
+        // Get the start of the pivot month
+        let pivotStart = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: pivotMonth)) ?? pivotMonth
+
+        guard let startDate = Calendar.current.date(byAdding: .month, value: -monthOffset, to: pivotStart),
+              let endDate = Calendar.current.date(byAdding: .month, value: monthOffset + 1, to: pivotStart) else {
+            throw CalendarServiceError.dateCalculationFailed
+        }
+
+        logger.debug("Loading shifts around month \(pivotMonth.formatted(.dateTime.year().month())) (±\(monthOffset) months): \(startDate.formatted()) to \(endDate.formatted())")
+
+        let shifts = try await loadShifts(from: startDate, to: endDate)
+
+        return (shifts: shifts, rangeStart: startDate, rangeEnd: endDate)
+    }
+
     /// Load shift data (before conversion to domain objects) for a date range
     /// Returns ScheduledShiftData which contains raw EventKit information
     func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {

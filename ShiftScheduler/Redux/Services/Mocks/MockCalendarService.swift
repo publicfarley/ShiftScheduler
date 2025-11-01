@@ -16,6 +16,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     private(set) var loadShiftsForNext30DaysCallCount = 0
     private(set) var loadShiftsForCurrentMonthCallCount = 0
     private(set) var loadShiftsForExtendedRangeCallCount = 0
+    private(set) var loadShiftsAroundMonthCallCount = 0
     private(set) var loadShiftDataCallCount = 0
     private(set) var createShiftEventCallCount = 0
     private(set) var updateShiftEventCallCount = 0
@@ -92,6 +93,25 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw error
         }
         return mockShifts
+    }
+
+    func loadShiftsAroundMonth(_ pivotMonth: Date, monthOffset: Int = 6) async throws -> (shifts: [ScheduledShift], rangeStart: Date, rangeEnd: Date) {
+        loadShiftsAroundMonthCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Calculate range dates
+        let pivotStart = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: pivotMonth)) ?? pivotMonth
+        let startDate = Calendar.current.date(byAdding: .month, value: -monthOffset, to: pivotStart) ?? pivotStart
+        let endDate = Calendar.current.date(byAdding: .month, value: monthOffset + 1, to: pivotStart) ?? pivotStart
+
+        // Filter shifts within the range
+        let filteredShifts = mockShifts.filter { shift in
+            shift.date >= startDate && shift.date < endDate
+        }
+
+        return (shifts: filteredShifts, rangeStart: startDate, rangeEnd: endDate)
     }
 
     var mockShiftData: [ScheduledShiftData] = []
