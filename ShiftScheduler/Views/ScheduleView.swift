@@ -10,6 +10,13 @@ struct ScheduleView: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
+                // Title
+                Text("Schedule")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+
                 if !store.state.schedule.isCalendarAuthorized {
                     authorizationRequiredView
                 } else {
@@ -64,21 +71,6 @@ struct ScheduleView: View {
                 LoadingOverlayView(message: nil)
             } else if store.state.schedule.isLoadingAdditionalShifts {
                 LoadingOverlayView(message: "Loading additional shifts...")
-            }
-        }
-        .navigationTitle("Schedule")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            if store.state.schedule.isCalendarAuthorized {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    addShiftButton
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        todayButton
-                        filterButton
-                    }
-                }
             }
         }
         .sheet(isPresented: Binding(
@@ -183,6 +175,16 @@ struct ScheduleView: View {
 
     private var scheduleContentView: some View {
         VStack(spacing: 0) {
+            // Header with buttons
+            HStack(spacing: 16) {
+                addShiftButton
+                Spacer()
+                todayButton
+                filterButton
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+
             // Calendar month view - FIXED SIZE
             VStack(spacing: 0) {
                 CustomCalendarView(
