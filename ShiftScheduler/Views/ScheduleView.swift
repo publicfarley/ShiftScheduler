@@ -8,146 +8,144 @@ struct ScheduleView: View {
     @State private var listOpacity: Double = 1
 
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    if !store.state.schedule.isCalendarAuthorized {
-                        authorizationRequiredView
-                    } else {
-                        scheduleContentView
-                    }
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                if !store.state.schedule.isCalendarAuthorized {
+                    authorizationRequiredView
+                } else {
+                    scheduleContentView
                 }
+            }
 
-                // Success Toast
-                if store.state.schedule.showSuccessToast, let message = store.state.schedule.successMessage {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.headline)
-                                .foregroundColor(.green)
+            // Success Toast
+            if store.state.schedule.showSuccessToast, let message = store.state.schedule.successMessage {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.headline)
+                            .foregroundColor(.green)
 
-                            Text(message)
+                        Text(message)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+
+                        Spacer()
+
+                        Button(action: { store.dispatch(action: .schedule(.dismissSuccessToast)) }) {
+                            Image(systemName: "xmark.circle.fill")
                                 .font(.body)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-
-                            Spacer()
-
-                            Button(action: { store.dispatch(action: .schedule(.dismissSuccessToast)) }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                            }
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .padding(16)
-                    .background(Color.green.opacity(0.1))
-                    .border(Color.green, width: 1)
-                    .cornerRadius(12)
-                    .padding(16)
-                    .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
-                                           removal: .move(edge: .top).combined(with: .opacity)))
-                    .onAppear {
-                        // Auto-dismiss after 3 seconds
-                        Task {
-                            try? await Task.sleep(nanoseconds: 3_000_000_000)
-                            await MainActor.run {
-                                withAnimation {
-                                    store.dispatch(action: .schedule(.dismissSuccessToast))
-                                }
+                }
+                .padding(16)
+                .background(Color.green.opacity(0.1))
+                .border(Color.green, width: 1)
+                .cornerRadius(12)
+                .padding(16)
+                .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
+                                       removal: .move(edge: .top).combined(with: .opacity)))
+                .onAppear {
+                    // Auto-dismiss after 3 seconds
+                    Task {
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        await MainActor.run {
+                            withAnimation {
+                                store.dispatch(action: .schedule(.dismissSuccessToast))
                             }
                         }
                     }
                 }
+            }
 
-                // Loading Overlay
-                if store.state.schedule.isLoading || store.state.schedule.isRestoringStacks {
-                    LoadingOverlayView(message: nil)
-                } else if store.state.schedule.isLoadingAdditionalShifts {
-                    LoadingOverlayView(message: "Loading additional shifts...")
+            // Loading Overlay
+            if store.state.schedule.isLoading || store.state.schedule.isRestoringStacks {
+                LoadingOverlayView(message: nil)
+            } else if store.state.schedule.isLoadingAdditionalShifts {
+                LoadingOverlayView(message: "Loading additional shifts...")
+            }
+        }
+        .navigationTitle("Schedule")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            if store.state.schedule.isCalendarAuthorized {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    addShiftButton
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 16) {
+                        todayButton
+                        filterButton
+                    }
                 }
             }
-            .navigationTitle("Schedule")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if store.state.schedule.isCalendarAuthorized {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        addShiftButton
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 16) {
-                            todayButton
-                            filterButton
+        }
+        .sheet(isPresented: Binding(
+            get: { store.state.schedule.showAddShiftSheet },
+            set: { isPresented in
+                if !isPresented {
+                    store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                }
+            }
+        )) {
+            AddShiftModalView(
+                isPresented: Binding(
+                    get: { store.state.schedule.showAddShiftSheet },
+                    set: { isPresented in
+                        if !isPresented {
+                            store.dispatch(action: .schedule(.addShiftSheetDismissed))
                         }
                     }
-                }
+                ),
+                availableShiftTypes: store.state.shiftTypes.shiftTypes,
+                preselectedDate: store.state.schedule.selectedDate
+            )
+        }
+        .sheet(
+            isPresented: .constant(store.state.schedule.showFilterSheet),
+            onDismiss: {
+                store.dispatch(action: .schedule(.filterSheetToggled(false)))
             }
-            .sheet(isPresented: Binding(
-                get: { store.state.schedule.showAddShiftSheet },
-                set: { isPresented in
-                    if !isPresented {
-                        store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                    }
-                }
-            )) {
-                AddShiftModalView(
-                    isPresented: Binding(
-                        get: { store.state.schedule.showAddShiftSheet },
-                        set: { isPresented in
-                            if !isPresented {
-                                store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                            }
-                        }
-                    ),
-                    availableShiftTypes: store.state.shiftTypes.shiftTypes,
-                    preselectedDate: store.state.schedule.selectedDate
-                )
+        ) {
+            ScheduleFilterSheetView()
+        }
+        .sheet(
+            isPresented: .constant(store.state.schedule.showShiftDetail),
+            onDismiss: {
+                store.dispatch(action: .schedule(.shiftDetailDismissed))
             }
-            .sheet(
-                isPresented: .constant(store.state.schedule.showFilterSheet),
-                onDismiss: {
-                    store.dispatch(action: .schedule(.filterSheetToggled(false)))
-                }
-            ) {
-                ScheduleFilterSheetView()
-            }
-            .sheet(
-                isPresented: .constant(store.state.schedule.showShiftDetail),
-                onDismiss: {
-                    store.dispatch(action: .schedule(.shiftDetailDismissed))
-                }
-            ) {
-                if let shiftId = store.state.schedule.selectedShiftId {
-                    ShiftDetailsView(initialShiftId: shiftId)
-                        .environment(\.reduxStore, store)
-                }
-            }
-            .sheet(
-                isPresented: .constant(store.state.schedule.showOverlapResolution),
-                onDismiss: {
-                    store.dispatch(action: .schedule(.overlapResolutionDismissed))
-                }
-            ) {
-                if let date = store.state.schedule.overlapDate,
-                   !store.state.schedule.overlappingShifts.isEmpty {
-                    OverlapResolutionSheet(
-                        date: date,
-                        overlappingShifts: store.state.schedule.overlappingShifts
-                    )
+        ) {
+            if let shiftId = store.state.schedule.selectedShiftId {
+                ShiftDetailsView(initialShiftId: shiftId)
                     .environment(\.reduxStore, store)
-                }
             }
-            .errorAlert(error: Binding(
-                get: { store.state.schedule.currentError },
-                set: { _ in store.dispatch(action: .schedule(.dismissError)) }
-            ))
-            .onAppear {
-                logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
-                store.dispatch(action: .schedule(.task))
+        }
+        .sheet(
+            isPresented: .constant(store.state.schedule.showOverlapResolution),
+            onDismiss: {
+                store.dispatch(action: .schedule(.overlapResolutionDismissed))
             }
-            .onChange(of: store.state.schedule.scheduledShifts) { _, shifts in
-                logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")
+        ) {
+            if let date = store.state.schedule.overlapDate,
+               !store.state.schedule.overlappingShifts.isEmpty {
+                OverlapResolutionSheet(
+                    date: date,
+                    overlappingShifts: store.state.schedule.overlappingShifts
+                )
+                .environment(\.reduxStore, store)
             }
+        }
+        .errorAlert(error: Binding(
+            get: { store.state.schedule.currentError },
+            set: { _ in store.dispatch(action: .schedule(.dismissError)) }
+        ))
+        .onAppear {
+            logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
+            store.dispatch(action: .schedule(.task))
+        }
+        .onChange(of: store.state.schedule.scheduledShifts) { _, shifts in
+            logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")
         }
         .dismissKeyboardOnTap()
     }
