@@ -185,29 +185,32 @@ struct ScheduleView: View {
 
     private var scheduleContentView: some View {
         VStack(spacing: 0) {
-            // Calendar month view
-            CustomCalendarView(
-                selectedDate: Binding(
-                    get: { store.state.schedule.selectedDate },
-                    set: { store.dispatch(action: .schedule(.selectedDateChanged($0))) }
-                ),
-                scheduledDates: Set(
-                    store.state.schedule.scheduledShifts.map { shift in
-                        Calendar.current.startOfDay(for: shift.date)
-                    }
+            // Calendar month view - FIXED SIZE
+            VStack(spacing: 0) {
+                CustomCalendarView(
+                    selectedDate: Binding(
+                        get: { store.state.schedule.selectedDate },
+                        set: { store.dispatch(action: .schedule(.selectedDateChanged($0))) }
+                    ),
+                    scheduledDates: Set(
+                        store.state.schedule.scheduledShifts.map { shift in
+                            Calendar.current.startOfDay(for: shift.date)
+                        }
+                    )
                 )
-            )
-            .padding()
-            .background(Color(.systemGray6))
+                .padding()
+                .background(Color(.systemGray6))
 
-            // Selected date display
-            Text(formattedSelectedDate)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-                .padding(.vertical, 12)
+                // Selected date display
+                Text(formattedSelectedDate)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+            }
+            .fixedSize(horizontal: false, vertical: true)
 
-            // Shifts list or empty state with fade animation
+            // Shifts list or empty state - FILLS REMAINING SPACE
             Group {
                 if store.state.schedule.filteredShifts.isEmpty {
                     emptyStateView
@@ -215,6 +218,7 @@ struct ScheduleView: View {
                     shiftsListView
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             .opacity(listOpacity)
             .onChange(of: store.state.schedule.selectedDate) { _, _ in
                 resetListAnimation()
