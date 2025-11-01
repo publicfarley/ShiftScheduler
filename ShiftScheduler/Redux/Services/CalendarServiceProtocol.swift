@@ -18,6 +18,10 @@ protocol CalendarServiceProtocol: Sendable {
     /// Load shifts for the current month
     func loadShiftsForCurrentMonth() async throws -> [ScheduledShift]
 
+    /// Load shifts for an extended range (6 months before and after today)
+    /// This is useful for calendar views that allow navigation to past/future months
+    func loadShiftsForExtendedRange() async throws -> [ScheduledShift]
+
     /// Load raw shift data (ScheduledShiftData) from EventKit for a date range
     /// This returns data before conversion to domain objects
     func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData]

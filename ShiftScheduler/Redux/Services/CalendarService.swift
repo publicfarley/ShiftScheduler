@@ -131,6 +131,17 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return try await loadShifts(from: startDate, to: endDate)
     }
 
+    func loadShiftsForExtendedRange() async throws -> [ScheduledShift] {
+        let today = Date()
+        guard let startDate = Calendar.current.date(byAdding: DateComponents(month: -6), to: today),
+              let endDate = Calendar.current.date(byAdding: DateComponents(month: 6), to: today) else {
+            throw CalendarServiceError.dateCalculationFailed
+        }
+
+        logger.debug("Loading shifts for extended range: \(startDate.formatted()) to \(endDate.formatted())")
+        return try await loadShifts(from: startDate, to: endDate)
+    }
+
     /// Load shift data (before conversion to domain objects) for a date range
     /// Returns ScheduledShiftData which contains raw EventKit information
     func loadShiftData(from startDate: Date, to endDate: Date) async throws -> [ScheduledShiftData] {

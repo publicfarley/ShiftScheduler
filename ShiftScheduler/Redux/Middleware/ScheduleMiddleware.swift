@@ -43,9 +43,9 @@ func scheduleMiddleware(
         }
 
     case .loadShifts:
-        logger.debug("Loading shifts for current month")
+        logger.debug("Loading shifts for extended range (±6 months)")
         do {
-            let shifts = try await services.calendarService.loadShiftsForCurrentMonth()
+            let shifts = try await services.calendarService.loadShiftsForExtendedRange()
             logger.debug("Successfully loaded \(shifts.count) shifts")
 
             // Check for overlapping shifts on the same date
