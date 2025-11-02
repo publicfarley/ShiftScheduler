@@ -367,15 +367,14 @@ struct ChangeLogState: Equatable {
 
     // MARK: - Computed Properties
 
-    /// Filtered entries based on search text
+    /// Filtered entries based on search text, sorted newest first
     var filteredEntries: [ChangeLogEntry] {
-        if searchText.isEmpty {
-            return entries
-        }
-        return entries.filter { entry in
+        let filtered = searchText.isEmpty ? entries : entries.filter { entry in
             entry.userDisplayName.localizedCaseInsensitiveContains(searchText) ||
             entry.changeType.displayName.localizedCaseInsensitiveContains(searchText)
         }
+        // Sort by timestamp in descending order (newest first)
+        return filtered.sorted { $0.timestamp > $1.timestamp }
     }
 }
 
