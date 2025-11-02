@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-private nonisolated(unsafe) let logger = Logger(subsystem: "com.shiftscheduler.redux.middleware", category: "AppStartupMiddleware")
+private nonisolated let logger = Logger(subsystem: "com.shiftscheduler.redux.middleware", category: "AppStartupMiddleware")
 
 /// Middleware for handling app startup and calendar authorization verification
 /// Ensures the user has granted calendar access before the app proceeds

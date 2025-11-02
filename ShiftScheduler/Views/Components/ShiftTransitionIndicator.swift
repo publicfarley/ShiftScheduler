@@ -136,7 +136,6 @@ import SwiftUI
         toShift: evening
     )
     .padding()
-    .previewLayout(.sizeThatFits)
 }
 #endif
 

@@ -41,15 +41,12 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
 
     switch action {
     case .onAppear:
-        // ReduxLogger.debug("App appeared")
         break
 
     case .tabSelected(let tab):
-        // ReduxLogger.debug("Tab selected: \(String(describing: tab))")
         state.selectedTab = tab
 
     case .userProfileUpdated(let profile):
-        // ReduxLogger.debug("User profile updated: \(profile.displayName)")
         state.userProfile = profile
 
     case .verifyCalendarAccessOnStartup:
@@ -120,11 +117,11 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
         state.isLoading = false
         state.showSwitchShiftSheet = false
         state.selectedShift = nil
-        //state.toastMessage = .success("Shift switched successfully")
+        state.toastMessage = .success("Shift switched successfully")
 
     case .shiftSwitched(.failure(let error)):
         state.isLoading = false
-       // state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
+        state.toastMessage = .error("Failed to switch shift: \(error.localizedDescription)")
 
     case .toastMessageCleared:
         state.toastMessage = nil
@@ -684,11 +681,11 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
     case .settingsSaved(.success):
         state.isLoading = false
         state.hasUnsavedChanges = false
-        //state.toastMessage = .success("Settings saved")
+        state.toastMessage = .success("Settings saved")
 
     case .settingsSaved(.failure(let error)):
         state.isLoading = false
-        //state.toastMessage = .error("Failed to save: \(error.localizedDescription)")
+        state.toastMessage = .error("Failed to save: \(error.localizedDescription)")
 
     case .settingsLoaded(.success(let profile)):
         state.isLoading = false

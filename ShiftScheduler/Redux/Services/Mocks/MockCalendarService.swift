@@ -155,7 +155,6 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Check for overlapping shifts (business rule: no overlaps allowed)
         let startDate = Calendar.current.startOfDay(for: date)
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         let existingShifts = mockShifts.filter { $0.date == startDate }
         if !existingShifts.isEmpty {

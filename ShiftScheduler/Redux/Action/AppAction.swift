@@ -231,7 +231,7 @@ enum ScheduleAction: Equatable {
     case addShiftButtonTapped
 
     /// User requested to add a new shift
-    case addShift(date: Date, shiftType: ShiftType, location: Location?, startTime: Date, notes: String)
+    case addShift(date: Date, shiftType: ShiftType, notes: String)
 
     /// Handle add shift result
     case addShiftResponse(Result<ScheduledShift, ScheduleError>)
@@ -378,8 +378,8 @@ enum ScheduleAction: Equatable {
             return lhs.id == rhs.id
         case let (.addShiftSheetToggled(lhs), .addShiftSheetToggled(rhs)):
             return lhs == rhs
-        case let (.addShift(dateL, typeL, locL, timeL, notesL), .addShift(dateR, typeR, locR, timeR, notesR)):
-            return dateL == dateR && typeL.id == typeR.id && locL?.id == locR?.id && timeL == timeR && notesL == notesR
+        case let (.addShift(dateL, typeL, notesL), .addShift(dateR, typeR, notesR)):
+            return dateL == dateR && typeL.id == typeR.id && notesL == notesR
         case let (.addShiftResponse(lhs), .addShiftResponse(rhs)):
             switch (lhs, rhs) {
             case (.success, .success), (.failure, .failure):

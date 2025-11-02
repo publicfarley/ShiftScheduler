@@ -393,8 +393,6 @@ struct AddShiftModalView: View {
         store.dispatch(action: .schedule(.addShift(
             date: selectedDate,
             shiftType: shiftType,
-            location: shiftType.location,
-            startTime: Date(),
             notes: finalNotes
         )))
     }

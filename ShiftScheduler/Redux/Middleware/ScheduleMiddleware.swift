@@ -94,7 +94,7 @@ func scheduleMiddleware(
         // No middleware side effects needed
         break
 
-    case .addShift(let date, let shiftType, _, let _, let notes):
+    case .addShift(let date, let shiftType, let notes):
         // Create shift event in calendar via CalendarService
         do {
             let notesForEvent = notes.isEmpty ? nil : notes

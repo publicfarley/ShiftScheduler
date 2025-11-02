@@ -73,7 +73,7 @@ struct ToastModifier: ViewModifier {
 }
 
 /// Toast message model
-struct ToastMessage: Identifiable, Equatable {
+nonisolated struct ToastMessage: Identifiable, Equatable {
     let id = UUID()
     let message: String
     let icon: String
