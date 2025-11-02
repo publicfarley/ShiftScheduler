@@ -127,14 +127,14 @@ struct UnifiedShiftCard: View {
 
                             // Location address
                             if !location.address.isEmpty {
-                                HStack(spacing: 4) {
+                                HStack(alignment: .top, spacing: 4) {
                                     Image(systemName: "mappin.and.ellipse")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
+                                        .padding(.top, 2)
                                     Text(location.address)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                        .lineLimit(2)
                                 }
                             }
 

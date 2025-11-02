@@ -12,7 +12,6 @@ struct ScheduleView: View {
             VStack(spacing: 0) {
                 // Title
                 Text("Schedule")
-                    .font(.largeTitle)
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
@@ -236,9 +235,6 @@ struct ScheduleView: View {
 
                 // Shift count
                 HStack {
-                    Text("Showing \(store.state.schedule.filteredShifts.count) shift(s)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
                     if store.state.schedule.hasActiveFilters {
                         Button(action: clearAllFilters) {
                             Text("Clear filters")
@@ -257,7 +253,6 @@ struct ScheduleView: View {
                     }
                 }
             }
-            .padding(.vertical)
         }
     }
 
