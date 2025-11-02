@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import SwiftUI
 @testable import ShiftScheduler
 
 /// Tests for Change Log View

@@ -164,8 +164,6 @@ struct ScheduleReducerTests {
             action: .addShift(
                 date: Date(),
                 shiftType: createTestShiftType(),
-                location: nil,
-                startTime: Date(),
                 notes: ""
             )
         )

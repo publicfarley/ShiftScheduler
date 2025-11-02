@@ -213,7 +213,7 @@ struct ConcurrencyTests {
 
         // Create multiple middlewares that all try to execute
         let middlewares = (0..<5).map { id in
-            { (state: AppState, action: AppAction, services: ServiceContainer, dispatch: @escaping Dispatcher<AppAction>) async in
+            { @Sendable (state: AppState, action: AppAction, services: ServiceContainer, dispatch: @escaping Dispatcher<AppAction>) async in
                 // Simulate async work
                 try? await Task.sleep(nanoseconds: 10_000_000)
                 await log.addExecution(id)
@@ -224,7 +224,7 @@ struct ConcurrencyTests {
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: middlewares
+            middlewares: [middleware]
         )
 
         // When - dispatch action (triggers all 5 middlewares)
@@ -237,6 +237,15 @@ struct ConcurrencyTests {
         let executionCount = await log.count()
         #expect(executionCount == 5)
     }
+    
+    @Sendable private func middleware(
+        state: AppState,
+        action: AppAction,
+        services: ServiceContainer,
+        dispatch: @escaping Dispatcher<AppAction>
+    ) async {
+    }
+
 
     /// Test that recursive dispatches from middleware don't cause deadlock
     @Test("Recursive dispatches from middleware don't deadlock")

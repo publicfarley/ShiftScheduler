@@ -179,7 +179,8 @@ struct CalendarServiceTests {
             shiftTypeId: UUID(),
             date: Date(),
             title: "Test Shift",
-            location: "Test Location"
+            location: "Test Location",
+            notes: "Test Notes"
         )
         mockService.mockShiftData = [testShiftData]
 

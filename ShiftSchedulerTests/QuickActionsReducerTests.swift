@@ -156,7 +156,7 @@ struct QuickActionsReducerTests {
 }
 
 // MARK: - Helper Functions
-
+@MainActor
 private func makeTestShift() -> ScheduledShift {
     ScheduledShift(
         id: UUID(),

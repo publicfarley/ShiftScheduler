@@ -19,7 +19,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -59,7 +58,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -88,7 +86,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -105,7 +102,7 @@ struct QuickActionsMiddlewareTests {
         await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
 
         // Verify a change log entry was created (check mock persistence)
-        let savedEntries = mockPersistence.allSavedChangeLogEntries()
+        let savedEntries = mockPersistence.mockChangeLogEntries
         #expect(!savedEntries.isEmpty)
         #expect(savedEntries.last?.changeType == .deleted)
     }
@@ -121,7 +118,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -155,7 +151,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -182,7 +177,6 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            shiftSwitchService: MockShiftSwitchService(),
             currentDayService: MockCurrentDayService()
         )
 
@@ -208,11 +202,12 @@ struct QuickActionsMiddlewareTests {
 }
 
 // MARK: - Test Helpers
-
+@MainActor
 private func makeAppState() -> AppState {
     AppState()
 }
 
+@MainActor
 private func makeAppStateWithShift(_ shift: ScheduledShift) -> AppState {
     var state = AppState()
     state.today.scheduledShifts = [shift]
@@ -220,6 +215,7 @@ private func makeAppStateWithShift(_ shift: ScheduledShift) -> AppState {
     return state
 }
 
+@MainActor
 private func makeTestShift(date: Date = Date()) -> ScheduledShift {
     ScheduledShift(
         id: UUID(),
