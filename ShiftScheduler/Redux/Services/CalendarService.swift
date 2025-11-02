@@ -292,19 +292,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         configureEventDates(event, shiftType: newShiftType, baseDate: startDate)
 
         // Update the shift type ID in the notes
-        // Preserve any additional notes that might have been added
-        let notes = event.notes ?? ""
-        let noteLines = notes.split(separator: "\n", omittingEmptySubsequences: false)
-
-        // Check if notes contain the separator
-        if let separatorIndex = noteLines.firstIndex(of: "---") {
-            // Preserve additional notes after separator
-            let additionalNotes = noteLines[(separatorIndex + 1)...]
-            event.notes = newShiftType.id.uuidString + "\n---\n" + additionalNotes.joined(separator: "\n")
-        } else {
-            // No additional notes, just update the shift type ID
-            event.notes = newShiftType.id.uuidString
-        }
+        // Clear any additional notes since they were associated with the old shift type
+        event.notes = newShiftType.id.uuidString
 
         // Save the updated event
         do {

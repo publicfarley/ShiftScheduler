@@ -63,6 +63,9 @@ func todayMiddleware(
 
                 // Reload shifts after switch to refresh from calendar
                 await dispatch(.today(.loadShifts))
+
+                // Reload change log to show the new entry
+                await dispatch(.changeLog(.task))
             } catch {
         // logger.error("Failed to switch shift: \(error.localizedDescription)")
                 await dispatch(.today(.shiftSwitched(.failure(error))))

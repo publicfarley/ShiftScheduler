@@ -294,6 +294,9 @@ func scheduleMiddleware(
 
             // Reload shifts after switch to refresh from calendar
             await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
+
+            // Reload change log to show the new entry
+            await dispatch(.changeLog(.task))
         } catch {
             // logger.error("Failed to switch shift: \(error.localizedDescription)")
             let scheduleError = ScheduleError.shiftSwitchFailed(error.localizedDescription)
