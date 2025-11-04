@@ -62,7 +62,7 @@ struct StatusBadge: View {
 struct TodayView: View {
     @Environment(\.reduxStore) var store
     @Environment(\.accessibilityReduceMotion) var reduceMotion
-
+    
     // MARK: - Animation Constants
     private let todayCardAnimationDuration: Double = 0.6
     private let tomorrowCardAnimationDelay: Double = 0.2
@@ -200,33 +200,61 @@ struct TodayView: View {
                             .opacity(tomorrowCardOpacity)
 
                             // Week Summary Section
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("This Week")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
+                            if !store.state.today.isLoading {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    let calendar = retrieveThisWeekCalendar()
+                                    let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+                                    let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+
+                                    let dateFormatter = retrieveDataFormatter()
+                                    let _ = dateFormatter.dateFormat = "EEE, MMM d"
+                                    let dateRangeText = "\(dateFormatter.string(from: startOfWeek)) – \(dateFormatter.string(from: endOfWeek))"
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("This Week")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+
+                                        Text(dateRangeText)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                     .padding(.horizontal, 16)
 
-                                let weekShifts = store.state.today.scheduledShifts.filter { shift in
-                                    let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-                                    let endOfWeek = Calendar.current.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
-                                    return shift.date >= startOfWeek && shift.date <= endOfWeek
-                                }
+                                    let weekShifts = store.state.today.scheduledShifts.filter { shift in
+                                        return shift.date >= startOfWeek && shift.date <= endOfWeek
+                                    }
 
-                                HStack(spacing: 12) {
-                                    CompactWeekStatView(
-                                        count: weekShifts.count,
-                                        label: "Scheduled",
-                                        color: .blue,
-                                        icon: "calendar"
-                                    )
-                                    CompactWeekStatView(
-                                        count: 0,
-                                        label: "Completed",
-                                        color: .green,
-                                        icon: "checkmark.circle.fill"
-                                    )
+                                    let completedShifts = weekShifts.filter { shift in
+                                        guard let shiftType = shift.shiftType else { return false }
+
+                                        switch shiftType.duration {
+                                        case .allDay:
+                                            // All-day shift is completed if it's a past date
+                                            return shift.date < Calendar.current.startOfDay(for: Date())
+                                        case .scheduled(_, let endTime):
+                                            // Shift is completed if its end time has passed
+                                            let shiftEndDateTime = endTime.toDate(on: shift.date)
+                                            return shiftEndDateTime < Date()
+                                        }
+                                    }
+
+                                    HStack(spacing: 12) {
+                                        CompactWeekStatView(
+                                            count: weekShifts.count,
+                                            label: "Scheduled",
+                                            color: .blue,
+                                            icon: "calendar"
+                                        )
+                                        CompactWeekStatView(
+                                            count: completedShifts.count,
+                                            label: "Completed",
+                                            color: .green,
+                                            icon: "checkmark.circle.fill"
+                                        )
+                                    }
+                                    .padding(.horizontal, 16)
                                 }
-                                .padding(.horizontal, 16)
                             }
 
                             Spacer(minLength: 100)
@@ -286,6 +314,17 @@ struct TodayView: View {
                 }
             }
         }
+    }
+    
+    private func retrieveThisWeekCalendar() -> Calendar {
+        var adjustedCalendar = Calendar.current
+        adjustedCalendar.firstWeekday = 2
+        
+        return adjustedCalendar
+    }
+    
+    private func retrieveDataFormatter() -> DateFormatter {
+        DateFormatter()
     }
 }
 // MARK: - Enhanced Today Shift Card with Visual Prominence
