@@ -688,6 +688,26 @@ enum SettingsAction: Equatable {
     /// Clear unsaved changes flag
     case clearUnsavedChanges
 
+    // MARK: - Purge Statistics Actions
+
+    /// Load purge statistics (entry counts, oldest date, etc.)
+    case loadPurgeStatistics
+
+    /// Purge statistics loaded
+    case purgeStatisticsLoaded(total: Int, toBePurged: Int, oldestDate: Date?)
+
+    /// User manually triggered purge from Settings
+    case manualPurgeTriggered
+
+    /// Manual purge completed
+    case manualPurgeCompleted(Result<Int, Error>)
+
+    /// User toggled auto-purge on app launch
+    case autoPurgeToggled(Bool)
+
+    /// Last purge date updated
+    case lastPurgeDateUpdated(Date?)
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.task, .task),
@@ -712,6 +732,24 @@ enum SettingsAction: Equatable {
             default:
                 return false
             }
+        case (.loadPurgeStatistics, .loadPurgeStatistics),
+             (.manualPurgeTriggered, .manualPurgeTriggered):
+            return true
+        case let (.purgeStatisticsLoaded(lTotal, lToBePurged, lOldest), .purgeStatisticsLoaded(rTotal, rToBePurged, rOldest)):
+            return lTotal == rTotal && lToBePurged == rToBePurged && lOldest == rOldest
+        case let (.manualPurgeCompleted(lhs), .manualPurgeCompleted(rhs)):
+            switch (lhs, rhs) {
+            case (.success(let l), .success(let r)):
+                return l == r
+            case (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case let (.autoPurgeToggled(lhs), .autoPurgeToggled(rhs)):
+            return lhs == rhs
+        case let (.lastPurgeDateUpdated(lhs), .lastPurgeDateUpdated(rhs)):
+            return lhs == rhs
         default:
             return false
         }

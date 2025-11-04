@@ -703,6 +703,35 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
 
     case .clearUnsavedChanges:
         state.hasUnsavedChanges = false
+
+    // MARK: - Purge Statistics Cases
+
+    case .loadPurgeStatistics:
+        // Middleware will handle loading statistics
+        break
+
+    case .purgeStatisticsLoaded(let total, let toBePurged, let oldestDate):
+        state.totalChangeLogEntries = total
+        state.entriesToBePurged = toBePurged
+        state.oldestEntryDate = oldestDate
+
+    case .manualPurgeTriggered:
+        state.isPurging = true
+
+    case .manualPurgeCompleted(.success(let deletedCount)):
+        state.isPurging = false
+        state.lastPurgeDate = Date()
+        state.toastMessage = .success("Purged \(deletedCount) entries successfully")
+
+    case .manualPurgeCompleted(.failure(let error)):
+        state.isPurging = false
+        state.toastMessage = .error("Purge failed: \(error.localizedDescription)")
+
+    case .autoPurgeToggled(let enabled):
+        state.autoPurgeEnabled = enabled
+
+    case .lastPurgeDateUpdated(let date):
+        state.lastPurgeDate = date
     }
 
     return state

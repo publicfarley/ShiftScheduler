@@ -15,21 +15,17 @@ func settingsMiddleware(
     
     switch settingsAction {
     case .task:
-        // logger.debug("Loading user settings")
-        //        Task {
-        //            do {
-        //                let profile = UserProfile(
-        //                    userId: state.userProfile.userId,
-        //                    displayName: state.userProfile.displayName
-        //                )
-        //                await dispatch(.settings(.settingsLoaded(.success(profile))))
-        //            } catch {
-        //                logger.error("Failed to load settings: \(error.localizedDescription)")
-        //                await dispatch(.settings(.settingsLoaded(.failure(error))))
-        //            }
-        //        }
-        
-        break
+        // Load auto-purge preference from UserDefaults
+        let autoPurgeEnabled = UserDefaults.standard.object(forKey: "autoPurgeEnabled") as? Bool ?? true
+        await dispatch(.settings(.autoPurgeToggled(autoPurgeEnabled)))
+
+        // Load last purge date from UserDefaults
+        if let lastPurgeTimestamp = UserDefaults.standard.object(forKey: "lastPurgeDate") as? TimeInterval {
+            await dispatch(.settings(.lastPurgeDateUpdated(Date(timeIntervalSince1970: lastPurgeTimestamp))))
+        }
+
+        // Load purge statistics
+        await dispatch(.settings(.loadPurgeStatistics))
         
     case .saveSettings:
         logger.debug("Saving settings")
@@ -51,7 +47,54 @@ func settingsMiddleware(
             await dispatch(.settings(.settingsSaved(.failure(error))))
         }
 
-    case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged:
+    // MARK: - Purge Statistics Actions
+
+    case .loadPurgeStatistics:
+        logger.debug("Loading purge statistics")
+        do {
+            // Load all change log entries
+            let entries = try await services.persistenceService.loadChangeLogEntries()
+            let total = entries.count
+
+            // Find oldest entry
+            let oldestDate = entries.map { $0.timestamp }.min()
+
+            // Calculate how many would be purged with current policy
+            var toBePurged = 0
+            if let cutoffDate = state.settings.retentionPolicy.cutoffDate {
+                toBePurged = entries.filter { $0.timestamp < cutoffDate }.count
+            }
+
+            await dispatch(.settings(.purgeStatisticsLoaded(total: total, toBePurged: toBePurged, oldestDate: oldestDate)))
+        } catch {
+            logger.error("Failed to load purge statistics: \(error.localizedDescription)")
+        }
+
+    case .manualPurgeTriggered:
+        logger.debug("Manual purge triggered from Settings")
+        // Dispatch purge action to ChangeLogMiddleware
+        await dispatch(.changeLog(.purgeOldEntries))
+
+        // Wait a moment for purge to complete, then reload statistics
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        await dispatch(.settings(.loadPurgeStatistics))
+        await dispatch(.changeLog(.task)) // Reload change log entries
+
+    case .autoPurgeToggled(let enabled):
+        logger.debug("Auto-purge toggled: \(enabled)")
+        UserDefaults.standard.set(enabled, forKey: "autoPurgeEnabled")
+
+    case .manualPurgeCompleted:
+        // Update last purge date
+        let now = Date()
+        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "lastPurgeDate")
+        await dispatch(.settings(.lastPurgeDateUpdated(now)))
+
+        // Reload statistics after purge
+        await dispatch(.settings(.loadPurgeStatistics))
+
+    case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
+         .purgeStatisticsLoaded, .lastPurgeDateUpdated:
         // Handled by reducer only
         break
     }

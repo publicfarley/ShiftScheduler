@@ -391,6 +391,26 @@ struct SettingsState: Equatable {
     /// Change log retention policy
     var retentionPolicy: ChangeLogRetentionPolicy = .forever
 
+    // MARK: - Purge Statistics
+
+    /// Total number of change log entries
+    var totalChangeLogEntries: Int = 0
+
+    /// Number of entries that would be purged with current policy
+    var entriesToBePurged: Int = 0
+
+    /// Date of oldest change log entry
+    var oldestEntryDate: Date? = nil
+
+    /// Date of last purge operation
+    var lastPurgeDate: Date? = nil
+
+    /// Whether automatic purge on app launch is enabled
+    var autoPurgeEnabled: Bool = true
+
+    /// Whether a purge operation is currently in progress
+    var isPurging: Bool = false
+
     /// Loading state
     var isLoading: Bool = false
 
