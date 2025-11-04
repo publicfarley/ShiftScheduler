@@ -79,6 +79,12 @@ struct ShiftSchedulerApp: App {
     }
 
     private func purgeExpiredChangeLogEntries() async {
+        // Check if auto-purge is enabled
+        guard reduxStore.state.settings.autoPurgeEnabled else {
+            logger.debug("Auto-purge is disabled - skipping automatic purge")
+            return
+        }
+
         logger.debug("Dispatching change log purge action (respects user retention policy)")
         reduxStore.dispatch(action: .changeLog(.purgeOldEntries))
     }
