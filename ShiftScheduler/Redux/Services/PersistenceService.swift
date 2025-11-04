@@ -74,19 +74,34 @@ final class PersistenceService: PersistenceServiceProtocol {
 
     func deleteChangeLogEntry(id: UUID) async throws {
         // logger.debug("Deleting change log entry: \(id)")
-        try await changeLogRepository.deleteEntriesOlderThan(Date(timeIntervalSince1970: 0))
+
+        // Fetch all entries
+        var entries = try await changeLogRepository.fetchAll()
+
+        // Remove the entry with matching ID
+        entries.removeAll { $0.id == id }
+
+        // Clear all entries and re-save the filtered list
+        try await changeLogRepository.deleteAll()
+        for entry in entries {
+            try await changeLogRepository.save(entry)
+        }
     }
 
     func purgeOldChangeLogEntries(olderThanDays: Int) async throws -> Int {
         // logger.debug("Purging change log entries older than \(olderThanDays) days")
 
+        // Get count before deletion
+        let beforeCount = try await changeLogRepository.fetchAll().count
+
         let cutoffDate = Calendar.current.date(byAdding: .day, value: -olderThanDays, to: Date()) ?? Date()
         try await changeLogRepository.deleteEntriesOlderThan(cutoffDate)
 
-        let entries = try await changeLogRepository.fetchAll()
-        let deletedCount = entries.count
+        // Get count after deletion and calculate deleted count
+        let afterCount = try await changeLogRepository.fetchAll().count
+        let deletedCount = beforeCount - afterCount
 
-        // logger.debug("Purged entries older than \(cutoffDate.formatted())")
+        // logger.debug("Purged \(deletedCount) entries older than \(cutoffDate.formatted())")
         return deletedCount
     }
 

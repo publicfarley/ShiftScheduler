@@ -35,13 +35,24 @@ func changeLogMiddleware(
         }
         
     case .purgeOldEntries:
-        logger.debug("Purging old change log entries")
+        logger.debug("Purging old change log entries based on retention policy: \(state.settings.retentionPolicy.displayName)")
+
+        // Check if retention policy is "Forever" - skip purge
+        guard let cutoffDate = state.settings.retentionPolicy.cutoffDate else {
+            logger.debug("Retention policy is Forever - skipping purge")
+            await dispatch(.changeLog(.purgeCompleted(.success(()))))
+            return
+        }
+
         do {
-            let deletedCount = try await services.persistenceService.purgeOldChangeLogEntries(olderThanDays: 30)
-             logger.debug("Purged \(deletedCount) old entries")
+            // Calculate days from cutoff date
+            let daysSince = Calendar.current.dateComponents([.day], from: cutoffDate, to: Date()).day ?? 0
+
+            let deletedCount = try await services.persistenceService.purgeOldChangeLogEntries(olderThanDays: daysSince)
+            logger.debug("Purged \(deletedCount) old entries (policy: \(state.settings.retentionPolicy.displayName))")
             await dispatch(.changeLog(.purgeCompleted(.success(()))))
         } catch {
-             logger.error("Failed to purge old entries: \(error.localizedDescription)")
+            logger.error("Failed to purge old entries: \(error.localizedDescription)")
             await dispatch(.changeLog(.purgeCompleted(.failure(error))))
         }
         

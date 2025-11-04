@@ -388,6 +388,9 @@ struct SettingsState: Equatable {
     /// User ID
     var userId: UUID = UUID()
 
+    /// Change log retention policy
+    var retentionPolicy: ChangeLogRetentionPolicy = .forever
+
     /// Loading state
     var isLoading: Bool = false
 

@@ -673,6 +673,9 @@ enum SettingsAction: Equatable {
     /// User changed display name
     case displayNameChanged(String)
 
+    /// User changed retention policy
+    case retentionPolicyChanged(ChangeLogRetentionPolicy)
+
     /// Save settings
     case saveSettings
 
@@ -692,6 +695,8 @@ enum SettingsAction: Equatable {
              (.clearUnsavedChanges, .clearUnsavedChanges):
             return true
         case let (.displayNameChanged(lhs), .displayNameChanged(rhs)):
+            return lhs == rhs
+        case let (.retentionPolicyChanged(lhs), .retentionPolicyChanged(rhs)):
             return lhs == rhs
         case let (.settingsSaved(lhs), .settingsSaved(rhs)):
             switch (lhs, rhs) {

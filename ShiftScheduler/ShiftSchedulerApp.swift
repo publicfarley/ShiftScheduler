@@ -79,18 +79,7 @@ struct ShiftSchedulerApp: App {
     }
 
     private func purgeExpiredChangeLogEntries() async {
-//        do {
-//            let repository = ChangeLogRepository()
-//            let retentionManager = UserDefaultsRetentionPolicyManager()
-//            let purgeService = ChangeLogPurgeService(repository: repository, retentionManager: retentionManager)
-//
-//            let purgedCount = try await purgeService.purgeIfNeeded()
-//
-//            if purgedCount > 0 {
-//                await logger.debug("Purged \(purgedCount) expired change log entries")
-//            }
-//        } catch {
-//            await logger.error("Failed to purge change log entries: \(error.localizedDescription)")
-//        }
+        logger.debug("Dispatching change log purge action (respects user retention policy)")
+        reduxStore.dispatch(action: .changeLog(.purgeOldEntries))
     }
 }

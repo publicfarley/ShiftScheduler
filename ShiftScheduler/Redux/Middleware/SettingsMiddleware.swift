@@ -33,24 +33,25 @@ func settingsMiddleware(
         
     case .saveSettings:
         logger.debug("Saving settings")
-        
+
         do {
             let profile = UserProfile(
                 userId: state.userProfile.userId,
-                displayName: state.settings.displayName
+                displayName: state.settings.displayName,
+                retentionPolicy: state.settings.retentionPolicy
             )
-        
+
             try await services.persistenceService.saveUserProfile(profile)
             await dispatch(.settings(.settingsSaved(.success(()))))
-            
+
             // Update app-level user profile
             await dispatch(.appLifecycle(.userProfileUpdated(profile)))
         } catch {
             logger.error("Failed to save settings: \(error.localizedDescription)")
             await dispatch(.settings(.settingsSaved(.failure(error))))
         }
-        
-    case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged:
+
+    case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged:
         // Handled by reducer only
         break
     }

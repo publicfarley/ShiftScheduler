@@ -33,11 +33,22 @@ struct SettingsView: View {
                         Text("Retention Period")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text("Forever")
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
+                        Picker("Retention Period", selection: Binding(
+                            get: { store.state.settings.retentionPolicy },
+                            set: { newValue in
+                                store.dispatch(action: .settings(.retentionPolicyChanged(newValue)))
+                            }
+                        )) {
+                            ForEach(ChangeLogRetentionPolicy.allCases) { policy in
+                                Text(policy.displayName).tag(policy)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(.primary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                     }
 
                     Spacer()

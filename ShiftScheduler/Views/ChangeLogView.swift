@@ -6,6 +6,9 @@ struct ChangeLogView: View {
     // Current date for relative time calculations (deterministic)
     private let currentDate = Date()
 
+    // State for confirmation dialog
+    @State private var showPurgeConfirmation = false
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -20,6 +23,33 @@ struct ChangeLogView: View {
             }
             .navigationTitle("Change Log")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showPurgeConfirmation = true
+                    }) {
+                        Label("Purge Old Entries", systemImage: "trash")
+                    }
+                    .disabled(store.state.settings.retentionPolicy == .forever)
+                }
+            }
+            .alert("Purge Old Entries?", isPresented: $showPurgeConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Purge", role: .destructive) {
+                    store.dispatch(action: .changeLog(.purgeOldEntries))
+                    // Reload entries after a short delay
+                    Task {
+                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                        store.dispatch(action: .changeLog(.task))
+                    }
+                }
+            } message: {
+                if let cutoffDate = store.state.settings.retentionPolicy.cutoffDate {
+                    Text("This will delete all change log entries older than \(cutoffDate, style: .date) according to your retention policy (\(store.state.settings.retentionPolicy.displayName)).")
+                } else {
+                    Text("Your retention policy is set to Forever. No entries will be deleted.")
+                }
+            }
             .onAppear {
                 store.dispatch(action: .changeLog(.task))
             }

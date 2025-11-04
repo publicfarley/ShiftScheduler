@@ -675,6 +675,10 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
         state.displayName = name
         state.hasUnsavedChanges = true
 
+    case .retentionPolicyChanged(let policy):
+        state.retentionPolicy = policy
+        state.hasUnsavedChanges = true
+
     case .saveSettings:
         state.isLoading = true
 
@@ -691,6 +695,7 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
         state.isLoading = false
         state.userId = profile.userId
         state.displayName = profile.displayName
+        state.retentionPolicy = profile.retentionPolicy
 
     case .settingsLoaded(.failure(let error)):
         state.isLoading = false
