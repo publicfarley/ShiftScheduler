@@ -39,6 +39,10 @@ struct SettingsView: View {
                 store.dispatch(action: .settings(.task))
                 displayName = store.state.userProfile.displayName
             }
+            .onChange(of: store.state.userProfile.displayName) { _, newValue in
+                // Sync local state when Redux store updates (e.g., from onboarding)
+                displayName = newValue
+            }
             .onDisappear {
                 // Cancel any pending save task when view disappears
                 saveTask?.cancel()
