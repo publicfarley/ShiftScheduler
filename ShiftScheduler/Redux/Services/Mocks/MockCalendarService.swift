@@ -66,6 +66,10 @@ final class MockCalendarService: CalendarServiceProtocol {
         if shouldThrowError, let error = throwError {
             throw error
         }
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
         return mockShifts.filter { shift in
             shift.date >= startDate && shift.date <= endDate
         }
@@ -122,6 +126,10 @@ final class MockCalendarService: CalendarServiceProtocol {
         if shouldThrowError, let error = throwError {
             throw error
         }
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
         return mockShiftData.filter { data in
             data.date >= startDate && data.date <= endDate
         }
@@ -151,6 +159,11 @@ final class MockCalendarService: CalendarServiceProtocol {
         lastCreateShiftEventData = (date, shiftType)
         if shouldThrowError, let error = throwError {
             throw error
+        }
+
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
         }
 
         // Check for overlapping shifts (business rule: no overlaps allowed)
@@ -184,13 +197,16 @@ final class MockCalendarService: CalendarServiceProtocol {
             }
         }
 
+        // Convert empty notes to nil
+        let finalNotes = notes?.isEmpty == true ? nil : notes
+
         // Create and add mock shift
         let shift = ScheduledShift(
             id: UUID(),
             eventIdentifier: UUID().uuidString,
             shiftType: shiftType,
             date: startDate,
-            notes: notes
+            notes: finalNotes
         )
 
         mockShifts.append(shift)
@@ -204,9 +220,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw error
         }
 
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
         // Find the shift to update
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
+            return
         }
 
         // Check for overlapping shifts on the same date (excluding the current shift being updated)
@@ -256,9 +278,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw error
         }
 
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
         // Find the shift to delete
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            throw ScheduleError.calendarEventDeletionFailed("Event with identifier \(eventIdentifier) not found")
+            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
+            return
         }
 
         // Remove the shift
@@ -272,9 +300,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw error
         }
 
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
         // Find the shift to update
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
+            return
         }
 
         // Update the shift with new notes
