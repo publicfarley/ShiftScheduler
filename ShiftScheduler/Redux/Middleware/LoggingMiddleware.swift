@@ -57,8 +57,8 @@ private func logFeatureState(state: AppState, action: AppAction) {
         break
         
     case .settings:
-        logger.debug("[Settings] User: \(state.settings.displayName)")
-        logger.debug("[Settings] Unsaved: \(state.settings.hasUnsavedChanges)")
+        logger.debug("[Settings] Policy: \(state.settings.retentionPolicy.displayName)")
+        logger.debug("[Settings] Auto-purge: \(state.settings.autoPurgeEnabled)")
         
         break
         

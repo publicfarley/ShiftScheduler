@@ -46,8 +46,13 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
     case .tabSelected(let tab):
         state.selectedTab = tab
 
+    case .displayNameChanged(let newName):
+        state.userProfile.displayName = newName
+        state.isNameConfigured = !newName.trimmingCharacters(in: .whitespaces).isEmpty
+
     case .userProfileUpdated(let profile):
         state.userProfile = profile
+        state.isNameConfigured = !profile.displayName.trimmingCharacters(in: .whitespaces).isEmpty
 
     case .verifyCalendarAccessOnStartup:
         // Middleware will handle the actual verification
@@ -671,9 +676,9 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
     case .task:
         state.isLoading = true
 
-    case .displayNameChanged(let name):
-        state.displayName = name
-        state.hasUnsavedChanges = true
+    case .displayNameChanged:
+        // displayName now managed at AppState level - no-op
+        break
 
     case .retentionPolicyChanged(let policy):
         state.retentionPolicy = policy
@@ -693,8 +698,6 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
 
     case .settingsLoaded(.success(let profile)):
         state.isLoading = false
-        state.userId = profile.userId
-        state.displayName = profile.displayName
         state.retentionPolicy = profile.retentionPolicy
 
     case .settingsLoaded(.failure(let error)):

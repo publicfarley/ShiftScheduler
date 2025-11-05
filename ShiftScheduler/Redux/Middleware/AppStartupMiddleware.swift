@@ -13,6 +13,17 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
 
     switch lifecycleAction {
     case .onAppear:
+        // Load user profile on app startup
+        do {
+            let profile = try await services.persistenceService.loadUserProfile()
+            // Update app state with loaded profile
+            await dispatch(.appLifecycle(.userProfileUpdated(profile)))
+            logger.debug("Loaded user profile: \(profile.displayName)")
+        } catch {
+            logger.error("Failed to load user profile on startup: \(error.localizedDescription)")
+            // Continue with default profile (empty displayName triggers onboarding)
+        }
+
         // When app appears, verify calendar access if not already verified
         if !state.isCalendarAuthorizationVerified {
             await dispatch(.appLifecycle(.verifyCalendarAccessOnStartup))
@@ -77,7 +88,7 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         // State updates handled by reducer, no middleware action needed
         break
 
-    case .tabSelected, .userProfileUpdated:
+    case .tabSelected, .userProfileUpdated, .displayNameChanged:
         // Not handled by this middleware
         break
     }

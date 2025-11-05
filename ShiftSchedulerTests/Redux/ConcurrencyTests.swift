@@ -134,7 +134,7 @@ struct ConcurrencyTests {
 
         // Then - all actions were processed without crash
         #expect(store.state.selectedTab == .today)
-        #expect(store.state.settings.displayName == "Test")
+        #expect(store.state.userProfile.displayName == "Test")
     }
 
     // MARK: - Race Condition Tests

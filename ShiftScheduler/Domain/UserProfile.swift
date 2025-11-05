@@ -10,7 +10,7 @@ struct UserProfile: Codable, Equatable, Sendable, Hashable {
 
     init(
         userId: UUID = UUID(),
-        displayName: String = "User",
+        displayName: String = "",
         retentionPolicy: ChangeLogRetentionPolicy = .forever,
         autoPurgeEnabled: Bool = true,
         lastPurgeDate: Date? = nil

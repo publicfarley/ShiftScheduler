@@ -55,6 +55,9 @@ enum AppLifecycleAction: Equatable {
     /// User selected a different tab
     case tabSelected(Tab)
 
+    /// User's display name changed
+    case displayNameChanged(String)
+
     /// User profile was updated
     case userProfileUpdated(UserProfile)
 
@@ -82,6 +85,8 @@ enum AppLifecycleAction: Equatable {
              (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData):
             return true
         case let (.tabSelected(a), .tabSelected(b)):
+            return a == b
+        case let (.displayNameChanged(a), .displayNameChanged(b)):
             return a == b
         case let (.userProfileUpdated(a), .userProfileUpdated(b)):
             return a.userId == b.userId

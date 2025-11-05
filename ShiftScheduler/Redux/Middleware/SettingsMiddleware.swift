@@ -37,7 +37,7 @@ func settingsMiddleware(
         do {
             let profile = UserProfile(
                 userId: state.userProfile.userId,
-                displayName: state.settings.displayName,
+                displayName: state.userProfile.displayName,
                 retentionPolicy: state.settings.retentionPolicy,
                 autoPurgeEnabled: state.settings.autoPurgeEnabled,
                 lastPurgeDate: state.settings.lastPurgeDate

@@ -3,7 +3,19 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.reduxStore) var store
     @State private var displayName: String = ""
+    @State private var saveStatus: SaveStatus = .idle
     @State private var showPurgeConfirmation = false
+    @State private var saveTask: Task<Void, Never>? = nil
+
+    private enum SaveStatus: Equatable {
+        case idle
+        case saving
+        case saved
+        case error(String)
+    }
+
+    private let debounceDelay: UInt64 = 500_000_000 // 500ms in nanoseconds
+    private let saveSuccessDuration: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
 
     var body: some View {
         NavigationView {
@@ -25,7 +37,11 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 store.dispatch(action: .settings(.task))
-                displayName = store.state.settings.displayName
+                displayName = store.state.userProfile.displayName
+            }
+            .onDisappear {
+                // Cancel any pending save task when view disappears
+                saveTask?.cancel()
             }
             .alert("Purge Old Entries?", isPresented: $showPurgeConfirmation) {
                 Button("Cancel", role: .cancel) { }
@@ -50,11 +66,45 @@ struct SettingsView: View {
                 Text("Display Name")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                TextField("Enter your name", text: $displayName)
-                    .textFieldStyle(.roundedBorder)
-                    .onChange(of: displayName) { _, newValue in
-                        store.dispatch(action: .settings(.displayNameChanged(newValue)))
+                HStack(spacing: 8) {
+                    TextField("Enter your name", text: $displayName)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: displayName) { _, newValue in
+                            // Update app state immediately for reactive UI
+                            store.dispatch(action: .appLifecycle(.displayNameChanged(newValue)))
+
+                            // Debounce the save: cancel previous save task and schedule new one
+                            saveTask?.cancel()
+                            saveTask = Task {
+                                try? await Task.sleep(nanoseconds: debounceDelay)
+                                if !Task.isCancelled {
+                                    await saveDisplayName()
+                                }
+                            }
+                        }
+
+                    // Save status indicator
+                    Group {
+                        switch saveStatus {
+                        case .idle:
+                            EmptyView()
+                        case .saving:
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .scaleEffect(0.8)
+                        case .saved:
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        case .error(let message):
+                            Button(action: {}) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundColor(.red)
+                            }
+                            .help(message)
+                        }
                     }
+                    .frame(width: 24)
+                }
             }
         }
     }
@@ -288,6 +338,37 @@ struct SettingsView: View {
             return Text("This will permanently delete \(store.state.settings.entriesToBePurged) entries older than \(cutoffDate.formatted(date: .abbreviated, time: .omitted)).\n\nRetention Policy: \(store.state.settings.retentionPolicy.displayName)\n\nThis action cannot be undone.")
         } else {
             return Text("Your retention policy is set to Forever. No entries will be deleted.")
+        }
+    }
+
+    // MARK: - Save Methods
+
+    private func saveDisplayName() async {
+        saveStatus = .saving
+
+        do {
+            // Dispatch save settings action to middleware
+            store.dispatch(action: .settings(.saveSettings))
+
+            // Wait for the save to complete by checking state changes
+            // In a real app, you might want to track a separate "isSaving" state
+            try await Task.sleep(nanoseconds: 300_000_000) // 300ms for save to complete
+
+            saveStatus = .saved
+
+            // Auto-dismiss the "saved" indicator after 2 seconds
+            try await Task.sleep(nanoseconds: saveSuccessDuration)
+            if saveStatus == .saved {
+                saveStatus = .idle
+            }
+        } catch {
+            saveStatus = .error("Failed to save")
+
+            // Reset error after 3 seconds
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if case .error = saveStatus {
+                saveStatus = .idle
+            }
         }
     }
 

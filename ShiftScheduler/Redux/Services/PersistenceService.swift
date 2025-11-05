@@ -148,7 +148,7 @@ final class PersistenceService: PersistenceServiceProtocol {
 
         // Return default profile for new users
         logger.debug("Creating default user profile")
-        return UserProfile(userId: UUID(), displayName: "User", retentionPolicy: .forever, autoPurgeEnabled: true)
+        return UserProfile(userId: UUID(), displayName: "", retentionPolicy: .forever, autoPurgeEnabled: true)
     }
 
     func saveUserProfile(_ profile: UserProfile) async throws {
@@ -158,7 +158,7 @@ final class PersistenceService: PersistenceServiceProtocol {
 
     /// Migrate old UserDefaults data to UserProfile model
     private func migrateUserDefaultsToProfile() async throws -> UserProfile? {
-        let displayName = UserDefaults.standard.string(forKey: "displayName") ?? "User"
+        let displayName = UserDefaults.standard.string(forKey: "displayName") ?? ""
         let autoPurgeEnabled = UserDefaults.standard.object(forKey: "autoPurgeEnabled") as? Bool ?? true
         var lastPurgeDate: Date? = nil
         if let timestamp = UserDefaults.standard.object(forKey: "lastPurgeDate") as? TimeInterval {
@@ -166,7 +166,7 @@ final class PersistenceService: PersistenceServiceProtocol {
         }
 
         // Only migrate if we have non-default data
-        guard displayName != "User" || !autoPurgeEnabled || lastPurgeDate != nil else {
+        guard !displayName.isEmpty || !autoPurgeEnabled || lastPurgeDate != nil else {
             return nil
         }
 

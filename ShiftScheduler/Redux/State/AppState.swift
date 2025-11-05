@@ -7,7 +7,10 @@ struct AppState: Equatable {
     var selectedTab: Tab = .today
 
     /// User profile information
-    var userProfile: UserProfile = UserProfile(userId: UUID(), displayName: "User")
+    var userProfile: UserProfile = UserProfile(userId: UUID(), displayName: "")
+
+    /// Whether user has configured their name (onboarding gate)
+    var isNameConfigured: Bool = false
 
     /// Calendar authorization status
     var isCalendarAuthorized: Bool = false
@@ -382,12 +385,6 @@ struct ChangeLogState: Equatable {
 
 /// State for the Settings feature (user preferences)
 struct SettingsState: Equatable {
-    /// User display name
-    var displayName: String = ""
-
-    /// User ID
-    var userId: UUID = UUID()
-
     /// Change log retention policy
     var retentionPolicy: ChangeLogRetentionPolicy = .forever
 
