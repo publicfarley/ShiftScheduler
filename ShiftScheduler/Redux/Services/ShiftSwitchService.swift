@@ -51,6 +51,13 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
             reason: reason
         )
 
+        // Update the shift in the calendar
+        try await calendarService.updateShiftEvent(
+            eventIdentifier: shift.eventIdentifier,
+            newShiftType: newShiftType,
+            date: shift.date
+        )
+
         // Record the change in change log
         try await persistenceService.addChangeLogEntry(entry)
 
@@ -60,6 +67,9 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
 
     func deleteShift(_ shift: ScheduledShift) async throws -> ChangeLogEntry {
         // logger.debug("Deleting shift: \(shift.shiftType?.title ?? "unknown")")
+
+        // Delete the shift from the calendar
+        try await calendarService.deleteShiftEvent(eventIdentifier: shift.eventIdentifier)
 
         // Create snapshot of deleted shift
         let deletedSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }

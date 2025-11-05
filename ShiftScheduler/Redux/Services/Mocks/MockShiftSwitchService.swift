@@ -16,6 +16,20 @@ final class MockShiftSwitchService: ShiftSwitchServiceProtocol {
     /// Whether shift switches are allowed
     var canSwitchShiftValue = true
 
+    // MARK: - Calendar Operation Tracking
+
+    /// Count of calendar update operations performed
+    private(set) var calendarUpdateCallCount = 0
+
+    /// Count of calendar delete operations performed
+    private(set) var calendarDeleteCallCount = 0
+
+    /// The last event identifier that was updated in the calendar
+    private(set) var lastUpdatedEventIdentifier: String?
+
+    /// The last event identifier that was deleted from the calendar
+    private(set) var lastDeletedEventIdentifier: String?
+
     // MARK: - ShiftSwitchServiceProtocol Implementation
 
     func switchShift(
@@ -26,6 +40,10 @@ final class MockShiftSwitchService: ShiftSwitchServiceProtocol {
         if shouldThrowError {
             throw errorToThrow
         }
+
+        // Track calendar update operation
+        calendarUpdateCallCount += 1
+        lastUpdatedEventIdentifier = shift.eventIdentifier
 
         let entry = ChangeLogEntry(
             id: UUID(),
@@ -45,6 +63,10 @@ final class MockShiftSwitchService: ShiftSwitchServiceProtocol {
         if shouldThrowError {
             throw errorToThrow
         }
+
+        // Track calendar delete operation
+        calendarDeleteCallCount += 1
+        lastDeletedEventIdentifier = shift.eventIdentifier
 
         let entry = ChangeLogEntry(
             id: UUID(),
@@ -91,6 +113,10 @@ final class MockShiftSwitchService: ShiftSwitchServiceProtocol {
         performedOperations.removeAll()
         shouldThrowError = false
         canSwitchShiftValue = true
+        calendarUpdateCallCount = 0
+        calendarDeleteCallCount = 0
+        lastUpdatedEventIdentifier = nil
+        lastDeletedEventIdentifier = nil
     }
 
     /// Check if a shift switch was performed

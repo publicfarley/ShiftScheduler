@@ -1,5 +1,25 @@
 import Foundation
 
+// MARK: - Error Types
+
+/// Errors that can be thrown by persistence operations
+enum PersistenceError: LocalizedError {
+    case notFound(String)
+    case saveFailed(String)
+    case loadFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notFound(let message):
+            return "Item not found: \(message)"
+        case .saveFailed(let message):
+            return "Failed to save: \(message)"
+        case .loadFailed(let message):
+            return "Failed to load: \(message)"
+        }
+    }
+}
+
 /// Mock implementation of PersistenceServiceProtocol for testing
 final class MockPersistenceService: PersistenceServiceProtocol {
     var mockShiftTypes: [ShiftType] = []
@@ -59,6 +79,10 @@ final class MockPersistenceService: PersistenceServiceProtocol {
         if shouldThrowError, let error = throwError {
             throw error
         }
+        // Validate that the shift type exists before deletion
+        guard mockShiftTypes.contains(where: { $0.id == id }) else {
+            throw PersistenceError.notFound("ShiftType with id \(id) not found")
+        }
         mockShiftTypes.removeAll { $0.id == id }
     }
 
@@ -87,6 +111,10 @@ final class MockPersistenceService: PersistenceServiceProtocol {
         if shouldThrowError, let error = throwError {
             throw error
         }
+        // Validate that the location exists before deletion
+        guard mockLocations.contains(where: { $0.id == id }) else {
+            throw PersistenceError.notFound("Location with id \(id) not found")
+        }
         mockLocations.removeAll { $0.id == id }
     }
 
@@ -113,6 +141,10 @@ final class MockPersistenceService: PersistenceServiceProtocol {
         lastDeletedChangeLogEntryId = id
         if shouldThrowError, let error = throwError {
             throw error
+        }
+        // Validate that the change log entry exists before deletion
+        guard mockChangeLogEntries.contains(where: { $0.id == id }) else {
+            throw PersistenceError.notFound("ChangeLogEntry with id \(id) not found")
         }
         mockChangeLogEntries.removeAll { $0.id == id }
     }
