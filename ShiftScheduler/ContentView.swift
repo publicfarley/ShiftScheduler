@@ -63,7 +63,8 @@ struct ContentView: View {
             .opacity(reduxStore.state.isNameConfigured ? 1.0 : 0.5)
 
             // Onboarding modal - blocks interaction until name is set
-            if !reduxStore.state.isNameConfigured {
+            // Only show after profile is loaded to prevent flash
+            if !reduxStore.state.isNameConfigured && reduxStore.state.isProfileLoaded {
                 UserNameOnboardingView()
                     .environment(\.reduxStore, reduxStore)
             }

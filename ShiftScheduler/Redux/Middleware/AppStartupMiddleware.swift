@@ -24,6 +24,9 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
             // Continue with default profile (empty displayName triggers onboarding)
         }
 
+        // Mark profile as loaded (prevents onboarding modal flash)
+        await dispatch(.appLifecycle(.profileLoaded))
+
         // When app appears, verify calendar access if not already verified
         if !state.isCalendarAuthorizationVerified {
             await dispatch(.appLifecycle(.verifyCalendarAccessOnStartup))
@@ -88,7 +91,7 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         // State updates handled by reducer, no middleware action needed
         break
 
-    case .tabSelected, .userProfileUpdated, .displayNameChanged:
+    case .tabSelected, .userProfileUpdated, .displayNameChanged, .profileLoaded:
         // Not handled by this middleware
         break
     }

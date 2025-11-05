@@ -12,6 +12,9 @@ struct AppState: Equatable {
     /// Whether user has configured their name (onboarding gate)
     var isNameConfigured: Bool = false
 
+    /// Whether user profile has been loaded from persistence (prevents modal flash)
+    var isProfileLoaded: Bool = false
+
     /// Calendar authorization status
     var isCalendarAuthorized: Bool = false
 

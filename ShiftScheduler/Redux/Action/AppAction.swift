@@ -61,6 +61,9 @@ enum AppLifecycleAction: Equatable {
     /// User profile was updated
     case userProfileUpdated(UserProfile)
 
+    /// User profile has been loaded from persistence
+    case profileLoaded
+
     /// Verify calendar access on app startup
     case verifyCalendarAccessOnStartup
 
@@ -82,7 +85,8 @@ enum AppLifecycleAction: Equatable {
     static func == (lhs: AppLifecycleAction, rhs: AppLifecycleAction) -> Bool {
         switch (lhs, rhs) {
         case (.onAppear, .onAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
-             (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData):
+             (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData),
+             (.profileLoaded, .profileLoaded):
             return true
         case let (.tabSelected(a), .tabSelected(b)):
             return a == b

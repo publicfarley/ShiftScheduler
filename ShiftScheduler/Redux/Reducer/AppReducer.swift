@@ -54,6 +54,9 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
         state.userProfile = profile
         state.isNameConfigured = !profile.displayName.trimmingCharacters(in: .whitespaces).isEmpty
 
+    case .profileLoaded:
+        state.isProfileLoaded = true
+
     case .verifyCalendarAccessOnStartup:
         // Middleware will handle the actual verification
         break
