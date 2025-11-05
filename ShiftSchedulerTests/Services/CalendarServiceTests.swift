@@ -241,21 +241,27 @@ struct CalendarServiceTests {
 
     @Test("updateShiftEvent updates event successfully")
     func testUpdateShiftEventSucceeds() async throws {
-        // Given - Mock service authorized
+        // Given - Mock service authorized with existing shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let eventId = "test-event-update"
+        let shiftType = Self.createTestShiftType(title: "Original Shift")
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // First create a shift to update
+        let createdShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
+
+        // Now prepare to update it
         let newShiftType = Self.createTestShiftType(title: "Updated Shift")
-        let date = Date()
 
         // When - should not throw
         try await mockService.updateShiftEvent(
-            eventIdentifier: eventId,
+            eventIdentifier: createdShift.eventIdentifier,
             newShiftType: newShiftType,
             date: date
         )
 
-        // Then - no exception means success
-        #expect(true)
+        // Then - verify the shift was updated
+        let updatedShift = mockService.mockShifts.first(where: { $0.eventIdentifier == createdShift.eventIdentifier })
+        #expect(updatedShift?.shiftType?.title == "Updated Shift")
     }
 
     @Test("updateShiftEvent throws error when not authorized")
@@ -278,15 +284,21 @@ struct CalendarServiceTests {
 
     @Test("deleteShiftEvent deletes event successfully")
     func testDeleteShiftEventSucceeds() async throws {
-        // Given - Mock service authorized
+        // Given - Mock service authorized with existing shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let eventId = "test-event-delete"
+        let shiftType = Self.createTestShiftType()
+        let date = Calendar.current.startOfDay(for: Date())
+
+        // First create a shift to delete
+        let createdShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
+        #expect(mockService.mockShifts.count == 1)
 
         // When - should not throw
-        try await mockService.deleteShiftEvent(eventIdentifier: eventId)
+        try await mockService.deleteShiftEvent(eventIdentifier: createdShift.eventIdentifier)
 
-        // Then - no exception means success
-        #expect(true)
+        // Then - shift should be removed
+        #expect(mockService.mockShifts.isEmpty)
+        #expect(mockService.mockShifts.count == 0)
     }
 
     @Test("deleteShiftEvent throws error when not authorized")

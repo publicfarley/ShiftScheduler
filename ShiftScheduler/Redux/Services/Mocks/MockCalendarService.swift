@@ -197,10 +197,10 @@ final class MockCalendarService: CalendarServiceProtocol {
             }
         }
 
-        // Convert empty notes to nil
-        let finalNotes = notes?.isEmpty == true ? nil : notes
-
         // Create and add mock shift
+        // Note: Production stores notes in EventKit but returns them in ScheduledShift for testing
+        // Convert empty notes to nil to match production behavior
+        let finalNotes = notes?.isEmpty == true ? nil : notes
         let shift = ScheduledShift(
             id: UUID(),
             eventIdentifier: UUID().uuidString,
@@ -227,8 +227,7 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Find the shift to update
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
-            return
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
         // Check for overlapping shifts on the same date (excluding the current shift being updated)
@@ -262,7 +261,7 @@ final class MockCalendarService: CalendarServiceProtocol {
             }
         }
 
-        // Update the shift with the new shift type
+        // Update the shift with the new shift type (preserve notes)
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
@@ -285,8 +284,7 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Find the shift to delete
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
-            return
+            throw ScheduleError.calendarEventDeletionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
         // Remove the shift
@@ -307,8 +305,7 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Find the shift to update
         guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
-            // For mock: silently succeed if event doesn't exist (lenient behavior for testing)
-            return
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
         // Update the shift with new notes
