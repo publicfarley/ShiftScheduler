@@ -560,4 +560,15 @@ enum CalendarServiceError: LocalizedError {
             return "Failed to convert event: \(reason)"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .notAuthorized:
+            return "Please grant calendar access in Settings > Privacy > Calendars"
+        case .dateCalculationFailed:
+            return "Please check your device date and time settings"
+        case .eventConversionFailed:
+            return "Please try again or contact support if the problem persists"
+        }
+    }
 }
