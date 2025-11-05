@@ -122,7 +122,7 @@ struct ConcurrencyTests {
             Task { store.dispatch(action: .appLifecycle(.tabSelected(.today))) },
             Task { store.dispatch(action: .locations(.addButtonTapped)) },
             Task { store.dispatch(action: .shiftTypes(.addButtonTapped)) },
-            Task { store.dispatch(action: .settings(.displayNameChanged("Test"))) },
+            Task { store.dispatch(action: .appLifecycle(.displayNameChanged("Test"))) },
             Task { store.dispatch(action: .changeLog(.purgeOldEntries)) }
         ]
 
@@ -212,8 +212,8 @@ struct ConcurrencyTests {
         let log = ExecutionLog()
 
         // Create multiple middlewares that all try to execute
-        let middlewares = (0..<5).map { id in
-            { @Sendable (state: AppState, action: AppAction, services: ServiceContainer, dispatch: @escaping Dispatcher<AppAction>) async in
+        let middlewares: [Middleware<AppState, AppAction>] = (0..<5).map { id in
+            { state, action, services, dispatch in
                 // Simulate async work
                 try? await Task.sleep(nanoseconds: 10_000_000)
                 await log.addExecution(id)
@@ -224,7 +224,7 @@ struct ConcurrencyTests {
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: [middleware]
+            middlewares: middlewares
         )
 
         // When - dispatch action (triggers all 5 middlewares)
@@ -236,14 +236,6 @@ struct ConcurrencyTests {
         // Then - all middlewares executed without interference
         let executionCount = await log.count()
         #expect(executionCount == 5)
-    }
-    
-    @Sendable private func middleware(
-        state: AppState,
-        action: AppAction,
-        services: ServiceContainer,
-        dispatch: @escaping Dispatcher<AppAction>
-    ) async {
     }
 
 
