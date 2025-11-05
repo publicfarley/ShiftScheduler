@@ -22,23 +22,30 @@ enum ChangeLogRetentionPolicy: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var cutoffDate: Date? {
+    /// Calculates the cutoff date for this retention policy
+    /// - Parameter baseDate: The reference date to calculate from. Defaults to the current date.
+    /// - Returns: The cutoff date (entries before this date should be purged), or nil for forever policy
+    func cutoffDate(from baseDate: Date = Date()) -> Date? {
         let calendar = Calendar.current
-        let now = Date()
 
         switch self {
         case .days30:
-            return calendar.date(byAdding: .day, value: -30, to: now)
+            return calendar.date(byAdding: .day, value: -30, to: baseDate)
         case .days90:
-            return calendar.date(byAdding: .day, value: -90, to: now)
+            return calendar.date(byAdding: .day, value: -90, to: baseDate)
         case .months6:
-            return calendar.date(byAdding: .month, value: -6, to: now)
+            return calendar.date(byAdding: .month, value: -6, to: baseDate)
         case .year1:
-            return calendar.date(byAdding: .year, value: -1, to: now)
+            return calendar.date(byAdding: .year, value: -1, to: baseDate)
         case .years2:
-            return calendar.date(byAdding: .year, value: -2, to: now)
+            return calendar.date(byAdding: .year, value: -2, to: baseDate)
         case .forever:
             return nil // Never purge
         }
+    }
+
+    /// Computed property for backward compatibility - returns cutoff date using current date
+    var cutoffDate: Date? {
+        cutoffDate(from: Date())
     }
 }
