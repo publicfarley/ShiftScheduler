@@ -277,7 +277,7 @@ struct TodayView: View {
             }
             .task {
                 // Dispatch Redux action
-                store.dispatch(action: .today(.task))
+                store.dispatch(action: .today(.loadShifts))
 
                 // Reset animation state when view appears
                 todayCardOffset = -400

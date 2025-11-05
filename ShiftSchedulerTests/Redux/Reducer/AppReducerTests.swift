@@ -24,7 +24,7 @@ struct AppReducerTests {
         var state = AppState()
         state.today.isLoading = false
 
-        let newState = appReducer(state: state, action: .today(.task))
+        let newState = appReducer(state: state, action: .today(.loadShifts))
 
         #expect(newState.today.isLoading == true)
     }
@@ -107,7 +107,7 @@ struct AppReducerTests {
         state.changeLog.isLoading = false
         state.settings.isLoading = false
 
-        let newState = appReducer(state: state, action: .today(.task))
+        let newState = appReducer(state: state, action: .today(.loadShifts))
 
         // Verify other states unchanged
         #expect(newState.selectedTab == .today)
@@ -127,7 +127,7 @@ struct AppReducerTests {
         var state = AppState()
 
         // First action: load today's shifts
-        state = appReducer(state: state, action: .today(.task))
+        state = appReducer(state: state, action: .today(.loadShifts))
         #expect(state.today.isLoading == true)
 
         // Second action: open locations add sheet

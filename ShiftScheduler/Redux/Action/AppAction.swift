@@ -112,9 +112,6 @@ enum AppLifecycleAction: Equatable {
 
 /// Actions for the Today feature
 enum TodayAction: Equatable {
-    /// View appeared, load initial data
-    case task
-
     /// Load shifts from calendar for next 30 days
     case loadShifts
 
@@ -164,7 +161,7 @@ enum TodayAction: Equatable {
 
     static func == (lhs: TodayAction, rhs: TodayAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task), (.loadShifts, .loadShifts),
+        case (.loadShifts, .loadShifts),
              (.toastMessageCleared, .toastMessageCleared),
              (.switchShiftSheetDismissed, .switchShiftSheetDismissed),
              (.updateCachedShifts, .updateCachedShifts),

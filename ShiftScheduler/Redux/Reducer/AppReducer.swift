@@ -99,9 +99,6 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
     var state = state
 
     switch action {
-    case .task:
-        state.isLoading = true
-
     case .loadShifts:
         state.isLoading = true
 

@@ -14,11 +14,6 @@ func todayMiddleware(
     guard case .today(let todayAction) = action else { return }
 
     switch todayAction {
-    case .task:
-        // logger.debug("Today task started")
-        // Load shifts for the entire current week from EventKit
-        await loadCurrentWeekShifts(services: services, dispatch: dispatch)
-
     case .loadShifts:
         // logger.debug("Loading shifts for Today view")
         await loadCurrentWeekShifts(services: services, dispatch: dispatch)
