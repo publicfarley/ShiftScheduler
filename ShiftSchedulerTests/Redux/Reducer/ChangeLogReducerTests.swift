@@ -144,9 +144,10 @@ struct ChangeLogReducerTests {
     @Test("purgeCompleted success clears loading")
     func testPurgeCompletedSuccessUpdatesState() {
         var state = ChangeLogState()
+        let changeLogCount = state.entries.count
         state.isLoading = true
 
-        let newState = changeLogReducer(state: state, action: .purgeCompleted(.success(())))
+        let newState = changeLogReducer(state: state, action: .purgeCompleted(.success(changeLogCount)))
 
         #expect(newState.isLoading == false)
     }
@@ -202,12 +203,13 @@ struct ChangeLogReducerTests {
         #expect(state.entries.count == 2)  // Entries not changed
 
         // Purge old entries
+        let changeLogCount = state.entries.count
         state = changeLogReducer(state: state, action: .purgeOldEntries)
         #expect(state.isLoading == true)
         #expect(state.searchText == "Alice")  // Search preserved
 
         // Purge completed
-        state = changeLogReducer(state: state, action: .purgeCompleted(.success(())))
+        state = changeLogReducer(state: state, action: .purgeCompleted(.success(changeLogCount)))
         #expect(state.isLoading == false)
     }
 
