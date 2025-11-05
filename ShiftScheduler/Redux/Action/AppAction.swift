@@ -633,8 +633,8 @@ enum ChangeLogAction: Equatable {
     /// Purge old entries
     case purgeOldEntries
 
-    /// Purge completed
-    case purgeCompleted(Result<Void, Error>)
+    /// Purge completed with count of deleted entries
+    case purgeCompleted(Result<Int, Error>)
 
     static func == (lhs: ChangeLogAction, rhs: ChangeLogAction) -> Bool {
         switch (lhs, rhs) {

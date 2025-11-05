@@ -15,13 +15,17 @@ func settingsMiddleware(
     
     switch settingsAction {
     case .task:
-        // Load auto-purge preference from UserDefaults
-        let autoPurgeEnabled = UserDefaults.standard.object(forKey: "autoPurgeEnabled") as? Bool ?? true
-        await dispatch(.settings(.autoPurgeToggled(autoPurgeEnabled)))
-
-        // Load last purge date from UserDefaults
-        if let lastPurgeTimestamp = UserDefaults.standard.object(forKey: "lastPurgeDate") as? TimeInterval {
-            await dispatch(.settings(.lastPurgeDateUpdated(Date(timeIntervalSince1970: lastPurgeTimestamp))))
+        // Load user profile (includes auto-purge settings and last purge date)
+        do {
+            let profile = try await services.persistenceService.loadUserProfile()
+            await dispatch(.settings(.autoPurgeToggled(profile.autoPurgeEnabled)))
+            if let lastPurgeDate = profile.lastPurgeDate {
+                await dispatch(.settings(.lastPurgeDateUpdated(lastPurgeDate)))
+            }
+        } catch {
+            logger.error("Failed to load user profile: \(error.localizedDescription)")
+            // Use defaults on error
+            await dispatch(.settings(.autoPurgeToggled(true)))
         }
 
         // Load purge statistics
@@ -34,7 +38,9 @@ func settingsMiddleware(
             let profile = UserProfile(
                 userId: state.userProfile.userId,
                 displayName: state.settings.displayName,
-                retentionPolicy: state.settings.retentionPolicy
+                retentionPolicy: state.settings.retentionPolicy,
+                autoPurgeEnabled: state.settings.autoPurgeEnabled,
+                lastPurgeDate: state.settings.lastPurgeDate
             )
 
             try await services.persistenceService.saveUserProfile(profile)
@@ -73,25 +79,33 @@ func settingsMiddleware(
     case .manualPurgeTriggered:
         logger.debug("Manual purge triggered from Settings")
         // Dispatch purge action to ChangeLogMiddleware
+        // Completion will be handled when ChangeLogMiddleware dispatches purgeCompleted
         await dispatch(.changeLog(.purgeOldEntries))
-
-        // Wait a moment for purge to complete, then reload statistics
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        await dispatch(.settings(.loadPurgeStatistics))
-        await dispatch(.changeLog(.task)) // Reload change log entries
 
     case .autoPurgeToggled(let enabled):
         logger.debug("Auto-purge toggled: \(enabled)")
-        UserDefaults.standard.set(enabled, forKey: "autoPurgeEnabled")
+        // Update will be saved when user saves settings
+        // For now, just update reducer state - no direct UserDefaults access
 
-    case .manualPurgeCompleted:
-        // Update last purge date
+    case .manualPurgeCompleted(.success(let deletedCount)):
+        logger.debug("Manual purge completed: deleted \(deletedCount) entries")
+        // Update last purge date in user profile
         let now = Date()
-        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "lastPurgeDate")
-        await dispatch(.settings(.lastPurgeDateUpdated(now)))
+        do {
+            var profile = try await services.persistenceService.loadUserProfile()
+            profile.lastPurgeDate = now
+            try await services.persistenceService.saveUserProfile(profile)
+            await dispatch(.settings(.lastPurgeDateUpdated(now)))
+        } catch {
+            logger.error("Failed to save last purge date: \(error.localizedDescription)")
+        }
 
         // Reload statistics after purge
         await dispatch(.settings(.loadPurgeStatistics))
+
+    case .manualPurgeCompleted(.failure(let error)):
+        logger.error("Manual purge failed: \(error.localizedDescription)")
+        // Error already handled and logged by ChangeLogMiddleware
 
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
          .purgeStatisticsLoaded, .lastPurgeDateUpdated:

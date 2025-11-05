@@ -5,7 +5,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     var mockShiftTypes: [ShiftType] = []
     var mockLocations: [Location] = []
     var mockChangeLogEntries: [ChangeLogEntry] = []
-    var mockUserProfile: UserProfile = UserProfile(userId: UUID(), displayName: "Test User")
+    var mockUserProfile: UserProfile = UserProfile(userId: UUID(), displayName: "Test User", retentionPolicy: .forever, autoPurgeEnabled: true)
     var mockUndoStack: [ChangeLogEntry] = []
     var mockRedoStack: [ChangeLogEntry] = []
 
@@ -32,7 +32,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     var lastDeletedShiftTypeId: UUID?
     var lastDeletedLocationId: UUID?
     var lastDeletedChangeLogEntryId: UUID?
-    var lastPurgeOldEntriesDays: Int?
+    var lastPurgeOldEntriesCutoffDate: Date?
 
     // MARK: - Shift Types
 
@@ -117,13 +117,12 @@ final class MockPersistenceService: PersistenceServiceProtocol {
         mockChangeLogEntries.removeAll { $0.id == id }
     }
 
-    func purgeOldChangeLogEntries(olderThanDays: Int) async throws -> Int {
+    func purgeOldChangeLogEntries(olderThan cutoffDate: Date) async throws -> Int {
         purgeOldChangeLogEntriesCallCount += 1
-        lastPurgeOldEntriesDays = olderThanDays
+        lastPurgeOldEntriesCutoffDate = cutoffDate
         if shouldThrowError, let error = throwError {
             throw error
         }
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -olderThanDays, to: Date()) ?? Date()
         let oldCount = mockChangeLogEntries.count
         mockChangeLogEntries.removeAll { $0.timestamp < cutoffDate }
         return oldCount - mockChangeLogEntries.count

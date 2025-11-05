@@ -270,7 +270,8 @@ struct PersistenceServiceUnitTests {
         #expect(mockService.mockChangeLogEntries.count == 2)
 
         // When - Purge entries older than 30 days
-        let purgedCount = try await mockService.purgeOldChangeLogEntries(olderThanDays: 30)
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let purgedCount = try await mockService.purgeOldChangeLogEntries(olderThan: cutoffDate)
 
         // Then
         #expect(purgedCount == 1)

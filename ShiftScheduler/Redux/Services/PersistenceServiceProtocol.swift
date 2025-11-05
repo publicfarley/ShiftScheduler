@@ -36,8 +36,8 @@ protocol PersistenceServiceProtocol: Sendable {
     /// Delete change log entry by ID
     func deleteChangeLogEntry(id: UUID) async throws
 
-    /// Delete change log entries older than specified days
-    func purgeOldChangeLogEntries(olderThanDays: Int) async throws -> Int
+    /// Delete change log entries older than specified cutoff date
+    func purgeOldChangeLogEntries(olderThan cutoffDate: Date) async throws -> Int
 
     // MARK: - Undo/Redo Stacks
 

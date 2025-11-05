@@ -9,15 +9,18 @@ final class PersistenceService: PersistenceServiceProtocol {
     private let shiftTypeRepository: ShiftTypeRepository
     private let locationRepository: LocationRepository
     private let changeLogRepository: ChangeLogRepository
+    private let userProfileRepository: UserProfileRepository
 
     init(
         shiftTypeRepository: ShiftTypeRepository? = nil,
         locationRepository: LocationRepository? = nil,
-        changeLogRepository: ChangeLogRepository? = nil
+        changeLogRepository: ChangeLogRepository? = nil,
+        userProfileRepository: UserProfileRepository? = nil
     ) {
         self.shiftTypeRepository = shiftTypeRepository ?? ShiftTypeRepository()
         self.locationRepository = locationRepository ?? LocationRepository()
         self.changeLogRepository = changeLogRepository ?? ChangeLogRepository()
+        self.userProfileRepository = userProfileRepository ?? UserProfileRepository()
     }
 
     // MARK: - Shift Types
@@ -88,13 +91,12 @@ final class PersistenceService: PersistenceServiceProtocol {
         }
     }
 
-    func purgeOldChangeLogEntries(olderThanDays: Int) async throws -> Int {
-        // logger.debug("Purging change log entries older than \(olderThanDays) days")
+    func purgeOldChangeLogEntries(olderThan cutoffDate: Date) async throws -> Int {
+        // logger.debug("Purging change log entries older than \(cutoffDate.formatted())")
 
         // Get count before deletion
         let beforeCount = try await changeLogRepository.fetchAll().count
 
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -olderThanDays, to: Date()) ?? Date()
         try await changeLogRepository.deleteEntriesOlderThan(cutoffDate)
 
         // Get count after deletion and calculate deleted count
@@ -124,14 +126,59 @@ final class PersistenceService: PersistenceServiceProtocol {
     // MARK: - User Profile
 
     func loadUserProfile() async throws -> UserProfile {
-        // logger.debug("Loading user profile")
-        // TODO: Implement UserProfile persistence when needed
-        // For now, return default profile
-        return UserProfile(userId: UUID(), displayName: "User")
+        logger.debug("Loading user profile")
+
+        // Try to load from repository
+        if let profile = try await userProfileRepository.fetch() {
+            logger.debug("Loaded user profile from persistence: \(profile.displayName)")
+            return profile
+        }
+
+        // Check for UserDefaults migration
+        if let migratedProfile = try await migrateUserDefaultsToProfile() {
+            logger.debug("Migrated user profile from UserDefaults")
+            // Save migrated profile to JSON
+            try await userProfileRepository.save(migratedProfile)
+            // Clean up old UserDefaults
+            UserDefaults.standard.removeObject(forKey: "displayName")
+            UserDefaults.standard.removeObject(forKey: "autoPurgeEnabled")
+            UserDefaults.standard.removeObject(forKey: "lastPurgeDate")
+            return migratedProfile
+        }
+
+        // Return default profile for new users
+        logger.debug("Creating default user profile")
+        return UserProfile(userId: UUID(), displayName: "User", retentionPolicy: .forever, autoPurgeEnabled: true)
     }
 
     func saveUserProfile(_ profile: UserProfile) async throws {
-        // logger.debug("Saving user profile: \(profile.displayName)")
-        // TODO: Implement UserProfile persistence when needed
+        logger.debug("Saving user profile: \(profile.displayName)")
+        try await userProfileRepository.save(profile)
+    }
+
+    /// Migrate old UserDefaults data to UserProfile model
+    private func migrateUserDefaultsToProfile() async throws -> UserProfile? {
+        let displayName = UserDefaults.standard.string(forKey: "displayName") ?? "User"
+        let autoPurgeEnabled = UserDefaults.standard.object(forKey: "autoPurgeEnabled") as? Bool ?? true
+        var lastPurgeDate: Date? = nil
+        if let timestamp = UserDefaults.standard.object(forKey: "lastPurgeDate") as? TimeInterval {
+            lastPurgeDate = Date(timeIntervalSince1970: timestamp)
+        }
+
+        // Only migrate if we have non-default data
+        guard displayName != "User" || !autoPurgeEnabled || lastPurgeDate != nil else {
+            return nil
+        }
+
+        let userId = UUID()
+        let retentionPolicy: ChangeLogRetentionPolicy = .forever
+
+        return UserProfile(
+            userId: userId,
+            displayName: displayName,
+            retentionPolicy: retentionPolicy,
+            autoPurgeEnabled: autoPurgeEnabled,
+            lastPurgeDate: lastPurgeDate
+        )
     }
 }

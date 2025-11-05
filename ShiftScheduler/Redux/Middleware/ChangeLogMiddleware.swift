@@ -40,23 +40,33 @@ func changeLogMiddleware(
         // Check if retention policy is "Forever" - skip purge
         guard let cutoffDate = state.settings.retentionPolicy.cutoffDate else {
             logger.debug("Retention policy is Forever - skipping purge")
-            await dispatch(.changeLog(.purgeCompleted(.success(()))))
+            await dispatch(.changeLog(.purgeCompleted(.success(0))))
             return
         }
 
         do {
-            // Calculate days from cutoff date
-            let daysSince = Calendar.current.dateComponents([.day], from: cutoffDate, to: Date()).day ?? 0
-
-            let deletedCount = try await services.persistenceService.purgeOldChangeLogEntries(olderThanDays: daysSince)
+            // Pass cutoff date directly to avoid double calculation
+            let deletedCount = try await services.persistenceService.purgeOldChangeLogEntries(olderThan: cutoffDate)
             logger.debug("Purged \(deletedCount) old entries (policy: \(state.settings.retentionPolicy.displayName))")
-            await dispatch(.changeLog(.purgeCompleted(.success(()))))
+            await dispatch(.changeLog(.purgeCompleted(.success(deletedCount))))
         } catch {
             logger.error("Failed to purge old entries: \(error.localizedDescription)")
             await dispatch(.changeLog(.purgeCompleted(.failure(error))))
         }
         
-    case .entriesLoaded, .entryDeleted, .purgeCompleted, .searchTextChanged:
+    case .purgeCompleted(.success(let deletedCount)):
+        logger.debug("Purge completed: deleted \(deletedCount) entries")
+        // Forward completion to settings if manual purge was triggered
+        await dispatch(.settings(.manualPurgeCompleted(.success(deletedCount))))
+        // Reload change log entries to refresh UI
+        await dispatch(.changeLog(.task))
+
+    case .purgeCompleted(.failure(let error)):
+        logger.error("Purge failed: \(error.localizedDescription)")
+        // Forward error to settings
+        await dispatch(.settings(.manualPurgeCompleted(.failure(error))))
+
+    case .entriesLoaded, .entryDeleted, .searchTextChanged:
         // Handled by reducer only
         break
     }

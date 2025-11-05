@@ -253,7 +253,8 @@ struct MockPersistenceServiceTests {
         // When/Then - purgeOldChangeLogEntries throws
         didThrow = false
         do {
-            _ = try await service.purgeOldChangeLogEntries(olderThanDays: 30)
+            let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+            _ = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
         } catch {
             didThrow = true
             #expect((error as NSError).code == 3)

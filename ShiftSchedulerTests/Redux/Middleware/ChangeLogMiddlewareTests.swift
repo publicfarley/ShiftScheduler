@@ -267,7 +267,7 @@ struct ChangeLogMiddlewareTests {
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
-        #expect(mockPersistence.lastPurgeOldEntriesDays != nil)
+        #expect(mockPersistence.lastPurgeOldEntriesCutoffDate != nil)
 
         if case .changeLog(.purgeCompleted(.success)) = dispatchedAction {
             // Success - correct action dispatched

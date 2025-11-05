@@ -388,7 +388,8 @@ struct PersistenceServiceErrorTests {
         mockService.throwError = ScheduleError.persistenceFailed("Cannot purge")
 
         do {
-            _ = try await mockService.purgeOldChangeLogEntries(olderThanDays: 30)
+            let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+            _ = try await mockService.purgeOldChangeLogEntries(olderThan: cutoffDate)
             #expect(Bool(false), "Expected error to be thrown")
         } catch let error as ScheduleError {
             if case .persistenceFailed = error {
@@ -447,7 +448,8 @@ struct PersistenceServiceErrorTests {
         try await service.addChangeLogEntry(recentEntry)
 
         // Purge very old entries (none should match)
-        let purgedCount = try await service.purgeOldChangeLogEntries(olderThanDays: 1)
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let purgedCount = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
         #expect(purgedCount == 0)
     }
 
@@ -491,7 +493,8 @@ struct PersistenceServiceErrorTests {
         try await service.addChangeLogEntry(oldEntry)
         try await service.addChangeLogEntry(newEntry)
 
-        let purgedCount = try await service.purgeOldChangeLogEntries(olderThanDays: 30)
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let purgedCount = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
         #expect(purgedCount >= 1)
 
         let remaining = try await service.loadChangeLogEntries()
