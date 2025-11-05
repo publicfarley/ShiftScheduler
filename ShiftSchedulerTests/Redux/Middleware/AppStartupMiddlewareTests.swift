@@ -30,18 +30,21 @@ struct AppStartupMiddlewareTests {
         // Dispatch onAppear action
         await appStartupMiddleware(state, .appLifecycle(.onAppear), mockServices, mockDispatch)
 
-        // Should dispatch verification action
+        // Middleware should dispatch: userProfileUpdated, profileLoaded, and verifyCalendarAccessOnStartup
         #expect(!dispatchedActions.isEmpty)
-        #expect(dispatchedActions.count == 1)
+        #expect(dispatchedActions.count >= 3)
 
-        if case .appLifecycle(.verifyCalendarAccessOnStartup) = dispatchedActions[0] {
-            // Test passes
-        } else {
-            #expect(Bool(false), "Expected verifyCalendarAccessOnStartup action")
+        // Verify verification action was dispatched
+        let hasVerificationAction = dispatchedActions.contains { action in
+            if case .appLifecycle(.verifyCalendarAccessOnStartup) = action {
+                return true
+            }
+            return false
         }
+        #expect(hasVerificationAction, "Expected verifyCalendarAccessOnStartup action to be dispatched")
     }
 
-    @Test("When app appears with already verified authorization, should not dispatch anything")
+    @Test("When app appears with already verified authorization, should load profile but skip verification")
     func testAppAppearsWithVerifiedAuthorizationDoesNothing() async {
         // Create initial state where authorization has already been verified
         var state = AppState()
@@ -62,8 +65,26 @@ struct AppStartupMiddlewareTests {
         // Dispatch onAppear action
         await appStartupMiddleware(state, .appLifecycle(.onAppear), mockServices, mockDispatch)
 
-        // Should not dispatch anything
-        #expect(dispatchedActions.isEmpty)
+        // Middleware should dispatch: userProfileUpdated and profileLoaded (but NOT verifyCalendarAccessOnStartup)
+        #expect(!dispatchedActions.isEmpty)
+
+        // Should NOT dispatch verification action since already verified
+        let hasVerificationAction = dispatchedActions.contains { action in
+            if case .appLifecycle(.verifyCalendarAccessOnStartup) = action {
+                return true
+            }
+            return false
+        }
+        #expect(!hasVerificationAction, "Should not dispatch verifyCalendarAccessOnStartup when already verified")
+
+        // Should dispatch profileLoaded
+        let hasProfileLoaded = dispatchedActions.contains { action in
+            if case .appLifecycle(.profileLoaded) = action {
+                return true
+            }
+            return false
+        }
+        #expect(hasProfileLoaded, "Expected profileLoaded action to be dispatched")
     }
 
     @Test("When verifying calendar access with granted permission, should dispatch calendarAccessVerified(true)")
