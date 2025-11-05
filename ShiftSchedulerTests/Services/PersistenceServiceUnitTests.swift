@@ -29,8 +29,9 @@ struct PersistenceServiceUnitTests {
     }
 
     /// Create a test change log entry with fixed date
-    static func createTestChangeLogEntry() -> ChangeLogEntry {
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+    static func createTestChangeLogEntry() throws -> ChangeLogEntry {
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
+        
         return ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -217,7 +218,7 @@ struct PersistenceServiceUnitTests {
     func testAddChangeLogEntryAddsToMockStorage() async throws {
         // Given
         let mockService = Self.createMockService()
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
         #expect(mockService.mockChangeLogEntries.isEmpty)
 
         // When
@@ -232,7 +233,7 @@ struct PersistenceServiceUnitTests {
     func testDeleteChangeLogEntryRemovesFromMockStorage() async throws {
         // Given
         let mockService = Self.createMockService()
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
         try await mockService.addChangeLogEntry(entry)
         #expect(mockService.mockChangeLogEntries.count == 1)
 
@@ -249,7 +250,7 @@ struct PersistenceServiceUnitTests {
         let mockService = Self.createMockService()
 
         // Create entry from 60 days ago
-        let oldDate = Calendar.current.date(byAdding: .day, value: -60, to: Date())!
+        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -60, to: Date()))
         let oldEntry = ChangeLogEntry(
             id: UUID(),
             timestamp: oldDate,
@@ -263,7 +264,7 @@ struct PersistenceServiceUnitTests {
         )
 
         // Create recent entry
-        let recentEntry = Self.createTestChangeLogEntry()
+        let recentEntry = try Self.createTestChangeLogEntry()
 
         try await mockService.addChangeLogEntry(oldEntry)
         try await mockService.addChangeLogEntry(recentEntry)
@@ -285,7 +286,7 @@ struct PersistenceServiceUnitTests {
         let mockService = Self.createMockService()
         mockService.shouldThrowError = true
         mockService.throwError = NSError(domain: "TestError", code: 1)
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
 
         // When/Then
         var didThrow = false
@@ -363,8 +364,8 @@ struct PersistenceServiceUnitTests {
     func testSaveUndoRedoStacksUpdatesStacks() async throws {
         // Given
         let mockService = Self.createMockService()
-        let entry1 = Self.createTestChangeLogEntry()
-        let entry2 = Self.createTestChangeLogEntry()
+        let entry1 = try Self.createTestChangeLogEntry()
+        let entry2 = try Self.createTestChangeLogEntry()
 
         // When
         try await mockService.saveUndoRedoStacks(undo: [entry1], redo: [entry2])
@@ -436,8 +437,8 @@ struct PersistenceServiceUnitTests {
     func testMultipleChangeLogEntriesAddedSequentially() async throws {
         // Given
         let mockService = Self.createMockService()
-        let entry1 = Self.createTestChangeLogEntry()
-        let entry2 = Self.createTestChangeLogEntry()
+        let entry1 = try Self.createTestChangeLogEntry()
+        let entry2 = try Self.createTestChangeLogEntry()
 
         // When
         try await mockService.addChangeLogEntry(entry1)

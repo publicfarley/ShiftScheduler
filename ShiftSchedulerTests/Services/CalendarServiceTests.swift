@@ -860,11 +860,13 @@ struct CalendarServiceTests {
 
         // Verify end time is on the NEXT day (because shift crosses midnight)
         let rawEndTime = HourMinuteTime(hour: 2, minute: 0).toDate(on: date)
-        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        let expectedEndTime = try #require(Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime))
         #expect(mockService.lastCreatedEventEndTime == expectedEndTime)
 
         // Verify end time is after start time
-        #expect(mockService.lastCreatedEventEndTime! > mockService.lastCreatedEventStartTime!)
+        let createdEndTime = try #require(mockService.lastCreatedEventEndTime)
+        let createdStartTime = try #require(mockService.lastCreatedEventStartTime)
+        #expect(createdEndTime > createdStartTime)
     }
 
     @Test("updateShiftEvent handles overnight shifts correctly")
@@ -910,11 +912,13 @@ struct CalendarServiceTests {
 
         // End time should be on next day
         let rawEndTime = HourMinuteTime(hour: 7, minute: 0).toDate(on: date)
-        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        let expectedEndTime = try #require(Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime))
         #expect(mockService.lastUpdatedEventEndTime == expectedEndTime)
 
         // Verify end time is after start time
-        #expect(mockService.lastUpdatedEventEndTime! > mockService.lastUpdatedEventStartTime!)
+        let updatedEndTime = try #require(mockService.lastUpdatedEventEndTime)
+        let updatedStartTime = try #require(mockService.lastUpdatedEventStartTime)
+        #expect(updatedEndTime > updatedStartTime)
     }
 
     @Test("createShiftEvent handles edge case: midnight to midnight (24-hour shift)")

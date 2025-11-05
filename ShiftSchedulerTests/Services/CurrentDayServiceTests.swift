@@ -24,7 +24,7 @@ struct CurrentDayServiceTests {
         day: 23,
         hour: 10,
         minute: 30
-    ).date!
+    ).date
 
     // MARK: - Tests: Basic Date Methods
 
@@ -74,10 +74,10 @@ struct CurrentDayServiceTests {
     }
 
     @Test("isToday returns false for yesterday")
-    func testIsTodayReturnsFalseForYesterday() {
+    func testIsTodayReturnsFalseForYesterday() throws {
         // Given
         let service = CurrentDayService()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: Date()))
 
         // When
         let result = service.isToday(yesterday)
@@ -87,10 +87,10 @@ struct CurrentDayServiceTests {
     }
 
     @Test("isToday returns false for tomorrow")
-    func testIsTodayReturnsFalseForTomorrow() {
+    func testIsTodayReturnsFalseForTomorrow() throws {
         // Given
         let service = CurrentDayService()
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
 
         // When
         let result = service.isToday(tomorrow)
@@ -100,10 +100,10 @@ struct CurrentDayServiceTests {
     }
 
     @Test("isTomorrow correctly identifies tomorrow")
-    func testIsTomorrowIdentifiesTomorrow() {
+    func testIsTomorrowIdentifiesTomorrow() throws {
         // Given
         let service = CurrentDayService()
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
 
         // When
         let result = service.isTomorrow(tomorrow)
@@ -125,10 +125,10 @@ struct CurrentDayServiceTests {
     }
 
     @Test("isYesterday correctly identifies yesterday")
-    func testIsYesterdayIdentifiesYesterday() {
+    func testIsYesterdayIdentifiesYesterday() throws {
         // Given
         let service = CurrentDayService()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: Date()))
 
         // When
         let result = service.isYesterday(yesterday)
@@ -152,7 +152,7 @@ struct CurrentDayServiceTests {
     // MARK: - Tests: Week/Month Calculations
 
     @Test("getStartOfWeek returns start of week")
-    func testGetStartOfWeekReturnsWeekStart() {
+    func testGetStartOfWeekReturnsWeekStart() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
@@ -160,7 +160,7 @@ struct CurrentDayServiceTests {
         let testDate = Self.testDate
 
         // When
-        let startOfWeek = service.getStartOfWeek(for: testDate)
+        let startOfWeek = service.getStartOfWeek(for: try #require(testDate))
 
         // Then
         let components = calendar.dateComponents([.weekday], from: startOfWeek)
@@ -169,12 +169,12 @@ struct CurrentDayServiceTests {
     }
 
     @Test("getEndOfWeek returns 6 days after week start")
-    func testGetEndOfWeekReturns6DaysAfterStart() {
+    func testGetEndOfWeekReturns6DaysAfterStart() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = Self.testDate
+        let testDate = try #require(Self.testDate)
 
         // When
         let startOfWeek = service.getStartOfWeek(for: testDate)
@@ -186,12 +186,12 @@ struct CurrentDayServiceTests {
     }
 
     @Test("getStartOfMonth returns first day of month")
-    func testGetStartOfMonthReturnsFirstDay() {
+    func testGetStartOfMonthReturnsFirstDay() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = Self.testDate
+        let testDate = try #require(Self.testDate)
 
         // When
         let startOfMonth = service.getStartOfMonth(for: testDate)
@@ -202,19 +202,19 @@ struct CurrentDayServiceTests {
     }
 
     @Test("getEndOfMonth returns last day of month")
-    func testGetEndOfMonthReturnsLastDay() {
+    func testGetEndOfMonthReturnsLastDay() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = Self.testDate
+        let testDate = try #require(Self.testDate)
 
         // When
         let endOfMonth = service.getEndOfMonth(for: testDate)
 
         // Then
         // End of month + 1 day should be first day of next month
-        let nextMonthStart = calendar.date(byAdding: .day, value: 1, to: endOfMonth)!
+        let nextMonthStart = try #require(calendar.date(byAdding: .day, value: 1, to: endOfMonth))
         let components = calendar.dateComponents([.day], from: nextMonthStart)
         #expect(components.day == 1)
     }
@@ -222,11 +222,11 @@ struct CurrentDayServiceTests {
     // MARK: - Tests: Day Calculations
 
     @Test("daysBetween calculates correct days between dates")
-    func testDaysBetweenCalculatesCorrectly() {
+    func testDaysBetweenCalculatesCorrectly() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = Self.testDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 7, to: date1)!
+        let date1 = try #require(Self.testDate)
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 7, to: date1))
 
         // When
         let days = service.daysBetween(date1, date2)
@@ -236,11 +236,11 @@ struct CurrentDayServiceTests {
     }
 
     @Test("daysBetween handles negative differences")
-    func testDaysBetweenHandlesNegativeDifference() {
+    func testDaysBetweenHandlesNegativeDifference() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = Self.testDate
-        let date2 = Calendar.current.date(byAdding: .day, value: -5, to: date1)!
+        let date1 = try #require(Self.testDate)
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: -5, to: date1))
 
         // When
         let days = service.daysBetween(date1, date2)
@@ -250,10 +250,10 @@ struct CurrentDayServiceTests {
     }
 
     @Test("daysBetween returns zero for same day")
-    func testDaysBetweenReturnZeroForSameDay() {
+    func testDaysBetweenReturnZeroForSameDay() throws {
         // Given
         let service = CurrentDayService()
-        let date = Self.testDate
+        let date = try #require(Self.testDate)
 
         // When
         let days = service.daysBetween(date, date)
@@ -263,11 +263,11 @@ struct CurrentDayServiceTests {
     }
 
     @Test("daysBetween handles multiple weeks")
-    func testDaysBetweenHandlesMultipleWeeks() {
+    func testDaysBetweenHandlesMultipleWeeks() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = Self.testDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 30, to: date1)!
+        let date1 = try #require(Self.testDate)
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 30, to: date1))
 
         // When
         let days = service.daysBetween(date1, date2)
@@ -277,21 +277,23 @@ struct CurrentDayServiceTests {
     }
 
     @Test("daysBetween ignores time component")
-    func testDaysBetweenIgnoresTimeComponent() {
+    func testDaysBetweenIgnoresTimeComponent() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
 
-        var components1 = calendar.dateComponents([.year, .month, .day], from: Self.testDate)
+        var components1 = calendar.dateComponents([.year, .month, .day], from: try #require(Self.testDate))
         components1.hour = 8
         components1.minute = 30
-        let date1 = calendar.date(from: components1)!
+        let date1 = try #require(calendar.date(from: components1))
 
-        var components2 = calendar.dateComponents([.year, .month, .day], from: Self.testDate)
-        components2.day! += 5
+        var components2 = calendar.dateComponents([.year, .month, .day], from: try #require(Self.testDate))
+        if let day = components2.day {
+            components2.day = day + 5
+        }
         components2.hour = 20
         components2.minute = 45
-        let date2 = calendar.date(from: components2)!
+        let date2 = try #require(calendar.date(from: components2))
 
         // When
         let days = service.daysBetween(date1, date2)
@@ -344,13 +346,13 @@ struct CurrentDayServiceTests {
     // MARK: - Tests: Month Boundaries
 
     @Test("getEndOfMonth handles leap years correctly")
-    func testGetEndOfMonthHandlesLeapYears() {
+    func testGetEndOfMonthHandlesLeapYears() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
 
         // February in leap year (2025 is not a leap year, use 2024)
-        let leapYearFeb = calendar.date(from: DateComponents(year: 2024, month: 2, day: 15))!
+        let leapYearFeb = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 15)))
 
         // When
         let endOfMonth = service.getEndOfMonth(for: leapYearFeb)
@@ -361,12 +363,12 @@ struct CurrentDayServiceTests {
     }
 
     @Test("getEndOfMonth handles 31-day months")
-    func testGetEndOfMonthHandles31DayMonths() {
+    func testGetEndOfMonthHandles31DayMonths() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
 
-        let january = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
+        let january = try #require(calendar.date(from: DateComponents(year: 2025, month: 1, day: 15)))
 
         // When
         let endOfMonth = service.getEndOfMonth(for: january)
@@ -377,12 +379,12 @@ struct CurrentDayServiceTests {
     }
 
     @Test("getEndOfMonth handles 30-day months")
-    func testGetEndOfMonthHandles30DayMonths() {
+    func testGetEndOfMonthHandles30DayMonths() throws {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
 
-        let april = calendar.date(from: DateComponents(year: 2025, month: 4, day: 15))!
+        let april = try #require(calendar.date(from: DateComponents(year: 2025, month: 4, day: 15)))
 
         // When
         let endOfMonth = service.getEndOfMonth(for: april)

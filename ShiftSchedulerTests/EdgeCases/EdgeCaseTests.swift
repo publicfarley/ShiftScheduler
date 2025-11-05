@@ -190,10 +190,11 @@ struct EdgeCaseTests {
     }
 
     @Test("Large number of change log entries handled")
-    func testLargeNumberOfChangeLogEntries() {
+    func testLargeNumberOfChangeLogEntries() throws {
         // Given
         let service = MockPersistenceService()
-        let baseDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let baseDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
+        
         service.mockChangeLogEntries = (0..<10000).map { index in
             ChangeLogEntryBuilder(
                 id: UUID(),
@@ -212,14 +213,14 @@ struct EdgeCaseTests {
     // MARK: - Date Edge Cases
 
     @Test("Shift scheduled for leap day (Feb 29)")
-    func testShiftOnLeapDay() {
+    func testShiftOnLeapDay() throws {
         // Given
         let calendar = Calendar.current
         var dateComponents = DateComponents()
         dateComponents.year = 2024
         dateComponents.month = 2
         dateComponents.day = 29
-        let leapDay = calendar.date(from: dateComponents)!
+        let leapDay = try #require(calendar.date(from: dateComponents))
 
         // When
         let builder = ScheduledShiftBuilder(date: leapDay)
@@ -230,14 +231,14 @@ struct EdgeCaseTests {
     }
 
     @Test("Shift scheduled for end of year")
-    func testShiftOnDecember31() {
+    func testShiftOnDecember31() throws {
         // Given
         let calendar = Calendar.current
         var dateComponents = DateComponents()
         dateComponents.year = 2025
         dateComponents.month = 12
         dateComponents.day = 31
-        let endOfYear = calendar.date(from: dateComponents)!
+        let endOfYear = try #require(calendar.date(from: dateComponents))
 
         // When
         let builder = ScheduledShiftBuilder(date: endOfYear)
@@ -248,14 +249,14 @@ struct EdgeCaseTests {
     }
 
     @Test("Shift scheduled for start of year")
-    func testShiftOnJanuary1() {
+    func testShiftOnJanuary1() throws {
         // Given
         let calendar = Calendar.current
         var dateComponents = DateComponents()
         dateComponents.year = 2025
         dateComponents.month = 1
         dateComponents.day = 1
-        let startOfYear = calendar.date(from: dateComponents)!
+        let startOfYear = try #require(calendar.date(from: dateComponents))
 
         // When
         let builder = ScheduledShiftBuilder(date: startOfYear)

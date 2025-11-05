@@ -12,8 +12,8 @@ struct ChangeLogViewTests {
     // MARK: - Relative Time String Tests
 
     @Test("Relative time string formats 'Just now' for recent times")
-    func testRelativeTimeString_justNow() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeString_justNow() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
         let thirtySecondsAgo = currentDate.addingTimeInterval(-30)
 
         let entry = ChangeLogEntryBuilder(timestamp: thirtySecondsAgo).build()
@@ -25,8 +25,8 @@ struct ChangeLogViewTests {
     }
 
     @Test("Relative time string formats minutes ago correctly")
-    func testRelativeTimeString_minutesAgo() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeString_minutesAgo() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
         let fiveMinutesAgo = currentDate.addingTimeInterval(-300) // 5 minutes
 
         let entry = ChangeLogEntryBuilder(timestamp: fiveMinutesAgo).build()
@@ -37,8 +37,8 @@ struct ChangeLogViewTests {
     }
 
     @Test("Relative time string formats hours ago correctly")
-    func testRelativeTimeString_hoursAgo() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeString_hoursAgo() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
         let twoHoursAgo = currentDate.addingTimeInterval(-7200) // 2 hours
 
         let entry = ChangeLogEntryBuilder(timestamp: twoHoursAgo).build()
@@ -49,8 +49,8 @@ struct ChangeLogViewTests {
     }
 
     @Test("Relative time string formats days ago correctly")
-    func testRelativeTimeString_daysAgo() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeString_daysAgo() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
         let threeDaysAgo = currentDate.addingTimeInterval(-259200) // 3 days
 
         let entry = ChangeLogEntryBuilder(timestamp: threeDaysAgo).build()
@@ -61,8 +61,8 @@ struct ChangeLogViewTests {
     }
 
     @Test("Relative time string formats weeks ago correctly")
-    func testRelativeTimeString_weeksAgo() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeString_weeksAgo() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
         let twoWeeksAgo = currentDate.addingTimeInterval(-1209600) // 2 weeks
 
         let entry = ChangeLogEntryBuilder(timestamp: twoWeeksAgo).build()
@@ -159,10 +159,10 @@ struct ChangeLogViewTests {
     // MARK: - Deterministic Date Tests
 
     @Test("EnhancedChangeLogCard uses passed current date not Date()")
-    func testDeterministicCurrentDate() {
+    func testDeterministicCurrentDate() throws {
         // Fixed dates for deterministic testing
-        let fixedCurrentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 15, minute: 0))!
-        let fixedTimestamp = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 13, minute: 0))!
+        let fixedCurrentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 15, minute: 0)))
+        let fixedTimestamp = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 13, minute: 0)))
 
         let entry = ChangeLogEntryBuilder(timestamp: fixedTimestamp).build()
         let card = EnhancedChangeLogCard(entry: entry, currentDate: fixedCurrentDate)
@@ -180,8 +180,8 @@ struct ChangeLogViewTests {
     // MARK: - Edge Case Tests
 
     @Test("Relative time handles exact boundaries correctly")
-    func testRelativeTimeBoundaries() {
-        let currentDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0))!
+    func testRelativeTimeBoundaries() throws {
+        let currentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 12, minute: 0)))
 
         // Exactly 60 seconds (should be 1m ago, not "Just now")
         let sixtySecondsAgo = currentDate.addingTimeInterval(-60)

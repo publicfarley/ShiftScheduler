@@ -219,7 +219,7 @@ struct PerformanceTests {
     // MARK: - Date Calculation Performance
 
     @Test("Date arithmetic operations are fast", .disabled(if: shouldSkipPerformanceTests))
-    func testDateArithmeticPerformance() {
+    func testDateArithmeticPerformance() throws {
         // Given
         let calendar = Calendar.current
         let baseDate = Date()
@@ -229,7 +229,7 @@ struct PerformanceTests {
         // When
         var computedDate = baseDate
         for _ in 0..<iterations {
-            computedDate = calendar.date(byAdding: .day, value: 1, to: computedDate)!
+            computedDate = try #require(calendar.date(byAdding: .day, value: 1, to: computedDate))
         }
 
         // Then

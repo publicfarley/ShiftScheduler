@@ -186,9 +186,13 @@ struct ScheduledShiftBuilder {
         return ScheduledShiftBuilder(date: today).build()
     }
 
-    static func tomorrow() -> ScheduledShift {
+    static func tomorrow() -> ScheduledShift? {
         let calendar = Calendar.current
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date()))!
+        
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) else {
+            return nil
+        }
+        
         return ScheduledShiftBuilder(date: tomorrow).build()
     }
 }
@@ -305,8 +309,8 @@ struct TestDataCollections {
         let today = calendar.startOfDay(for: Date())
         let shiftTypes = standardShiftTypes()
 
-        return (0..<7).map { dayOffset in
-            let shiftDate = calendar.date(byAdding: .day, value: dayOffset, to: today)!
+        return (0..<7).compactMap { dayOffset in
+            guard let shiftDate = calendar.date(byAdding: .day, value: dayOffset, to: today) else { return nil }
             let shiftType = shiftTypes[dayOffset % shiftTypes.count]
             return ScheduledShiftBuilder(date: shiftDate, shiftType: shiftType).build()
         }

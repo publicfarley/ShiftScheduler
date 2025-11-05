@@ -467,7 +467,7 @@ struct PersistenceServiceErrorTests {
         // Add old entry
         let oldEntry = ChangeLogEntry(
             id: UUID(),
-            timestamp: Calendar.current.date(byAdding: .day, value: -60, to: Date())!,
+            timestamp: try #require(Calendar.current.date(byAdding: .day, value: -60, to: Date())),
             userId: UUID(),
             userDisplayName: "User",
             changeType: .switched,
@@ -652,7 +652,7 @@ struct PersistenceServiceErrorTests {
         for i in 0..<10 {
             let entry = ChangeLogEntry(
                 id: UUID(),
-                timestamp: Calendar.current.date(byAdding: .day, value: -i, to: Date())!,
+                timestamp: try #require(Calendar.current.date(byAdding: .day, value: -i, to: Date())),
                 userId: UUID(),
                 userDisplayName: "User \(i)",
                 changeType: .switched,

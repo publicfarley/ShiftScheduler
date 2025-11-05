@@ -22,10 +22,10 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Load Entries Tests (.task action)
 
     @Test("task action loads entries and dispatches entriesLoaded success")
-    func testTaskActionLoadsEntries() async {
+    func testTaskActionLoadsEntries() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let testEntries = [
             ChangeLogEntryBuilder(userDisplayName: "Alice").build(),
@@ -62,10 +62,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("task action handles empty entries list")
-    func testTaskActionWithEmptyEntries() async {
+    func testTaskActionWithEmptyEntries() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         mockPersistence.mockChangeLogEntries = []
 
@@ -95,10 +95,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("task action dispatches entriesLoaded failure on persistence error")
-    func testTaskActionErrorHandling() async {
+    func testTaskActionErrorHandling() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let testError = NSError(domain: "Test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to load"])
         mockPersistence.shouldThrowError = true
@@ -132,10 +132,10 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Delete Entry Tests (.deleteEntry action)
 
     @Test("deleteEntry action deletes entry and dispatches entryDeleted success")
-    func testDeleteEntrySuccess() async {
+    func testDeleteEntrySuccess() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let entry = ChangeLogEntryBuilder(userDisplayName: "Alice").build()
         mockPersistence.mockChangeLogEntries = [entry]
@@ -167,10 +167,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("deleteEntry action dispatches entryDeleted failure on error")
-    func testDeleteEntryFailure() async {
+    func testDeleteEntryFailure() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let testError = NSError(domain: "Test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Delete failed"])
         mockPersistence.shouldThrowError = true
@@ -205,10 +205,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("deleteEntry passes correct entry ID to service")
-    func testDeleteEntryPassesCorrectId() async {
+    func testDeleteEntryPassesCorrectId() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let entry = ChangeLogEntryBuilder(userDisplayName: "Test").build()
 
@@ -234,15 +234,15 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Purge Old Entries Tests (.purgeOldEntries action)
 
     @Test("purgeOldEntries with 30-day policy purges correctly")
-    func testPurgeOldEntriesWith30DayPolicy() async {
+    func testPurgeOldEntriesWith30DayPolicy() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         // Create entries - some old, some recent
         let now = Date()
-        let fiftyDaysAgo = Calendar.current.date(byAdding: .day, value: -50, to: now)!
-        let tenDaysAgo = Calendar.current.date(byAdding: .day, value: -10, to: now)!
+        let fiftyDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -50, to: now))
+        let tenDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -10, to: now))
 
         mockPersistence.mockChangeLogEntries = [
             ChangeLogEntryBuilder(timestamp: fiftyDaysAgo).build(),
@@ -277,13 +277,13 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("purgeOldEntries with Forever policy skips purge")
-    func testPurgeOldEntriesWithForeverPolicy() async {
+    func testPurgeOldEntriesWithForeverPolicy() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         // Create old entries that would normally be purged
-        let fiftyDaysAgo = Calendar.current.date(byAdding: .day, value: -50, to: Date())!
+        let fiftyDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -50, to: Date()))
         mockPersistence.mockChangeLogEntries = [
             ChangeLogEntryBuilder(timestamp: fiftyDaysAgo).build()
         ]
@@ -316,10 +316,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("purgeOldEntries with 90-day policy")
-    func testPurgeOldEntriesWith90DayPolicy() async {
+    func testPurgeOldEntriesWith90DayPolicy() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var dispatchedAction: AppAction? = nil
         let dispatcher: Dispatcher<AppAction> = { action in
@@ -348,10 +348,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("purgeOldEntries with 6-month policy")
-    func testPurgeOldEntriesWith6MonthPolicy() async {
+    func testPurgeOldEntriesWith6MonthPolicy() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var dispatchedAction: AppAction? = nil
         let dispatcher: Dispatcher<AppAction> = { action in
@@ -380,10 +380,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("purgeOldEntries dispatches purgeCompleted failure on error")
-    func testPurgeOldEntriesErrorHandling() async {
+    func testPurgeOldEntriesErrorHandling() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let testError = NSError(domain: "Test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purge failed"])
         mockPersistence.shouldThrowError = true
@@ -418,10 +418,10 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Non-Middleware Actions (should be ignored)
 
     @Test("entriesLoaded action is ignored by middleware")
-    func testEntriesLoadedActionIgnored() async {
+    func testEntriesLoadedActionIgnored() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var dispatchedAction: AppAction? = nil
         let dispatcher: Dispatcher<AppAction> = { action in
@@ -445,10 +445,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("searchTextChanged action is ignored by middleware")
-    func testSearchTextChangedActionIgnored() async {
+    func testSearchTextChangedActionIgnored() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var dispatchedAction: AppAction? = nil
         let dispatcher: Dispatcher<AppAction> = { action in
@@ -473,10 +473,10 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Non-ChangeLog Actions
 
     @Test("non-ChangeLog actions are ignored")
-    func testNonChangeLogActionsIgnored() async {
+    func testNonChangeLogActionsIgnored() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var dispatchedAction: AppAction? = nil
         let dispatcher: Dispatcher<AppAction> = { action in
@@ -501,10 +501,10 @@ struct ChangeLogMiddlewareTests {
     // MARK: - Sequential Operations
 
     @Test("multiple sequential operations work correctly")
-    func testSequentialOperations() async {
+    func testSequentialOperations() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let entry1 = ChangeLogEntryBuilder(userDisplayName: "Alice").build()
         let entry2 = ChangeLogEntryBuilder(userDisplayName: "Bob").build()
@@ -544,10 +544,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("task action with store integration")
-    func testTaskActionWithStore() async {
+    func testTaskActionWithStore() async throws {
         // Given - Create store with real middleware
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let testEntries = [
             ChangeLogEntryBuilder(userDisplayName: "Test User").build()
@@ -573,10 +573,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("deleteEntry action with store integration")
-    func testDeleteEntryWithStore() async {
+    func testDeleteEntryWithStore() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let entry = ChangeLogEntryBuilder(userDisplayName: "Test User").build()
         mockPersistence.mockChangeLogEntries = [entry]
@@ -603,10 +603,10 @@ struct ChangeLogMiddlewareTests {
     }
 
     @Test("purgeOldEntries action with store integration")
-    func testPurgeOldEntriesWithStore() async {
+    func testPurgeOldEntriesWithStore() async throws {
         // Given
         let mockServices = Self.createMockServiceContainer()
-        let mockPersistence = mockServices.persistenceService as! MockPersistenceService
+        let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         var state = AppState()
         state.settings.retentionPolicy = .days30
