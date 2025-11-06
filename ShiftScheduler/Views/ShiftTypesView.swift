@@ -68,11 +68,15 @@ struct ShiftTypesView: View {
                                 ForEach(filteredShiftTypes) { shiftType in
                                     ShiftTypeCard(shiftType: shiftType)
                                         .onTapGesture {
-                                            store.dispatch(action: .shiftTypes(.editShiftType(shiftType)))
+                                            Task {
+                                                await store.dispatch(action: .shiftTypes(.editShiftType(shiftType)))
+                                            }
                                         }
                                         .contextMenu {
                                             Button(action: {
-                                                store.dispatch(action: .shiftTypes(.editShiftType(shiftType)))
+                                                Task {
+                                                    await store.dispatch(action: .shiftTypes(.editShiftType(shiftType)))
+                                                }
                                             }) {
                                                 Label("Edit", systemImage: "pencil")
                                             }
@@ -120,7 +124,9 @@ struct ShiftTypesView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
-                            store.dispatch(action: .shiftTypes(.addButtonTapped))
+                            Task {
+                                await store.dispatch(action: .shiftTypes(.addButtonTapped))
+                            }
                         }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 20))
@@ -130,7 +136,9 @@ struct ShiftTypesView: View {
                 .sheet(
                     isPresented: .constant(store.state.shiftTypes.showAddEditSheet),
                     onDismiss: {
-                        store.dispatch(action: .shiftTypes(.addEditSheetDismissed))
+                        Task {
+                            await store.dispatch(action: .shiftTypes(.addEditSheetDismissed))
+                        }
                     }
                 ) {
                     AddEditShiftTypeView(
@@ -142,7 +150,9 @@ struct ShiftTypesView: View {
                     Button("Cancel", role: .cancel) { }
                     Button("Delete", role: .destructive) {
                         if let shiftType = shiftTypeToDelete {
-                            store.dispatch(action: .shiftTypes(.deleteShiftType(shiftType)))
+                            Task {
+                                await store.dispatch(action: .shiftTypes(.deleteShiftType(shiftType)))
+                            }
                             shiftTypeToDelete = nil
                         }
                     }
@@ -152,7 +162,9 @@ struct ShiftTypesView: View {
                     }
                 }
                 .onAppear {
-                    store.dispatch(action: .shiftTypes(.loadShiftTypes))
+                    Task {
+                        await store.dispatch(action: .shiftTypes(.loadShiftTypes))
+                    }
                 }
             }
         }

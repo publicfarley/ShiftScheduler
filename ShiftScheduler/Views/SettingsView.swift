@@ -36,7 +36,9 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                store.dispatch(action: .settings(.loadSettings))
+                Task {
+                    await store.dispatch(action: .settings(.loadSettings))
+                }
                 displayName = store.state.userProfile.displayName
             }
             .onChange(of: store.state.userProfile.displayName) { _, newValue in
@@ -50,7 +52,9 @@ struct SettingsView: View {
             .alert("Purge Old Entries?", isPresented: $showPurgeConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Purge", role: .destructive) {
-                    store.dispatch(action: .settings(.manualPurgeTriggered))
+                    Task {
+                        await store.dispatch(action: .settings(.manualPurgeTriggered))
+                    }
                 }
             } message: {
                 purgeConfirmationMessage
@@ -75,7 +79,9 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                         .onChange(of: displayName) { _, newValue in
                             // Update app state immediately for reactive UI
-                            store.dispatch(action: .appLifecycle(.displayNameChanged(newValue)))
+                            Task {
+                                await store.dispatch(action: .appLifecycle(.displayNameChanged(newValue)))
+                            }
 
                             // Debounce the save: cancel previous save task and schedule new one
                             saveTask?.cancel()
@@ -214,9 +220,11 @@ struct SettingsView: View {
             Picker("Retention Period", selection: Binding(
                 get: { store.state.settings.retentionPolicy },
                 set: { newValue in
-                    store.dispatch(action: .settings(.retentionPolicyChanged(newValue)))
-                    // Reload statistics when policy changes
-                    store.dispatch(action: .settings(.loadPurgeStatistics))
+                    Task {
+                        await store.dispatch(action: .settings(.retentionPolicyChanged(newValue)))
+                        // Reload statistics when policy changes
+                        await store.dispatch(action: .settings(.loadPurgeStatistics))
+                    }
                 }
             )) {
                 ForEach(ChangeLogRetentionPolicy.allCases) { policy in
@@ -291,7 +299,9 @@ struct SettingsView: View {
             Toggle(isOn: Binding(
                 get: { store.state.settings.autoPurgeEnabled },
                 set: { newValue in
-                    store.dispatch(action: .settings(.autoPurgeToggled(newValue)))
+                    Task {
+                        await store.dispatch(action: .settings(.autoPurgeToggled(newValue)))
+                    }
                 }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -352,7 +362,7 @@ struct SettingsView: View {
 
         do {
             // Dispatch save settings action to middleware
-            store.dispatch(action: .settings(.saveSettings))
+            await store.dispatch(action: .settings(.saveSettings))
 
             // Wait for the save to complete by checking state changes
             // In a real app, you might want to track a separate "isSaving" state

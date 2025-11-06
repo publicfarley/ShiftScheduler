@@ -23,7 +23,7 @@ public typealias Middleware<State, Action> = @Sendable (
 // -----------------------------
 @MainActor
 @Observable
-public final class Store<State, Action: Sendable> {
+public final class Store<State: Sendable, Action: Sendable> {
     public private(set) var state: State
 
     private let reducer: Reducer<State, Action>
@@ -51,8 +51,18 @@ public final class Store<State, Action: Sendable> {
         await Task.yield()
 
         // Phase 3: Execute middleware (async side effects)
-        // Capture current state for middleware to use
+        // Capture current state and dependencies for middleware to use
         let currentState = state
+        let services = services
+
+        // Create dispatch closure before entering concurrent context
+        // SAFETY: This closure is safe to send to concurrent middleware because:
+        // 1. It captures self weakly (no retain cycle)
+        // 2. It immediately awaits dispatch() which returns to @MainActor
+        // 3. No data race is possible - the closure properly isolates the call
+        let dispatchAction: Dispatcher<Action> = { [weak self] newAction in
+            await self?.dispatch(action: newAction)
+        }
 
         // Wait for all middleware to complete before returning
         await withTaskGroup(of: Void.self) { group in
@@ -62,9 +72,7 @@ public final class Store<State, Action: Sendable> {
                         currentState,
                         action,
                         services,
-                        { [weak self] newAction in
-                            await self?.dispatch(action: newAction)
-                        }
+                        dispatchAction
                     )
                 }
             }

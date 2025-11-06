@@ -56,7 +56,9 @@ struct AddEditLocationView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
-                        store.dispatch(action: .locations(.addEditSheetDismissed))
+                        Task {
+                            await store.dispatch(action: .locations(.addEditSheetDismissed))
+                        }
                     }
                 }
 
@@ -93,7 +95,9 @@ struct AddEditLocationView: View {
             address: trimmedAddress
         )
 
-        store.dispatch(action: .locations(.saveLocation(newLocation)))
+        Task {
+            await store.dispatch(action: .locations(.saveLocation(newLocation)))
+        }
     }
 }
 

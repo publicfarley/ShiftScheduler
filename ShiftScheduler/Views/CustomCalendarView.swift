@@ -96,7 +96,9 @@ struct CustomCalendarView: View {
         }
         .onChange(of: currentMonth) { _, newMonth in
             // Notify Redux that the displayed month changed (for fault detection)
-            store.dispatch(action: .schedule(.displayedMonthChanged(newMonth)))
+            Task {
+                await store.dispatch(action: .schedule(.displayedMonthChanged(newMonth)))
+            }
         }
     }
 

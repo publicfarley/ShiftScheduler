@@ -70,11 +70,15 @@ struct LocationsView: View {
                                 ForEach(filteredLocations) { location in
                                     LocationCard(location: location)
                                         .onTapGesture {
-                                            store.dispatch(action: .locations(.editLocation(location)))
+                                            Task {
+                                                await store.dispatch(action: .locations(.editLocation(location)))
+                                            }
                                         }
                                         .contextMenu {
                                             Button(action: {
-                                                store.dispatch(action: .locations(.editLocation(location)))
+                                                Task {
+                                                    await store.dispatch(action: .locations(.editLocation(location)))
+                                                }
                                             }) {
                                                 Label("Edit", systemImage: "pencil")
                                             }
@@ -122,7 +126,9 @@ struct LocationsView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
-                            store.dispatch(action: .locations(.addButtonTapped))
+                            Task {
+                                await store.dispatch(action: .locations(.addButtonTapped))
+                            }
                         }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 20))
@@ -131,9 +137,11 @@ struct LocationsView: View {
                 }
                 .sheet(
                     isPresented: .constant(store.state.locations.showAddEditSheet),
-                       
+
                     onDismiss: {
-                        store.dispatch(action: .locations(.addEditSheetDismissed))
+                        Task {
+                            await store.dispatch(action: .locations(.addEditSheetDismissed))
+                        }
                     }
                 ) {
                     AddEditLocationView(
@@ -145,7 +153,9 @@ struct LocationsView: View {
                     Button("Cancel", role: .cancel) { }
                     Button("Delete", role: .destructive) {
                         if let location = locationToDelete {
-                            store.dispatch(action: .locations(.deleteLocation(location)))
+                            Task {
+                                await store.dispatch(action: .locations(.deleteLocation(location)))
+                            }
                             locationToDelete = nil
                         }
                     }
@@ -169,7 +179,9 @@ struct LocationsView: View {
                     }
                 }
                 .onAppear {
-                    store.dispatch(action: .locations(.loadLocations))
+                    Task {
+                        await store.dispatch(action: .locations(.loadLocations))
+                    }
                 }
             }
         }

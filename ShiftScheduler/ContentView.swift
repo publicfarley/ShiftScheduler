@@ -7,7 +7,11 @@ struct ContentView: View {
         ZStack {
             TabView(selection: Binding(
                 get: { reduxStore.state.selectedTab },
-                set: { reduxStore.dispatch(action: .appLifecycle(.tabSelected($0))) }
+                set: { tab in
+                    Task {
+                        await reduxStore.dispatch(action: .appLifecycle(.tabSelected(tab)))
+                    }
+                }
             )) {
                 TodayView()
                     .tabItem {
@@ -70,7 +74,9 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            reduxStore.dispatch(action: .appLifecycle(.onAppAppear))
+            Task {
+                await reduxStore.dispatch(action: .appLifecycle(.onAppAppear))
+            }
         }
     }
 }

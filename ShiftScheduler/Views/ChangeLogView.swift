@@ -36,11 +36,11 @@ struct ChangeLogView: View {
             .alert("Purge Old Entries?", isPresented: $showPurgeConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Purge", role: .destructive) {
-                    store.dispatch(action: .changeLog(.purgeOldEntries))
-                    // Reload entries after a short delay
                     Task {
+                        await store.dispatch(action: .changeLog(.purgeOldEntries))
+                        // Reload entries after a short delay
                         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                        store.dispatch(action: .changeLog(.loadChangeLogEntries))
+                        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
                     }
                 }
             } message: {
@@ -51,7 +51,9 @@ struct ChangeLogView: View {
                 }
             }
             .onAppear {
-                store.dispatch(action: .changeLog(.loadChangeLogEntries))
+                Task {
+                    await store.dispatch(action: .changeLog(.loadChangeLogEntries))
+                }
             }
         }
     }

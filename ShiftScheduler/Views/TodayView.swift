@@ -268,7 +268,9 @@ struct TodayView: View {
             .sheet(
                 isPresented: .constant(store.state.today.showSwitchShiftSheet),
                 onDismiss: {
-                    store.dispatch(action: .today(.switchShiftSheetDismissed))
+                    Task {
+                        await store.dispatch(action: .today(.switchShiftSheetDismissed))
+                    }
                 }
             ) {
                 if let shift = store.state.today.selectedShift {
@@ -277,7 +279,7 @@ struct TodayView: View {
             }
             .task {
                 // Dispatch Redux action
-                store.dispatch(action: .today(.loadShifts))
+                await store.dispatch(action: .today(.loadShifts))
 
                 // Reset animation state when view appears
                 todayCardOffset = -400

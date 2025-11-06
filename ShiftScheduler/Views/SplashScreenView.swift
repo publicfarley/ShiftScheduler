@@ -122,7 +122,9 @@ struct SplashScreenView: View {
         .onAppear {
             startAnimations()
             // Load locations and shift types during splash screen
-            store.dispatch(action: .appLifecycle(.loadInitialData))
+            Task {
+                await store.dispatch(action: .appLifecycle(.loadInitialData))
+            }
         }
     }
 

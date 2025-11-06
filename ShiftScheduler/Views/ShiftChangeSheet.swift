@@ -593,9 +593,9 @@ struct ShiftChangeSheet: View {
         // Dispatch shift switch action based on feature
         switch feature {
         case .today:
-            store.dispatch(action: .today(.performSwitchShift(currentShift, newShiftType, reasonText)))
+            await store.dispatch(action: .today(.performSwitchShift(currentShift, newShiftType, reasonText)))
         case .schedule:
-            store.dispatch(action: .schedule(.performSwitchShift(currentShift, newShiftType, reasonText)))
+            await store.dispatch(action: .schedule(.performSwitchShift(currentShift, newShiftType, reasonText)))
         }
 
         // Show success feedback
@@ -616,9 +616,13 @@ struct ShiftChangeSheet: View {
     private func handleDismiss() {
         switch feature {
         case .today:
-            store.dispatch(action: .today(.switchShiftSheetDismissed))
+            Task {
+                await store.dispatch(action: .today(.switchShiftSheetDismissed))
+            }
         case .schedule:
-            store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
+            Task {
+                await store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
+            }
         }
     }
 }

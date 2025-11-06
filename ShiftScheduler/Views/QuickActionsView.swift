@@ -16,7 +16,9 @@ struct QuickActionsView: View {
             HStack(spacing: 12) {
                 // Switch Shift Button
                 Button(action: {
-                    store.dispatch(action: .today(.switchShiftTapped(shift)))
+                    Task {
+                        await store.dispatch(action: .today(.switchShiftTapped(shift)))
+                    }
                 }) {
                     VStack(spacing: 4) {
                         Image(systemName: "arrow.triangle.2.circlepath")
@@ -40,7 +42,9 @@ struct QuickActionsView: View {
 
                 // Delete Shift Button
                 Button(action: {
-                    store.dispatch(action: .today(.deleteShiftRequested(shift)))
+                    Task {
+                        await store.dispatch(action: .today(.deleteShiftRequested(shift)))
+                    }
                     showDeleteConfirmation = true
                 }) {
                     VStack(spacing: 4) {
@@ -67,8 +71,10 @@ struct QuickActionsView: View {
                 Button(action: {
                     showEditNotesSheet = true
                     // Initialize notes with existing shift notes
-                    store.dispatch(action: .today(.quickActionsNotesChanged(shift.notes ?? "")))
-                    store.dispatch(action: .today(.editNotesSheetToggled(true)))
+                    Task {
+                        await store.dispatch(action: .today(.quickActionsNotesChanged(shift.notes ?? "")))
+                        await store.dispatch(action: .today(.editNotesSheetToggled(true)))
+                    }
                 }) {
                     VStack(spacing: 4) {
                         Image(systemName: "note.text")
@@ -94,10 +100,14 @@ struct QuickActionsView: View {
         }
         .alert("Delete Shift", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
-                store.dispatch(action: .today(.deleteShiftCancelled))
+                Task {
+                    await store.dispatch(action: .today(.deleteShiftCancelled))
+                }
             }
             Button("Delete", role: .destructive) {
-                store.dispatch(action: .today(.deleteShiftConfirmed))
+                Task {
+                    await store.dispatch(action: .today(.deleteShiftConfirmed))
+                }
                 showDeleteConfirmation = false
             }
         } message: {
@@ -131,7 +141,9 @@ struct EditNotesSheetView: View {
                     TextEditor(text: Binding(
                         get: { store.state.today.quickActionsNotes },
                         set: { newValue in
-                            store.dispatch(action: .today(.quickActionsNotesChanged(newValue)))
+                            Task {
+                                await store.dispatch(action: .today(.quickActionsNotesChanged(newValue)))
+                            }
                         }
                     ))
                     .font(.body)
@@ -154,7 +166,9 @@ struct EditNotesSheetView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        store.dispatch(action: .today(.editNotesSheetToggled(false)))
+                        Task {
+                            await store.dispatch(action: .today(.editNotesSheetToggled(false)))
+                        }
                         isPresented = false
                     }
                 }

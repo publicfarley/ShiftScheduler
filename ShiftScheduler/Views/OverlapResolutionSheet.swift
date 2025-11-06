@@ -48,17 +48,21 @@ struct OverlapResolutionSheet: View {
                 // Action buttons
                 HStack(spacing: 16) {
                     Button("Cancel") {
-                        store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                        Task {
+                            await store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                        }
                     }
                     .buttonStyle(.bordered)
 
                     Button("Keep Selected") {
                         guard let selected = selectedShift else { return }
                         let shiftsToDelete = overlappingShifts.filter { $0.id != selected.id }
-                        store.dispatch(action: .schedule(.resolveOverlap(
-                            keepShift: selected,
-                            deleteShifts: shiftsToDelete
-                        )))
+                        Task {
+                            await store.dispatch(action: .schedule(.resolveOverlap(
+                                keepShift: selected,
+                                deleteShifts: shiftsToDelete
+                            )))
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(selectedShift == nil)
@@ -70,7 +74,9 @@ struct OverlapResolutionSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
-                        store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                        Task {
+                            await store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                        }
                     }
                 }
             }

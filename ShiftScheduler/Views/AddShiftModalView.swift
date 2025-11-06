@@ -303,7 +303,9 @@ struct AddShiftModalView: View {
                             // Cancel Button
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                                Task {
+                                    await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                                }
                             }) {
                                 HStack {
                                     Image(systemName: "xmark")
@@ -390,11 +392,13 @@ struct AddShiftModalView: View {
 
         let finalNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        store.dispatch(action: .schedule(.addShift(
-            date: selectedDate,
-            shiftType: shiftType,
-            notes: finalNotes
-        )))
+        Task {
+            await store.dispatch(action: .schedule(.addShift(
+                date: selectedDate,
+                shiftType: shiftType,
+                notes: finalNotes
+            )))
+        }
     }
 }
 

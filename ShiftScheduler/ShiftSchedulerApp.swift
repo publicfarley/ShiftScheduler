@@ -86,6 +86,6 @@ struct ShiftSchedulerApp: App {
         }
 
         logger.debug("Dispatching change log purge action (respects user retention policy)")
-        reduxStore.dispatch(action: .changeLog(.purgeOldEntries))
+        await reduxStore.dispatch(action: .changeLog(.purgeOldEntries))
     }
 }

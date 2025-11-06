@@ -96,7 +96,9 @@ struct ShiftDetailsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        store.dispatch(action: .schedule(.shiftDetailDismissed))
+                        Task {
+                            await store.dispatch(action: .schedule(.shiftDetailDismissed))
+                        }
                     }
                 }
 
@@ -107,7 +109,9 @@ struct ShiftDetailsView: View {
             }
         }
         .sheet(isPresented: .constant(store.state.schedule.showSwitchShiftSheet), onDismiss: {
-            store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
+            Task {
+                await store.dispatch(action: .schedule(.switchShiftSheetToggled(false)))
+            }
         }) {
             if let currentShift = shift {
                 ShiftChangeSheet(currentShift: currentShift, feature: .schedule)
@@ -118,8 +122,10 @@ struct ShiftDetailsView: View {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
                 if let currentShift = shift {
-                    store.dispatch(action: .schedule(.deleteShift(currentShift)))
-                    store.dispatch(action: .schedule(.shiftDetailDismissed))
+                    Task {
+                        await store.dispatch(action: .schedule(.deleteShift(currentShift)))
+                        await store.dispatch(action: .schedule(.shiftDetailDismissed))
+                    }
                 }
             }
         } message: {
@@ -240,7 +246,11 @@ struct ShiftDetailsView: View {
 
                 // Action buttons
                 VStack(spacing: 12) {
-                    Button(action: { store.dispatch(action: .schedule(.switchShiftTapped(currentShift))) }) {
+                    Button(action: {
+                        Task {
+                            await store.dispatch(action: .schedule(.switchShiftTapped(currentShift)))
+                        }
+                    }) {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.left.arrow.right")
                                 .font(.body)

@@ -38,7 +38,11 @@ struct ScheduleView: View {
 
                         Spacer()
 
-                        Button(action: { store.dispatch(action: .schedule(.dismissSuccessToast)) }) {
+                        Button(action: {
+                            Task {
+                                await store.dispatch(action: .schedule(.dismissSuccessToast))
+                            }
+                        }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.body)
                                 .foregroundColor(.secondary)
@@ -52,16 +56,10 @@ struct ScheduleView: View {
                 .padding(16)
                 .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
                                        removal: .move(edge: .top).combined(with: .opacity)))
-                .onAppear {
+                .task {
                     // Auto-dismiss after 3 seconds
-                    Task {
-                        try? await Task.sleep(nanoseconds: 3_000_000_000)
-                        await MainActor.run {
-                            withAnimation {
-                                store.dispatch(action: .schedule(.dismissSuccessToast))
-                            }
-                        }
-                    }
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    await store.dispatch(action: .schedule(.dismissSuccessToast))
                 }
             }
 
@@ -76,7 +74,9 @@ struct ScheduleView: View {
             get: { store.state.schedule.showAddShiftSheet },
             set: { isPresented in
                 if !isPresented {
-                    store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                    Task {
+                        await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                    }
                 }
             }
         )) {
@@ -85,7 +85,9 @@ struct ScheduleView: View {
                     get: { store.state.schedule.showAddShiftSheet },
                     set: { isPresented in
                         if !isPresented {
-                            store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                            Task {
+                                await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                            }
                         }
                     }
                 ),
@@ -96,7 +98,9 @@ struct ScheduleView: View {
         .sheet(
             isPresented: .constant(store.state.schedule.showFilterSheet),
             onDismiss: {
-                store.dispatch(action: .schedule(.filterSheetToggled(false)))
+                Task {
+                    await store.dispatch(action: .schedule(.filterSheetToggled(false)))
+                }
             }
         ) {
             ScheduleFilterSheetView()
@@ -104,7 +108,9 @@ struct ScheduleView: View {
         .sheet(
             isPresented: .constant(store.state.schedule.showShiftDetail),
             onDismiss: {
-                store.dispatch(action: .schedule(.shiftDetailDismissed))
+                Task {
+                    await store.dispatch(action: .schedule(.shiftDetailDismissed))
+                }
             }
         ) {
             if let shiftId = store.state.schedule.selectedShiftId {
@@ -115,7 +121,9 @@ struct ScheduleView: View {
         .sheet(
             isPresented: .constant(store.state.schedule.showOverlapResolution),
             onDismiss: {
-                store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                Task {
+                    await store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                }
             }
         ) {
             if let date = store.state.schedule.overlapDate,
@@ -129,11 +137,17 @@ struct ScheduleView: View {
         }
         .errorAlert(error: Binding(
             get: { store.state.schedule.currentError },
-            set: { _ in store.dispatch(action: .schedule(.dismissError)) }
+            set: { _ in
+                Task {
+                    await store.dispatch(action: .schedule(.dismissError))
+                }
+            }
         ))
         .onAppear {
             logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
-            store.dispatch(action: .schedule(.initializeAndLoadScheduleData))
+            Task {
+                await store.dispatch(action: .schedule(.initializeAndLoadScheduleData))
+            }
         }
         .onChange(of: store.state.schedule.scheduledShifts) { _, shifts in
             logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")
@@ -189,7 +203,11 @@ struct ScheduleView: View {
                 CustomCalendarView(
                     selectedDate: Binding(
                         get: { store.state.schedule.selectedDate },
-                        set: { store.dispatch(action: .schedule(.selectedDateChanged($0))) }
+                        set: { date in
+                            Task {
+                                await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                            }
+                        }
                     ),
                     scheduledDates: Set(
                         store.state.schedule.scheduledShifts.map { shift in
@@ -260,10 +278,8 @@ struct ScheduleView: View {
         listOpacity = 0
         Task {
             try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
-            await MainActor.run {
-                withAnimation(.easeIn(duration: 0.6)) {
-                    listOpacity = 1
-                }
+            withAnimation(.easeIn(duration: 0.6)) {
+                listOpacity = 1
             }
         }
     }
@@ -317,7 +333,11 @@ struct ScheduleView: View {
     }
 
     private var addShiftButton: some View {
-        Button(action: { store.dispatch(action: .schedule(.addShiftSheetToggled(true))) }) {
+        Button(action: {
+            Task {
+                await store.dispatch(action: .schedule(.addShiftSheetToggled(true)))
+            }
+        }) {
             Image(systemName: "plus.circle")
                 .foregroundColor(.primary)
         }
@@ -325,17 +345,24 @@ struct ScheduleView: View {
 
     private var todayButton: some View {
         Button(action: {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                store.dispatch(action: .schedule(.jumpToToday))
+            Task {
+                await store.dispatch(action: .schedule(.jumpToToday))
             }
         }) {
             Image(systemName: "calendar.badge.clock")
                 .foregroundColor(.primary)
         }
+        .transaction { transaction in
+            transaction.animation = .easeInOut(duration: 0.3)
+        }
     }
 
     private var filterButton: some View {
-        Button(action: { store.dispatch(action: .schedule(.filterSheetToggled(true))) }) {
+        Button(action: {
+            Task {
+                await store.dispatch(action: .schedule(.filterSheetToggled(true)))
+            }
+        }) {
             Image(systemName: "line.3.horizontal.decrease.circle")
                 .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
         }
@@ -345,7 +372,9 @@ struct ScheduleView: View {
         UnifiedShiftCard(
             shift: shift,
             onTap: {
-                store.dispatch(action: .schedule(.shiftTapped(shift)))
+                Task {
+                    await store.dispatch(action: .schedule(.shiftTapped(shift)))
+                }
             }
         )
         .padding(.horizontal)
@@ -353,7 +382,9 @@ struct ScheduleView: View {
 
     private func clearAllFilters() {
         // logger.debug("Clearing all filters")
-        store.dispatch(action: .schedule(.clearFilters))
+        Task {
+            await store.dispatch(action: .schedule(.clearFilters))
+        }
     }
 }
 

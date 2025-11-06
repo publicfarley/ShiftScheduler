@@ -163,7 +163,9 @@ struct AddEditShiftTypeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
-                        store.dispatch(action: .shiftTypes(.addEditSheetDismissed))
+                        Task {
+                            await store.dispatch(action: .shiftTypes(.addEditSheetDismissed))
+                        }
                     }
                 }
 
@@ -229,7 +231,9 @@ struct AddEditShiftTypeView: View {
             location: location
         )
 
-        store.dispatch(action: .shiftTypes(.saveShiftType(newShiftType)))
+        Task {
+            await store.dispatch(action: .shiftTypes(.saveShiftType(newShiftType)))
+        }
     }
 }
 

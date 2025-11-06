@@ -109,7 +109,9 @@ struct UserNameOnboardingView: View {
 
         // Clear error and dispatch action
         showError = false
-        store.dispatch(action: .appLifecycle(.displayNameChanged(trimmedName)))
+        Task {
+            await store.dispatch(action: .appLifecycle(.displayNameChanged(trimmedName)))
+        }
     }
 }
 

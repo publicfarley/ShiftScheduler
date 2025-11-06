@@ -135,18 +135,20 @@ struct ScheduleFilterSheetView: View {
     private func applyFilters() {
         // logger.debug("Applying filters: dates \(String(describing: startDate))-\(String(describing: endDate)), location: \(selectedLocation?.name ?? "None"), type: \(selectedShiftType?.title ?? "None")")
 
-        // Dispatch filter actions
-        if let start = startDate, let end = endDate {
-            store.dispatch(action: .schedule(.filterDateRangeChanged(startDate: start, endDate: end)))
-        } else {
-            store.dispatch(action: .schedule(.filterDateRangeChanged(startDate: nil, endDate: nil)))
+        Task {
+            // Dispatch filter actions
+            if let start = startDate, let end = endDate {
+                await store.dispatch(action: .schedule(.filterDateRangeChanged(startDate: start, endDate: end)))
+            } else {
+                await store.dispatch(action: .schedule(.filterDateRangeChanged(startDate: nil, endDate: nil)))
+            }
+
+            await store.dispatch(action: .schedule(.filterLocationChanged(selectedLocation)))
+            await store.dispatch(action: .schedule(.filterShiftTypeChanged(selectedShiftType)))
+            await store.dispatch(action: .schedule(.filterSheetToggled(false)))
+
+            dismiss()
         }
-
-        store.dispatch(action: .schedule(.filterLocationChanged(selectedLocation)))
-        store.dispatch(action: .schedule(.filterShiftTypeChanged(selectedShiftType)))
-        store.dispatch(action: .schedule(.filterSheetToggled(false)))
-
-        dismiss()
     }
 
     private func clearDateRange() {
