@@ -43,10 +43,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger app startup verification
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called calendar service to verify authorization
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -72,10 +69,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - verify calendar access (authorized)
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service and secondary dispatch updated state
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -101,10 +95,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        // Small delay to allow async middleware Task to execute (match other tests for consistency)
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
+        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service to check authorization
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -131,10 +122,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - middleware tries to call failing service
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service and handled the error gracefully
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -174,10 +162,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger initial data load
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms for multiple async operations
+        await await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Then - middleware called persistence service and secondary dispatches loaded data
         #expect(mockPersistence.loadLocationsCallCount == 1)
@@ -201,10 +186,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
+        await await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Then - initialization complete was dispatched by middleware
         #expect(store.state.isInitializationComplete == true)
@@ -228,7 +210,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - dispatch action that both middlewares handle
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Then - reducer updated state synchronously
         #expect(store.state.selectedTab == .today)
@@ -249,7 +231,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
+        await store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
 
         // Then - reducer updated state immediately
         #expect(store.state.isCalendarAuthorized == true)
@@ -278,10 +260,8 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger load that causes secondary dispatch
-        store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
 
         // Then - middleware called service and state was updated by secondary dispatch
         #expect(mockPersistence.loadLocationsCallCount == 1)
@@ -317,10 +297,8 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
 
         // Then - middleware called services and entire action chain executed
         #expect(mockPersistence.loadShiftTypesCallCount == 1)
@@ -353,10 +331,8 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger operations that use services
-        store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
 
         // Then - middleware called service and state has the data
         #expect(mockPersistence.loadLocationsCallCount == 1)
@@ -388,10 +364,8 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - error occurs in middleware
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
 
         // Then - middleware called service and state is preserved despite error
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -412,7 +386,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - dispatch action not handled by this middleware
-        store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
 
         // Then - reducer updated state, middleware didn't interfere
         #expect(store.state.selectedTab == .locations)
@@ -441,10 +415,8 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - dispatch action that loads data
-        store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Small delay to allow async middleware Task to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
 
         // Then - middleware called service and all secondary dispatches executed
         #expect(mockPersistence.loadLocationsCallCount == 1)

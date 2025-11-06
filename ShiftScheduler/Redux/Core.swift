@@ -42,19 +42,31 @@ public final class Store<State, Action: Sendable> {
         self.middlewares = middlewares
     }
 
-    public func dispatch(action: Action) {
-        // Apply reducer immediately
+    public func dispatch(action: Action) async {
+        // Phase 1: Apply reducer immediately (synchronous state update)
         state = reducer(state, action)
 
-        // Capture current state for middleware
+        // Phase 2: Yield to allow UI to update with reducer changes
+        // This ensures loading states, optimistic updates, etc. are visible
+        await Task.yield()
+
+        // Phase 3: Execute middleware (async side effects)
+        // Capture current state for middleware to use
         let currentState = state
 
-        // Run middlewares
-        for middleware in middlewares {
-            Task {
-                await middleware(currentState, action, services, { [weak self] newAction in
-                    await self?.dispatch(action: newAction)
-                })
+        // Wait for all middleware to complete before returning
+        await withTaskGroup(of: Void.self) { group in
+            for middleware in middlewares {
+                group.addTask {
+                    await middleware(
+                        currentState,
+                        action,
+                        services,
+                        { [weak self] newAction in
+                            await self?.dispatch(action: newAction)
+                        }
+                    )
+                }
             }
         }
     }
