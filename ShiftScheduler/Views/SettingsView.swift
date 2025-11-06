@@ -36,7 +36,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                store.dispatch(action: .settings(.task))
+                store.dispatch(action: .settings(.loadSettings))
                 displayName = store.state.userProfile.displayName
             }
             .onChange(of: store.state.userProfile.displayName) { _, newValue in

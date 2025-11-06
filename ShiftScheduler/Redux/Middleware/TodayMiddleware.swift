@@ -60,7 +60,7 @@ func todayMiddleware(
                 await dispatch(.today(.loadShifts))
 
                 // Reload change log to show the new entry
-                await dispatch(.changeLog(.task))
+                await dispatch(.changeLog(.loadChangeLogEntries))
             } catch {
         // logger.error("Failed to switch shift: \(error.localizedDescription)")
                 await dispatch(.today(.shiftSwitched(.failure(error))))

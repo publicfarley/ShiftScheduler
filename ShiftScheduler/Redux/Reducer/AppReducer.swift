@@ -40,7 +40,7 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
     var state = state
 
     switch action {
-    case .onAppear:
+    case .onAppAppear:
         break
 
     case .tabSelected(let tab):
@@ -206,7 +206,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
     var state = state
 
     switch action {
-    case .task:
+    case .initializeAndLoadScheduleData:
         state.isLoading = true
         state.isRestoringStacks = true
 
@@ -500,7 +500,7 @@ nonisolated func shiftTypesReducer(state: ShiftTypesState, action: ShiftTypesAct
     var state = state
 
     switch action {
-    case .task, .refreshShiftTypes:
+    case .loadShiftTypes, .refreshShiftTypes:
         state.isLoading = true
 
     case .searchTextChanged(let text):
@@ -563,7 +563,7 @@ nonisolated func locationsReducer(state: LocationsState, action: LocationsAction
     var state = state
 
     switch action {
-    case .task, .refreshLocations:
+    case .loadLocations, .refreshLocations:
         state.isLoading = true
 
     case .searchTextChanged(let text):
@@ -626,7 +626,7 @@ nonisolated func changeLogReducer(state: ChangeLogState, action: ChangeLogAction
     var state = state
 
     switch action {
-    case .task:
+    case .loadChangeLogEntries:
         state.isLoading = true
 
     case .searchTextChanged(let text):
@@ -673,7 +673,7 @@ nonisolated func settingsReducer(state: SettingsState, action: SettingsAction) -
     var state = state
 
     switch action {
-    case .task:
+    case .loadSettings:
         state.isLoading = true
 
     case .displayNameChanged:

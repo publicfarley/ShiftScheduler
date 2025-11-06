@@ -14,7 +14,7 @@ struct TodayReducerTests {
         var state = TodayState()
         state.isLoading = false
 
-        let newState = todayReducer(state: state, action: .task)
+        let newState = todayReducer(state: state, action: .loadShifts)
 
         #expect(newState.isLoading == true)
     }
@@ -223,7 +223,7 @@ struct TodayReducerTests {
         var state = TodayState()
 
         // Action 1: Start loading
-        state = todayReducer(state: state, action: .task)
+        state = todayReducer(state: state, action: .loadShifts)
         #expect(state.isLoading == true)
 
         // Action 2: Shifts loaded

@@ -14,7 +14,7 @@ func shiftTypesMiddleware(
     guard case .shiftTypes(let shiftTypesAction) = action else { return }
     
     switch shiftTypesAction {
-    case .task, .refreshShiftTypes:
+    case .loadShiftTypes, .refreshShiftTypes:
         logger.debug("Loading shift types")
         do {
             let shiftTypes = try await services.persistenceService.loadShiftTypes()

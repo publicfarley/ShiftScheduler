@@ -14,7 +14,7 @@ struct SettingsReducerTests {
         var state = SettingsState()
         state.isLoading = false
 
-        let newState = settingsReducer(state: state, action: .task)
+        let newState = settingsReducer(state: state, action: .loadSettings)
 
         #expect(newState.isLoading == true)
     }
@@ -146,7 +146,7 @@ struct SettingsReducerTests {
         var state = SettingsState()
 
         // Start loading
-        state = settingsReducer(state: state, action: .task)
+        state = settingsReducer(state: state, action: .loadSettings)
         #expect(state.isLoading == true)
 
         // Load settings

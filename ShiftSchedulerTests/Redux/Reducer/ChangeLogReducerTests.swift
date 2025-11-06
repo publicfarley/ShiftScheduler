@@ -14,7 +14,7 @@ struct ChangeLogReducerTests {
         var state = ChangeLogState()
         state.isLoading = false
 
-        let newState = changeLogReducer(state: state, action: .task)
+        let newState = changeLogReducer(state: state, action: .loadChangeLogEntries)
 
         #expect(newState.isLoading == true)
     }
@@ -185,7 +185,7 @@ struct ChangeLogReducerTests {
         var state = ChangeLogState()
 
         // Start loading
-        state = changeLogReducer(state: state, action: .task)
+        state = changeLogReducer(state: state, action: .loadChangeLogEntries)
         #expect(state.isLoading == true)
 
         // Load entries

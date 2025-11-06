@@ -50,7 +50,7 @@ enum AppAction: Equatable {
 /// Actions for app initialization and global navigation
 enum AppLifecycleAction: Equatable {
     /// App launched and appeared
-    case onAppear
+    case onAppAppear
 
     /// User selected a different tab
     case tabSelected(Tab)
@@ -84,7 +84,7 @@ enum AppLifecycleAction: Equatable {
 
     static func == (lhs: AppLifecycleAction, rhs: AppLifecycleAction) -> Bool {
         switch (lhs, rhs) {
-        case (.onAppear, .onAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
+        case (.onAppAppear, .onAppAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
              (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData),
              (.profileLoaded, .profileLoaded):
             return true
@@ -203,7 +203,7 @@ enum TodayAction: Equatable {
 /// Actions for the Schedule feature
 enum ScheduleAction: Equatable {
     /// View appeared, load initial data and restore undo/redo stacks
-    case task
+    case initializeAndLoadScheduleData
 
     /// Check calendar authorization status
     case checkAuthorization
@@ -361,7 +361,7 @@ enum ScheduleAction: Equatable {
 
     static func == (lhs: ScheduleAction, rhs: ScheduleAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task), (.checkAuthorization, .checkAuthorization),
+        case (.initializeAndLoadScheduleData, .initializeAndLoadScheduleData), (.checkAuthorization, .checkAuthorization),
              (.loadShifts, .loadShifts),
              (.shiftDetailDismissed, .shiftDetailDismissed),
              (.addShiftButtonTapped, .addShiftButtonTapped),
@@ -482,7 +482,7 @@ enum ScheduleAction: Equatable {
 /// Actions for the Shift Types feature
 enum ShiftTypesAction: Equatable {
     /// View appeared, load initial data
-    case task
+    case loadShiftTypes
 
     /// Search text changed
     case searchTextChanged(String)
@@ -516,7 +516,7 @@ enum ShiftTypesAction: Equatable {
 
     static func == (lhs: ShiftTypesAction, rhs: ShiftTypesAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task),
+        case (.loadShiftTypes, .loadShiftTypes),
              (.addButtonTapped, .addButtonTapped),
              (.addEditSheetDismissed, .addEditSheetDismissed),
              (.refreshShiftTypes, .refreshShiftTypes):
@@ -552,7 +552,7 @@ enum ShiftTypesAction: Equatable {
 /// Actions for the Locations feature
 enum LocationsAction: Equatable {
     /// View appeared, load initial data
-    case task
+    case loadLocations
 
     /// Search text changed
     case searchTextChanged(String)
@@ -586,7 +586,7 @@ enum LocationsAction: Equatable {
 
     static func == (lhs: LocationsAction, rhs: LocationsAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task),
+        case (.loadLocations, .loadLocations),
              (.addButtonTapped, .addButtonTapped),
              (.addEditSheetDismissed, .addEditSheetDismissed),
              (.refreshLocations, .refreshLocations):
@@ -622,7 +622,7 @@ enum LocationsAction: Equatable {
 /// Actions for the Change Log feature
 enum ChangeLogAction: Equatable {
     /// View appeared, load initial data
-    case task
+    case loadChangeLogEntries
 
     /// Search text changed
     case searchTextChanged(String)
@@ -644,7 +644,7 @@ enum ChangeLogAction: Equatable {
 
     static func == (lhs: ChangeLogAction, rhs: ChangeLogAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task),
+        case (.loadChangeLogEntries, .loadChangeLogEntries),
              (.purgeOldEntries, .purgeOldEntries):
             return true
         case let (.searchTextChanged(lhs), .searchTextChanged(rhs)):
@@ -674,7 +674,7 @@ enum ChangeLogAction: Equatable {
 /// Actions for the Settings feature
 enum SettingsAction: Equatable {
     /// View appeared, load initial data
-    case task
+    case loadSettings
 
     /// User changed display name
     case displayNameChanged(String)
@@ -716,7 +716,7 @@ enum SettingsAction: Equatable {
 
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
-        case (.task, .task),
+        case (.loadSettings, .loadSettings),
              (.saveSettings, .saveSettings),
              (.clearUnsavedChanges, .clearUnsavedChanges):
             return true

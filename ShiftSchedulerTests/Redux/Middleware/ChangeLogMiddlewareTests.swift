@@ -43,7 +43,7 @@ struct ChangeLogMiddlewareTests {
         // When
         await changeLogMiddleware(
             state: state,
-            action: .changeLog(.task),
+            action: .changeLog(.loadChangeLogEntries),
             services: mockServices,
             dispatch: dispatcher
         )
@@ -79,7 +79,7 @@ struct ChangeLogMiddlewareTests {
         // When
         await changeLogMiddleware(
             state: state,
-            action: .changeLog(.task),
+            action: .changeLog(.loadChangeLogEntries),
             services: mockServices,
             dispatch: dispatcher
         )
@@ -114,7 +114,7 @@ struct ChangeLogMiddlewareTests {
         // When
         await changeLogMiddleware(
             state: state,
-            action: .changeLog(.task),
+            action: .changeLog(.loadChangeLogEntries),
             services: mockServices,
             dispatch: dispatcher
         )
@@ -488,7 +488,7 @@ struct ChangeLogMiddlewareTests {
         // When
         await changeLogMiddleware(
             state: state,
-            action: .appLifecycle(.onAppear),
+            action: .appLifecycle(.onAppAppear),
             services: mockServices,
             dispatch: dispatcher
         )
@@ -520,7 +520,7 @@ struct ChangeLogMiddlewareTests {
         // When - Task (load entries)
         await changeLogMiddleware(
             state: state,
-            action: .changeLog(.task),
+            action: .changeLog(.loadChangeLogEntries),
             services: mockServices,
             dispatch: dispatcher
         )
@@ -562,7 +562,7 @@ struct ChangeLogMiddlewareTests {
         )
 
         // When
-        store.dispatch(action: .changeLog(.task))
+        store.dispatch(action: .changeLog(.loadChangeLogEntries))
 
         // Wait for async middleware
         try? await Task.sleep(nanoseconds: 50_000_000)

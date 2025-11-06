@@ -14,7 +14,7 @@ func changeLogMiddleware(
     guard case .changeLog(let changeLogAction) = action else { return }
     
     switch changeLogAction {
-    case .task:
+    case .loadChangeLogEntries:
         logger.debug("Loading change log entries")
         do {
             let entries = try await services.persistenceService.loadChangeLogEntries()
@@ -59,7 +59,7 @@ func changeLogMiddleware(
         // Forward completion to settings if manual purge was triggered
         await dispatch(.settings(.manualPurgeCompleted(.success(deletedCount))))
         // Reload change log entries to refresh UI
-        await dispatch(.changeLog(.task))
+        await dispatch(.changeLog(.loadChangeLogEntries))
 
     case .purgeCompleted(.failure(let error)):
         logger.error("Purge failed: \(error.localizedDescription)")

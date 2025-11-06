@@ -70,7 +70,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            reduxStore.dispatch(action: .appLifecycle(.onAppear))
+            reduxStore.dispatch(action: .appLifecycle(.onAppAppear))
         }
     }
 }

@@ -14,7 +14,7 @@ func settingsMiddleware(
     guard case .settings(let settingsAction) = action else { return }
     
     switch settingsAction {
-    case .task:
+    case .loadSettings:
         // Load user profile (includes auto-purge settings and last purge date)
         do {
             let profile = try await services.persistenceService.loadUserProfile()

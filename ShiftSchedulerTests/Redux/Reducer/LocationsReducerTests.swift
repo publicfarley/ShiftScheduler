@@ -14,7 +14,7 @@ struct LocationsReducerTests {
         var state = LocationsState()
         state.isLoading = false
 
-        let newState = locationsReducer(state: state, action: .task)
+        let newState = locationsReducer(state: state, action: .loadLocations)
 
         #expect(newState.isLoading == true)
     }
@@ -258,7 +258,7 @@ struct LocationsReducerTests {
         var state = LocationsState()
 
         // Start loading
-        state = locationsReducer(state: state, action: .task)
+        state = locationsReducer(state: state, action: .loadLocations)
         #expect(state.isLoading == true)
 
         // Load locations

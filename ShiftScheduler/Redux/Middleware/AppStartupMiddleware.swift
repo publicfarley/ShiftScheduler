@@ -12,7 +12,7 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
     }
 
     switch lifecycleAction {
-    case .onAppear:
+    case .onAppAppear:
         // Load user profile on app startup
         do {
             let profile = try await services.persistenceService.loadUserProfile()

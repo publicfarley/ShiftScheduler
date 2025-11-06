@@ -28,7 +28,7 @@ struct AppStartupMiddlewareTests {
         )
 
         // Dispatch onAppear action
-        await appStartupMiddleware(state, .appLifecycle(.onAppear), mockServices, mockDispatch)
+        await appStartupMiddleware(state, .appLifecycle(.onAppAppear), mockServices, mockDispatch)
 
         // Middleware should dispatch: userProfileUpdated, profileLoaded, and verifyCalendarAccessOnStartup
         #expect(!dispatchedActions.isEmpty)
@@ -63,7 +63,7 @@ struct AppStartupMiddlewareTests {
         )
 
         // Dispatch onAppear action
-        await appStartupMiddleware(state, .appLifecycle(.onAppear), mockServices, mockDispatch)
+        await appStartupMiddleware(state, .appLifecycle(.onAppAppear), mockServices, mockDispatch)
 
         // Middleware should dispatch: userProfileUpdated and profileLoaded (but NOT verifyCalendarAccessOnStartup)
         #expect(!dispatchedActions.isEmpty)

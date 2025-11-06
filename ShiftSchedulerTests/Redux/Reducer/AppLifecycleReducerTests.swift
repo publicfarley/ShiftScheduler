@@ -86,7 +86,7 @@ struct AppLifecycleReducerTests {
     func testOnAppearDoesNotChangeState() {
         let state = AppState()
 
-        let newState = appLifecycleReducer(state: state, action: .onAppear)
+        let newState = appLifecycleReducer(state: state, action: .onAppAppear)
 
         #expect(newState == state)
     }

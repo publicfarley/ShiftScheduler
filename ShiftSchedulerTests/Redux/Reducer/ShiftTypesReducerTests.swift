@@ -14,7 +14,7 @@ struct ShiftTypesReducerTests {
         var state = ShiftTypesState()
         state.isLoading = false
 
-        let newState = shiftTypesReducer(state: state, action: .task)
+        let newState = shiftTypesReducer(state: state, action: .loadShiftTypes)
 
         #expect(newState.isLoading == true)
     }
@@ -264,7 +264,7 @@ struct ShiftTypesReducerTests {
         var state = ShiftTypesState()
 
         // Start loading
-        state = shiftTypesReducer(state: state, action: .task)
+        state = shiftTypesReducer(state: state, action: .loadShiftTypes)
         #expect(state.isLoading == true)
 
         // Load shift types

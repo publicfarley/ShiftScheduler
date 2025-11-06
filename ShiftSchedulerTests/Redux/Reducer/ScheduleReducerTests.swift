@@ -15,7 +15,7 @@ struct ScheduleReducerTests {
         state.isLoading = false
         state.isRestoringStacks = false
 
-        let newState = scheduleReducer(state: state, action: .task)
+        let newState = scheduleReducer(state: state, action: .initializeAndLoadScheduleData)
 
         #expect(newState.isLoading == true)
         #expect(newState.isRestoringStacks == true)

@@ -152,7 +152,7 @@ struct ShiftTypesView: View {
                     }
                 }
                 .onAppear {
-                    store.dispatch(action: .shiftTypes(.task))
+                    store.dispatch(action: .shiftTypes(.loadShiftTypes))
                 }
             }
         }

@@ -44,7 +44,7 @@ struct AppReducerTests {
         var state = AppState()
         state.shiftTypes.isLoading = false
 
-        let newState = appReducer(state: state, action: .shiftTypes(.task))
+        let newState = appReducer(state: state, action: .shiftTypes(.loadShiftTypes))
 
         #expect(newState.shiftTypes.isLoading == true)
     }
@@ -54,7 +54,7 @@ struct AppReducerTests {
         var state = AppState()
         state.locations.isLoading = false
 
-        let newState = appReducer(state: state, action: .locations(.task))
+        let newState = appReducer(state: state, action: .locations(.loadLocations))
 
         #expect(newState.locations.isLoading == true)
     }
@@ -64,7 +64,7 @@ struct AppReducerTests {
         var state = AppState()
         state.changeLog.isLoading = false
 
-        let newState = appReducer(state: state, action: .changeLog(.task))
+        let newState = appReducer(state: state, action: .changeLog(.loadChangeLogEntries))
 
         #expect(newState.changeLog.isLoading == true)
     }
@@ -74,7 +74,7 @@ struct AppReducerTests {
         var state = AppState()
         state.settings.isLoading = false
 
-        let newState = appReducer(state: state, action: .settings(.task))
+        let newState = appReducer(state: state, action: .settings(.loadSettings))
 
         #expect(newState.settings.isLoading == true)
     }

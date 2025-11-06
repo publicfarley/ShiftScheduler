@@ -14,7 +14,7 @@ func scheduleMiddleware(
     guard case .schedule(let scheduleAction) = action else { return }
 
     switch scheduleAction {
-    case .task:
+    case .initializeAndLoadScheduleData:
         logger.debug("Schedule task started")
         // Restore undo/redo stacks first
         await dispatch(.schedule(.restoreUndoRedoStacks))
@@ -296,7 +296,7 @@ func scheduleMiddleware(
             await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
 
             // Reload change log to show the new entry
-            await dispatch(.changeLog(.task))
+            await dispatch(.changeLog(.loadChangeLogEntries))
         } catch {
             // logger.error("Failed to switch shift: \(error.localizedDescription)")
             let scheduleError = ScheduleError.shiftSwitchFailed(error.localizedDescription)

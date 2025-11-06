@@ -133,7 +133,7 @@ struct ScheduleView: View {
         ))
         .onAppear {
             logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
-            store.dispatch(action: .schedule(.task))
+            store.dispatch(action: .schedule(.initializeAndLoadScheduleData))
         }
         .onChange(of: store.state.schedule.scheduledShifts) { _, shifts in
             logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")

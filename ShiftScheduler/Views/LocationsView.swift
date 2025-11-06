@@ -169,7 +169,7 @@ struct LocationsView: View {
                     }
                 }
                 .onAppear {
-                    store.dispatch(action: .locations(.task))
+                    store.dispatch(action: .locations(.loadLocations))
                 }
             }
         }

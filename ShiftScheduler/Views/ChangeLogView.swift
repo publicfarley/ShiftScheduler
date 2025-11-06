@@ -40,7 +40,7 @@ struct ChangeLogView: View {
                     // Reload entries after a short delay
                     Task {
                         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                        store.dispatch(action: .changeLog(.task))
+                        store.dispatch(action: .changeLog(.loadChangeLogEntries))
                     }
                 }
             } message: {
@@ -51,7 +51,7 @@ struct ChangeLogView: View {
                 }
             }
             .onAppear {
-                store.dispatch(action: .changeLog(.task))
+                store.dispatch(action: .changeLog(.loadChangeLogEntries))
             }
         }
     }

@@ -15,7 +15,7 @@ func locationsMiddleware(
     
     switch locationsAction {
         
-    case .task, .refreshLocations:
+    case .loadLocations, .refreshLocations:
         logger.debug("Loading locations")
         do {
             let locations = try await services.persistenceService.loadLocations()
