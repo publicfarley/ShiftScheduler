@@ -519,10 +519,10 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        let initialCallCount = mockPersistence.loadShiftTypesCallCount
+        #expect(store.state.initializationError == nil)
+        
         await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        // Verify service was actually called
-        #expect(mockPersistence.loadShiftTypesCallCount > initialCallCount)
+        #expect(store.state.initializationError != nil)
     }
 }

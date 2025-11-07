@@ -434,22 +434,25 @@ struct PersistenceServiceErrorTests {
         )
 
         // Add a recent entry
+        let recentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let recentEntry = ChangeLogEntry(
             id: UUID(),
-            timestamp: Date(),
+            timestamp: recentDate,
             userId: UUID(),
             userDisplayName: "User",
             changeType: .switched,
-            scheduledShiftDate: Date(),
+            scheduledShiftDate: recentDate,
             oldShiftSnapshot: nil,
             newShiftSnapshot: nil,
             reason: "Recent change"
         )
+
         try await service.addChangeLogEntry(recentEntry)
 
         // Purge very old entries (none should match)
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let cutoffDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 28)))
         let purgedCount = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
+
         #expect(purgedCount == 0)
     }
 
@@ -464,27 +467,29 @@ struct PersistenceServiceErrorTests {
             changeLogRepository: ChangeLogRepository()
         )
 
-        // Add old entry
+        // Add old entry (from 60 days ago)
+        let oldDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 8, day: 30)))
         let oldEntry = ChangeLogEntry(
             id: UUID(),
-            timestamp: try #require(Calendar.current.date(byAdding: .day, value: -60, to: Date())),
+            timestamp: oldDate,
             userId: UUID(),
             userDisplayName: "User",
             changeType: .switched,
-            scheduledShiftDate: Date(),
+            scheduledShiftDate: oldDate,
             oldShiftSnapshot: nil,
             newShiftSnapshot: nil,
             reason: "Old change"
         )
 
-        // Add new entry
+        // Add new entry (from reference date)
+        let newDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let newEntry = ChangeLogEntry(
             id: UUID(),
-            timestamp: Date(),
+            timestamp: newDate,
             userId: UUID(),
             userDisplayName: "User",
             changeType: .switched,
-            scheduledShiftDate: Date(),
+            scheduledShiftDate: newDate,
             oldShiftSnapshot: nil,
             newShiftSnapshot: nil,
             reason: "Recent change"
@@ -493,7 +498,8 @@ struct PersistenceServiceErrorTests {
         try await service.addChangeLogEntry(oldEntry)
         try await service.addChangeLogEntry(newEntry)
 
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        // Cutoff at 30 days ago from reference date (October 29, 2025)
+        let cutoffDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 9, day: 29)))
         let purgedCount = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
         #expect(purgedCount >= 1)
 
@@ -649,14 +655,16 @@ struct PersistenceServiceErrorTests {
         var undoStack: [ChangeLogEntry] = []
         var redoStack: [ChangeLogEntry] = []
 
+        let baseDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         for i in 0..<10 {
+            let entryDate = try #require(Calendar.current.date(byAdding: .day, value: -i, to: baseDate))
             let entry = ChangeLogEntry(
                 id: UUID(),
-                timestamp: try #require(Calendar.current.date(byAdding: .day, value: -i, to: Date())),
+                timestamp: entryDate,
                 userId: UUID(),
                 userDisplayName: "User \(i)",
                 changeType: .switched,
-                scheduledShiftDate: Date(),
+                scheduledShiftDate: entryDate,
                 oldShiftSnapshot: nil,
                 newShiftSnapshot: nil,
                 reason: "Change \(i)"

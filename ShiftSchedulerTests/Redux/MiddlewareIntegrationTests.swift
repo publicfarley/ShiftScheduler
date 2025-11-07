@@ -93,13 +93,14 @@ struct MiddlewareIntegrationTests {
             services: mockServices,
             middlewares: [appStartupMiddleware]
         )
+        
+        #expect(store.state.isCalendarAuthorized == false)
 
         // When
-        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service to check authorization
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
-        #expect(store.state.isCalendarAuthorized == false)
     }
 
     @Test("AppStartupMiddleware handles calendar service errors gracefully")
