@@ -27,7 +27,7 @@ struct PerformanceTests {
     // MARK: - Store Dispatch Performance
 
     @Test("Store dispatch completes in reasonable time", .disabled(if: shouldSkipPerformanceTests))
-    func testStoreDispatchPerformance() {
+    func testStoreDispatchPerformance() async {
         // Given
         let store = Store(
             state: AppState(),
@@ -41,7 +41,7 @@ struct PerformanceTests {
 
         // When
         for _ in 0..<iterations {
-            store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+            await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
         }
 
         // Then
@@ -168,11 +168,11 @@ struct PerformanceTests {
                     date: Date().addingTimeInterval(TimeInterval(index * 86400))
                 ).build()
             }
-        let targetDate = Date()
+
         let startTime = Date()
 
         // When
-        let filteredShifts = allShifts.filter { shift in
+        let _ = allShifts.filter { shift in
             Calendar.current.isDateInToday(shift.date)
         }
 

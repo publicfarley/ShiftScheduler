@@ -40,10 +40,7 @@ struct MiddlewareErrorHandlingTests {
         )
 
         // Dispatch action that will fail
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        // Allow middleware to execute
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // App should still be in valid state despite error
         #expect(store.state.selectedTab != nil)
@@ -59,9 +56,7 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // App should recover and display content
         #expect(store.state.shiftTypes is ShiftTypesState)
@@ -77,21 +72,20 @@ struct MiddlewareErrorHandlingTests {
             services: failingServices,
             middlewares: [appStartupMiddleware]
         )
+        
+        let initialTab = store.state.selectedTab
 
         // Dispatch multiple actions that will fail
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
-
-        // App should still be functional
-        #expect(store.state.selectedTab != nil)
+        // App should still be functional and be showing initial tab state
+        #expect(store.state.selectedTab == initialTab)
     }
 
     // MARK: - Service-Specific Error Handling
 
-    @Test("Middleware handles calendar access denial without crashing")
+    @Test("Middleware handles calendar access denial")
     func testMiddlewareHandlesCalendarAccessDenial() async {
         let mockCalendar = MockCalendarService()
         mockCalendar.shouldThrowError = true
@@ -110,14 +104,12 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
-        // Should show error but not crash
-        #expect(store.state is AppState)
+        #expect(store.state.isCalendarAuthorized == false)
     }
 
-    @Test("Middleware handles event conversion errors without crashing")
+    @Test("Middleware handles event conversion errors")
     func testMiddlewareHandlesEventConversionErrors() async {
         let mockCalendar = MockCalendarService()
         mockCalendar.shouldThrowError = true
@@ -136,11 +128,12 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        let initialTab = store.state.selectedTab
+
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // App recovers from error
-        #expect(store.state is AppState)
+        #expect(store.state.selectedTab == initialTab)
     }
 
     // MARK: - Persistence Error Handling
@@ -164,11 +157,12 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        let initialLocationsCount = store.state.locations.locations.count
+        
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // State remains valid
-        #expect(store.state.locations.locations.isEmpty == false || store.state.locations.locations.isEmpty == true)
+        #expect(store.state.locations.locations.count == initialLocationsCount)
     }
 
     @Test("Middleware handles stack restoration errors gracefully")
@@ -190,11 +184,12 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        let initialTab = store.state.selectedTab
+
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // App continues despite error
-        #expect(store.state.selectedTab != nil)
+        #expect(store.state.selectedTab == initialTab)
     }
 
     // MARK: - Error State Preservation Tests
@@ -213,8 +208,7 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Original state preserved
         #expect(store.state.selectedTab == .schedule)
@@ -231,7 +225,7 @@ struct MiddlewareErrorHandlingTests {
         )
 
         let originalTab = store.state.selectedTab
-        store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
 
         // Reducer still updates state
         #expect(store.state.selectedTab == .locations)
@@ -240,7 +234,7 @@ struct MiddlewareErrorHandlingTests {
 
     // MARK: - Error Sequence Tests
 
-    @Test("Middleware handles interleaved success and failure actions")
+    @Test("Middleware handles interleaved failure and success actions")
     func testHandlesInterleavedSuccessAndFailure() async {
         let failingServices = Self.createFailingServiceContainer()
         let store = Store(
@@ -251,11 +245,10 @@ struct MiddlewareErrorHandlingTests {
         )
 
         // Dispatch failing action
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Dispatch successful action (tab change)
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // App should handle both
         #expect(store.state.selectedTab == .today)
@@ -273,15 +266,15 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
+        let initialTab = store.state.selectedTab
+        
         // Dispatch multiple failing actions rapidly
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-
-        try? await Task.sleep(nanoseconds: 30_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // App should be stable
-        #expect(store.state.selectedTab != nil)
+        #expect(store.state.selectedTab == initialTab)
     }
 
     // MARK: - Error Recovery Tests
@@ -306,8 +299,9 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+
+        #expect(store.state.isCalendarAuthorized == false)
 
         // Then with recovering services
         store = Store(
@@ -317,8 +311,7 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Should recover
         #expect(store.state.isCalendarAuthorized == true)
@@ -337,11 +330,10 @@ struct MiddlewareErrorHandlingTests {
         )
 
         // Dispatch failing action
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Dispatch action that triggers logging
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Verify state updated (logging functionality intact)
         #expect(store.state.selectedTab == .today)
@@ -371,17 +363,18 @@ struct MiddlewareErrorHandlingTests {
             services: services,
             middlewares: [appStartupMiddleware]
         )
+        
+        let initialLocations = store.state.locations.locations
+        let initialShiftTypes = store.state.shiftTypes.shiftTypes
 
         // Actions that use multiple services
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // App should handle all errors
-        #expect(store.state.shiftTypes is ShiftTypesState)
-        #expect(store.state.locations is LocationsState)
+        #expect(store.state.shiftTypes.shiftTypes == initialShiftTypes)
+        #expect(store.state.locations.locations == initialLocations)
     }
 
     // MARK: - Error Propagation to UI Tests
@@ -406,8 +399,7 @@ struct MiddlewareErrorHandlingTests {
         )
 
         // Dispatch action that will fail
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Verify state reflects the error condition
         #expect(!store.state.isCalendarAuthorized)
@@ -437,15 +429,12 @@ struct MiddlewareErrorHandlingTests {
         )
 
         // Dispatch multiple failing actions
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-
-        try? await Task.sleep(nanoseconds: 30_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
 
         // App should still be responsive
         #expect(store.state.selectedTab == .schedule)
-        #expect(store.state is AppState)
     }
 
     @Test("Error state is cleared when successful action follows error")
@@ -471,15 +460,13 @@ struct MiddlewareErrorHandlingTests {
         #expect(store.state.isCalendarAuthorized == false)
 
         // Dispatch failing action
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Verify error state
         #expect(store.state.isCalendarAuthorized == false)
 
         // Dispatch successful action (tab selection doesn't depend on calendar)
-        store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
-        try? await Task.sleep(nanoseconds: 5_000_000)
+        await store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
 
         // Verify app remains functional
         #expect(store.state.selectedTab == .locations)
@@ -507,8 +494,7 @@ struct MiddlewareErrorHandlingTests {
         )
 
         let initialCallCount = mockCalendar.isCalendarAuthorizedCallCount
-        store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Verify service was actually called
         #expect(mockCalendar.isCalendarAuthorizedCallCount > initialCallCount)
@@ -534,8 +520,7 @@ struct MiddlewareErrorHandlingTests {
         )
 
         let initialCallCount = mockPersistence.loadShiftTypesCallCount
-        store.dispatch(action: .appLifecycle(.loadInitialData))
-        try? await Task.sleep(nanoseconds: 20_000_000)
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Verify service was actually called
         #expect(mockPersistence.loadShiftTypesCallCount > initialCallCount)

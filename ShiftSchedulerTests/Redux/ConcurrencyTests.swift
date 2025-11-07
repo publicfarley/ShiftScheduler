@@ -37,9 +37,9 @@ struct ConcurrencyTests {
         )
 
         // When - dispatch multiple actions sequentially
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
-        store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-        store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.locations)))
 
         // Then - state reflects final action
         #expect(store.state.selectedTab == .locations)
@@ -63,7 +63,7 @@ struct ConcurrencyTests {
         for i in 0..<dispatchCount {
             let tabIndex = i % 6
             let tab: Tab = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings][tabIndex]
-            store.dispatch(action: .appLifecycle(.tabSelected(tab)))
+            await store.dispatch(action: .appLifecycle(.tabSelected(tab)))
         }
 
         // Then - final state is the last dispatched action
@@ -89,7 +89,7 @@ struct ConcurrencyTests {
             Task {
                 let tabIndex = i % 6
                 let tab: Tab = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings][tabIndex]
-                store.dispatch(action: .appLifecycle(.tabSelected(tab)))
+                await store.dispatch(action: .appLifecycle(.tabSelected(tab)))
             }
         }
 
@@ -119,11 +119,11 @@ struct ConcurrencyTests {
 
         // When - dispatch different action types concurrently
         let tasks = [
-            Task { store.dispatch(action: .appLifecycle(.tabSelected(.today))) },
-            Task { store.dispatch(action: .locations(.addButtonTapped)) },
-            Task { store.dispatch(action: .shiftTypes(.addButtonTapped)) },
-            Task { store.dispatch(action: .appLifecycle(.displayNameChanged("Test"))) },
-            Task { store.dispatch(action: .changeLog(.purgeOldEntries)) }
+            Task { await store.dispatch(action: .appLifecycle(.tabSelected(.today))) },
+            Task { await store.dispatch(action: .locations(.addButtonTapped)) },
+            Task { await store.dispatch(action: .shiftTypes(.addButtonTapped)) },
+            Task { await store.dispatch(action: .appLifecycle(.displayNameChanged("Test"))) },
+            Task { await store.dispatch(action: .changeLog(.purgeOldEntries)) }
         ]
 
         await withTaskGroup(of: Void.self) { group in
@@ -176,11 +176,8 @@ struct ConcurrencyTests {
         for i in 0..<dispatchCount {
             let tabIndex = i % 6
             let tab: Tab = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings][tabIndex]
-            store.dispatch(action: .appLifecycle(.tabSelected(tab)))
+            await store.dispatch(action: .appLifecycle(.tabSelected(tab)))
         }
-
-        // Allow middleware to complete
-        try? await Task.sleep(nanoseconds: 100_000_000)
 
         // Then - all captured states should be valid tabs
         let capturedStates = await log.getStates()
@@ -214,8 +211,6 @@ struct ConcurrencyTests {
         // Create multiple middlewares that all try to execute
         let middlewares: [Middleware<AppState, AppAction>] = (0..<5).map { id in
             { state, action, services, dispatch in
-                // Simulate async work
-                try? await Task.sleep(nanoseconds: 10_000_000)
                 await log.addExecution(id)
             }
         }
@@ -228,10 +223,7 @@ struct ConcurrencyTests {
         )
 
         // When - dispatch action (triggers all 5 middlewares)
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
-
-        // Wait for all middleware to complete
-        try? await Task.sleep(nanoseconds: 200_000_000)
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Then - all middlewares executed without interference
         let executionCount = await log.count()
@@ -279,10 +271,7 @@ struct ConcurrencyTests {
         )
 
         // When - dispatch action that triggers recursive dispatch
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
-
-        // Wait for all recursive dispatches to complete
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Then - recursive dispatches completed successfully (no deadlock)
         let count = await counter.getCount()
@@ -363,7 +352,7 @@ struct ConcurrencyTests {
     /// Test that Store's @MainActor isolation is enforced
     @Test("Store dispatch is only callable from MainActor context")
     @MainActor
-    func testStoreDispatchMainActorIsolation() {
+    func testStoreDispatchMainActorIsolation() async {
         // This test verifies the Store is @MainActor isolated
         // If it wasn't, this would compile but the store would not be safe
 
@@ -376,7 +365,7 @@ struct ConcurrencyTests {
         )
 
         // When - dispatch from MainActor (current context)
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Then - dispatch succeeded (we're on MainActor)
         #expect(store.state.selectedTab == .today)
@@ -395,17 +384,13 @@ struct ConcurrencyTests {
         )
 
         // When - dispatch, await, then read state
-        store.dispatch(action: .appLifecycle(.tabSelected(.today)))
-
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
 
         // Then - state update is visible
         #expect(store.state.selectedTab == .today)
 
         // And - dispatch another action, await, and verify
-        store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
 
         #expect(store.state.selectedTab == .schedule)
     }
@@ -422,7 +407,7 @@ struct ConcurrencyTests {
             middlewares: []
         )
 
-        store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
+        await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
 
         // When - read state from multiple concurrent tasks
         let results = await withTaskGroup(of: Tab.self) { group in
@@ -473,11 +458,8 @@ struct ConcurrencyTests {
             } else {
                 .appLifecycle(.tabSelected(.schedule))
             }
-            store.dispatch(action: action)
+            await store.dispatch(action: action)
         }
-
-        // Wait for all middleware to complete
-        try? await Task.sleep(nanoseconds: 200_000_000)
 
         // Then - store is still in valid state
         let validTabs: [Tab] = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings]
@@ -505,10 +487,7 @@ struct ConcurrencyTests {
                 for dispatchId in 0..<dispatchesPerTask {
                     let tabIndex = (taskId + dispatchId) % 6
                     let tab: Tab = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings][tabIndex]
-                    store.dispatch(action: .appLifecycle(.tabSelected(tab)))
-
-                    // Tiny delay to allow interleaving
-                    try? await Task.sleep(nanoseconds: 1_000_000)
+                    await store.dispatch(action: .appLifecycle(.tabSelected(tab)))
                 }
             }
         }
@@ -522,27 +501,5 @@ struct ConcurrencyTests {
         // Then - store is in consistent state (no crashes, valid tab)
         let validTabs: [Tab] = [.today, .schedule, .locations, .shiftTypes, .changeLog, .settings]
         #expect(validTabs.contains(store.state.selectedTab))
-    }
-
-    /// Test: Memory safety with weak captures in dispatch closure
-    @Test("Dispatch closure's weak self capture is memory-safe")
-    func testWeakSelfCaptureInDispatch() async {
-        // Given - Store
-        var store: Store<AppState, AppAction>? = Store(
-            state: AppState(),
-            reducer: appReducer,
-            services: Self.createMockServiceContainer(),
-            middlewares: []
-        )
-
-        store?.dispatch(action: .appLifecycle(.tabSelected(.today)))
-
-        // When - release store reference
-        store = nil
-
-        try? await Task.sleep(nanoseconds: 10_000_000)
-
-        // Then - no crashes (weak reference handled correctly)
-        #expect(true)
     }
 }

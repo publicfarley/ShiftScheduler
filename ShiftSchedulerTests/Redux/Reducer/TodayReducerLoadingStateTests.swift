@@ -31,9 +31,9 @@ struct TodayReducerLoadingStateTests {
         state.isLoading = false
         state.scheduledShifts = [
             ScheduledShift(
-                id: UUID(),
+                eventIdentifier: UUID().uuidString,
+                shiftType: Self.createTestShiftType(),
                 date: Date(),
-                shiftType: createTestShiftType(),
                 notes: nil
             )
         ]
@@ -56,9 +56,9 @@ struct TodayReducerLoadingStateTests {
 
         let testShifts = [
             ScheduledShift(
-                id: UUID(),
+                eventIdentifier: UUID().uuidString,
+                shiftType: Self.createTestShiftType(),
                 date: Date(),
-                shiftType: createTestShiftType(),
                 notes: nil
             )
         ]
@@ -103,9 +103,21 @@ struct TodayReducerLoadingStateTests {
         // Given
         var state = TodayState()
         state.isLoading = false
+        
+        let morningShiftType = ShiftTypeBuilder.morningShift()
+        let afternoonShiftType = ShiftTypeBuilder.afternoonShift()
+        
+        let scheduledMorningShift = ScheduledShiftBuilder(shiftType: morningShiftType).build()
 
         // When
-        let newState = todayReducer(state: state, action: .performSwitchShift)
+        let newState = todayReducer(
+            state: state,
+            action: .performSwitchShift(
+                scheduledMorningShift,
+                afternoonShiftType,
+                "Required switch"
+            )
+        )
 
         // Then
         #expect(newState.isLoading == true)
@@ -118,9 +130,9 @@ struct TodayReducerLoadingStateTests {
         state.isLoading = true
         state.showSwitchShiftSheet = true
         state.selectedShift = ScheduledShift(
-            id: UUID(),
+            eventIdentifier: UUID().uuidString,
+            shiftType: Self.createTestShiftType(),
             date: Date(),
-            shiftType: createTestShiftType(),
             notes: nil
         )
 
@@ -174,9 +186,9 @@ struct TodayReducerLoadingStateTests {
 
         // When - Complete loading
         let testShift = ScheduledShift(
-            id: UUID(),
+            eventIdentifier: UUID().uuidString,
+            shiftType: Self.createTestShiftType(),
             date: Date(),
-            shiftType: createTestShiftType(),
             notes: nil
         )
         state = todayReducer(

@@ -562,10 +562,7 @@ struct ChangeLogMiddlewareTests {
         )
 
         // When
-        store.dispatch(action: .changeLog(.loadChangeLogEntries))
-
-        // Wait for async middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
 
         // Then - entries should be loaded into state
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 1)
@@ -592,10 +589,7 @@ struct ChangeLogMiddlewareTests {
         )
 
         // When
-        store.dispatch(action: .changeLog(.deleteEntry(entry)))
-
-        // Wait for async middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await store.dispatch(action: .changeLog(.deleteEntry(entry)))
 
         // Then
         #expect(mockPersistence.deleteChangeLogEntryCallCount == 1)
@@ -619,10 +613,7 @@ struct ChangeLogMiddlewareTests {
         )
 
         // When
-        store.dispatch(action: .changeLog(.purgeOldEntries))
-
-        // Wait for async middleware
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
