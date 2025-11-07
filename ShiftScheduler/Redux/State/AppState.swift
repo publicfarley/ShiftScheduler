@@ -24,6 +24,9 @@ struct AppState: Equatable {
     /// Whether app initialization is complete (locations and shift types loaded)
     var isInitializationComplete: Bool = false
 
+    /// Error message if initialization fails (prevents app startup)
+    var initializationError: String? = nil
+
     // MARK: - Feature States
 
     /// Today feature state

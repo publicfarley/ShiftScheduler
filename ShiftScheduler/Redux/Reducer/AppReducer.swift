@@ -83,10 +83,12 @@ nonisolated func appLifecycleReducer(state: AppState, action: AppLifecycleAction
 
     case .initializationComplete(.success):
         state.isInitializationComplete = true
+        state.initializationError = nil
 
-    case .initializationComplete(.failure):
-        // Even on failure, mark as complete so we show content
-        state.isInitializationComplete = true
+    case .initializationComplete(.failure(let error)):
+        // Don't mark as complete on failure - prevents app startup
+        state.isInitializationComplete = false
+        state.initializationError = error.localizedDescription
     }
 
     return state
