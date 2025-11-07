@@ -49,56 +49,61 @@ struct CurrentDayServiceErrorTests {
 
     // MARK: - Leap Year Edge Cases
 
-    @Test("Handles leap year February 29th correctly")
+    @Test("Calculates days correctly across leap year February 29th")
     func testHandlesLeapYearFebruary29() throws {
         let service = CurrentDayService()
-        let leapYearDate = try #require(Calendar.current.date(from: DateComponents(year: 2024, month: 2, day: 29)))
+        let leapYearFeb28 = try #require(Calendar.current.date(from: DateComponents(year: 2024, month: 2, day: 28)))
+        let leapYearFeb29 = try #require(Calendar.current.date(from: DateComponents(year: 2024, month: 2, day: 29)))
+        let leapYearMar1 = try #require(Calendar.current.date(from: DateComponents(year: 2024, month: 3, day: 1)))
 
-        // February 29, 2024 is a valid leap year date
-        let dayOfWeek = Calendar.current.component(.weekday, from: leapYearDate)
-        #expect(dayOfWeek >= 1 && dayOfWeek <= 7)
+        // Service correctly calculates day differences across leap day
+        #expect(service.daysBetween(leapYearFeb28, leapYearFeb29) == 1)
+        #expect(service.daysBetween(leapYearFeb29, leapYearMar1) == 1)
+        #expect(service.daysBetween(leapYearFeb28, leapYearMar1) == 2)
     }
 
-    @Test("Handles non-leap year February 28th correctly")
+    @Test("Calculates month end correctly for non-leap year February")
     func testHandlesNonLeapYearFebruary28() throws {
         let service = CurrentDayService()
-        let nonLeapYearDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 28)))
+        let nonLeapYearFeb = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 28)))
+        let mar1 = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 3, day: 1)))
 
-        let dayOfWeek = Calendar.current.component(.weekday, from: nonLeapYearDate)
-        #expect(dayOfWeek >= 1 && dayOfWeek <= 7)
+        // Service correctly identifies end of February in non-leap year
+        let endOfFeb = service.getEndOfMonth(for: nonLeapYearFeb)
+        #expect(service.daysBetween(endOfFeb, mar1) == 1)
     }
 
     // MARK: - Month Boundary Edge Cases
 
-    @Test("Handles month transitions correctly")
+    @Test("Service calculates day differences correctly across month transitions")
     func testHandlesMonthTransitions() throws {
         let service = CurrentDayService()
         let lastDayOfMonth = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 31)))
-        let nextDay = try #require(Calendar.current.date(byAdding: .day, value: 1, to: lastDayOfMonth))
+        let firstDayOfNextMonth = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 2, day: 1)))
 
-        let nextMonth = Calendar.current.component(.month, from: nextDay)
-        #expect(nextMonth == 2)
+        // Service correctly handles month boundary
+        #expect(service.daysBetween(lastDayOfMonth, firstDayOfNextMonth) == 1)
     }
 
-    @Test("Handles year transitions correctly")
+    @Test("Service calculates day differences correctly across year transitions")
     func testHandlesYearTransitions() throws {
         let service = CurrentDayService()
         let lastDayOfYear = try #require(Calendar.current.date(from: DateComponents(year: 2024, month: 12, day: 31)))
-        let nextDay = try #require(Calendar.current.date(byAdding: .day, value: 1, to: lastDayOfYear))
+        let firstDayOfNextYear = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1)))
 
-        let nextYear = Calendar.current.component(.year, from: nextDay)
-        #expect(nextYear == 2025)
+        // Service correctly handles year boundary
+        #expect(service.daysBetween(lastDayOfYear, firstDayOfNextYear) == 1)
     }
 
     @Test("Handles negative day calculations")
     func testHandlesNegativeDayCalculations() throws {
         let service = CurrentDayService()
-        let date = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 15)))
+        let baseDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 15)))
+        let earlierDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 5, day: 26)))
 
-        // Go back 20 days
-        let pastDate = try #require(Calendar.current.date(byAdding: .day, value: -20, to: date))
-        let daysDifference = Calendar.current.dateComponents([.day], from: pastDate, to: date).day ?? 0
-        #expect(daysDifference == 20)
+        // Service correctly calculates negative differences (past dates)
+        let daysDifference = service.daysBetween(baseDate, earlierDate)
+        #expect(daysDifference == -20)
     }
 
     // MARK: - Comparison Tests
@@ -263,24 +268,26 @@ struct CurrentDayServiceErrorTests {
 
     // MARK: - Error and Exception Handling Tests
 
-    @Test("getYesterdayDate handles distant past dates")
+    @Test("Service calculates dates correctly for distant past dates")
     func testGetYesterdayDateHandlesDistantPast() throws {
-        let service = CurrentDayService()
+        let service = CurrentDayService(calendar: Calendar.current)
         let veryOldDate = try #require(Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1)))
-        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: veryOldDate))
+        let refDate = try #require(Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 2)))
 
-        let daysDifference = Calendar.current.dateComponents([.day], from: yesterday, to: veryOldDate).day ?? 0
+        // Service can calculate day differences across distant past dates
+        let daysDifference = service.daysBetween(veryOldDate, refDate)
         #expect(daysDifference == 1)
     }
 
-    @Test("getTomorrowDate handles distant future dates")
+    @Test("Service calculates dates correctly for distant future dates")
     func testGetTomorrowDateHandlesDistantFuture() throws {
-        let service = CurrentDayService()
+        let service = CurrentDayService(calendar: Calendar.current)
         let veryFutureDate = try #require(Calendar.current.date(from: DateComponents(year: 2099, month: 12, day: 31)))
-        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: veryFutureDate))
+        let refDate = try #require(Calendar.current.date(from: DateComponents(year: 2100, month: 1, day: 1)))
 
-        let daysDifference = Calendar.current.dateComponents([.day], from: veryFutureDate, to: tomorrow).day ?? 0
-        #expect(daysDifference == -1)
+        // Service can calculate day differences across distant future dates
+        let daysDifference = service.daysBetween(veryFutureDate, refDate)
+        #expect(daysDifference == 1)
     }
 
     @Test("daysBetween handles extreme date ranges without overflow")
@@ -346,26 +353,25 @@ struct CurrentDayServiceErrorTests {
 
     // MARK: - Component Access Tests
 
-    @Test("Can extract date components safely")
+    @Test("Service correctly identifies date ranges")
     func testExtractsDateComponentsSafely() throws {
         let service = CurrentDayService()
-        let date = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 15)))
+        let june15 = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 15)))
+        let june20 = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 20)))
 
-        let year = Calendar.current.component(.year, from: date)
-        let month = Calendar.current.component(.month, from: date)
-        let day = Calendar.current.component(.day, from: date)
-
-        #expect(year == 2025)
-        #expect(month == 6)
-        #expect(day == 15)
+        // Service can work with dates from the same month
+        let monthDifference = service.daysBetween(june15, june20)
+        #expect(monthDifference == 5)
     }
 
-    @Test("Can format dates correctly")
+    @Test("Service formats dates correctly")
     func testFormattesDateCorrectly() throws {
         let service = CurrentDayService()
         let date = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 6, day: 15)))
 
-        let formatted = date.formatted(date: .abbreviated, time: .omitted)
+        // Service's formatDate method produces non-empty output
+        let formatted = service.formatDate(date, style: .medium)
         #expect(!formatted.isEmpty)
+        #expect(formatted.contains("6") || formatted.contains("15") || formatted.contains("Jun") || formatted.contains("2025"))
     }
 }
