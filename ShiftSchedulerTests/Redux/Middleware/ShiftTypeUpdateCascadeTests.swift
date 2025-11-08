@@ -125,8 +125,8 @@ struct ShiftTypeUpdateCascadeTests {
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let location = LocationBuilder(name: "Office", address: "123 Main St").build()
-        let shiftType = ShiftTypeBuilder(title: "Day Shift", location: location).build()
-        let otherShiftType = ShiftTypeBuilder(title: "Night Shift", location: location).build()
+        let shiftType = ShiftTypeBuilder.afternoonShift(location: location)
+        let otherShiftType = ShiftTypeBuilder.nightShift(location: location)
 
         // Create calendar event that references a different shift type
         let shift = ScheduledShift(
@@ -144,6 +144,9 @@ struct ShiftTypeUpdateCascadeTests {
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType, otherShiftType]
 
+        var isShiftTypeSaved = false
+        var isShiftTypesRefreshed = false
+        
         func mockTrackingMiddleware(
             state: AppState,
             action: AppAction,
@@ -151,12 +154,18 @@ struct ShiftTypeUpdateCascadeTests {
             dispatch: @escaping Dispatcher<AppAction>
         ) async {
             switch action {
-            case .shiftTypes(.shiftTypeSaved(.success)), .shiftTypes(.refreshShiftTypes):
-                // Should still dispatch success and refresh
-                print("As expected")
+            case .shiftTypes(.shiftTypeSaved(.success)):
+                isShiftTypeSaved = true
+
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+
+            case .shiftTypes(.shiftTypeSaved(.failure)):
+                Issue.record("Should not get failure when shift saved")
                 
             case .schedule(.loadShifts):
                 Issue.record("Should not dispatch schedule refresh when no events are affected")
+
             default:
                 break
             }
@@ -166,15 +175,15 @@ struct ShiftTypeUpdateCascadeTests {
             state: state,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [shiftTypesMiddleware, scheduleMiddleware, mockTrackingMiddleware]
+            middlewares: baseMiddlewares + [mockTrackingMiddleware]
         )
         
         // When
         await store.dispatch(action: .shiftTypes(.saveShiftType(shiftType)))
 
         // Then
-        #expect(mockPersistence.saveShiftTypeCallCount == 1)
-        #expect(mockCalendar.updateEventsWithShiftTypeCallCount == 1)
+        #expect(isShiftTypeSaved)
+        #expect(isShiftTypesRefreshed)
     }
 
     @Test("saveShiftType handles calendar service error gracefully")

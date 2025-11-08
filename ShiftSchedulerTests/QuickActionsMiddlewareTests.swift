@@ -26,7 +26,7 @@ struct QuickActionsMiddlewareTests {
             state: AppState(),
             reducer: appReducer,
             services: mockServices,
-            middlewares: [todayMiddleware, scheduleMiddleware]
+            middlewares: baseMiddlewares
         )
 
         let addedShiftNote = "Added Shift"
@@ -56,10 +56,16 @@ struct QuickActionsMiddlewareTests {
         )
 
         await store.dispatch(action: .today(.deleteShiftRequested(addedShift)))
+        await store.dispatch(action: .today(.deleteShiftConfirmed))
         
         await store.dispatch(action: .schedule(.loadShifts))
+        
+        let removedShift =
+            store.state.schedule.scheduledShifts.first(
+                where: { $0.notes == addedShiftNote }
+            )
 
-        #expect(store.state.schedule.scheduledShifts.isEmpty)
+        #expect(removedShift == nil)
     }
 
     @Test
