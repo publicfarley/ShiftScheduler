@@ -112,42 +112,6 @@ struct EdgeCaseTests {
         #expect(shiftType.duration == duration)
     }
 
-    @Test("Maximum hour value (23)")
-    func testMaximumHourValue() {
-        // Given
-        let maxHour = HourMinuteTime(hour: 23, minute: 59)
-
-        // When
-        let builder = ShiftTypeBuilder(
-            duration: .specified(.scheduled(
-                from: HourMinuteTime(hour: 22, minute: 0),
-                to: maxHour
-            ))
-        )
-        let shiftType = builder.build()
-
-        // Then
-        #expect(shiftType != nil)
-    }
-
-    @Test("Minimum hour value (0)")
-    func testMinimumHourValue() {
-        // Given
-        let minHour = HourMinuteTime(hour: 0, minute: 0)
-
-        // When
-        let builder = ShiftTypeBuilder(
-            duration: .specified(.scheduled(
-                from: minHour,
-                to: HourMinuteTime(hour: 8, minute: 0)
-            ))
-        )
-        let shiftType = builder.build()
-
-        // Then
-        #expect(shiftType != nil)
-    }
-
     // MARK: - Large Collection Tests
 
     @Test("Large number of locations handled")

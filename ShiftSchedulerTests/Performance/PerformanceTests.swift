@@ -4,29 +4,13 @@ import Foundation
 
 /// Performance Tests for measuring and validating execution times
 /// Tests ensure that critical operations complete within acceptable time bounds
-///
-/// These tests can be skipped in CI environments by setting the environment variable:
-/// `SKIP_PERFORMANCE_TESTS=1`
-///
-/// To run only performance tests:
-/// `xcodebuild test -scheme ShiftScheduler -testPlan PerformanceTests`
-///
-/// To skip performance tests locally:
-/// `SKIP_PERFORMANCE_TESTS=1 xcodebuild test -scheme ShiftScheduler`
 
 @Suite("Performance Tests")
 @MainActor
 struct PerformanceTests {
-    // MARK: - Environment Variables
-
-    /// Check if performance tests should be skipped (useful in CI environments)
-    private static let shouldSkipPerformanceTests: Bool = {
-        ProcessInfo.processInfo.environment["SKIP_PERFORMANCE_TESTS"] == "1"
-    }()
-
     // MARK: - Store Dispatch Performance
 
-    @Test("Store dispatch completes in reasonable time", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Store dispatch completes in reasonable time")
     func testStoreDispatchPerformance() async {
         // Given
         let store = Store(
@@ -49,7 +33,7 @@ struct PerformanceTests {
         #expect(elapsed < 1.0, "1000 store dispatches should complete in under 1 second")
     }
 
-    @Test("Reducer execution is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Reducer execution is fast")
     func testReducerExecutionSpeed() {
         // Given
         var state = AppState()
@@ -69,7 +53,7 @@ struct PerformanceTests {
 
     // MARK: - Data Collection Performance
 
-    @Test("Building large location collection is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Building large location collection is fast")
     func testBuildingLargeLocationCollection() {
         // Given
         let locationCount = 10000
@@ -89,7 +73,7 @@ struct PerformanceTests {
         #expect(elapsed < 1.0, "Building 10000 locations should complete in under 1 second")
     }
 
-    @Test("Building large shift type collection is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Building large shift type collection is fast")
     func testBuildingLargeShiftTypeCollection() {
         // Given
         let shiftTypeCount = 5000
@@ -110,7 +94,7 @@ struct PerformanceTests {
         #expect(elapsed < 1.0, "Building 5000 shift types should complete in under 1 second")
     }
 
-    @Test("Building large scheduled shift collection is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Building large scheduled shift collection is fast")
     func testBuildingLargeScheduledShiftCollection() {
         // Given
         let shiftCount = 10000
@@ -134,7 +118,7 @@ struct PerformanceTests {
 
     // MARK: - Mock Service Performance
 
-    @Test("MockPersistenceService handles large data sets efficiently", .disabled(if: shouldSkipPerformanceTests))
+    @Test("MockPersistenceService handles large data sets efficiently")
     func testMockPersistenceServicePerformance() {
         // Given
         let service = MockPersistenceService()
@@ -159,7 +143,7 @@ struct PerformanceTests {
 
     // MARK: - Filter Performance
 
-    @Test("Filtering large shift collection is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Filtering large shift collection is fast")
     func testFilteringLargeShiftCollection() {
         // Given
         let allShifts = TestDataCollections.weekOfShifts() +
@@ -183,7 +167,7 @@ struct PerformanceTests {
 
     // MARK: - Collection Operations Performance
 
-    @Test("Sorting large shift collection is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Sorting large shift collection is fast")
     func testSortingLargeShiftCollection() {
         // Given
         var shifts = (0..<1000).map { index in
@@ -201,7 +185,7 @@ struct PerformanceTests {
         #expect(elapsed < 0.1, "Sorting 1000 shifts should complete in under 0.1 seconds")
     }
 
-    @Test("UUID generation performance", .disabled(if: shouldSkipPerformanceTests))
+    @Test("UUID generation performance")
     func testUUIDGenerationPerformance() {
         // Given
         let generationCount = 100000
@@ -218,7 +202,7 @@ struct PerformanceTests {
 
     // MARK: - Date Calculation Performance
 
-    @Test("Date arithmetic operations are fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Date arithmetic operations are fast")
     func testDateArithmeticPerformance() throws {
         // Given
         let calendar = Calendar.current
@@ -237,7 +221,7 @@ struct PerformanceTests {
         #expect(elapsed < 0.5, "10000 date arithmetic operations should complete in under 0.5 seconds")
     }
 
-    @Test("Finding date boundaries is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Finding date boundaries is fast")
     func testDateBoundaryCalculationPerformance() {
         // Given
         let calendar = Calendar.current
@@ -259,7 +243,7 @@ struct PerformanceTests {
 
     // MARK: - String Operations Performance
 
-    @Test("Building large shift snapshot collection with descriptions", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Building large shift snapshot collection with descriptions")
     func testBuildingLargeShiftSnapshotsWithText() {
         // Given
         let snapshotCount = 5000
@@ -283,7 +267,7 @@ struct PerformanceTests {
 
     // MARK: - Set/Dictionary Performance
 
-    @Test("Converting large collection to set is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Converting large collection to set is fast")
     func testConvertingToSetPerformance() {
         // Given
         let locations = (0..<5000).map { index in
@@ -303,7 +287,7 @@ struct PerformanceTests {
         #expect(elapsed < 0.1, "Converting 5000 items to set should complete in under 0.1 seconds")
     }
 
-    @Test("Large dictionary lookup is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Large dictionary lookup is fast")
     func testDictionaryLookupPerformance() {
         // Given
         let locations = (0..<10000).map { index in
@@ -326,7 +310,7 @@ struct PerformanceTests {
 
     // MARK: - Encoding/Decoding Performance (if applicable)
 
-    @Test("Change log entry creation with all fields is fast", .disabled(if: shouldSkipPerformanceTests))
+    @Test("Change log entry creation with all fields is fast")
     func testChangeLogEntryCreationPerformance() {
         // Given
         let entryCount = 10000
