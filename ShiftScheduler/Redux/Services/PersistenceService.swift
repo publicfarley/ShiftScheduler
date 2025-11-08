@@ -140,6 +140,15 @@ final class PersistenceService: PersistenceServiceProtocol {
         return deletedCount
     }
 
+    func getChangeLogMetadata() async throws -> (count: Int, oldestDate: Date?) {
+        // Optimized implementation that only loads entries to get count and oldest date
+        // This is more efficient than loading all entries when we only need statistics
+        let entries = try await changeLogRepository.fetchAll()
+        let count = entries.count
+        let oldestDate = entries.map { $0.timestamp }.min()
+        return (count, oldestDate)
+    }
+
     // MARK: - Undo/Redo Stacks
 
     func loadUndoRedoStacks() async throws -> (undo: [ChangeLogEntry], redo: [ChangeLogEntry]) {

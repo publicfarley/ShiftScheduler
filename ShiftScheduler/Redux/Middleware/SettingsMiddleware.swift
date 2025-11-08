@@ -15,22 +15,14 @@ func settingsMiddleware(
     
     switch settingsAction {
     case .loadSettings:
-        // Load user profile (includes auto-purge settings and last purge date)
-        do {
-            let profile = try await services.persistenceService.loadUserProfile()
-            await dispatch(.settings(.autoPurgeToggled(profile.autoPurgeEnabled)))
-            if let lastPurgeDate = profile.lastPurgeDate {
-                await dispatch(.settings(.lastPurgeDateUpdated(lastPurgeDate)))
-            }
-        } catch {
-            logger.error("Failed to load user profile: \(error.localizedDescription)")
-            // Use defaults on error
-            await dispatch(.settings(.autoPurgeToggled(true)))
+        // User profile is already loaded in AppState by AppStartupMiddleware
+        // Just sync the relevant settings to SettingsState
+        await dispatch(.settings(.autoPurgeToggled(state.userProfile.autoPurgeEnabled)))
+        if let lastPurgeDate = state.userProfile.lastPurgeDate {
+            await dispatch(.settings(.lastPurgeDateUpdated(lastPurgeDate)))
         }
+        // Note: Purge statistics are loaded explicitly by SettingsView when needed
 
-        // Load purge statistics
-        await dispatch(.settings(.loadPurgeStatistics))
-        
     case .saveSettings:
         logger.debug("Saving settings")
 
@@ -58,16 +50,15 @@ func settingsMiddleware(
     case .loadPurgeStatistics:
         logger.debug("Loading purge statistics")
         do {
-            // Load all change log entries
-            let entries = try await services.persistenceService.loadChangeLogEntries()
-            let total = entries.count
+            // Get metadata without loading full entries (optimized)
+            let metadata = try await services.persistenceService.getChangeLogMetadata()
+            let total = metadata.count
+            let oldestDate = metadata.oldestDate
 
-            // Find oldest entry
-            let oldestDate = entries.map { $0.timestamp }.min()
-
-            // Calculate how many would be purged with current policy
+            // For toBePurged count, we still need to load entries when there's a cutoff date
             var toBePurged = 0
             if let cutoffDate = state.settings.retentionPolicy.cutoffDate {
+                let entries = try await services.persistenceService.loadChangeLogEntries()
                 toBePurged = entries.filter { $0.timestamp < cutoffDate }.count
             }
 

@@ -45,6 +45,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     private(set) var addChangeLogEntryCallCount = 0
     private(set) var deleteChangeLogEntryCallCount = 0
     private(set) var purgeOldChangeLogEntriesCallCount = 0
+    private(set) var getChangeLogMetadataCallCount = 0
     private(set) var loadUndoRedoStacksCallCount = 0
     private(set) var saveUndoRedoStacksCallCount = 0
     private(set) var loadUserProfileCallCount = 0
@@ -181,6 +182,16 @@ final class MockPersistenceService: PersistenceServiceProtocol {
         let oldCount = mockChangeLogEntries.count
         mockChangeLogEntries.removeAll { $0.timestamp < cutoffDate }
         return oldCount - mockChangeLogEntries.count
+    }
+
+    func getChangeLogMetadata() async throws -> (count: Int, oldestDate: Date?) {
+        getChangeLogMetadataCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        let count = mockChangeLogEntries.count
+        let oldestDate = mockChangeLogEntries.map { $0.timestamp }.min()
+        return (count, oldestDate)
     }
 
     // MARK: - Undo/Redo Stacks

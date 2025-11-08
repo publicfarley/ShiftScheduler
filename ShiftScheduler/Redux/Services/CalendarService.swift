@@ -530,7 +530,6 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
                 let notesAfterSeparator = String(notes[separatorRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
                 userNotes = notesAfterSeparator.isEmpty ? nil : notesAfterSeparator
 
-                logger.debug("Event '\(eventTitle)' found separator '\(separator)'. Extracted ID: '\(shiftTypeIdString)', User notes: '\(userNotes ?? "nil")'")
                 break
             }
         }
@@ -538,7 +537,6 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         if shiftTypeIdString.isEmpty {
             // No separator found - entire note string should be the shift type ID
             shiftTypeIdString = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-            logger.debug("Event '\(eventTitle)' has no separator. Using full notes as ID: '\(shiftTypeIdString)'")
         }
 
         return (shiftTypeIdString, userNotes)
@@ -550,11 +548,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Extract shift type ID from event notes
         // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
         guard let notes = event.notes else {
-            logger.debug("Event '\(event.title)' has no notes")
             return nil
         }
-
-        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
 
         let (shiftTypeIdString, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 
@@ -577,11 +572,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Extract shift type ID from event notes
         // Notes format: "SHIFT_TYPE_UUID\n---\nuser notes" or just "SHIFT_TYPE_UUID"
         guard let notes = event.notes else {
-            logger.debug("Event '\(event.title)' has no notes")
             return nil
         }
-
-        logger.debug("Event '\(event.title)' full notes: '\(notes)'")
 
         let (shiftTypeIdString, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 

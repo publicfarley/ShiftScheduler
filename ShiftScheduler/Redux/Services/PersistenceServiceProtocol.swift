@@ -44,6 +44,11 @@ protocol PersistenceServiceProtocol: Sendable {
     /// Delete change log entries older than specified cutoff date
     func purgeOldChangeLogEntries(olderThan cutoffDate: Date) async throws -> Int
 
+    /// Get metadata about change log entries without loading full entries
+    /// Optimized for calculating statistics without deserializing all entries
+    /// - Returns: Tuple containing total count and oldest entry date (if any)
+    func getChangeLogMetadata() async throws -> (count: Int, oldestDate: Date?)
+
     // MARK: - Undo/Redo Stacks
 
     /// Load undo/redo stacks from persistence

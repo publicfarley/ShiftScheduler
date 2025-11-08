@@ -35,7 +35,7 @@ struct ShiftTypeUpdateCascadeTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: "Updated Day Shift",
-            shiftDescription: "New description",
+            description: "New description",
             location: location
         )
 
@@ -266,7 +266,7 @@ struct ShiftTypeUpdateCascadeTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: "Updated Day Shift",
-            shiftDescription: shiftType.shiftDescription,
+            description: shiftType.shiftDescription,
             location: location
         )
 
@@ -329,13 +329,13 @@ struct ShiftTypeUpdateCascadeTests {
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         let location = LocationBuilder(name: "Office", address: "123 Main St").build()
-        let shiftType = ShiftTypeBuilder(title: "Day Shift", symbol: "D", location: location).build()
+        let shiftType = ShiftTypeBuilder(symbol: "D", title: "Day Shift", location: location).build()
         let duplicateSymbolShiftType = ShiftType(
             id: UUID(), // Different ID
             symbol: "D", // Same symbol
             duration: shiftType.duration,
             title: "Another Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 

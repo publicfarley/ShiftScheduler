@@ -38,6 +38,8 @@ struct SettingsView: View {
             .onAppear {
                 Task {
                     await store.dispatch(action: .settings(.loadSettings))
+                    // Explicitly load purge statistics when Settings view appears
+                    await store.dispatch(action: .settings(.loadPurgeStatistics))
                 }
                 displayName = store.state.userProfile.displayName
             }

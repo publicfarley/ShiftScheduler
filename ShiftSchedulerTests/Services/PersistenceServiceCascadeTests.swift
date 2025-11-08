@@ -58,7 +58,7 @@ struct PersistenceServiceCascadeTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "Morning work",
+            description: "Morning work",
             location: location
         )
         let shiftType2 = ShiftType(
@@ -66,7 +66,7 @@ struct PersistenceServiceCascadeTests {
             symbol: "N",
             duration: .allDay,
             title: "Night Shift",
-            shiftDescription: "Evening work",
+            description: "Evening work",
             location: location
         )
         try await service.saveShiftType(shiftType1)
@@ -108,7 +108,7 @@ struct PersistenceServiceCascadeTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "Work",
+            description: "Work",
             location: location2
         )
         try await service.saveShiftType(shiftType)
@@ -144,7 +144,7 @@ struct PersistenceServiceCascadeTests {
                 symbol: "S\(index)",
                 duration: .allDay,
                 title: "Shift \(index)",
-                shiftDescription: "Description \(index)",
+                description: "Description \(index)",
                 location: location
             )
             try await service.saveShiftType(shiftType)
@@ -182,7 +182,7 @@ struct PersistenceServiceCascadeTests {
             symbol: "🌅",
             duration: .scheduled(from: HourMinuteTime(hour: 9, minute: 0), to: HourMinuteTime(hour: 17, minute: 0)),
             title: "Day Shift",
-            shiftDescription: "Standard workday",
+            description: "Standard workday",
             location: location
         )
         try await service.saveShiftType(originalShiftType)
@@ -229,11 +229,11 @@ struct PersistenceServiceCascadeTests {
         try await service.saveLocation(location2)
 
         // Create shift types: 3 reference location1, 2 reference location2
-        let shiftType1 = ShiftType(id: UUID(), symbol: "A", duration: .allDay, title: "A", shiftDescription: "", location: location1)
-        let shiftType2 = ShiftType(id: UUID(), symbol: "B", duration: .allDay, title: "B", shiftDescription: "", location: location2)
-        let shiftType3 = ShiftType(id: UUID(), symbol: "C", duration: .allDay, title: "C", shiftDescription: "", location: location1)
-        let shiftType4 = ShiftType(id: UUID(), symbol: "D", duration: .allDay, title: "D", shiftDescription: "", location: location2)
-        let shiftType5 = ShiftType(id: UUID(), symbol: "E", duration: .allDay, title: "E", shiftDescription: "", location: location1)
+        let shiftType1 = ShiftType(id: UUID(), symbol: "A", duration: .allDay, title: "A", description: "", location: location1)
+        let shiftType2 = ShiftType(id: UUID(), symbol: "B", duration: .allDay, title: "B", description: "", location: location2)
+        let shiftType3 = ShiftType(id: UUID(), symbol: "C", duration: .allDay, title: "C", description: "", location: location1)
+        let shiftType4 = ShiftType(id: UUID(), symbol: "D", duration: .allDay, title: "D", description: "", location: location2)
+        let shiftType5 = ShiftType(id: UUID(), symbol: "E", duration: .allDay, title: "E", description: "", location: location1)
 
         try await service.saveShiftType(shiftType1)
         try await service.saveShiftType(shiftType2)
@@ -282,7 +282,7 @@ struct PersistenceServiceCascadeTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "Work",
+            description: "Work",
             location: location
         )
         try await service.saveShiftType(shiftType)

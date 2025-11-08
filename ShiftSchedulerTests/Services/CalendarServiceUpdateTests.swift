@@ -31,7 +31,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "Original description",
+            description: "Original description",
             location: location
         )
 
@@ -63,7 +63,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: "Updated Day Shift",
-            shiftDescription: "New description",
+            description: "New description",
             location: location
         )
 
@@ -94,7 +94,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
         let shiftType2 = ShiftType(
@@ -102,7 +102,7 @@ struct CalendarServiceUpdateTests {
             symbol: "N",
             duration: .allDay,
             title: "Night Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 
@@ -121,7 +121,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType1.symbol,
             duration: shiftType1.duration,
             title: "Updated Day Shift",
-            shiftDescription: "New",
+            description: "New",
             location: location
         )
 
@@ -148,7 +148,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "",
+            description: "",
             location: originalLocation
         )
 
@@ -167,7 +167,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: shiftType.title,
-            shiftDescription: shiftType.shiftDescription,
+            description: shiftType.shiftDescription,
             location: newLocation
         )
 
@@ -190,7 +190,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 
@@ -209,7 +209,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: "Updated Day Shift",
-            shiftDescription: "New desc",
+            description: "New desc",
             location: location
         )
 
@@ -233,7 +233,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
         let shiftType2 = ShiftType(
@@ -241,7 +241,7 @@ struct CalendarServiceUpdateTests {
             symbol: "N",
             duration: .allDay,
             title: "Night Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 
@@ -260,7 +260,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType1.symbol,
             duration: shiftType1.duration,
             title: "Updated Day Shift",
-            shiftDescription: "New",
+            description: "New",
             location: location
         )
 
@@ -297,7 +297,7 @@ struct CalendarServiceUpdateTests {
             symbol: "D",
             duration: .allDay,
             title: "Day Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 
@@ -318,7 +318,7 @@ struct CalendarServiceUpdateTests {
             symbol: "S",
             duration: .allDay,
             title: "Standard Shift",
-            shiftDescription: "",
+            description: "",
             location: location
         )
 
@@ -340,7 +340,7 @@ struct CalendarServiceUpdateTests {
             symbol: shiftType.symbol,
             duration: shiftType.duration,
             title: "Updated Standard Shift",
-            shiftDescription: "New desc",
+            description: "New desc",
             location: newLocation
         )
 
