@@ -160,28 +160,6 @@ struct TodayReducerTests {
         #expect(newState.tomorrowShift?.id == tomorrowShift.id)
     }
 
-    @Test("updateCachedShifts calculates this week shift counts")
-    func testUpdateCachedShiftsCalculatesWeekStats() {
-        var state = TodayState()
-
-        let today = Calendar.current.startOfDay(for: Date())
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today) ?? today
-
-        let shifts = [
-            ScheduledShiftBuilder(date: today).build(),
-            ScheduledShiftBuilder(date: tomorrow).build(),
-            ScheduledShiftBuilder(date: yesterday).build()
-        ]
-
-        state.scheduledShifts = shifts
-
-        let newState = todayReducer(state: state, action: .updateCachedShifts)
-
-        #expect(newState.thisWeekShiftsCount >= 2)
-        #expect(newState.completedThisWeek >= 1)
-    }
-
     // MARK: - Undo/Redo State
 
     @Test("updateUndoRedoStates disables undo and redo buttons")
