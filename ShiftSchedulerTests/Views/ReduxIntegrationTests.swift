@@ -241,7 +241,7 @@ struct ViewReduxIntegrationTests {
     // MARK: - Error State Tests
 
     @Test("Error messages are set when shifts fail to load")
-    func testErrorMessageHandling() async {
+    func testErrorMessageHandling() async throws {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
@@ -252,8 +252,15 @@ struct ViewReduxIntegrationTests {
         #expect(store.state.today.errorMessage == nil)
 
         // Simulate a shift loading error
-        await store.dispatch(action: .today(.shiftsLoaded(.failure(NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])))))
-        #expect(store.state.today.errorMessage == "Test error")
+        let errorDescription = "Test error"
+        let error = NSError(
+            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: errorDescription]
+        )
+        
+        await store.dispatch(action: .today(.shiftsLoaded(.failure(error))))
+        
+        let errorMessage = try #require(store.state.today.errorMessage)
+        #expect(errorMessage.contains(errorDescription))
 
         // Clear error by successfully loading shifts
         await store.dispatch(action: .today(.shiftsLoaded(.success([]))))

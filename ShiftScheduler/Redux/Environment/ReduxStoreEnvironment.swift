@@ -1,20 +1,7 @@
 import SwiftUI
 
 struct ReduxStoreEnvironmentKey: EnvironmentKey {
-    static let defaultValue: Store<AppState, AppAction> = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            loggingMiddleware,
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware
-        ]
-    )
+    static let defaultValue: Store<AppState, AppAction> = createReduxStore(includeStartup: false)
 }
 
 extension EnvironmentValues {

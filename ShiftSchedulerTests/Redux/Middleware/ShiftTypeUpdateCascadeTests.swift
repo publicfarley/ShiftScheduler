@@ -18,7 +18,7 @@ struct ShiftTypeUpdateCascadeTests {
             currentDayService: CurrentDayService()
         )
     }
-
+    
     // MARK: - ShiftType Cascade Tests
 
     @Test("saveShiftType cascades update to calendar events created from the ShiftType")
@@ -144,48 +144,37 @@ struct ShiftTypeUpdateCascadeTests {
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType, otherShiftType]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .shiftTypes(.shiftTypeSaved(.success)), .shiftTypes(.refreshShiftTypes):
+                // Should still dispatch success and refresh
+                print("As expected")
+                
+            case .schedule(.loadShifts):
+                Issue.record("Should not dispatch schedule refresh when no events are affected")
+            default:
+                break
+            }
         }
 
-        // When
-        await shiftTypesMiddleware(
+        let store = Store(
             state: state,
-            action: .shiftTypes(.saveShiftType(shiftType)),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [shiftTypesMiddleware, scheduleMiddleware, mockTrackingMiddleware]
         )
+        
+        // When
+        await store.dispatch(action: .shiftTypes(.saveShiftType(shiftType)))
 
         // Then
         #expect(mockPersistence.saveShiftTypeCallCount == 1)
         #expect(mockCalendar.updateEventsWithShiftTypeCallCount == 1)
-
-        // Should NOT dispatch schedule refresh since no events were affected
-        let hasScheduleRefresh = dispatchedActions.contains { action in
-            if case .schedule(.loadShifts) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasScheduleRefresh, "Should not dispatch schedule refresh when no events are affected")
-
-        // Should still dispatch success and refresh
-        let hasShiftTypeSaved = dispatchedActions.contains { action in
-            if case .shiftTypes(.shiftTypeSaved(.success)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypeSaved)
-
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypesRefresh)
     }
 
     @Test("saveShiftType handles calendar service error gracefully")

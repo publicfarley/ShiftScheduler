@@ -6,22 +6,8 @@ private let logger = Logger(subsystem: "com.workevents.ShiftScheduler", category
 
 @main
 struct ShiftSchedulerApp: App {
-    // Redux store with service integration
-    @State private var reduxStore = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            loggingMiddleware,
-            appStartupMiddleware,
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware
-        ]
-    )
+    // Redux store with service integration and startup initialization
+    @State private var reduxStore = createReduxStore(includeStartup: true)
 
     @State private var showSplash = true
 
