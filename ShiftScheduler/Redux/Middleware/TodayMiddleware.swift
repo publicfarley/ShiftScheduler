@@ -16,7 +16,7 @@ func todayMiddleware(
     switch todayAction {
     case .loadShifts:
         // logger.debug("Loading shifts for Today view")
-        await loadCurrentWeekShifts(services: services, dispatch: dispatch)
+        await loadNext7DaysShifts(services: services, dispatch: dispatch)
 
     case .switchShiftTapped:
         // logger.debug("Switch shift tapped")
@@ -174,56 +174,51 @@ func todayMiddleware(
 
 // MARK: - Private Helper Functions
 
-/// Load shifts for the current week from EventKit
-/// A "week" is defined as Monday through Sunday (7 days) containing today's date
+/// Load shifts for the next 7 days from today from EventKit
+/// This ensures we always include tomorrow, regardless of current day of week
 /// Implements the data transformation pipeline:
 /// EventKit events → ScheduledShiftData (reification) → ScheduledShift (domain object)
-private func loadCurrentWeekShifts(
+private func loadNext7DaysShifts(
     services: ServiceContainer,
     dispatch: Dispatcher<AppAction>
 ) async {
     do {
-        // Step 1: Calculate the current week range (Monday to Sunday containing today)
-        // Use the same calculation as AppReducer for consistency
+        // Step 1: Calculate the next 7 days range (today through today + 7 days)
+        // This avoids week boundary issues where tomorrow falls into the next calendar week
         let today = Date()
         let calendar = Calendar.current
 
-        // Get the start of the week using Calendar's week-of-year calculation
-        // This respects locale settings where Monday is the first day of the week
-        guard let weekStart = calendar.date(
-            from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
-        ) else {
+        // Start from today (not week start)
+        let startDate = calendar.startOfDay(for: today)
+
+        // End date is 7 days after today
+        guard let endDate = calendar.date(byAdding: .day, value: 7, to: startDate) else {
             throw CalendarServiceError.dateCalculationFailed
         }
 
-        // Get the end of the week (7 days after week start)
-        guard let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
-            throw CalendarServiceError.dateCalculationFailed
-        }
-
-        // Step 2: Load raw shift data from EventKit for the entire week
-        let weekShiftData = try await services.calendarService.loadShiftData(from: weekStart, to: weekEnd)
+        // Step 2: Load raw shift data from EventKit for the next 7 days
+        let shiftData = try await services.calendarService.loadShiftData(from: startDate, to: endDate)
 
         // Step 3: Load ShiftTypes to look up during conversion
         let shiftTypes = try await services.persistenceService.loadShiftTypes()
 
         // Step 4: Transform ScheduledShiftData → ScheduledShift using ShiftType lookup
-        let shifts = weekShiftData.compactMap { shiftData -> ScheduledShift? in
+        let shifts = shiftData.compactMap { shiftDataItem -> ScheduledShift? in
             // Find matching ShiftType by ID
-            let matchingShiftType = shiftTypes.first { $0.id == shiftData.shiftTypeId }
+            let matchingShiftType = shiftTypes.first { $0.id == shiftDataItem.shiftTypeId }
 
             // Create ScheduledShift from data and ShiftType
-            return ScheduledShift(from: shiftData, shiftType: matchingShiftType)
+            return ScheduledShift(from: shiftDataItem, shiftType: matchingShiftType)
         }
 
-        // logger.debug("Loaded \(shifts.count) shifts for current week (\(weekStart.formatted()) to \(weekEnd.formatted()))")
+        // logger.debug("Loaded \(shifts.count) shifts for next 7 days (\(startDate.formatted()) to \(endDate.formatted()))")
         await dispatch(.today(.shiftsLoaded(.success(shifts))))
 
         // Update cached shifts after loading
         await dispatch(.today(.updateCachedShifts))
         await dispatch(.today(.updateUndoRedoStates))
     } catch {
-        // logger.error("Failed to load current week shifts: \(error.localizedDescription)")
+        // logger.error("Failed to load next 7 days shifts: \(error.localizedDescription)")
         await dispatch(.today(.shiftsLoaded(.failure(error))))
     }
 }

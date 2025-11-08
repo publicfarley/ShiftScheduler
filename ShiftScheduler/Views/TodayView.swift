@@ -202,16 +202,15 @@ struct TodayView: View {
                             // Week Summary Section
                             if !store.state.today.isLoading {
                                 VStack(alignment: .leading, spacing: 10) {
-                                    let calendar = retrieveThisWeekCalendar()
-                                    let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-                                    let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? Date()
+                                    let today = Calendar.current.startOfDay(for: Date())
+                                    let next7Days = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today
 
                                     let dateFormatter = retrieveDataFormatter()
                                     let _ = dateFormatter.dateFormat = "EEE, MMM d"
-                                    let dateRangeText = "\(dateFormatter.string(from: startOfWeek)) – \(dateFormatter.string(from: endOfWeek))"
+                                    let dateRangeText = "\(dateFormatter.string(from: today)) – \(dateFormatter.string(from: next7Days))"
 
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("This Week")
+                                        Text("Next 7 Days")
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
 
@@ -222,21 +221,7 @@ struct TodayView: View {
                                     .padding(.horizontal, 16)
 
                                     let weekShifts = store.state.today.scheduledShifts.filter { shift in
-                                        return shift.date >= startOfWeek && shift.date <= endOfWeek
-                                    }
-
-                                    let completedShifts = weekShifts.filter { shift in
-                                        guard let shiftType = shift.shiftType else { return false }
-
-                                        switch shiftType.duration {
-                                        case .allDay:
-                                            // All-day shift is completed if it's a past date
-                                            return shift.date < Calendar.current.startOfDay(for: Date())
-                                        case .scheduled(_, let endTime):
-                                            // Shift is completed if its end time has passed
-                                            let shiftEndDateTime = endTime.toDate(on: shift.date)
-                                            return shiftEndDateTime < Date()
-                                        }
+                                        return shift.date >= today && shift.date <= next7Days
                                     }
 
                                     HStack(spacing: 12) {
@@ -245,12 +230,6 @@ struct TodayView: View {
                                             label: "Scheduled",
                                             color: .blue,
                                             icon: "calendar"
-                                        )
-                                        CompactWeekStatView(
-                                            count: completedShifts.count,
-                                            label: "Completed",
-                                            color: .green,
-                                            icon: "checkmark.circle.fill"
                                         )
                                     }
                                     .padding(.horizontal, 16)
@@ -317,14 +296,7 @@ struct TodayView: View {
             }
         }
     }
-    
-    private func retrieveThisWeekCalendar() -> Calendar {
-        var adjustedCalendar = Calendar.current
-        adjustedCalendar.firstWeekday = 2
-        
-        return adjustedCalendar
-    }
-    
+
     private func retrieveDataFormatter() -> DateFormatter {
         DateFormatter()
     }

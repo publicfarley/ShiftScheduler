@@ -149,20 +149,14 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
             Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
         }
 
-        let weekStart = Calendar.current.date(
-            from: Calendar.current.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
-        ) ?? today
-        let weekEnd = Calendar.current.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart
+        let next7DaysEnd = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today
 
-        let thisWeekShifts = state.scheduledShifts.filter { shift in
-            shift.date >= weekStart && shift.date < weekEnd
+        let next7DaysShifts = state.scheduledShifts.filter { shift in
+            shift.date >= today && shift.date <= next7DaysEnd
         }
 
-        state.thisWeekShiftsCount = thisWeekShifts.count
-        let completedCount = thisWeekShifts.filter { shift in
-            shift.date < today
-        }.count
-        state.completedThisWeek = completedCount
+        state.thisWeekShiftsCount = next7DaysShifts.count
+        state.completedThisWeek = 0  // No completed shifts in next 7 days range
 
     case .updateUndoRedoStates:
         // Undo/redo disabled for now (future implementation)
