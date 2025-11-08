@@ -42,6 +42,39 @@ final class PersistenceService: PersistenceServiceProtocol {
         try await shiftTypeRepository.delete(id: id)
     }
 
+    /// Updates all ShiftTypes that contain the given Location with the updated Location data
+    /// - Parameter location: The updated Location to cascade to ShiftTypes
+    /// - Returns: The list of ShiftTypes that were updated
+    func updateShiftTypesWithLocation(_ location: Location) async throws -> [ShiftType] {
+        logger.debug("Updating ShiftTypes with location: \(location.name) (ID: \(location.id))")
+
+        // Load all shift types
+        let allShiftTypes = try await shiftTypeRepository.fetchAll()
+
+        // Find shift types that reference this location
+        let affectedShiftTypes = allShiftTypes.filter { $0.location.id == location.id }
+
+        guard !affectedShiftTypes.isEmpty else {
+            logger.debug("No ShiftTypes reference location \(location.id), skipping cascade")
+            return []
+        }
+
+        logger.debug("Found \(affectedShiftTypes.count) ShiftTypes to update")
+
+        // Update each affected shift type with the new location data
+        var updatedShiftTypes: [ShiftType] = []
+        for shiftType in affectedShiftTypes {
+            var updatedShiftType = shiftType
+            updatedShiftType.location = location
+            try await shiftTypeRepository.save(updatedShiftType)
+            updatedShiftTypes.append(updatedShiftType)
+            logger.debug("Updated ShiftType '\(updatedShiftType.title)' with new location data")
+        }
+
+        logger.debug("Successfully updated \(updatedShiftTypes.count) ShiftTypes")
+        return updatedShiftTypes
+    }
+
     // MARK: - Locations
 
     func loadLocations() async throws -> [Location] {
@@ -110,17 +143,47 @@ final class PersistenceService: PersistenceServiceProtocol {
     // MARK: - Undo/Redo Stacks
 
     func loadUndoRedoStacks() async throws -> (undo: [ChangeLogEntry], redo: [ChangeLogEntry]) {
-        // logger.debug("Loading undo/redo stacks")
+        logger.debug("Loading undo/redo stacks")
 
-        // For now, return empty stacks
-        // TODO: Implement persistent undo/redo stack storage
-        return ([], [])
+        let fileManager = FileManager.default
+        let directoryURL = changeLogRepository.directoryURL
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let fileURL = directoryURL.appendingPathComponent("undoredo_stacks.json")
+
+        guard fileManager.fileExists(atPath: fileURL.path) else {
+            logger.debug("No undo/redo stacks file found, returning empty stacks")
+            return ([], [])
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let stacks = try JSONDecoder().decode(UndoRedoStacks.self, from: data)
+            logger.debug("Loaded \(stacks.undoStack.count) undo and \(stacks.redoStack.count) redo operations")
+            return (stacks.undoStack, stacks.redoStack)
+        } catch {
+            logger.error("Failed to decode undo/redo stacks: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     func saveUndoRedoStacks(undo: [ChangeLogEntry], redo: [ChangeLogEntry]) async throws {
-        // logger.debug("Saving undo/redo stacks: \(undo.count) undo, \(redo.count) redo")
+        logger.debug("Saving undo/redo stacks: \(undo.count) undo, \(redo.count) redo")
 
-        // TODO: Implement persistent undo/redo stack storage
+        let fileManager = FileManager.default
+        let directoryURL = changeLogRepository.directoryURL
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let fileURL = directoryURL.appendingPathComponent("undoredo_stacks.json")
+
+        let stacks = UndoRedoStacks(undoStack: undo, redoStack: redo)
+
+        do {
+            let data = try JSONEncoder().encode(stacks)
+            try data.write(to: fileURL, options: .atomic)
+            logger.debug("Successfully saved undo/redo stacks")
+        } catch {
+            logger.error("Failed to save undo/redo stacks: \(error.localizedDescription)")
+            throw error
+        }
     }
 
     // MARK: - User Profile

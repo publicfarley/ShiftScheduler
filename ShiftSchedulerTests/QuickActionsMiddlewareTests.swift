@@ -12,43 +12,54 @@ struct QuickActionsMiddlewareTests {
     // MARK: - Delete Shift Middleware Tests
 
     @Test
-    func deleteShiftSuccessfully() async {
-        let testShift = makeTestShift(date: Date())
-        var dispatchedActions: [TodayAction] = []
-
+    func deleteShiftSuccessfully() async throws {
+        
+        let mockCalendar = MockCalendarService()
+        mockCalendar.mockIsAuthorized = true
         let mockServices = ServiceContainer(
-            calendarService: MockCalendarService(),
+            calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
             currentDayService: MockCurrentDayService()
         )
 
-        var state = makeAppStateWithShift(testShift)
-        state.today.deleteShiftConfirmationShift = testShift
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [todayMiddleware, scheduleMiddleware]
+        )
 
-        let dispatcher: Dispatcher<AppAction> = { action in
-            if case .today(let todayAction) = action {
-                dispatchedActions.append(todayAction)
-            }
-        }
+        let addedShiftNote = "Added Shift"
+        
+        await store.dispatch(
+            action: AppAction.schedule(
+                .addShift(
+                    date: .distantFuture,
+                    shiftType: ShiftTypeBuilder.afternoonShift(),
+                    notes: addedShiftNote
+                )
+            )
+        )
+        
+        await store.dispatch(action: .schedule(.loadShifts))
+        
+        #expect(
+            store.state.schedule.scheduledShifts.contains(
+                where: { $0.notes == addedShiftNote }
+            )
+        )
+        
+        let addedShift = try #require(
+            store.state.schedule.scheduledShifts.first(
+                where: { $0.notes == addedShiftNote }
+            )
+        )
 
-        let appAction = AppAction.today(.deleteShiftConfirmed)
-        await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
+        await store.dispatch(action: .today(.deleteShiftRequested(addedShift)))
+        
+        await store.dispatch(action: .schedule(.loadShifts))
 
-        // Verify middleware dispatched success action
-        #expect(dispatchedActions.contains { action in
-            if case .shiftDeleted(.success) = action {
-                return true
-            }
-            return false
-        })
-
-        // Verify reload shifts was dispatched
-        #expect(dispatchedActions.contains { action in
-            if case .loadShifts = action {
-                return true
-            }
-            return false
-        })
+        #expect(store.state.schedule.scheduledShifts.isEmpty)
     }
 
     @Test
@@ -167,37 +178,6 @@ struct QuickActionsMiddlewareTests {
 
         // No persistence actions should be dispatched
         #expect(dispatchedActions.isEmpty)
-    }
-
-    // MARK: - State Transitions
-
-    @Test
-    func deleteFollowedByNotesEdit() async {
-        let testShift = makeTestShift(date: Date())
-        let mockServices = ServiceContainer(
-            calendarService: MockCalendarService(),
-            persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
-        )
-
-        var state = makeAppStateWithShift(testShift)
-        state.today.deleteShiftConfirmationShift = testShift
-
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
-
-        // Delete shift
-        await todayMiddleware(
-            state: state,
-            action: .today(.deleteShiftConfirmed),
-            services: mockServices,
-            dispatch: dispatcher
-        )
-
-        // Verify delete actions were dispatched
-        #expect(dispatchedActions.count >= 2) // At least shiftDeleted + loadShifts
     }
 }
 

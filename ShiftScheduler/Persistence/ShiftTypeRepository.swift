@@ -2,12 +2,17 @@ import Foundation
 
 /// Actor-based repository for persisting shift types to JSON files
 actor ShiftTypeRepository: Sendable {
+    private static let defaultDirectory: URL = {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("ShiftSchedulerData", isDirectory: true)
+    }()
+
     private let fileManager = FileManager.default
-    private let directoryURL: URL
+    internal let directoryURL: URL
     private let fileName = "shiftTypes.json"
 
     init(directoryURL: URL? = nil) {
-        self.directoryURL = directoryURL ?? LocationRepository.defaultDirectory
+        self.directoryURL = directoryURL ?? Self.defaultDirectory
     }
 
     /// Ensure the directory exists

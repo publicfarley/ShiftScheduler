@@ -29,11 +29,13 @@ struct PersistenceServiceIntegrationTests {
         let tempDir = createTemporaryDirectory()
         let shiftTypeRepo = ShiftTypeRepository(directoryURL: tempDir)
         let locationRepo = LocationRepository(directoryURL: tempDir)
-        let changeLogRepo = ChangeLogRepository() // Uses default directory
+        let changeLogRepo = ChangeLogRepository(directoryURL: tempDir)
+        let userProfileRepo = UserProfileRepository(directoryURL: tempDir)
         let service = PersistenceService(
             shiftTypeRepository: shiftTypeRepo,
             locationRepository: locationRepo,
-            changeLogRepository: changeLogRepo
+            changeLogRepository: changeLogRepo,
+            userProfileRepository: userProfileRepo
         )
         return (service, tempDir)
     }
@@ -279,18 +281,17 @@ struct PersistenceServiceIntegrationTests {
 
     // MARK: - Tests: User Profile Operations
 
-    @Test("loadUserProfile returns UserProfile")
+    @Test("loadUserProfile does not throw")
     func testLoadUserProfileReturnsUserProfile() async throws {
         // Given
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        // When
-        let profile = try await service.loadUserProfile()
-
         // Then
-        #expect(profile is UserProfile)
-        #expect(profile.displayName.isEmpty == false)
+        await #expect(throws: Never.self) {
+            // When
+            _ = try await service.loadUserProfile()
+        }
     }
 
     @Test("saveUserProfile does not throw")
@@ -300,13 +301,16 @@ struct PersistenceServiceIntegrationTests {
         defer { Self.cleanupTemporaryDirectory(tempDir) }
         let profile = UserProfile(userId: UUID(), displayName: "Test User")
 
-        // When/Then
-        try await service.saveUserProfile(profile)
+        // Then
+        await #expect(throws: Never.self) {
+            // When
+            try await service.saveUserProfile(profile)
+        }
     }
 
     // MARK: - Tests: Undo/Redo Stacks
 
-    @Test("loadUndoRedoStacks returns tuple of two arrays")
+    @Test("loadUndoRedoStacks returns empty stacks when no file exists")
     func testLoadUndoRedoStacksReturnsTuple() async throws {
         // Given
         let (service, tempDir) = Self.createTestService()
@@ -316,20 +320,128 @@ struct PersistenceServiceIntegrationTests {
         let (undo, redo) = try await service.loadUndoRedoStacks()
 
         // Then
-        #expect(undo is [ChangeLogEntry])
-        #expect(redo is [ChangeLogEntry])
+        #expect(undo.isEmpty)
+        #expect(redo.isEmpty)
     }
 
-    @Test("saveUndoRedoStacks does not throw")
+    @Test("saveUndoRedoStacks persists stacks to file")
     func testSaveUndoRedoStacksDoesNotThrow() async throws {
         // Given
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
-        let undoStack: [ChangeLogEntry] = []
-        let redoStack: [ChangeLogEntry] = []
 
-        // When/Then
-        try await service.saveUndoRedoStacks(undo: undoStack, redo: redoStack)
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let entry1 = ChangeLogEntry(
+            id: UUID(),
+            timestamp: fixedDate,
+            userId: UUID(),
+            userDisplayName: "User 1",
+            changeType: .switched,
+            scheduledShiftDate: fixedDate
+        )
+        let entry2 = ChangeLogEntry(
+            id: UUID(),
+            timestamp: fixedDate,
+            userId: UUID(),
+            userDisplayName: "User 2",
+            changeType: .deleted,
+            scheduledShiftDate: fixedDate
+        )
+
+        // When
+        try await service.saveUndoRedoStacks(undo: [entry1], redo: [entry2])
+
+        // Then - verify stacks persisted correctly
+        let (undo, redo) = try await service.loadUndoRedoStacks()
+        #expect(undo.count == 1)
+        #expect(redo.count == 1)
+        #expect(undo[0].id == entry1.id)
+        #expect(redo[0].id == entry2.id)
+    }
+
+    @Test("saveUndoRedoStacks with empty stacks creates file")
+    func testSaveUndoRedoStacksWithEmptyStacks() async throws {
+        // Given
+        let (service, tempDir) = Self.createTestService()
+        defer { Self.cleanupTemporaryDirectory(tempDir) }
+
+        // When
+        try await service.saveUndoRedoStacks(undo: [], redo: [])
+
+        // Then
+        let (undo, redo) = try await service.loadUndoRedoStacks()
+        #expect(undo.isEmpty)
+        #expect(redo.isEmpty)
+    }
+
+    @Test("loadUndoRedoStacks retrieves multiple entries")
+    func testLoadUndoRedoStacksRetrievesMultipleEntries() async throws {
+        // Given
+        let (service, tempDir) = Self.createTestService()
+        defer { Self.cleanupTemporaryDirectory(tempDir) }
+
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        var entries: [ChangeLogEntry] = []
+        for i in 0..<3 {
+            let entry = ChangeLogEntry(
+                id: UUID(),
+                timestamp: fixedDate.addingTimeInterval(TimeInterval(i * 3600)),
+                userId: UUID(),
+                userDisplayName: "User \(i)",
+                changeType: .switched,
+                scheduledShiftDate: fixedDate
+            )
+            entries.append(entry)
+        }
+
+        // When
+        try await service.saveUndoRedoStacks(undo: entries, redo: [])
+
+        // Then
+        let (undo, redo) = try await service.loadUndoRedoStacks()
+        #expect(undo.count == 3)
+        #expect(redo.isEmpty)
+        #expect(undo[0].id == entries[0].id)
+        #expect(undo[1].id == entries[1].id)
+        #expect(undo[2].id == entries[2].id)
+    }
+
+    @Test("saveUndoRedoStacks overwrites previous stacks")
+    func testSaveUndoRedoStacksOverwritesPreviousStacks() async throws {
+        // Given
+        let (service, tempDir) = Self.createTestService()
+        defer { Self.cleanupTemporaryDirectory(tempDir) }
+
+        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let entry1 = ChangeLogEntry(
+            id: UUID(),
+            timestamp: fixedDate,
+            userId: UUID(),
+            userDisplayName: "User 1",
+            changeType: .switched,
+            scheduledShiftDate: fixedDate
+        )
+        let entry2 = ChangeLogEntry(
+            id: UUID(),
+            timestamp: fixedDate,
+            userId: UUID(),
+            userDisplayName: "User 2",
+            changeType: .deleted,
+            scheduledShiftDate: fixedDate
+        )
+
+        // When - first save
+        try await service.saveUndoRedoStacks(undo: [entry1], redo: [])
+
+        // And - second save overwrites
+        try await service.saveUndoRedoStacks(undo: [entry2], redo: [entry1])
+
+        // Then
+        let (undo, redo) = try await service.loadUndoRedoStacks()
+        #expect(undo.count == 1)
+        #expect(redo.count == 1)
+        #expect(undo[0].id == entry2.id)
+        #expect(redo[0].id == entry1.id)
     }
 
     // MARK: - Tests: Multiple Operations

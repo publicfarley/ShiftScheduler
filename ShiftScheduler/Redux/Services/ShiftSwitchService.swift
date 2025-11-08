@@ -95,17 +95,151 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
     }
 
     func undoOperation(_ operation: ChangeLogEntry) async throws {
-        // logger.debug("Undoing operation: \(operation.id)")
+        logger.debug("Undoing operation: \(operation.id) - type: \(operation.changeType.displayName)")
 
-        // For now, just log the operation
-        // TODO: Implement actual undo logic based on change type
+        switch operation.changeType {
+        case .switched:
+            // For switched operations, revert to the old shift type
+            guard let oldSnapshot = operation.oldShiftSnapshot else {
+                throw ShiftSwitchServiceError.undoFailed("No old snapshot available for switched operation")
+            }
+
+            // Reconstruct location from snapshot
+            let location = Location(
+                name: oldSnapshot.locationName ?? "Unknown Location",
+                address: oldSnapshot.locationAddress ?? ""
+            )
+
+            // Reconstruct the old ShiftType from the snapshot
+            let oldShiftType = ShiftType(
+                id: oldSnapshot.shiftTypeId,
+                symbol: oldSnapshot.symbol,
+                duration: oldSnapshot.duration,
+                title: oldSnapshot.title,
+                description: oldSnapshot.shiftDescription,
+                location: location
+            )
+
+            // Update the shift back to the old type
+            try await calendarService.updateShiftEvent(
+                eventIdentifier: operation.id.uuidString,
+                newShiftType: oldShiftType,
+                date: operation.scheduledShiftDate
+            )
+
+        case .deleted:
+            // For deleted operations, restore the shift from the old snapshot
+            guard let oldSnapshot = operation.oldShiftSnapshot else {
+                throw ShiftSwitchServiceError.undoFailed("No old snapshot available for deleted operation")
+            }
+
+            // Reconstruct location from snapshot
+            let location = Location(
+                name: oldSnapshot.locationName ?? "Unknown Location",
+                address: oldSnapshot.locationAddress ?? ""
+            )
+
+            // Reconstruct the old ShiftType from the snapshot
+            let restoredShiftType = ShiftType(
+                id: oldSnapshot.shiftTypeId,
+                symbol: oldSnapshot.symbol,
+                duration: oldSnapshot.duration,
+                title: oldSnapshot.title,
+                description: oldSnapshot.shiftDescription,
+                location: location
+            )
+
+            // Recreate the shift in the calendar
+            _ = try await calendarService.createShiftEvent(
+                date: operation.scheduledShiftDate,
+                shiftType: restoredShiftType,
+                notes: operation.reason
+            )
+
+        case .created:
+            // For created operations, delete the shift
+            try await calendarService.deleteShiftEvent(eventIdentifier: operation.id.uuidString)
+
+        case .undo, .redo:
+            // These are meta operations, not directly undoable
+            throw ShiftSwitchServiceError.undoFailed("Cannot undo \(operation.changeType.displayName) operations")
+        }
+
+        logger.debug("Successfully undid operation: \(operation.id)")
     }
 
     func redoOperation(_ operation: ChangeLogEntry) async throws {
-        // logger.debug("Redoing operation: \(operation.id)")
+        logger.debug("Redoing operation: \(operation.id) - type: \(operation.changeType.displayName)")
 
-        // For now, just log the operation
-        // TODO: Implement actual redo logic based on change type
+        switch operation.changeType {
+        case .switched:
+            // For switched operations, reapply the new shift type
+            guard let newSnapshot = operation.newShiftSnapshot else {
+                throw ShiftSwitchServiceError.redoFailed("No new snapshot available for switched operation")
+            }
+
+            // Reconstruct location from snapshot
+            let location = Location(
+                name: newSnapshot.locationName ?? "Unknown Location",
+                address: newSnapshot.locationAddress ?? ""
+            )
+
+            // Reconstruct the new ShiftType from the snapshot
+            let newShiftType = ShiftType(
+                id: newSnapshot.shiftTypeId,
+                symbol: newSnapshot.symbol,
+                duration: newSnapshot.duration,
+                title: newSnapshot.title,
+                description: newSnapshot.shiftDescription,
+                location: location
+            )
+
+            // Update the shift to the new type
+            try await calendarService.updateShiftEvent(
+                eventIdentifier: operation.id.uuidString,
+                newShiftType: newShiftType,
+                date: operation.scheduledShiftDate
+            )
+
+        case .deleted:
+            // For deleted operations, delete the shift again
+            try await calendarService.deleteShiftEvent(eventIdentifier: operation.id.uuidString)
+
+        case .created:
+            // For created operations, recreate the shift
+            guard let newSnapshot = operation.newShiftSnapshot else {
+                throw ShiftSwitchServiceError.redoFailed("No new snapshot available for created operation")
+            }
+
+            // Reconstruct location from snapshot
+            let location = Location(
+                name: newSnapshot.locationName ?? "Unknown Location",
+                address: newSnapshot.locationAddress ?? ""
+            )
+
+            // Reconstruct the ShiftType from the snapshot
+            let shiftType = ShiftType(
+                id: newSnapshot.shiftTypeId,
+                symbol: newSnapshot.symbol,
+                duration: newSnapshot.duration,
+                title: newSnapshot.title,
+                description: newSnapshot.shiftDescription,
+                location: location
+            )
+
+            // Recreate the shift in the calendar
+            _ = try await calendarService.createShiftEvent(
+                date: operation.scheduledShiftDate,
+                shiftType: shiftType,
+                notes: operation.reason
+            )
+
+        case .undo, .redo:
+            // These are meta operations, not directly redoable
+            throw ShiftSwitchServiceError.redoFailed("Cannot redo \(operation.changeType.displayName) operations")
+        }
+
+        logger.debug("Successfully redid operation: \(operation.id)")
     }
 
     func canSwitchShift(_ shift: ScheduledShift, to newShiftType: ShiftType) async throws -> Bool {

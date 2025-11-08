@@ -25,7 +25,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     var mockShiftTypes: [ShiftType] = []
     var mockLocations: [Location] = []
     var mockChangeLogEntries: [ChangeLogEntry] = []
-    var mockUserProfile: UserProfile = UserProfile(userId: UUID(), displayName: "Test User", retentionPolicy: .forever, autoPurgeEnabled: true)
+    var mockUserProfile: UserProfile = UserProfile()
     var mockUndoStack: [ChangeLogEntry] = []
     var mockRedoStack: [ChangeLogEntry] = []
 
@@ -37,6 +37,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     private(set) var loadShiftTypesCallCount = 0
     private(set) var saveShiftTypeCallCount = 0
     private(set) var deleteShiftTypeCallCount = 0
+    private(set) var updateShiftTypesWithLocationCallCount = 0
     private(set) var loadLocationsCallCount = 0
     private(set) var saveLocationCallCount = 0
     private(set) var deleteLocationCallCount = 0
@@ -84,6 +85,28 @@ final class MockPersistenceService: PersistenceServiceProtocol {
             throw PersistenceError.notFound("ShiftType with id \(id) not found")
         }
         mockShiftTypes.removeAll { $0.id == id }
+    }
+
+    func updateShiftTypesWithLocation(_ location: Location) async throws -> [ShiftType] {
+        updateShiftTypesWithLocationCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Find shift types that reference this location
+        let affectedShiftTypes = mockShiftTypes.filter { $0.location.id == location.id }
+
+        // Update each affected shift type with the new location data
+        var updatedShiftTypes: [ShiftType] = []
+        for shiftType in affectedShiftTypes {
+            var updatedShiftType = shiftType
+            updatedShiftType.location = location
+            mockShiftTypes.removeAll { $0.id == shiftType.id }
+            mockShiftTypes.append(updatedShiftType)
+            updatedShiftTypes.append(updatedShiftType)
+        }
+
+        return updatedShiftTypes
     }
 
     // MARK: - Locations

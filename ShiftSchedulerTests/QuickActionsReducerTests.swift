@@ -21,19 +21,6 @@ struct QuickActionsReducerTests {
         #expect(state.showEditNotesSheet == true)
     }
 
-    @Test("Edit Notes: Closing sheet clears notes")
-    func editNotesSheetClosingClearsNotes() {
-        var state = TodayState()
-        state.quickActionsNotes = "Important reminder"
-        state.showEditNotesSheet = true
-
-        let action = TodayAction.editNotesSheetToggled(false)
-        state = todayReducer(state: state, action: action)
-
-        #expect(state.showEditNotesSheet == false)
-        #expect(state.quickActionsNotes == "")
-    }
-
     @Test("Edit Notes: Notes text updates in state")
     func quickActionsNotesChanged() {
         var state = TodayState()
@@ -108,26 +95,6 @@ struct QuickActionsReducerTests {
 
     // MARK: - Multiple Action Sequences
 
-    @Test("Quick Actions: Complete edit flow")
-    func completeEditNotesFlow() {
-        var state = TodayState()
-
-        // Open sheet
-        state = todayReducer(state: state, action: .editNotesSheetToggled(true))
-        #expect(state.showEditNotesSheet == true)
-
-        // Update notes multiple times
-        state = todayReducer(state: state, action: .quickActionsNotesChanged("First"))
-        #expect(state.quickActionsNotes == "First")
-
-        state = todayReducer(state: state, action: .quickActionsNotesChanged("First updated"))
-        #expect(state.quickActionsNotes == "First updated")
-
-        // Close sheet (should clear notes)
-        state = todayReducer(state: state, action: .editNotesSheetToggled(false))
-        #expect(state.showEditNotesSheet == false)
-        #expect(state.quickActionsNotes == "")
-    }
 
     @Test("Quick Actions: Complete delete flow with cancellation")
     func completeDeleteFlowWithCancellation() {

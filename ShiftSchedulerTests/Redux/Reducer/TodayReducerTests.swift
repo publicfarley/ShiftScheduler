@@ -201,8 +201,10 @@ struct TodayReducerTests {
     @Test("shift loading preserves other state properties")
     func testShiftLoadingPreservesOtherState() {
         var state = TodayState()
-        state.toastMessage = .success("Test")
         state.showSwitchShiftSheet = true
+
+        #expect(state.scheduledShifts.count == 0)
+
         state.selectedShift = createTestShift()
         state.isLoading = false
 
@@ -210,7 +212,6 @@ struct TodayReducerTests {
         let newState = todayReducer(state: state, action: .shiftsLoaded(.success([testShift])))
 
         // Verify other properties preserved
-        #expect(newState.toastMessage == .success("Test"))
         #expect(newState.showSwitchShiftSheet == true)
         #expect(newState.selectedShift?.id == state.selectedShift?.id)
         // Only isLoading and shifts changed

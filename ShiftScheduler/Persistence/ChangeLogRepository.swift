@@ -2,10 +2,28 @@ import Foundation
 
 /// Actor-based repository for persisting change log entries to JSON files
 actor ChangeLogRepository: ChangeLogRepositoryProtocol {
+    private static let defaultDirectory: URL = {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("ShiftSchedulerData", isDirectory: true)
+    }()
+
+    private let fileManager = FileManager.default
+    internal let directoryURL: URL
+    private let fileName = "changelog.json"
+
+    init(directoryURL: URL? = nil) {
+        self.directoryURL = directoryURL ?? Self.defaultDirectory
+    }
+
+    /// Ensure the directory exists
+    private func ensureDirectory() throws {
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+    }
+
     /// Fetch all change log entries
     nonisolated func fetchAll() async throws -> [ChangeLogEntry] {
         let fileManager = FileManager.default
-        let directoryURL = LocationRepository.defaultDirectory
+        let directoryURL = self.directoryURL
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let fileURL = directoryURL.appendingPathComponent("changelog.json")
 
@@ -35,7 +53,7 @@ actor ChangeLogRepository: ChangeLogRepositoryProtocol {
         entries.append(entry)
 
         let fileManager = FileManager.default
-        let directoryURL = LocationRepository.defaultDirectory
+        let directoryURL = self.directoryURL
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let fileURL = directoryURL.appendingPathComponent("changelog.json")
         let data = try JSONEncoder().encode(entries)
@@ -48,7 +66,7 @@ actor ChangeLogRepository: ChangeLogRepositoryProtocol {
         entries.removeAll { $0.timestamp < date }
 
         let fileManager = FileManager.default
-        let directoryURL = LocationRepository.defaultDirectory
+        let directoryURL = self.directoryURL
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let fileURL = directoryURL.appendingPathComponent("changelog.json")
         let data = try JSONEncoder().encode(entries)
@@ -58,7 +76,7 @@ actor ChangeLogRepository: ChangeLogRepositoryProtocol {
     /// Delete all entries
     nonisolated func deleteAll() async throws {
         let fileManager = FileManager.default
-        let directoryURL = LocationRepository.defaultDirectory
+        let directoryURL = self.directoryURL
         let fileURL = directoryURL.appendingPathComponent("changelog.json")
 
         if fileManager.fileExists(atPath: fileURL.path) {

@@ -41,7 +41,7 @@ struct PerformanceTests {
 
         // When
         for _ in 0..<iterations {
-            await store.dispatch(action: .appLifecycle(.tabSelected(.today)))
+            await store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
         }
 
         // Then

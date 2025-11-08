@@ -2,13 +2,13 @@ import Foundation
 
 /// Actor-based repository for persisting user profile to JSON file
 actor UserProfileRepository: Sendable {
-    static let defaultDirectory: URL = {
+    private static let defaultDirectory: URL = {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0].appendingPathComponent("ShiftSchedulerData", isDirectory: true)
     }()
 
     private let fileManager = FileManager.default
-    private let directoryURL: URL
+    internal let directoryURL: URL
     private let fileName = "userProfile.json"
 
     init(directoryURL: URL? = nil) {

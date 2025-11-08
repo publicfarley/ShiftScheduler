@@ -21,6 +21,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     private(set) var createShiftEventCallCount = 0
     private(set) var updateShiftEventCallCount = 0
     private(set) var deleteShiftEventCallCount = 0
+    private(set) var updateEventsWithShiftTypeCallCount = 0
     private(set) var updateShiftNotesCallCount = 0
 
     var lastLoadShiftsRange: (from: Date, to: Date)?
@@ -289,6 +290,41 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Remove the shift
         mockShifts.remove(at: index)
+    }
+
+    func updateEventsWithShiftType(_ shiftType: ShiftType) async throws -> Int {
+        updateEventsWithShiftTypeCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Find all shifts that were created from this shift type
+        let affectedShifts = mockShifts.filter { $0.shiftType?.id == shiftType.id }
+
+        // Update each affected shift with the new ShiftType data
+        var updatedCount = 0
+        for shift in affectedShifts {
+            guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == shift.eventIdentifier }) else {
+                continue
+            }
+
+            // Update the shift with new ShiftType data while preserving notes and date
+            mockShifts[index] = ScheduledShift(
+                id: shift.id,
+                eventIdentifier: shift.eventIdentifier,
+                shiftType: shiftType,
+                date: shift.date,
+                notes: shift.notes
+            )
+            updatedCount += 1
+        }
+
+        return updatedCount
     }
 
     func updateShiftNotes(eventIdentifier: String, notes: String) async throws {

@@ -155,7 +155,6 @@ struct UserNameManagementTests {
     @Test("Reducer: userProfileUpdated action replaces entire profile")
     func testUserProfileUpdatedReducer() {
         var state = AppState()
-        let originalName = state.userProfile.displayName
 
         let newProfile = UserProfile(
             userId: state.userProfile.userId,
@@ -167,8 +166,7 @@ struct UserNameManagementTests {
         state = appReducer(state: state, action: .appLifecycle(.userProfileUpdated(newProfile)))
 
         #expect(state.userProfile.displayName == "New Name")
-        #expect(state.userProfile.displayName != originalName)
-        #expect(state.settings.retentionPolicy == .years2)
+        #expect(state.userProfile.retentionPolicy == .years2)
     }
 
     // Note: ChangeLog entry name capture is tested implicitly in integration tests

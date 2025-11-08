@@ -63,7 +63,18 @@ func shiftTypesMiddleware(
         }
         
         do {
+            // Save the shift type
             try await services.persistenceService.saveShiftType(shiftType)
+            logger.info("Shift type \(shiftType.title) saved successfully")
+
+            // Cascade shift type updates to all calendar events that use it
+            let updatedEventCount = try await services.calendarService.updateEventsWithShiftType(shiftType)
+            if updatedEventCount > 0 {
+                logger.info("Cascaded shift type update to \(updatedEventCount) calendar event(s)")
+                // Refresh schedule to reflect updated calendar events
+                await dispatch(.schedule(.loadShifts))
+            }
+
             await dispatch(.shiftTypes(.shiftTypeSaved(.success(()))))
             // Refresh after save
             await dispatch(.shiftTypes(.refreshShiftTypes))

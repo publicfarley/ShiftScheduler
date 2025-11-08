@@ -14,6 +14,11 @@ protocol PersistenceServiceProtocol: Sendable {
     /// Delete shift type by ID
     func deleteShiftType(id: UUID) async throws
 
+    /// Updates all ShiftTypes that contain the given Location with the updated Location data
+    /// - Parameter location: The updated Location to cascade to ShiftTypes
+    /// - Returns: The list of ShiftTypes that were updated
+    func updateShiftTypesWithLocation(_ location: Location) async throws -> [ShiftType]
+
     // MARK: - Locations
 
     /// Load all locations from persistence

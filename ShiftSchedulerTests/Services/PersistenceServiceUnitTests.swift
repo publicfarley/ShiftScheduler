@@ -304,12 +304,12 @@ struct PersistenceServiceUnitTests {
     func testLoadUserProfileReturnsDefaultProfile() async throws {
         // Given
         let mockService = Self.createMockService()
-
+        
         // When
         let profile = try await mockService.loadUserProfile()
 
         // Then
-        #expect(profile.displayName == "Test User")
+        #expect(profile.displayName == "")
     }
 
     @Test("saveUserProfile updates profile in mock storage")

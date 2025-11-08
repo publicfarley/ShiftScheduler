@@ -263,7 +263,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         let shiftType = Self.createTestShiftType()
@@ -281,7 +281,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         let location = Self.createTestLocation()
@@ -301,7 +301,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         var savedIds: [UUID] = []
@@ -326,7 +326,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         let location1 = Location(id: UUID(), name: "Office 1", address: "123 Main")
@@ -410,7 +410,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         let entry = Self.createTestChangeLogEntry()
@@ -430,7 +430,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         // Add a recent entry
@@ -464,7 +464,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         // Add old entry (from 60 days ago)
@@ -557,7 +557,8 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir),
+            userProfileRepository: UserProfileRepository(directoryURL: tempDir)
         )
 
         let profile = UserProfile(userId: UUID(), displayName: "John Doe")
@@ -575,7 +576,8 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir),
+            userProfileRepository: UserProfileRepository(directoryURL: tempDir)
         )
 
         let profile = UserProfile(userId: UUID(), displayName: "")
@@ -633,7 +635,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         let (undo, redo) = try await service.loadUndoRedoStacks()
@@ -649,11 +651,12 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir),
+            userProfileRepository: UserProfileRepository(directoryURL: tempDir)
         )
 
         var undoStack: [ChangeLogEntry] = []
-        var redoStack: [ChangeLogEntry] = []
+        let redoStack: [ChangeLogEntry] = []
 
         let baseDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         for i in 0..<10 {
@@ -689,7 +692,7 @@ struct PersistenceServiceErrorTests {
         let service = PersistenceService(
             shiftTypeRepository: ShiftTypeRepository(directoryURL: tempDir),
             locationRepository: LocationRepository(directoryURL: tempDir),
-            changeLogRepository: ChangeLogRepository()
+            changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
         // Save data

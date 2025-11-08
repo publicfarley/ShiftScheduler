@@ -327,6 +327,72 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         }
     }
 
+    /// Updates all calendar events created from the given ShiftType with updated ShiftType data
+    /// - Parameter shiftType: The updated ShiftType to cascade to existing calendar events
+    /// - Returns: The number of events that were updated
+    func updateEventsWithShiftType(_ shiftType: ShiftType) async throws -> Int {
+        logger.debug("Updating calendar events with ShiftType: \(shiftType.title) (ID: \(shiftType.id))")
+
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Load all shifts in extended range (±6 months from today)
+        // This ensures we catch most active/future shifts while being performant
+        let shifts = try await loadShiftsForExtendedRange()
+
+        // Find shifts that were created from this shift type
+        let affectedShifts = shifts.filter { $0.shiftType?.id == shiftType.id }
+
+        guard !affectedShifts.isEmpty else {
+            logger.debug("No calendar events reference ShiftType \(shiftType.id), skipping cascade")
+            return 0
+        }
+
+        logger.debug("Found \(affectedShifts.count) calendar events to update")
+
+        // Update each affected calendar event
+        var updatedCount = 0
+        for shift in affectedShifts {
+            guard let event = eventStore.event(withIdentifier: shift.eventIdentifier) else {
+                logger.warning("Could not find calendar event for shift \(shift.id)")
+                continue
+            }
+
+            // Update event properties with new ShiftType data
+            event.title = shiftType.title
+            event.location = shiftType.location.name
+
+            // Reconfigure event dates based on new shift type duration
+            let baseDate = Calendar.current.startOfDay(for: shift.date)
+            configureEventDates(event, shiftType: shiftType, baseDate: baseDate)
+
+            // Preserve shift type ID in notes (don't override user notes)
+            let currentNotes = event.notes ?? ""
+            let (_, userNotes) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
+
+            if let notes = userNotes, !notes.isEmpty {
+                event.notes = shiftType.id.uuidString + "\n---\n" + notes
+            } else {
+                event.notes = shiftType.id.uuidString
+            }
+
+            // Save the updated event
+            do {
+                try eventStore.save(event, span: .thisEvent)
+                updatedCount += 1
+                logger.debug("Updated calendar event '\(event.title)' for date \(shift.date.formatted())")
+            } catch {
+                logger.error("Failed to update event \(shift.eventIdentifier): \(error.localizedDescription)")
+                // Continue updating other events even if one fails
+            }
+        }
+
+        logger.debug("Successfully updated \(updatedCount) calendar events")
+        return updatedCount
+    }
+
     func updateShiftNotes(eventIdentifier: String, notes: String) async throws {
         logger.debug("Updating notes for shift event with identifier: \(eventIdentifier)")
 

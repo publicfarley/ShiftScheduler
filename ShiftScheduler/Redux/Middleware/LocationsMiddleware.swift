@@ -28,8 +28,18 @@ func locationsMiddleware(
     case .saveLocation(let location):
         logger.debug("Saving location: \(location.name)")
         do {
+            // Save the location
             try await services.persistenceService.saveLocation(location)
             logger.info("Location \(location.name) saved successfully")
+
+            // Cascade location updates to all ShiftTypes that reference it
+            let updatedShiftTypes = try await services.persistenceService.updateShiftTypesWithLocation(location)
+            if !updatedShiftTypes.isEmpty {
+                logger.info("Cascaded location update to \(updatedShiftTypes.count) ShiftType(s)")
+                // Refresh shift types to reflect updated Location data
+                await dispatch(.shiftTypes(.refreshShiftTypes))
+            }
+
             await dispatch(.locations(.locationSaved(.success(()))))
             // Refresh after save
             await dispatch(.locations(.refreshLocations))

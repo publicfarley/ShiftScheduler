@@ -61,6 +61,12 @@ protocol CalendarServiceProtocol: Sendable {
     /// - Throws: ScheduleError if deletion fails
     func deleteShiftEvent(eventIdentifier: String) async throws -> Void
 
+    /// Updates all calendar events created from the given ShiftType with updated ShiftType data
+    /// - Parameter shiftType: The updated ShiftType to cascade to existing calendar events
+    /// - Returns: The number of events that were updated
+    /// - Throws: CalendarServiceError if calendar is not authorized or updates fail
+    func updateEventsWithShiftType(_ shiftType: ShiftType) async throws -> Int
+
     /// Update shift notes in an existing calendar event
     /// - Parameters:
     ///   - eventIdentifier: The EventKit event identifier of the shift to update
