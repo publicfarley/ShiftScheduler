@@ -282,13 +282,20 @@ struct TodayView: View {
                     ShiftChangeSheet(currentShift: shift, feature: .today)
                 }
             }
-            .sheet(isPresented: Binding(
-                get: { store.state.today.showAddShiftSheet },
-                set: { _ in
-                    // Binding is read-only - reducer controls sheet presentation
-                    // Sheet only closes via Cancel button or successful save
+            .sheet(
+                isPresented: Binding(
+                    get: { store.state.today.showAddShiftSheet },
+                    set: { _ in
+                        // Binding is read-only - reducer controls sheet presentation
+                        // Sheet only closes via Cancel button or successful save
+                    }
+                ),
+                onDismiss: {
+                    Task {
+                        await store.dispatch(action: .today(.addShiftSheetDismissed))
+                    }
                 }
-            )) {
+            ) {
                 AddShiftModalView(
                     isPresented: Binding(
                         get: { store.state.today.showAddShiftSheet },

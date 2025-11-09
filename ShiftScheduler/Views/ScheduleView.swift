@@ -70,13 +70,20 @@ struct ScheduleView: View {
                 LoadingOverlayView(message: "Loading additional shifts...")
             }
         }
-        .sheet(isPresented: Binding(
-            get: { store.state.schedule.showAddShiftSheet },
-            set: { _ in
-                // Binding is read-only - reducer controls sheet presentation
-                // Sheet only closes via Cancel button or successful save
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.schedule.showAddShiftSheet },
+                set: { _ in
+                    // Binding is read-only - reducer controls sheet presentation
+                    // Sheet only closes via Cancel button or successful save
+                }
+            ),
+            onDismiss: {
+                Task {
+                    await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                }
             }
-        )) {
+        ) {
             AddShiftModalView(
                 isPresented: Binding(
                     get: { store.state.schedule.showAddShiftSheet },
