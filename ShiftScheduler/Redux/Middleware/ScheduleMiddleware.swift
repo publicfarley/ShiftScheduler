@@ -56,6 +56,9 @@ func scheduleMiddleware(
             // Find any dates with multiple shifts
             if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
                 logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
+                // Dismiss any open add shift sheets before showing overlap resolution
+                await dispatch(.today(.addShiftSheetDismissed))
+                await dispatch(.schedule(.addShiftSheetDismissed))
                 // Dispatch overlap detection - user must resolve
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
@@ -475,6 +478,9 @@ func scheduleMiddleware(
             // Find any dates with multiple shifts
             if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
                 logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
+                // Dismiss any open add shift sheets before showing overlap resolution
+                await dispatch(.today(.addShiftSheetDismissed))
+                await dispatch(.schedule(.addShiftSheetDismissed))
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
 
