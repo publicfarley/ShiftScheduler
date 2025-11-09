@@ -38,8 +38,9 @@ nonisolated func appReducer(state: AppState, action: AppAction) -> AppState {
             // Also dismiss Today's add shift sheet on success
             state.today.showAddShiftSheet = false
         case .addShiftResponse(.failure):
-            // Also keep Today's add shift sheet open on error
-            state.today.showAddShiftSheet = true
+            // Don't force Today's sheet state on error - each feature manages its own sheet
+            // The reducer for the launching feature (today or schedule) already set the correct state
+            break
         default:
             break
         }
