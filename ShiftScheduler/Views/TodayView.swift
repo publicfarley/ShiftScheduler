@@ -304,7 +304,12 @@ struct TodayView: View {
                         }
                     ),
                     availableShiftTypes: store.state.shiftTypes.shiftTypes,
-                    preselectedDate: Date()
+                    preselectedDate: Date(),
+                    onCancel: {
+                        Task {
+                            await store.dispatch(action: .today(.addShiftSheetDismissed))
+                        }
+                    }
                 )
             }
             .task {

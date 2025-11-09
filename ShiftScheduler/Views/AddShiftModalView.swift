@@ -10,6 +10,7 @@ struct AddShiftModalView: View {
 
     let availableShiftTypes: [ShiftType]
     var preselectedDate: Date = Date()
+    var onCancel: () -> Void = { }
 
     @State private var selectedDate: Date = Date()
     @State private var selectedShiftType: ShiftType?
@@ -303,8 +304,9 @@ struct AddShiftModalView: View {
                             // Cancel Button
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                onCancel()
                                 Task {
-                                    await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                                    isPresented = false
                                 }
                             }) {
                                 HStack {

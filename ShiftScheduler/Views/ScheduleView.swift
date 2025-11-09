@@ -92,7 +92,12 @@ struct ScheduleView: View {
                     }
                 ),
                 availableShiftTypes: store.state.shiftTypes.shiftTypes,
-                preselectedDate: store.state.schedule.selectedDate
+                preselectedDate: store.state.schedule.selectedDate,
+                onCancel: {
+                    Task {
+                        await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                    }
+                }
             )
         }
         .sheet(
