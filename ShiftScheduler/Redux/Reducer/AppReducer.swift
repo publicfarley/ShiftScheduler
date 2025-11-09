@@ -190,6 +190,17 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
     case .shiftDeleted(.failure(let error)):
         state.deleteShiftConfirmationShift = nil
         state.errorMessage = "Failed to delete shift: \(error.localizedDescription)"
+
+    // MARK: - Add Shift
+
+    case .addShiftButtonTapped:
+        state.showAddShiftSheet = true
+
+    case .addShiftSheetToggled(let show):
+        state.showAddShiftSheet = show
+
+    case .addShiftSheetDismissed:
+        state.showAddShiftSheet = false
     }
 
     return state

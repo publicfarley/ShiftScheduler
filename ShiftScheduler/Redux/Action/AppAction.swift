@@ -159,6 +159,17 @@ enum TodayAction: Equatable {
     /// Shift deleted
     case shiftDeleted(Result<Void, Error>)
 
+    // MARK: - Add Shift
+
+    /// User tapped add shift button
+    case addShiftButtonTapped
+
+    /// Show/hide add shift sheet
+    case addShiftSheetToggled(Bool)
+
+    /// Add shift sheet was dismissed
+    case addShiftSheetDismissed
+
     static func == (lhs: TodayAction, rhs: TodayAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadShifts, .loadShifts),
@@ -167,7 +178,9 @@ enum TodayAction: Equatable {
              (.updateCachedShifts, .updateCachedShifts),
              (.updateUndoRedoStates, .updateUndoRedoStates),
              (.deleteShiftConfirmed, .deleteShiftConfirmed),
-             (.deleteShiftCancelled, .deleteShiftCancelled):
+             (.deleteShiftCancelled, .deleteShiftCancelled),
+             (.addShiftButtonTapped, .addShiftButtonTapped),
+             (.addShiftSheetDismissed, .addShiftSheetDismissed):
             return true
         case let (.shiftsLoaded(a), .shiftsLoaded(b)):
             switch (a, b) {
@@ -184,6 +197,8 @@ enum TodayAction: Equatable {
              (.shiftSwitched(.failure), .shiftSwitched(.failure)):
             return true
         case let (.editNotesSheetToggled(lhs), .editNotesSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.addShiftSheetToggled(lhs), .addShiftSheetToggled(rhs)):
             return lhs == rhs
         case let (.quickActionsNotesChanged(lhs), .quickActionsNotesChanged(rhs)):
             return lhs == rhs

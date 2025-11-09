@@ -169,6 +169,23 @@ func todayMiddleware(
         // logger.debug("Shift deletion completed")
         // No additional middleware side effects - reducer and middleware dispatch handle it
         break
+
+    // MARK: - Add Shift
+
+    case .addShiftButtonTapped:
+        // logger.debug("Add shift button tapped")
+        // No middleware side effects - reducer handles sheet presentation
+        break
+
+    case .addShiftSheetToggled:
+        // logger.debug("Add shift sheet toggled")
+        // No middleware side effects - reducer handles sheet state
+        break
+
+    case .addShiftSheetDismissed:
+        // logger.debug("Add shift sheet dismissed")
+        // No middleware side effects - reducer handles cleanup
+        break
     }
 }
 

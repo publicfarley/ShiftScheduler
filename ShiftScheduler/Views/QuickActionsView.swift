@@ -95,6 +95,32 @@ struct QuickActionsView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                 }
+
+                // Add Shift Button
+                Button(action: {
+                    Task {
+                        await store.dispatch(action: .today(.addShiftButtonTapped))
+                    }
+                }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Add")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.purple.opacity(0.8), Color.indigo.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
             }
             .frame(height: 60)
         }

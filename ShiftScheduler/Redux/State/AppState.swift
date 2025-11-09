@@ -96,6 +96,9 @@ struct TodayState: Equatable {
 
     /// Shift awaiting deletion confirmation
     var deleteShiftConfirmationShift: ScheduledShift? = nil
+
+    /// Sheet presentation for adding a new shift
+    var showAddShiftSheet: Bool = false
 }
 
 // MARK: - Schedule State

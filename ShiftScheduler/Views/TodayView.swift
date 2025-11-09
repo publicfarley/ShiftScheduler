@@ -141,7 +141,7 @@ struct TodayView: View {
                                     .offset(x: todayCardOffset)
                                     .opacity(todayCardOpacity)
                                 } else {
-                                    VStack(spacing: 12) {
+                                    VStack(spacing: 16) {
                                         Image(systemName: "calendar.badge.exclamationmark")
                                             .font(.largeTitle)
                                             .foregroundColor(.secondary)
@@ -151,13 +151,39 @@ struct TodayView: View {
                                                 .font(.headline)
                                                 .foregroundColor(.primary)
 
-                                            Text("Perfect day for rest")
+                                            Text("Add today's shift or enjoy your day off")
                                                 .font(.subheadline)
                                                 .foregroundColor(.secondary)
+                                        }
+
+                                        Button(action: {
+                                            Task {
+                                                await store.dispatch(action: .today(.addShiftButtonTapped))
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "plus.circle.fill")
+                                                    .font(.system(size: 18))
+
+                                                Text("Add Shift")
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 10)
+                                            .foregroundColor(.white)
+                                            .background(
+                                                LinearGradient(
+                                                    gradient: Gradient(colors: [.purple, .indigo]),
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .cornerRadius(8)
                                         }
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 20)
+                                    .padding(.horizontal, 16)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color(.systemBackground))
@@ -255,6 +281,31 @@ struct TodayView: View {
                 if let shift = store.state.today.selectedShift {
                     ShiftChangeSheet(currentShift: shift, feature: .today)
                 }
+            }
+            .sheet(isPresented: Binding(
+                get: { store.state.today.showAddShiftSheet },
+                set: { isPresented in
+                    if !isPresented {
+                        Task {
+                            await store.dispatch(action: .today(.addShiftSheetDismissed))
+                        }
+                    }
+                }
+            )) {
+                AddShiftModalView(
+                    isPresented: Binding(
+                        get: { store.state.today.showAddShiftSheet },
+                        set: { isPresented in
+                            if !isPresented {
+                                Task {
+                                    await store.dispatch(action: .today(.addShiftSheetDismissed))
+                                }
+                            }
+                        }
+                    ),
+                    availableShiftTypes: store.state.shiftTypes.shiftTypes,
+                    preselectedDate: Date()
+                )
             }
             .task {
                 // Dispatch Redux action
