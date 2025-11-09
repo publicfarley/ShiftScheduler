@@ -134,14 +134,6 @@ struct ScheduleView: View {
                 .environment(\.reduxStore, store)
             }
         }
-        .errorAlert(error: Binding(
-            get: { store.state.schedule.currentError },
-            set: { _ in
-                Task {
-                    await store.dispatch(action: .schedule(.dismissError))
-                }
-            }
-        ))
         .onAppear {
             logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
             Task {
