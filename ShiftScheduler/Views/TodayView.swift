@@ -283,7 +283,7 @@ struct TodayView: View {
                 }
             }
             .sheet(isPresented: Binding(
-                get: { store.state.today.showAddShiftSheet },
+                get: { store.state.today.showAddShiftSheet && !store.state.schedule.showOverlapResolution },
                 set: { isPresented in
                     if !isPresented {
                         Task {
