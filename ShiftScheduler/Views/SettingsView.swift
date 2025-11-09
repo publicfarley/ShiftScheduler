@@ -226,6 +226,8 @@ struct SettingsView: View {
                         await store.dispatch(action: .settings(.retentionPolicyChanged(newValue)))
                         // Reload statistics when policy changes
                         await store.dispatch(action: .settings(.loadPurgeStatistics))
+                        // Immediately save the policy to disk
+                        await saveRetentionPolicy()
                     }
                 }
             )) {
@@ -386,6 +388,12 @@ struct SettingsView: View {
                 saveStatus = .idle
             }
         }
+    }
+
+    private func saveRetentionPolicy() async {
+        // Dispatch save settings action to middleware
+        // This persists the current retention policy to disk
+        await store.dispatch(action: .settings(.saveSettings))
     }
 
     // MARK: - Helper Functions

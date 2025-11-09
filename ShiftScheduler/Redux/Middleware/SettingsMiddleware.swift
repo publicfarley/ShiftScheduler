@@ -16,7 +16,8 @@ func settingsMiddleware(
     switch settingsAction {
     case .loadSettings:
         // User profile is already loaded in AppState by AppStartupMiddleware
-        // Just sync the relevant settings to SettingsState
+        // Sync the relevant settings from UserProfile to SettingsState
+        await dispatch(.settings(.retentionPolicyChanged(state.userProfile.retentionPolicy)))
         await dispatch(.settings(.autoPurgeToggled(state.userProfile.autoPurgeEnabled)))
         if let lastPurgeDate = state.userProfile.lastPurgeDate {
             await dispatch(.settings(.lastPurgeDateUpdated(lastPurgeDate)))
