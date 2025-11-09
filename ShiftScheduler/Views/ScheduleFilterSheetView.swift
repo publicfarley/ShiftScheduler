@@ -107,7 +107,7 @@ struct ScheduleFilterSheetView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        dismiss()
+                        cancelFilters()
                     }
                 }
 
@@ -154,6 +154,13 @@ struct ScheduleFilterSheetView: View {
     private func clearDateRange() {
         startDate = nil
         endDate = nil
+    }
+
+    private func cancelFilters() {
+        Task {
+            await store.dispatch(action: .schedule(.filterSheetToggled(false)))
+            dismiss()
+        }
     }
 }
 
