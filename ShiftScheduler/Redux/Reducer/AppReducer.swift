@@ -513,6 +513,61 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.selectedDate = today
         state.displayedMonth = today
         state.searchText = ""
+
+    // MARK: - Multi-Select Actions
+
+    case .enterSelectionMode(let mode, let firstId):
+        state.isInSelectionMode = true
+        state.selectionMode = mode
+        state.selectedShiftIds = [firstId]
+
+    case .exitSelectionMode:
+        state.isInSelectionMode = false
+        state.selectionMode = nil
+        state.selectedShiftIds.removeAll()
+
+    case .toggleShiftSelection(let shiftId):
+        if state.selectedShiftIds.contains(shiftId) {
+            state.selectedShiftIds.remove(shiftId)
+        } else {
+            // Enforce max selection limit
+            if state.selectedShiftIds.count < 100 {
+                state.selectedShiftIds.insert(shiftId)
+            } else {
+                // Could dispatch an error here if needed
+                state.currentError = .unknown("Maximum 100 items can be selected")
+            }
+        }
+
+    case .selectAllVisible:
+        // Select all shifts (filtered view is handled by computed properties in state)
+        // Enforce max selection limit of 100
+        let allIds = state.scheduledShifts.map { $0.id }
+        state.selectedShiftIds = Set(allIds.prefix(100))
+
+    case .clearSelection:
+        state.selectedShiftIds.removeAll()
+
+    case .bulkDeleteRequested:
+        state.showBulkDeleteConfirmation = true
+
+    case .bulkDeleteConfirmed:
+        state.isDeletingShift = true
+        state.currentError = nil
+
+    case .bulkDeleteCompleted(.success(let count)):
+        state.isDeletingShift = false
+        state.isInSelectionMode = false
+        state.selectionMode = nil
+        state.selectedShiftIds.removeAll()
+        state.showBulkDeleteConfirmation = false
+        state.successMessage = "\(count) shifts deleted"
+        state.showSuccessToast = true
+
+    case .bulkDeleteCompleted(.failure(let error)):
+        state.isDeletingShift = false
+        state.currentError = error
+        // Keep selection and mode active for retry
     }
 
     return state

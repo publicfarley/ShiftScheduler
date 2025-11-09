@@ -225,6 +225,20 @@ struct ScheduleState: Equatable {
     /// Loading state for fetching additional shifts (during range fault)
     var isLoadingAdditionalShifts: Bool = false
 
+    // MARK: - Multi-Select State
+
+    /// IDs of shifts currently selected for bulk operations
+    var selectedShiftIds: Set<UUID> = []
+
+    /// Whether the view is in multi-select mode
+    var isInSelectionMode: Bool = false
+
+    /// The current mode for multi-select (delete or add)
+    var selectionMode: SelectionMode? = nil
+
+    /// Whether to show bulk delete confirmation dialog
+    var showBulkDeleteConfirmation: Bool = false
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states
@@ -286,6 +300,35 @@ struct ScheduleState: Equatable {
         filterSelectedShiftType != nil ||
         !searchText.isEmpty
     }
+
+    /// Selected shifts based on selectedShiftIds
+    var selectedShifts: [ScheduledShift] {
+        let selectedIds = selectedShiftIds
+        return scheduledShifts.filter { selectedIds.contains($0.id) }
+    }
+
+    /// Count of currently selected shifts
+    var selectionCount: Int {
+        selectedShiftIds.count
+    }
+
+    /// Whether user can delete selected shifts (must be in delete mode with selection)
+    var canDeleteSelectedShifts: Bool {
+        selectionMode == .delete && !selectedShiftIds.isEmpty
+    }
+
+    /// Whether user can add to selected dates (must be in add mode with selection)
+    var canAddToSelectedDates: Bool {
+        selectionMode == .add && !selectedShiftIds.isEmpty
+    }
+}
+
+// MARK: - SelectionMode Enum
+
+/// Enum to track what mode multi-select is in
+enum SelectionMode: Equatable {
+    case delete  // Selecting existing shifts to delete
+    case add     // Selecting empty dates to add shifts
 }
 
 // MARK: - Shift Types State

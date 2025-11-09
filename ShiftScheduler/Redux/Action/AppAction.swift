@@ -375,6 +375,32 @@ enum ScheduleAction: Equatable {
     /// Clear all active filters
     case clearFilters
 
+    // MARK: - Multi-Select Actions
+
+    /// Enter multi-select mode with initial selection
+    case enterSelectionMode(mode: SelectionMode, firstId: UUID)
+
+    /// Exit multi-select mode
+    case exitSelectionMode
+
+    /// Toggle selection of a shift
+    case toggleShiftSelection(UUID)
+
+    /// Select all visible shifts
+    case selectAllVisible
+
+    /// Clear all selections
+    case clearSelection
+
+    /// Bulk delete was requested
+    case bulkDeleteRequested
+
+    /// Bulk delete was confirmed
+    case bulkDeleteConfirmed([UUID])
+
+    /// Bulk delete completed
+    case bulkDeleteCompleted(Result<Int, ScheduleError>)
+
     // MARK: - Sliding Window Actions
 
     /// User navigated to a different month in the calendar view
@@ -402,7 +428,11 @@ enum ScheduleAction: Equatable {
              (.dismissSuccessToast, .dismissSuccessToast),
              (.clearFilters, .clearFilters),
              (.restoreUndoRedoStacks, .restoreUndoRedoStacks),
-             (.jumpToToday, .jumpToToday):
+             (.jumpToToday, .jumpToToday),
+             (.exitSelectionMode, .exitSelectionMode),
+             (.selectAllVisible, .selectAllVisible),
+             (.clearSelection, .clearSelection),
+             (.bulkDeleteRequested, .bulkDeleteRequested):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs
@@ -500,6 +530,24 @@ enum ScheduleAction: Equatable {
             return lhsDate == rhsDate && lhsOffset == rhsOffset
         case (.shiftsLoadedAroundMonth(.success), .shiftsLoadedAroundMonth(.success)),
              (.shiftsLoadedAroundMonth(.failure), .shiftsLoadedAroundMonth(.failure)):
+            return true
+        case let (.enterSelectionMode(lhsMode, lhsId), .enterSelectionMode(rhsMode, rhsId)):
+            return lhsMode == rhsMode && lhsId == rhsId
+        case (.exitSelectionMode, .exitSelectionMode):
+            return true
+        case let (.toggleShiftSelection(lhs), .toggleShiftSelection(rhs)):
+            return lhs == rhs
+        case (.selectAllVisible, .selectAllVisible):
+            return true
+        case (.clearSelection, .clearSelection):
+            return true
+        case (.bulkDeleteRequested, .bulkDeleteRequested):
+            return true
+        case let (.bulkDeleteConfirmed(lhs), .bulkDeleteConfirmed(rhs)):
+            return lhs == rhs
+        case (.bulkDeleteCompleted(.success(let lhs)), .bulkDeleteCompleted(.success(let rhs))):
+            return lhs == rhs
+        case (.bulkDeleteCompleted(.failure), .bulkDeleteCompleted(.failure)):
             return true
         default:
             return false

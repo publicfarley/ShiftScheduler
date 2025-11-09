@@ -519,5 +519,39 @@ func scheduleMiddleware(
         // No middleware side effects needed - reducer handles state update
         // Animation is handled by SwiftUI's @State in CustomCalendarView
         break
+
+    // MARK: - Multi-Select Actions
+
+    case .enterSelectionMode:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .exitSelectionMode:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .toggleShiftSelection:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .selectAllVisible:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .clearSelection:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .bulkDeleteRequested:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .bulkDeleteConfirmed:
+        // TODO: Implement bulk delete middleware
+        break
+
+    case .bulkDeleteCompleted:
+        // No middleware side effects needed - reducer handles state update
+        break
     }
 }
