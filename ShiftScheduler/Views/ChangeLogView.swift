@@ -6,8 +6,9 @@ struct ChangeLogView: View {
     // Current date for relative time calculations (deterministic)
     private let currentDate = Date()
 
-    // State for confirmation dialog
-    @State private var showPurgeConfirmation = false
+    // State for confirmation dialogs
+    @State private var showPurgeOldConfirmation = false
+    @State private var showClearAllConfirmation = false
 
     var body: some View {
         NavigationView {
@@ -24,16 +25,45 @@ struct ChangeLogView: View {
             .navigationTitle("Change Log")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                // Use separate ToolbarItem entries and a custom HStack label so UIKit creates a custom view
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        showPurgeConfirmation = true
+                        showPurgeOldConfirmation = true
                     }) {
-                        Label("Purge Old Entries", systemImage: "trash")
+                        HStack(spacing: 8) {
+                            Image(systemName: "trash.fill")
+                                .imageScale(.medium)
+                            Text("Purge Old")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .padding(.vertical, 6) // optional: gives a bit of tappable area
+                        .fixedSize()           // avoid undesired truncation/layout surprises
                     }
+                    .buttonStyle(.plain)
                     .disabled(store.state.settings.retentionPolicy == .forever)
+                    .accessibilityLabel("Purge Old")
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showClearAllConfirmation = true
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.bin")
+                                .imageScale(.medium)
+                            Text("Clear All")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .padding(.vertical, 6)
+                        .fixedSize()
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear all entries")
                 }
             }
-            .alert("Purge Old Entries?", isPresented: $showPurgeConfirmation) {
+            .alert("Purge Old Entries?", isPresented: $showPurgeOldConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Purge", role: .destructive) {
                     Task {
@@ -49,6 +79,19 @@ struct ChangeLogView: View {
                 } else {
                     Text("Your retention policy is set to Forever. No entries will be deleted.")
                 }
+            }
+            .alert("Clear All Entries?", isPresented: $showClearAllConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clear", role: .destructive) {
+                    Task {
+                        await store.dispatch(action: .changeLog(.purgeOldEntries))
+                        // Reload entries after a short delay
+                        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
+                    }
+                }
+            } message: {
+                Text("This will permanently delete ALL your change log entries. This action cannot be undone.")
             }
             .onAppear {
                 Task {
