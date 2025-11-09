@@ -283,34 +283,23 @@ struct TodayView: View {
                 }
             }
             .sheet(isPresented: Binding(
-                get: { store.state.today.showAddShiftSheet && !store.state.schedule.showOverlapResolution },
-                set: { isPresented in
-                    if !isPresented {
-                        Task {
-                            await store.dispatch(action: .today(.addShiftSheetDismissed))
-                        }
-                    }
+                get: { store.state.today.showAddShiftSheet },
+                set: { _ in
+                    // Binding is read-only - reducer controls sheet presentation
+                    // Sheet only closes via Cancel button or successful save
                 }
             )) {
                 AddShiftModalView(
                     isPresented: Binding(
                         get: { store.state.today.showAddShiftSheet },
-                        set: { isPresented in
-                            if !isPresented {
-                                Task {
-                                    await store.dispatch(action: .today(.addShiftSheetDismissed))
-                                }
-                            }
+                        set: { _ in
+                            // Binding is read-only - reducer controls sheet state
+                            // based on .addShiftResponse success/failure
                         }
                     ),
                     availableShiftTypes: store.state.shiftTypes.shiftTypes,
                     preselectedDate: Date(),
                     onCancel: {
-                        Task {
-                            await store.dispatch(action: .today(.addShiftSheetDismissed))
-                        }
-                    },
-                    onSave: {
                         Task {
                             await store.dispatch(action: .today(.addShiftSheetDismissed))
                         }

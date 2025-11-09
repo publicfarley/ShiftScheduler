@@ -72,33 +72,22 @@ struct ScheduleView: View {
         }
         .sheet(isPresented: Binding(
             get: { store.state.schedule.showAddShiftSheet },
-            set: { isPresented in
-                if !isPresented {
-                    Task {
-                        await store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                    }
-                }
+            set: { _ in
+                // Binding is read-only - reducer controls sheet presentation
+                // Sheet only closes via Cancel button or successful save
             }
         )) {
             AddShiftModalView(
                 isPresented: Binding(
                     get: { store.state.schedule.showAddShiftSheet },
-                    set: { isPresented in
-                        if !isPresented {
-                            Task {
-                                await store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                            }
-                        }
+                    set: { _ in
+                        // Binding is read-only - reducer controls sheet state
+                        // based on .addShiftResponse success/failure
                     }
                 ),
                 availableShiftTypes: store.state.shiftTypes.shiftTypes,
                 preselectedDate: store.state.schedule.selectedDate,
                 onCancel: {
-                    Task {
-                        await store.dispatch(action: .schedule(.addShiftSheetDismissed))
-                    }
-                },
-                onSave: {
                     Task {
                         await store.dispatch(action: .schedule(.addShiftSheetDismissed))
                     }

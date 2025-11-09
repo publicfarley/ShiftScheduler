@@ -11,7 +11,6 @@ struct AddShiftModalView: View {
     let availableShiftTypes: [ShiftType]
     var preselectedDate: Date = Date()
     var onCancel: () -> Void = { }
-    var onSave: () -> Void = { }
 
     @State private var selectedDate: Date = Date()
     @State private var selectedShiftType: ShiftType?
