@@ -23,9 +23,12 @@ struct ScheduleView: View {
                 }
             }
 
-            // Success Toast - Centered overlay
+            // Success Toast - Positioned at calendar/shifts intersection
             if store.state.schedule.showSuccessToast, let message = store.state.schedule.successMessage {
                 VStack {
+                    Spacer()
+                        .frame(height: 240)
+
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 12) {
                             Image(systemName: "checkmark.circle.fill")
@@ -56,6 +59,8 @@ struct ScheduleView: View {
                     .cornerRadius(12)
                     .padding(16)
                     .frame(maxWidth: 400)
+
+                    Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transition(.asymmetric(insertion: .scale.combined(with: .opacity),
