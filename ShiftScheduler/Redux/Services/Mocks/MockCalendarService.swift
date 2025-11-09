@@ -21,6 +21,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     private(set) var createShiftEventCallCount = 0
     private(set) var updateShiftEventCallCount = 0
     private(set) var deleteShiftEventCallCount = 0
+    private(set) var deleteMultipleShiftEventsCallCount = 0
     private(set) var updateEventsWithShiftTypeCallCount = 0
     private(set) var updateShiftNotesCallCount = 0
 
@@ -290,6 +291,30 @@ final class MockCalendarService: CalendarServiceProtocol {
 
         // Remove the shift
         mockShifts.remove(at: index)
+    }
+
+    func deleteMultipleShiftEvents(_ eventIdentifiers: [String]) async throws -> Int {
+        deleteMultipleShiftEventsCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        var deletedCount = 0
+
+        // Delete each event (in reverse order to avoid index shifting)
+        for eventIdentifier in eventIdentifiers {
+            if let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) {
+                mockShifts.remove(at: index)
+                deletedCount += 1
+            }
+        }
+
+        return deletedCount
     }
 
     func updateEventsWithShiftType(_ shiftType: ShiftType) async throws -> Int {

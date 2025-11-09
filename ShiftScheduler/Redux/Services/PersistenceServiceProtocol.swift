@@ -38,6 +38,11 @@ protocol PersistenceServiceProtocol: Sendable {
     /// Add entry to change log
     func addChangeLogEntry(_ entry: ChangeLogEntry) async throws
 
+    /// Add multiple entries to change log in a batch
+    /// - Parameter entries: Array of ChangeLogEntry objects to add
+    /// - Throws: Error if batch addition fails
+    func addMultipleChangeLogEntries(_ entries: [ChangeLogEntry]) async throws
+
     /// Delete change log entry by ID
     func deleteChangeLogEntry(id: UUID) async throws
 

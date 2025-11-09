@@ -327,6 +327,38 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         }
     }
 
+    func deleteMultipleShiftEvents(_ eventIdentifiers: [String]) async throws -> Int {
+        logger.debug("Deleting \(eventIdentifiers.count) shift events")
+
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        var deletedCount = 0
+
+        for eventIdentifier in eventIdentifiers {
+            do {
+                // Fetch the event by identifier
+                guard let event = eventStore.event(withIdentifier: eventIdentifier) else {
+                    logger.warning("Event with identifier \(eventIdentifier) not found, skipping")
+                    continue
+                }
+
+                // Delete the event
+                try eventStore.remove(event, span: .thisEvent)
+                deletedCount += 1
+                logger.debug("Successfully deleted shift event \(eventIdentifier)")
+            } catch {
+                logger.error("Failed to delete shift event \(eventIdentifier): \(error.localizedDescription)")
+                // Continue with next event instead of throwing (best effort approach)
+            }
+        }
+
+        logger.debug("Batch delete completed: \(deletedCount) of \(eventIdentifiers.count) events deleted")
+        return deletedCount
+    }
+
     /// Updates all calendar events created from the given ShiftType with updated ShiftType data
     /// - Parameter shiftType: The updated ShiftType to cascade to existing calendar events
     /// - Returns: The number of events that were updated

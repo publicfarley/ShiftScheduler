@@ -43,6 +43,7 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     private(set) var deleteLocationCallCount = 0
     private(set) var loadChangeLogEntriesCallCount = 0
     private(set) var addChangeLogEntryCallCount = 0
+    private(set) var addMultipleChangeLogEntriesCallCount = 0
     private(set) var deleteChangeLogEntryCallCount = 0
     private(set) var purgeOldChangeLogEntriesCallCount = 0
     private(set) var getChangeLogMetadataCallCount = 0
@@ -158,6 +159,14 @@ final class MockPersistenceService: PersistenceServiceProtocol {
             throw error
         }
         mockChangeLogEntries.append(entry)
+    }
+
+    func addMultipleChangeLogEntries(_ entries: [ChangeLogEntry]) async throws {
+        addMultipleChangeLogEntriesCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        mockChangeLogEntries.append(contentsOf: entries)
     }
 
     func deleteChangeLogEntry(id: UUID) async throws {

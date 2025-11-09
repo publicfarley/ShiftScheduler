@@ -108,6 +108,14 @@ final class PersistenceService: PersistenceServiceProtocol {
         try await changeLogRepository.save(entry)
     }
 
+    func addMultipleChangeLogEntries(_ entries: [ChangeLogEntry]) async throws {
+        // logger.debug("Adding \(entries.count) change log entries")
+        for entry in entries {
+            try await changeLogRepository.save(entry)
+        }
+        // logger.debug("Successfully added \(entries.count) change log entries")
+    }
+
     func deleteChangeLogEntry(id: UUID) async throws {
         // logger.debug("Deleting change log entry: \(id)")
 
