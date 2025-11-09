@@ -39,15 +39,18 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
+        let initalTab = store.state.selectedTab
+        
         // Dispatch action that will fail
         await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // App should still be in valid state despite error
-        #expect(store.state.selectedTab != nil)
+        #expect(store.state.selectedTab == initalTab)
     }
 
     @Test("AppStartupMiddleware handles persistence errors gracefully")
     func testAppStartupHandlesPersistenceErrors() async {
+        
         let failingServices = Self.createFailingServiceContainer()
         let store = Store(
             state: AppState(),
@@ -56,11 +59,12 @@ struct MiddlewareErrorHandlingTests {
             middlewares: [appStartupMiddleware]
         )
 
+        let initalTab = store.state.selectedTab
+        
         await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // App should recover and display content
-        #expect(store.state.shiftTypes is ShiftTypesState)
-        #expect(store.state.locations is LocationsState)
+        #expect(store.state.selectedTab == initalTab)
     }
 
     @Test("AppStartupMiddleware continues after multiple errors")

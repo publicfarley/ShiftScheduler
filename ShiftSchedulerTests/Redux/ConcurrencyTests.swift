@@ -317,36 +317,6 @@ struct ConcurrencyTests {
         #expect(tab == .today)
     }
 
-    /// Test that service container can be passed to concurrent contexts
-    @Test("ServiceContainer is Sendable compatible")
-    func testServiceContainerInConcurrentContexts() async {
-        // Given - Service container
-        let services = Self.createMockServiceContainer()
-
-        // When - pass services to async tasks
-        let results = await withTaskGroup(of: Bool.self) { group in
-            for _ in 0..<3 {
-                group.addTask { [services] () -> Bool in
-                    // Services captured and used in concurrent context
-                    // Just verify the services are not nil and accessible
-                    return true
-                }
-            }
-
-            var results: [Bool] = []
-            for await result in group {
-                results.append(result)
-            }
-            return results
-        }
-
-        // Then - services were accessible in all concurrent contexts
-        #expect(results.count == 3)
-        for result in results {
-            #expect(result == true)
-        }
-    }
-
     // MARK: - Actor Isolation Tests
 
     /// Test that Store's @MainActor isolation is enforced

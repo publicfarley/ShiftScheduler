@@ -121,7 +121,7 @@ struct AppLifecycleReducerTests {
 
     @Test("userProfileUpdated action updates user profile")
     func testUserProfileUpdatedChangesProfile() {
-        var state = AppState()
+        let state = AppState()
         let newProfile = UserProfile(userId: UUID(), displayName: "John Doe")
 
         let newState = appLifecycleReducer(state: state, action: .userProfileUpdated(newProfile))

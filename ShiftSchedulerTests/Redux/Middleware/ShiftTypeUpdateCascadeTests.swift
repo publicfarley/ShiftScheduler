@@ -57,22 +57,43 @@ struct ShiftTypeUpdateCascadeTests {
         // Mock locations to pass validation
         mockPersistence.mockLocations = [location]
 
+        var isScheduleRefreshed = false
+        var isShiftTypeSaved = false
+        var isShiftTypesRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.loadShifts):
+                isScheduleRefreshed = true
+            case .shiftTypes(.shiftTypeSaved(.success)):
+                isShiftTypeSaved = true
+            case .shiftTypes(.shiftTypeSaved(.failure)):
+                Issue.record("Should not get failure when saving shift type")
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            default:
+                break
+            }
+        }
+
         var state = AppState()
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [shiftTypesMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await shiftTypesMiddleware(
-            state: state,
-            action: .shiftTypes(.saveShiftType(updatedShiftType)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .shiftTypes(.saveShiftType(updatedShiftType)))
 
         // Then
         // Verify saveShiftType was called
@@ -82,34 +103,9 @@ struct ShiftTypeUpdateCascadeTests {
         #expect(mockCalendar.updateEventsWithShiftTypeCallCount == 1)
 
         // Verify correct actions were dispatched
-        #expect(dispatchedActions.count >= 3)
-
-        // Should dispatch schedule refresh
-        let hasScheduleRefresh = dispatchedActions.contains { action in
-            if case .schedule(.loadShifts) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasScheduleRefresh, "Should dispatch schedule refresh when calendar events are updated")
-
-        // Should dispatch shift type saved success
-        let hasShiftTypeSaved = dispatchedActions.contains { action in
-            if case .shiftTypes(.shiftTypeSaved(.success)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypeSaved, "Should dispatch shift type saved success")
-
-        // Should dispatch shift types refresh
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypesRefresh, "Should dispatch shift types refresh")
+        #expect(isScheduleRefreshed, "Should dispatch schedule refresh when calendar events are updated")
+        #expect(isShiftTypeSaved, "Should dispatch shift type saved success")
+        #expect(isShiftTypesRefreshed, "Should dispatch shift types refresh")
 
         // Verify calendar events were updated
         #expect(mockCalendar.mockShifts.count == 2)
@@ -203,51 +199,53 @@ struct ShiftTypeUpdateCascadeTests {
         // Mock locations to pass validation
         mockPersistence.mockLocations = [location]
 
+        var isShiftTypeSavedFailure = false
+        var isScheduleRefreshed = false
+        var isShiftTypesRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .shiftTypes(.shiftTypeSaved(.failure)):
+                isShiftTypeSavedFailure = true
+            case .shiftTypes(.shiftTypeSaved(.success)):
+                Issue.record("Should not succeed when calendar error occurs")
+            case .schedule(.loadShifts):
+                isScheduleRefreshed = true
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            default:
+                break
+            }
+        }
+
         var state = AppState()
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [shiftTypesMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await shiftTypesMiddleware(
-            state: state,
-            action: .shiftTypes(.saveShiftType(shiftType)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .shiftTypes(.saveShiftType(shiftType)))
 
         // Then
         #expect(mockPersistence.saveShiftTypeCallCount == 1)
 
         // Should dispatch failure action
-        let hasShiftTypeSavedFailure = dispatchedActions.contains { action in
-            if case .shiftTypes(.shiftTypeSaved(.failure)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypeSavedFailure, "Should dispatch shift type saved failure on calendar error")
+        #expect(isShiftTypeSavedFailure, "Should dispatch shift type saved failure on calendar error")
 
         // Should not dispatch refresh actions on error
-        let hasScheduleRefresh = dispatchedActions.contains { action in
-            if case .schedule(.loadShifts) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasScheduleRefresh, "Should not dispatch schedule refresh on error")
-
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasShiftTypesRefresh, "Should not dispatch shift types refresh on error")
+        #expect(!isScheduleRefreshed, "Should not dispatch schedule refresh on error")
+        #expect(!isShiftTypesRefreshed, "Should not dispatch shift types refresh on error")
     }
 
     @Test("saveShiftType updates multiple calendar events with same ShiftType")
@@ -282,22 +280,38 @@ struct ShiftTypeUpdateCascadeTests {
         // Mock locations to pass validation
         mockPersistence.mockLocations = [location]
 
+        var isScheduleRefreshed = false
+        var isShiftTypeSaved = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.loadShifts):
+                isScheduleRefreshed = true
+            case .shiftTypes(.shiftTypeSaved(.success)):
+                isShiftTypeSaved = true
+            default:
+                break
+            }
+        }
+
         var state = AppState()
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [shiftTypesMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await shiftTypesMiddleware(
-            state: state,
-            action: .shiftTypes(.saveShiftType(updatedShiftType)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .shiftTypes(.saveShiftType(updatedShiftType)))
 
         // Then
         #expect(mockPersistence.saveShiftTypeCallCount == 1)
@@ -310,13 +324,8 @@ struct ShiftTypeUpdateCascadeTests {
         }
 
         // Should dispatch schedule refresh
-        let hasScheduleRefresh = dispatchedActions.contains { action in
-            if case .schedule(.loadShifts) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasScheduleRefresh)
+        #expect(isScheduleRefreshed)
+        #expect(isShiftTypeSaved)
     }
 
     @Test("saveShiftType preserves validation checks before cascading")
@@ -340,22 +349,37 @@ struct ShiftTypeUpdateCascadeTests {
         // Mock locations to pass location validation
         mockPersistence.mockLocations = [location]
 
+        var isShiftTypeSavedFailure = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .shiftTypes(.shiftTypeSaved(.failure)):
+                isShiftTypeSavedFailure = true
+            case .shiftTypes(.shiftTypeSaved(.success)):
+                Issue.record("Should not succeed when validation fails")
+            default:
+                break
+            }
+        }
+
         var state = AppState()
         state.locations.locations = [location]
         state.shiftTypes.shiftTypes = [shiftType] // Existing shift type with same symbol
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [shiftTypesMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await shiftTypesMiddleware(
-            state: state,
-            action: .shiftTypes(.saveShiftType(duplicateSymbolShiftType)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .shiftTypes(.saveShiftType(duplicateSymbolShiftType)))
 
         // Then
         // Should fail validation and not reach cascade logic
@@ -363,12 +387,6 @@ struct ShiftTypeUpdateCascadeTests {
         #expect(mockCalendar.updateEventsWithShiftTypeCallCount == 0, "Should not cascade when validation fails")
 
         // Should dispatch failure action
-        let hasShiftTypeSavedFailure = dispatchedActions.contains { action in
-            if case .shiftTypes(.shiftTypeSaved(.failure)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypeSavedFailure, "Should dispatch failure when duplicate symbol detected")
+        #expect(isShiftTypeSavedFailure, "Should dispatch failure when duplicate symbol detected")
     }
 }

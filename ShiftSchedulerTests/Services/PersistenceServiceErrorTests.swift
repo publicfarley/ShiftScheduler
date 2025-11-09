@@ -141,7 +141,7 @@ struct PersistenceServiceErrorTests {
         // Should handle gracefully and return empty array
         do {
             let result = try await repo.fetchAll()
-            #expect(result is [ShiftType])
+            #expect(result.isEmpty)
         } catch {
             // Decoding error is acceptable
             #expect(true)
@@ -209,7 +209,7 @@ struct PersistenceServiceErrorTests {
 
         do {
             let result = try await repo.fetchAll()
-            #expect(result is [Location])
+            #expect(result.isEmpty)
         } catch {
             #expect(true)
         }

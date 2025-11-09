@@ -145,8 +145,8 @@ struct CalendarServiceErrorTests {
 
         do {
             let shifts = try await service.loadShifts(from: date, to: date)
-            // Should return empty array for single-day range or existing shifts
-            #expect(shifts is [ScheduledShift])
+            // Should return empty array for single-day range
+            #expect(shifts.isEmpty)
         } catch {
             // Authorization error is acceptable
             #expect(true)
@@ -337,12 +337,6 @@ struct CalendarServiceErrorTests {
     }
 
     // MARK: - Error Propagation Tests
-
-    @Test("CalendarService errors conform to LocalizedError protocol")
-    func testCalendarServiceErrorConformsToLocalizedError() {
-        let error: CalendarServiceError = .notAuthorized
-        #expect(error is LocalizedError)
-    }
 
     @Test("ScheduleError.calendarAccessDenied provides proper error handling")
     func testScheduleErrorCalendarAccessDenied() {

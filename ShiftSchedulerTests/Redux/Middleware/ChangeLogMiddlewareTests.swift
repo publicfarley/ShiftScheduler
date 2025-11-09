@@ -33,32 +33,42 @@ struct ChangeLogMiddlewareTests {
         ]
         mockPersistence.mockChangeLogEntries = testEntries
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isEntriesLoaded = false
+        var loadedEntries: [ChangeLogEntry] = []
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entriesLoaded(.success(let entries))):
+                isEntriesLoaded = true
+                loadedEntries = entries
+            case .changeLog(.entriesLoaded(.failure)):
+                Issue.record("Should not get failure when loading entries")
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.loadChangeLogEntries),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
 
         // Then
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 1)
-
-        // Verify correct secondary action was dispatched
-        if case .changeLog(.entriesLoaded(.success(let entries))) = dispatchedAction {
-            #expect(entries.count == 2)
-            #expect(entries[0].userDisplayName == "Alice")
-            #expect(entries[1].userDisplayName == "Bob")
-        } else {
-            #expect(Bool(false), "Expected entriesLoaded success action")
-        }
+        #expect(isEntriesLoaded)
+        #expect(loadedEntries.count == 2)
+        #expect(loadedEntries[0].userDisplayName == "Alice")
+        #expect(loadedEntries[1].userDisplayName == "Bob")
     }
 
     @Test("task action handles empty entries list")
@@ -69,29 +79,40 @@ struct ChangeLogMiddlewareTests {
 
         mockPersistence.mockChangeLogEntries = []
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isEntriesLoaded = false
+        var loadedEntries: [ChangeLogEntry] = []
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entriesLoaded(.success(let entries))):
+                isEntriesLoaded = true
+                loadedEntries = entries
+            case .changeLog(.entriesLoaded(.failure)):
+                Issue.record("Should not get failure when loading entries")
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.loadChangeLogEntries),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
 
         // Then
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 1)
-
-        if case .changeLog(.entriesLoaded(.success(let entries))) = dispatchedAction {
-            #expect(entries.isEmpty)
-        } else {
-            #expect(Bool(false), "Expected entriesLoaded success action with empty array")
-        }
+        #expect(isEntriesLoaded)
+        #expect(loadedEntries.isEmpty)
     }
 
     @Test("task action dispatches entriesLoaded failure on persistence error")
@@ -104,29 +125,37 @@ struct ChangeLogMiddlewareTests {
         mockPersistence.shouldThrowError = true
         mockPersistence.throwError = testError
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isEntriesLoadedFailure = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entriesLoaded(.failure)):
+                isEntriesLoadedFailure = true
+            case .changeLog(.entriesLoaded(.success)):
+                Issue.record("Should not succeed when persistence error occurs")
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        let store = Store(
+            state: AppState(),
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.loadChangeLogEntries),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
 
         // Then
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 1)
-
-        if case .changeLog(.entriesLoaded(.failure)) = dispatchedAction {
-            // Success - error was dispatched correctly
-        } else {
-            #expect(Bool(false), "Expected entriesLoaded failure action")
-        }
+        #expect(isEntriesLoadedFailure)
     }
 
     // MARK: - Delete Entry Tests (.deleteEntry action)
@@ -140,30 +169,41 @@ struct ChangeLogMiddlewareTests {
         let entry = ChangeLogEntryBuilder(userDisplayName: "Alice").build()
         mockPersistence.mockChangeLogEntries = [entry]
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isEntryDeletedSuccess = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entryDeleted(.success)):
+                isEntryDeletedSuccess = true
+            case .changeLog(.entryDeleted(.failure)):
+                Issue.record("Should not get failure when deleting entry")
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.changeLog.entries = [entry]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.deleteEntry(entry)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.deleteEntry(entry)))
 
         // Then
         #expect(mockPersistence.deleteChangeLogEntryCallCount == 1)
         #expect(mockPersistence.lastDeletedChangeLogEntryId == entry.id)
-
-        if case .changeLog(.entryDeleted(.success)) = dispatchedAction {
-            // Success - correct action dispatched
-        } else {
-            #expect(Bool(false), "Expected entryDeleted success action")
-        }
+        #expect(isEntryDeletedSuccess)
     }
 
     @Test("deleteEntry action dispatches entryDeleted failure on error")
@@ -178,30 +218,41 @@ struct ChangeLogMiddlewareTests {
 
         let entry = ChangeLogEntryBuilder(userDisplayName: "Alice").build()
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isEntryDeletedFailure = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entryDeleted(.failure)):
+                isEntryDeletedFailure = true
+            case .changeLog(.entryDeleted(.success)):
+                Issue.record("Should not succeed when persistence error occurs")
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.changeLog.entries = [entry]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.deleteEntry(entry)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.deleteEntry(entry)))
 
         // Then
         #expect(mockPersistence.deleteChangeLogEntryCallCount == 1)
         #expect(mockPersistence.lastDeletedChangeLogEntryId == entry.id)
-
-        if case .changeLog(.entryDeleted(.failure)) = dispatchedAction {
-            // Success - error was dispatched correctly
-        } else {
-            #expect(Bool(false), "Expected entryDeleted failure action")
-        }
+        #expect(isEntryDeletedFailure)
     }
 
     @Test("deleteEntry passes correct entry ID to service")
@@ -212,20 +263,18 @@ struct ChangeLogMiddlewareTests {
 
         let entry = ChangeLogEntryBuilder(userDisplayName: "Test").build()
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
-        }
+        var state = AppState()
+        state.changeLog.entries = [entry]
 
-        let state = AppState()
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [changeLogMiddleware]
+        )
 
         // When
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.deleteEntry(entry)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .changeLog(.deleteEntry(entry)))
 
         // Then
         #expect(mockPersistence.lastDeletedChangeLogEntryId == entry.id)
@@ -249,31 +298,41 @@ struct ChangeLogMiddlewareTests {
             ChangeLogEntryBuilder(timestamp: tenDaysAgo).build()
         ]
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isPurgeCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.purgeCompleted(.success)):
+                isPurgeCompleted = true
+            case .changeLog(.purgeCompleted(.failure)):
+                Issue.record("Should not get failure when purging entries")
+            default:
+                break
+            }
         }
 
         var state = AppState()
         state.settings.retentionPolicy = .days30
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.purgeOldEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
+
+        // When
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
         #expect(mockPersistence.lastPurgeOldEntriesCutoffDate != nil)
-
-        if case .changeLog(.purgeCompleted(.success)) = dispatchedAction {
-            // Success - correct action dispatched
-        } else {
-            #expect(Bool(false), "Expected purgeCompleted success action")
-        }
+        #expect(isPurgeCompleted)
     }
 
     @Test("purgeOldEntries with Forever policy skips purge")
@@ -288,31 +347,41 @@ struct ChangeLogMiddlewareTests {
             ChangeLogEntryBuilder(timestamp: fiftyDaysAgo).build()
         ]
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isPurgeCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.purgeCompleted(.success)):
+                isPurgeCompleted = true
+            case .changeLog(.purgeCompleted(.failure)):
+                Issue.record("Should not get failure when skipping purge")
+            default:
+                break
+            }
         }
 
         var state = AppState()
         state.settings.retentionPolicy = .forever
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.purgeOldEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
+
+        // When
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         // Should NOT call purge when policy is forever
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 0)
-
-        if case .changeLog(.purgeCompleted(.success)) = dispatchedAction {
-            // Success - skipped purge correctly
-        } else {
-            #expect(Bool(false), "Expected purgeCompleted success action even when skipping")
-        }
+        #expect(isPurgeCompleted)
     }
 
     @Test("purgeOldEntries with 90-day policy")
@@ -321,30 +390,40 @@ struct ChangeLogMiddlewareTests {
         let mockServices = Self.createMockServiceContainer()
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isPurgeCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.purgeCompleted(.success)):
+                isPurgeCompleted = true
+            case .changeLog(.purgeCompleted(.failure)):
+                Issue.record("Should not get failure when purging entries")
+            default:
+                break
+            }
         }
 
         var state = AppState()
         state.settings.retentionPolicy = .days90
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.purgeOldEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
+
+        // When
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
-
-        if case .changeLog(.purgeCompleted(.success)) = dispatchedAction {
-            // Success
-        } else {
-            #expect(Bool(false), "Expected purgeCompleted success action")
-        }
+        #expect(isPurgeCompleted)
     }
 
     @Test("purgeOldEntries with 6-month policy")
@@ -353,30 +432,40 @@ struct ChangeLogMiddlewareTests {
         let mockServices = Self.createMockServiceContainer()
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isPurgeCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.purgeCompleted(.success)):
+                isPurgeCompleted = true
+            case .changeLog(.purgeCompleted(.failure)):
+                Issue.record("Should not get failure when purging entries")
+            default:
+                break
+            }
         }
 
         var state = AppState()
         state.settings.retentionPolicy = .months6
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.purgeOldEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
+
+        // When
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
-
-        if case .changeLog(.purgeCompleted(.success)) = dispatchedAction {
-            // Success
-        } else {
-            #expect(Bool(false), "Expected purgeCompleted success action")
-        }
+        #expect(isPurgeCompleted)
     }
 
     @Test("purgeOldEntries dispatches purgeCompleted failure on error")
@@ -389,30 +478,40 @@ struct ChangeLogMiddlewareTests {
         mockPersistence.shouldThrowError = true
         mockPersistence.throwError = testError
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        var isPurgeCompletedFailure = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.purgeCompleted(.failure)):
+                isPurgeCompletedFailure = true
+            case .changeLog(.purgeCompleted(.success)):
+                Issue.record("Should not succeed when persistence error occurs")
+            default:
+                break
+            }
         }
 
         var state = AppState()
         state.settings.retentionPolicy = .days30
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.purgeOldEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
+
+        // When
+        await store.dispatch(action: .changeLog(.purgeOldEntries))
 
         // Then
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
-
-        if case .changeLog(.purgeCompleted(.failure)) = dispatchedAction {
-            // Success - error was dispatched correctly
-        } else {
-            #expect(Bool(false), "Expected purgeCompleted failure action")
-        }
+        #expect(isPurgeCompletedFailure)
     }
 
     // MARK: - Non-Middleware Actions (should be ignored)
@@ -423,25 +522,40 @@ struct ChangeLogMiddlewareTests {
         let mockServices = Self.createMockServiceContainer()
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            // If middleware is ignoring the action, it should not dispatch secondary actions
+            switch action {
+            case .changeLog(.loadChangeLogEntries):
+                Issue.record("Should not dispatch loadChangeLogEntries when entriesLoaded is received")
+            case .changeLog(.deleteEntry):
+                Issue.record("Should not dispatch deleteEntry when entriesLoaded is received")
+            case .changeLog(.purgeOldEntries):
+                Issue.record("Should not dispatch purgeOldEntries when entriesLoaded is received")
+            default:
+                break
+            }
         }
 
         let state = AppState()
         let entries = [ChangeLogEntryBuilder().build()]
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.entriesLoaded(.success(entries))),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
 
+        // When
+        await store.dispatch(action: .changeLog(.entriesLoaded(.success(entries))))
+
         // Then
-        #expect(dispatchedAction == nil, "Middleware should not dispatch for entriesLoaded")
-        #expect(mockPersistence.loadChangeLogEntriesCallCount == 0)
+        #expect(mockPersistence.loadChangeLogEntriesCallCount == 0, "Middleware should not call services for entriesLoaded")
     }
 
     @Test("searchTextChanged action is ignored by middleware")
@@ -450,24 +564,39 @@ struct ChangeLogMiddlewareTests {
         let mockServices = Self.createMockServiceContainer()
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            // If middleware is ignoring the action, it should not dispatch secondary actions
+            switch action {
+            case .changeLog(.loadChangeLogEntries):
+                Issue.record("Should not dispatch loadChangeLogEntries when searchTextChanged is received")
+            case .changeLog(.deleteEntry):
+                Issue.record("Should not dispatch deleteEntry when searchTextChanged is received")
+            case .changeLog(.purgeOldEntries):
+                Issue.record("Should not dispatch purgeOldEntries when searchTextChanged is received")
+            default:
+                break
+            }
         }
 
         let state = AppState()
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.searchTextChanged("test")),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
 
+        // When
+        await store.dispatch(action: .changeLog(.searchTextChanged("test")))
+
         // Then
-        #expect(dispatchedAction == nil, "Middleware should not dispatch for searchTextChanged")
-        #expect(mockPersistence.loadChangeLogEntriesCallCount == 0)
+        #expect(mockPersistence.loadChangeLogEntriesCallCount == 0, "Middleware should not call services for searchTextChanged")
     }
 
     // MARK: - Non-ChangeLog Actions
@@ -478,23 +607,31 @@ struct ChangeLogMiddlewareTests {
         let mockServices = Self.createMockServiceContainer()
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
-        var dispatchedAction: AppAction? = nil
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedAction = action
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            // If middleware is ignoring the action, it should not dispatch any changeLog secondary actions
+            if case .changeLog = action {
+                Issue.record("changeLogMiddleware should not dispatch any ChangeLog actions for non-ChangeLog input actions")
+            }
         }
 
         let state = AppState()
 
-        // When
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .appLifecycle(.onAppAppear),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
 
+        // When
+        await store.dispatch(action: .appLifecycle(.onAppAppear))
+
         // Then
-        #expect(dispatchedAction == nil)
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 0)
     }
 
@@ -510,36 +647,48 @@ struct ChangeLogMiddlewareTests {
         let entry2 = ChangeLogEntryBuilder(userDisplayName: "Bob").build()
         mockPersistence.mockChangeLogEntries = [entry1, entry2]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        var isEntriesLoaded = false
+        var isEntryDeleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .changeLog(.entriesLoaded(.success)):
+                isEntriesLoaded = true
+            case .changeLog(.entryDeleted(.success)):
+                isEntryDeleted = true
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.changeLog.entries = [entry1, entry2]
 
-        // When - Task (load entries)
-        await changeLogMiddleware(
+        let store = Store(
             state: state,
-            action: .changeLog(.loadChangeLogEntries),
+            reducer: appReducer,
             services: mockServices,
-            dispatch: dispatcher
+            middlewares: [changeLogMiddleware, mockTrackingMiddleware]
         )
 
+        // When - Task (load entries)
+        await store.dispatch(action: .changeLog(.loadChangeLogEntries))
+
         // Then - Should have dispatched entriesLoaded
-        #expect(dispatchedActions.count == 1)
+        #expect(isEntriesLoaded)
         #expect(mockPersistence.loadChangeLogEntriesCallCount == 1)
 
         // When - Delete entry
-        dispatchedActions.removeAll()
-        await changeLogMiddleware(
-            state: state,
-            action: .changeLog(.deleteEntry(entry1)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        isEntryDeleted = false
+        await store.dispatch(action: .changeLog(.deleteEntry(entry1)))
 
         // Then - Should have dispatched entryDeleted
-        #expect(dispatchedActions.count == 1)
+        #expect(isEntryDeleted)
         #expect(mockPersistence.deleteChangeLogEntryCallCount == 1)
     }
 

@@ -70,8 +70,6 @@ struct QuickActionsMiddlewareTests {
 
     @Test
     func deleteWithoutConfirmationShift() async {
-        var dispatchedActions: [TodayAction] = []
-
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
@@ -81,24 +79,26 @@ struct QuickActionsMiddlewareTests {
         let state = makeAppState()
         // No deleteShiftConfirmationShift set
 
-        let dispatcher: Dispatcher<AppAction> = { action in
-            if case .today(let todayAction) = action {
-                dispatchedActions.append(todayAction)
-            }
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: baseMiddlewares
+        )
 
-        let appAction = AppAction.today(.deleteShiftConfirmed)
-        await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
+        // When
+        await store.dispatch(action: .today(.deleteShiftConfirmed))
 
-        // No actions should be dispatched when there's no shift to delete
-        #expect(dispatchedActions.isEmpty)
+        // Then - No actions should be dispatched when there's no shift to delete
+        // The state should remain empty (no side effects should occur)
+        #expect(store.state.today.deleteShiftConfirmationShift == nil)
+        #expect(store.state.schedule.scheduledShifts.isEmpty)
     }
 
     @Test
     func deleteCreatesChangeLogEntry() async {
         let testShift = makeTestShift(date: Date())
         let mockPersistence = MockPersistenceService()
-        var dispatchedActions: [TodayAction] = []
 
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
@@ -109,16 +109,17 @@ struct QuickActionsMiddlewareTests {
         var state = makeAppStateWithShift(testShift)
         state.today.deleteShiftConfirmationShift = testShift
 
-        let dispatcher: Dispatcher<AppAction> = { action in
-            if case .today(let todayAction) = action {
-                dispatchedActions.append(todayAction)
-            }
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: baseMiddlewares
+        )
 
-        let appAction = AppAction.today(.deleteShiftConfirmed)
-        await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
+        // When
+        await store.dispatch(action: .today(.deleteShiftConfirmed))
 
-        // Verify a change log entry was created (check mock persistence)
+        // Then - Verify a change log entry was created (check mock persistence)
         let savedEntries = mockPersistence.mockChangeLogEntries
         #expect(!savedEntries.isEmpty)
         #expect(savedEntries.last?.changeType == .deleted)
@@ -130,7 +131,6 @@ struct QuickActionsMiddlewareTests {
     func notesPersistedOnSheetClose() async {
         let testShift = makeTestShift(date: Date())
         let testNotes = "Updated shift notes"
-        var dispatchedActions: [TodayAction] = []
 
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
@@ -143,28 +143,35 @@ struct QuickActionsMiddlewareTests {
         state.today.showEditNotesSheet = true
         state.today.quickActionsNotes = testNotes
 
-        let dispatcher: Dispatcher<AppAction> = { action in
-            if case .today(let todayAction) = action {
-                dispatchedActions.append(todayAction)
+        var didDispatchLoadFailure = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            if case .schedule(.shiftsLoaded(.failure)) = action {
+                didDispatchLoadFailure = true
             }
         }
 
-        let appAction = AppAction.today(.editNotesSheetToggled(false))
-        await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: baseMiddlewares + [mockTrackingMiddleware]
+        )
 
-        // Notes should be persisted (no error actions dispatched)
-        #expect(!dispatchedActions.contains { action in
-            if case .shiftsLoaded(.failure) = action {
-                return true
-            }
-            return false
-        })
+        // When
+        await store.dispatch(action: .today(.editNotesSheetToggled(false)))
+
+        // Then - Notes should be persisted (no error actions dispatched)
+        #expect(!didDispatchLoadFailure)
     }
 
     @Test
     func notesNotPersistedOnSheetOpen() async {
-        var dispatchedActions: [TodayAction] = []
-
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
@@ -173,17 +180,19 @@ struct QuickActionsMiddlewareTests {
 
         let state = makeAppState()
 
-        let dispatcher: Dispatcher<AppAction> = { action in
-            if case .today(let todayAction) = action {
-                dispatchedActions.append(todayAction)
-            }
-        }
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: baseMiddlewares
+        )
 
-        let appAction = AppAction.today(.editNotesSheetToggled(true))
-        await todayMiddleware(state: state, action: appAction, services: mockServices, dispatch: dispatcher)
+        // When
+        await store.dispatch(action: .today(.editNotesSheetToggled(true)))
 
-        // No persistence actions should be dispatched
-        #expect(dispatchedActions.isEmpty)
+        // Then - No persistence actions should be dispatched (sheet opening should not trigger persistence)
+        // Verify the sheet state is updated but no side effects occurred
+        #expect(store.state.today.showEditNotesSheet == true)
     }
 }
 

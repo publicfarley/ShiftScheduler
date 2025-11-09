@@ -37,20 +37,42 @@ struct LocationUpdateCascadeTests {
         // Pre-populate mock with shift types
         mockPersistence.mockShiftTypes = [shiftType1, shiftType2]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        var isLocationSaved = false
+        var isShiftTypesRefreshed = false
+        var isLocationsRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .locations(.locationSaved(.success)):
+                isLocationSaved = true
+            case .locations(.locationSaved(.failure)):
+                Issue.record("Should not get failure when saving location")
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            case .locations(.refreshLocations):
+                isLocationsRefreshed = true
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.locations.locations = [location]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [locationsMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await locationsMiddleware(
-            state: state,
-            action: .locations(.saveLocation(updatedLocation)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .locations(.saveLocation(updatedLocation)))
 
         // Then
         // Verify saveLocation was called
@@ -60,34 +82,9 @@ struct LocationUpdateCascadeTests {
         #expect(mockPersistence.updateShiftTypesWithLocationCallCount == 1)
 
         // Verify correct actions were dispatched
-        #expect(dispatchedActions.count >= 3)
-
-        // Should dispatch shiftTypes refresh
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypesRefresh, "Should dispatch shiftTypes refresh when ShiftTypes are updated")
-
-        // Should dispatch location saved success
-        let hasLocationSaved = dispatchedActions.contains { action in
-            if case .locations(.locationSaved(.success)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasLocationSaved, "Should dispatch location saved success")
-
-        // Should dispatch locations refresh
-        let hasLocationsRefresh = dispatchedActions.contains { action in
-            if case .locations(.refreshLocations) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasLocationsRefresh, "Should dispatch locations refresh")
+        #expect(isLocationSaved, "Should dispatch location saved success")
+        #expect(isShiftTypesRefreshed, "Should dispatch shiftTypes refresh when ShiftTypes are updated")
+        #expect(isLocationsRefreshed, "Should dispatch locations refresh")
 
         // Verify ShiftTypes were updated with new location data
         #expect(mockPersistence.mockShiftTypes.count == 2)
@@ -108,50 +105,54 @@ struct LocationUpdateCascadeTests {
         let shiftType = ShiftTypeBuilder(title: "Day Shift", location: otherLocation).build()
         mockPersistence.mockShiftTypes = [shiftType]
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        var isLocationSaved = false
+        var isLocationsRefreshed = false
+        var isShiftTypesRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .locations(.locationSaved(.success)):
+                isLocationSaved = true
+            case .locations(.locationSaved(.failure)):
+                Issue.record("Should not get failure when saving location")
+            case .locations(.refreshLocations):
+                isLocationsRefreshed = true
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.locations.locations = [location]
+        state.shiftTypes.shiftTypes = [shiftType]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [locationsMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await locationsMiddleware(
-            state: state,
-            action: .locations(.saveLocation(location)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .locations(.saveLocation(location)))
 
         // Then
         #expect(mockPersistence.saveLocationCallCount == 1)
         #expect(mockPersistence.updateShiftTypesWithLocationCallCount == 1)
 
         // Should NOT dispatch shiftTypes refresh since no ShiftTypes were affected
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasShiftTypesRefresh, "Should not dispatch shiftTypes refresh when no ShiftTypes are affected")
+        #expect(!isShiftTypesRefreshed, "Should not dispatch shiftTypes refresh when no ShiftTypes are affected")
 
         // Should still dispatch success and refresh
-        let hasLocationSaved = dispatchedActions.contains { action in
-            if case .locations(.locationSaved(.success)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasLocationSaved)
-
-        let hasLocationsRefresh = dispatchedActions.contains { action in
-            if case .locations(.refreshLocations) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasLocationsRefresh)
+        #expect(isLocationSaved)
+        #expect(isLocationsRefreshed)
     }
 
     @Test("saveLocation handles persistence error gracefully")
@@ -165,49 +166,52 @@ struct LocationUpdateCascadeTests {
         mockPersistence.shouldThrowError = true
         mockPersistence.throwError = NSError(domain: "TestError", code: 1, userInfo: nil)
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        var isLocationSavedFailure = false
+        var isShiftTypesRefreshed = false
+        var isLocationsRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .locations(.locationSaved(.failure)):
+                isLocationSavedFailure = true
+            case .locations(.locationSaved(.success)):
+                Issue.record("Should not succeed when persistence error occurs")
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            case .locations(.refreshLocations):
+                isLocationsRefreshed = true
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.locations.locations = [location]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [locationsMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await locationsMiddleware(
-            state: state,
-            action: .locations(.saveLocation(location)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .locations(.saveLocation(location)))
 
         // Then
         #expect(mockPersistence.saveLocationCallCount == 1)
 
         // Should dispatch failure action
-        let hasLocationSavedFailure = dispatchedActions.contains { action in
-            if case .locations(.locationSaved(.failure)) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasLocationSavedFailure, "Should dispatch location saved failure on error")
+        #expect(isLocationSavedFailure, "Should dispatch location saved failure on error")
 
         // Should not dispatch refresh actions on error
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasShiftTypesRefresh, "Should not dispatch shiftTypes refresh on error")
-
-        let hasLocationsRefresh = dispatchedActions.contains { action in
-            if case .locations(.refreshLocations) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!hasLocationsRefresh, "Should not dispatch locations refresh on error")
+        #expect(!isShiftTypesRefreshed, "Should not dispatch shiftTypes refresh on error")
+        #expect(!isLocationsRefreshed, "Should not dispatch locations refresh on error")
     }
 
     @Test("saveLocation updates multiple ShiftTypes with same Location")
@@ -225,20 +229,37 @@ struct LocationUpdateCascadeTests {
         }
         mockPersistence.mockShiftTypes = shiftTypes
 
-        var dispatchedActions: [AppAction] = []
-        let dispatcher: Dispatcher<AppAction> = { action in
-            dispatchedActions.append(action)
+        var isLocationSaved = false
+        var isShiftTypesRefreshed = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .locations(.locationSaved(.success)):
+                isLocationSaved = true
+            case .shiftTypes(.refreshShiftTypes):
+                isShiftTypesRefreshed = true
+            default:
+                break
+            }
         }
 
-        let state = AppState()
+        var state = AppState()
+        state.locations.locations = [location]
+
+        let store = Store(
+            state: state,
+            reducer: appReducer,
+            services: mockServices,
+            middlewares: [locationsMiddleware, mockTrackingMiddleware]
+        )
 
         // When
-        await locationsMiddleware(
-            state: state,
-            action: .locations(.saveLocation(updatedLocation)),
-            services: mockServices,
-            dispatch: dispatcher
-        )
+        await store.dispatch(action: .locations(.saveLocation(updatedLocation)))
 
         // Then
         #expect(mockPersistence.saveLocationCallCount == 1)
@@ -251,12 +272,7 @@ struct LocationUpdateCascadeTests {
         }
 
         // Should dispatch shiftTypes refresh
-        let hasShiftTypesRefresh = dispatchedActions.contains { action in
-            if case .shiftTypes(.refreshShiftTypes) = action {
-                return true
-            }
-            return false
-        }
-        #expect(hasShiftTypesRefresh)
+        #expect(isLocationSaved)
+        #expect(isShiftTypesRefreshed)
     }
 }

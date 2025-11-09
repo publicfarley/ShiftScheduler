@@ -403,7 +403,7 @@ struct ScheduleReducerTests {
 
     @Test("filterDateRangeChanged updates filter dates")
     func testFilterDateRangeChangedUpdatesState() {
-        var state = ScheduleState()
+        let state = ScheduleState()
         let startDate = Date()
         let endDate = Date().addingTimeInterval(86400)
 
@@ -418,7 +418,7 @@ struct ScheduleReducerTests {
 
     @Test("filterLocationChanged updates location filter")
     func testFilterLocationChangedUpdatesState() {
-        var state = ScheduleState()
+        let state = ScheduleState()
         let location = LocationBuilder().build()
 
         let newState = scheduleReducer(state: state, action: .filterLocationChanged(location))
@@ -428,7 +428,7 @@ struct ScheduleReducerTests {
 
     @Test("filterShiftTypeChanged updates shift type filter")
     func testFilterShiftTypeChangedUpdatesState() {
-        var state = ScheduleState()
+        let state = ScheduleState()
         let shiftType = createTestShiftType()
 
         let newState = scheduleReducer(state: state, action: .filterShiftTypeChanged(shiftType))

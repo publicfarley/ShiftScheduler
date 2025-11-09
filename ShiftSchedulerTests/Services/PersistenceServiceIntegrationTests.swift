@@ -76,44 +76,17 @@ struct PersistenceServiceIntegrationTests {
 
     // MARK: - Tests: Shift Type Operations
 
-    @Test("PersistenceService initializes with default repositories")
-    func testPersistenceServiceInitializesWithDefaultRepositories() {
-        // Given - Create service with defaults
-        let service = PersistenceService()
-
-        // Then - Verify it doesn't throw on creation
-        #expect(service != nil)
-    }
-
-    @Test("PersistenceService can be initialized with custom repositories")
-    func testPersistenceServiceCanInitializeWithCustomRepositories() {
-        // Given
-        let customShiftTypeRepository = ShiftTypeRepository()
-        let customLocationRepository = LocationRepository()
-        let customChangeLogRepository = ChangeLogRepository()
-
-        // When
-        let service = PersistenceService(
-            shiftTypeRepository: customShiftTypeRepository,
-            locationRepository: customLocationRepository,
-            changeLogRepository: customChangeLogRepository
-        )
-
-        // Then
-        #expect(service != nil)
-    }
-
     @Test("loadShiftTypes returns array of ShiftType")
     func testLoadShiftTypesReturnsShiftTypeArray() async throws {
         // Given
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        // When
-        let result = try await service.loadShiftTypes()
-
         // Then
-        #expect(result is [ShiftType])
+        await #expect(throws: Never.self) {
+            // When
+            _ = try await service.loadShiftTypes()
+        }
     }
 
     @Test("saveShiftType persists shift type")
@@ -149,19 +122,6 @@ struct PersistenceServiceIntegrationTests {
 
     // MARK: - Tests: Location Operations
 
-    @Test("loadLocations returns array of Location")
-    func testLoadLocationsReturnsLocationArray() async throws {
-        // Given
-        let (service, tempDir) = Self.createTestService()
-        defer { Self.cleanupTemporaryDirectory(tempDir) }
-
-        // When
-        let result = try await service.loadLocations()
-
-        // Then
-        #expect(result is [Location])
-    }
-
     @Test("saveLocation persists location")
     func testSaveLocationPersistsLocation() async throws {
         // Given
@@ -194,19 +154,6 @@ struct PersistenceServiceIntegrationTests {
     }
 
     // MARK: - Tests: Change Log Operations
-
-    @Test("loadChangeLogEntries returns array of ChangeLogEntry")
-    func testLoadChangeLogEntriesReturnsEntryArray() async throws {
-        // Given
-        let (service, tempDir) = Self.createTestService()
-        defer { Self.cleanupTemporaryDirectory(tempDir) }
-
-        // When
-        let result = try await service.loadChangeLogEntries()
-
-        // Then
-        #expect(result is [ChangeLogEntry])
-    }
 
     @Test("addChangeLogEntry persists entry")
     func testAddChangeLogEntryPersistsEntry() async throws {

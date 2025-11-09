@@ -43,7 +43,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger app startup verification
-        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called calendar service to verify authorization
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -69,7 +69,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - verify calendar access (authorized)
-        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service and secondary dispatch updated state
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -123,7 +123,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - middleware tries to call failing service
-        await await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
+        await store.dispatch(action: .appLifecycle(.verifyCalendarAccessOnStartup))
 
         // Then - middleware called service and handled the error gracefully
         #expect(mockCalendar.isCalendarAuthorizedCallCount == 1)
@@ -163,7 +163,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When - trigger initial data load
-        await await store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Then - middleware called persistence service and secondary dispatches loaded data
         #expect(mockPersistence.loadLocationsCallCount == 1)
@@ -187,7 +187,7 @@ struct MiddlewareIntegrationTests {
         )
 
         // When
-        await await store.dispatch(action: .appLifecycle(.loadInitialData))
+        await store.dispatch(action: .appLifecycle(.loadInitialData))
 
         // Then - initialization complete was dispatched by middleware
         #expect(store.state.isInitializationComplete == true)
