@@ -186,6 +186,60 @@ func todayMiddleware(
         // logger.debug("Add shift sheet dismissed")
         // No middleware side effects - reducer handles cleanup
         break
+
+    case .addShift(let date, let shiftType, let notes):
+        // logger.debug("Adding shift from Today view: \(shiftType.title) on \(date.formatted())")
+        do {
+            let notesForEvent = notes.isEmpty ? nil : notes
+            let createdShift = try await services.calendarService.createShiftEvent(
+                date: date,
+                shiftType: shiftType,
+                notes: notesForEvent
+            )
+            logger.debug("Shift created successfully from Today: \(shiftType.title) on \(date.formatted())")
+
+            // Reload shifts to check for overlaps
+            let shifts = try await services.calendarService.loadShiftsForExtendedRange()
+
+            // Check for overlapping shifts on the same date
+            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
+                Calendar.current.startOfDay(for: shift.date)
+            }
+
+            let createdShiftDate = Calendar.current.startOfDay(for: createdShift.date)
+            if let shiftsOnDate = shiftsGroupedByDate[createdShiftDate], shiftsOnDate.count > 1 {
+                // Overlap detected! Rollback by deleting the shift we just created
+                logger.warning("Overlap detected after creating shift from Today - rolling back")
+                try await services.calendarService.deleteShiftEvent(eventIdentifier: createdShift.eventIdentifier)
+
+                // Create error with existing shift names
+                let existingShiftNames = shiftsOnDate
+                    .filter { $0.eventIdentifier != createdShift.eventIdentifier }
+                    .compactMap { $0.shiftType?.title }
+
+                let error = ScheduleError.overlappingShifts(date: date, existingShifts: existingShiftNames)
+                await dispatch(.today(.addShiftResponse(.failure(error))))
+                return
+            }
+
+            // No overlap - success!
+            await dispatch(.today(.addShiftResponse(.success(createdShift))))
+
+            // Reload today's shifts to refresh the UI
+            await dispatch(.today(.loadShifts))
+        } catch let error as ScheduleError {
+            logger.error("Failed to create shift from Today: \(error.localizedDescription)")
+            await dispatch(.today(.addShiftResponse(.failure(error))))
+        } catch {
+            logger.error("Failed to create shift from Today: \(error.localizedDescription)")
+            let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
+            await dispatch(.today(.addShiftResponse(.failure(scheduleError))))
+        }
+
+    case .addShiftResponse, .dismissError:
+        // logger.debug("No middleware side effects for action: \(String(describing: todayAction))")
+        // Handled by reducer only
+        break
     }
 }
 

@@ -87,6 +87,13 @@ struct ScheduleView: View {
                 ),
                 availableShiftTypes: store.state.shiftTypes.shiftTypes,
                 preselectedDate: store.state.schedule.selectedDate,
+                currentError: store.state.schedule.currentError,
+                onAddShift: { date, shiftType, notes in
+                    await store.dispatch(action: .schedule(.addShift(date: date, shiftType: shiftType, notes: notes)))
+                },
+                onDismissError: {
+                    await store.dispatch(action: .schedule(.dismissError))
+                },
                 onCancel: {
                     Task {
                         await store.dispatch(action: .schedule(.addShiftSheetDismissed))

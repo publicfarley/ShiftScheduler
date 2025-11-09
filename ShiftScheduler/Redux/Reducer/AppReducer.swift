@@ -30,22 +30,6 @@ nonisolated func appReducer(state: AppState, action: AppAction) -> AppState {
         state.settings = settingsReducer(state: state.settings, action: action)
     }
 
-    // Cross-cutting concerns: Update Today state when Schedule addShift completes
-    // This ensures Add Shift sheet dismisses correctly regardless of where it was launched
-    if case .schedule(let scheduleAction) = action {
-        switch scheduleAction {
-        case .addShiftResponse(.success):
-            // Also dismiss Today's add shift sheet on success
-            state.today.showAddShiftSheet = false
-        case .addShiftResponse(.failure):
-            // Don't force Today's sheet state on error - each feature manages its own sheet
-            // The reducer for the launching feature (today or schedule) already set the correct state
-            break
-        default:
-            break
-        }
-    }
-
     return state
 }
 
@@ -217,6 +201,24 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
 
     case .addShiftSheetDismissed:
         state.showAddShiftSheet = false
+        state.currentError = nil
+
+    // MARK: - Add Shift Operations
+
+    case .addShift:
+        // Middleware will handle the actual shift creation
+        state.currentError = nil
+
+    case .addShiftResponse(.success):
+        state.showAddShiftSheet = false
+        state.currentError = nil
+
+    case .addShiftResponse(.failure(let error)):
+        state.currentError = error
+        state.showAddShiftSheet = true  // Keep sheet open to allow retry
+
+    case .dismissError:
+        state.currentError = nil
     }
 
     return state

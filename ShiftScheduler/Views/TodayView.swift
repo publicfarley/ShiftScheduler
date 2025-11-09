@@ -299,6 +299,13 @@ struct TodayView: View {
                     ),
                     availableShiftTypes: store.state.shiftTypes.shiftTypes,
                     preselectedDate: Date(),
+                    currentError: store.state.today.currentError,
+                    onAddShift: { date, shiftType, notes in
+                        await store.dispatch(action: .today(.addShift(date: date, shiftType: shiftType, notes: notes)))
+                    },
+                    onDismissError: {
+                        await store.dispatch(action: .today(.dismissError))
+                    },
                     onCancel: {
                         Task {
                             await store.dispatch(action: .today(.addShiftSheetDismissed))

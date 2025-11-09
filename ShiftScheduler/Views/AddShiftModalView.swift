@@ -10,6 +10,9 @@ struct AddShiftModalView: View {
 
     let availableShiftTypes: [ShiftType]
     var preselectedDate: Date = Date()
+    let currentError: ScheduleError?
+    var onAddShift: (Date, ShiftType, String) async -> Void
+    var onDismissError: () async -> Void
     var onCancel: () -> Void = { }
 
     @State private var selectedDate: Date = Date()
@@ -64,7 +67,7 @@ struct AddShiftModalView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         // MARK: - Error Display
-                        if let error = store.state.schedule.currentError {
+                        if let error = currentError {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 12) {
                                     Image(systemName: "exclamationmark.triangle.fill")
@@ -88,7 +91,7 @@ struct AddShiftModalView: View {
 
                                     Button(action: {
                                         Task {
-                                            await store.dispatch(action: .schedule(.dismissError))
+                                            await onDismissError()
                                         }
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
@@ -355,7 +358,7 @@ struct AddShiftModalView: View {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 Task {
                                     // Clear any error before dismissing
-                                    await store.dispatch(action: .schedule(.dismissError))
+                                    await onDismissError()
                                     onCancel()
                                     isPresented = false
                                 }
@@ -447,16 +450,13 @@ struct AddShiftModalView: View {
 
         Task {
             // Clear any previous error before attempting to add
-            await store.dispatch(action: .schedule(.dismissError))
+            await onDismissError()
 
-            await store.dispatch(action: .schedule(.addShift(
-                date: selectedDate,
-                shiftType: shiftType,
-                notes: finalNotes
-            )))
+            // Call the closure provided by the parent view (Today or Schedule)
+            await onAddShift(selectedDate, shiftType, finalNotes)
 
-            // Note: onSave() and isPresented = false are NOT called here
-            // The reducer will handle sheet dismissal on success
+            // Note: Sheet dismissal is handled by the reducer based on success/failure
+            // On success, the reducer closes the sheet
             // On error, the sheet stays open to show the error
         }
     }
@@ -531,8 +531,18 @@ struct DatePickerSheet: View {
         )
     ]
 
-    AddShiftModalView(isPresented: .constant(true), availableShiftTypes: sampleShiftTypes)
-        .environment(\.reduxStore, previewStore)
+    AddShiftModalView(
+        isPresented: .constant(true),
+        availableShiftTypes: sampleShiftTypes,
+        currentError: nil,
+        onAddShift: { date, shiftType, notes in
+            print("Adding shift: \(shiftType.title) on \(date)")
+        },
+        onDismissError: {
+            print("Dismissing error")
+        }
+    )
+    .environment(\.reduxStore, previewStore)
 }
 
 private let previewStore: Store = {

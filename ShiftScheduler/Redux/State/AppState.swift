@@ -99,6 +99,9 @@ struct TodayState: Equatable {
 
     /// Sheet presentation for adding a new shift
     var showAddShiftSheet: Bool = false
+
+    /// Current error for Add Shift operations
+    var currentError: ScheduleError? = nil
 }
 
 // MARK: - Schedule State

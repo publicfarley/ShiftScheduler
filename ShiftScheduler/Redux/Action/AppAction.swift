@@ -170,6 +170,15 @@ enum TodayAction: Equatable {
     /// Add shift sheet was dismissed
     case addShiftSheetDismissed
 
+    /// User requested to add a new shift
+    case addShift(date: Date, shiftType: ShiftType, notes: String)
+
+    /// Handle add shift result
+    case addShiftResponse(Result<ScheduledShift, ScheduleError>)
+
+    /// Dismiss current error
+    case dismissError
+
     static func == (lhs: TodayAction, rhs: TodayAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadShifts, .loadShifts),
@@ -180,7 +189,8 @@ enum TodayAction: Equatable {
              (.deleteShiftConfirmed, .deleteShiftConfirmed),
              (.deleteShiftCancelled, .deleteShiftCancelled),
              (.addShiftButtonTapped, .addShiftButtonTapped),
-             (.addShiftSheetDismissed, .addShiftSheetDismissed):
+             (.addShiftSheetDismissed, .addShiftSheetDismissed),
+             (.dismissError, .dismissError):
             return true
         case let (.shiftsLoaded(a), .shiftsLoaded(b)):
             switch (a, b) {
@@ -206,6 +216,11 @@ enum TodayAction: Equatable {
             return lhs.id == rhs.id
         case (.shiftDeleted(.success), .shiftDeleted(.success)),
              (.shiftDeleted(.failure), .shiftDeleted(.failure)):
+            return true
+        case let (.addShift(dateL, typeL, notesL), .addShift(dateR, typeR, notesR)):
+            return dateL == dateR && typeL.id == typeR.id && notesL == notesR
+        case (.addShiftResponse(.success), .addShiftResponse(.success)),
+             (.addShiftResponse(.failure), .addShiftResponse(.failure)):
             return true
         default:
             return false
