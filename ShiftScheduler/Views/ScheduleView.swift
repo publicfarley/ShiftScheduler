@@ -97,6 +97,11 @@ struct ScheduleView: View {
                     Task {
                         await store.dispatch(action: .schedule(.addShiftSheetDismissed))
                     }
+                },
+                onSave: {
+                    Task {
+                        await store.dispatch(action: .schedule(.addShiftSheetDismissed))
+                    }
                 }
             )
         }

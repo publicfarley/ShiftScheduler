@@ -309,6 +309,11 @@ struct TodayView: View {
                         Task {
                             await store.dispatch(action: .today(.addShiftSheetDismissed))
                         }
+                    },
+                    onSave: {
+                        Task {
+                            await store.dispatch(action: .today(.addShiftSheetDismissed))
+                        }
                     }
                 )
             }

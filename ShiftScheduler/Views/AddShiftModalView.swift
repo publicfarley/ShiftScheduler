@@ -11,6 +11,7 @@ struct AddShiftModalView: View {
     let availableShiftTypes: [ShiftType]
     var preselectedDate: Date = Date()
     var onCancel: () -> Void = { }
+    var onSave: () -> Void = { }
 
     @State private var selectedDate: Date = Date()
     @State private var selectedShiftType: ShiftType?
@@ -400,6 +401,12 @@ struct AddShiftModalView: View {
                 shiftType: shiftType,
                 notes: finalNotes
             )))
+
+            // Call the save closure to allow parent to dismiss sheet appropriately
+            onSave()
+
+            // Manually dismiss the sheet
+            isPresented = false
         }
     }
 }
