@@ -63,7 +63,7 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
         case .duplicateShift:
             return "Delete the existing shift or choose a different date."
         case .overlappingShifts:
-            return "Only one shift can exist on a given date. Delete the existing shift first."
+            return "On a given date, shifts cannot overlap. Delete or move the existing shift first."
         case .shiftNotFound:
             return "The shift may have been deleted. Please refresh your calendar."
         case .persistenceFailed:

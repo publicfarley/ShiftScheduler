@@ -290,34 +290,120 @@ struct ScheduleView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             Spacer()
-            Image(systemName: "calendar")
-                .font(.system(size: 48))
-                .foregroundColor(.gray)
-            Text("No Shifts Found")
-                .font(.headline)
+
             if store.state.schedule.hasActiveFilters {
-                Text("Try adjusting your filters or clearing them to see more shifts.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-                    .font(.body)
-                Button(action: clearAllFilters) {
-                    Text("Clear Filters")
+                // Filter-specific empty state
+                VStack(spacing: 16) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+
+                    VStack(spacing: 4) {
+                        Text("No Shifts Found")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        Text("Try adjusting your filters or clearing them to see more shifts.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button(action: clearAllFilters) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 18))
+
+                            Text("Clear Filters")
+                                .fontWeight(.semibold)
+                        }
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .foregroundColor(.white)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.blue, .cyan]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .cornerRadius(8)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 2)
+                        )
+                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                )
+                .padding(.horizontal, 16)
             } else {
-                Text("No shifts scheduled for this date.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-                    .font(.body)
+                // No filter - standard "No shift scheduled" state matching TodayView
+                VStack(spacing: 16) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+
+                    VStack(spacing: 4) {
+                        Text("No shift scheduled")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        Text("Add today's shift or enjoy your day off")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button(action: {
+                        Task {
+                            await store.dispatch(action: .schedule(.addShiftButtonTapped))
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 18))
+
+                            Text("Add Shift")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .foregroundColor(.white)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.purple, .indigo]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .cornerRadius(8)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 2)
+                        )
+                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                )
+                .padding(.horizontal, 16)
             }
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
     }
 
     private var activeFiltersIndicator: some View {
