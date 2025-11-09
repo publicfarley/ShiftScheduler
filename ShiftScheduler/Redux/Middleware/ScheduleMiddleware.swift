@@ -56,11 +56,6 @@ func scheduleMiddleware(
             // Find any dates with multiple shifts
             if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
                 logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
-                // Dismiss any open add shift sheets before showing overlap resolution
-                await dispatch(.today(.addShiftSheetDismissed))
-                await dispatch(.schedule(.addShiftSheetDismissed))
-                // Small delay to allow SwiftUI to complete sheet dismissal animation
-                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
                 // Dispatch overlap detection - user must resolve
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
@@ -110,8 +105,14 @@ func scheduleMiddleware(
             )
             // logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
 
-            // Reload shifts to refresh the UI (around the displayed month)
+            // Dispatch success response (this will dismiss the Add Shift sheet)
             await dispatch(.schedule(.addShiftResponse(.success(createdShift))))
+
+            // Wait for SwiftUI to complete sheet dismissal animation before loading shifts
+            // This ensures overlap detection sheet can be shown if needed
+            try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
+
+            // Reload shifts to refresh the UI (around the displayed month)
             await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch let error as ScheduleError {
             // logger.error("Failed to create shift: \(error.localizedDescription)")
@@ -480,11 +481,7 @@ func scheduleMiddleware(
             // Find any dates with multiple shifts
             if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
                 logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
-                // Dismiss any open add shift sheets before showing overlap resolution
-                await dispatch(.today(.addShiftSheetDismissed))
-                await dispatch(.schedule(.addShiftSheetDismissed))
-                // Small delay to allow SwiftUI to complete sheet dismissal animation
-                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
+                // Dispatch overlap detection - user must resolve
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
 
