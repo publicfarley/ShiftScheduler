@@ -58,6 +58,7 @@ struct ScheduleView: View {
                     .frame(maxWidth: 400)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(y: 80)
                 .transition(.asymmetric(insertion: .scale.combined(with: .opacity),
                                        removal: .scale.combined(with: .opacity)))
                 .task {
