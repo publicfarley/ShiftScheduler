@@ -64,6 +64,55 @@ struct AddShiftModalView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // MARK: - Error Display
+                        if let error = store.state.schedule.currentError {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.title3)
+                                        .foregroundColor(.red)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(error.localizedDescription)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+
+                                        if let suggestion = error.recoverySuggestion {
+                                            Text(suggestion)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    Button(action: {
+                                        Task {
+                                            await store.dispatch(action: .schedule(.dismissError))
+                                        }
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.title3)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(Color.red.opacity(0.1))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                .strokeBorder(Color.red.opacity(0.3), lineWidth: 1)
+                                        )
+                                )
+                            }
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.95).combined(with: .opacity),
+                                removal: .scale(scale: 0.98).combined(with: .opacity)
+                            ))
+                        }
+
                         // MARK: - Date Selection Card
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Shift Date")
@@ -305,8 +354,10 @@ struct AddShiftModalView: View {
                             // Cancel Button
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                onCancel()
                                 Task {
+                                    // Clear any error before dismissing
+                                    await store.dispatch(action: .schedule(.dismissError))
+                                    onCancel()
                                     isPresented = false
                                 }
                             }) {
@@ -396,17 +447,18 @@ struct AddShiftModalView: View {
         let finalNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
         Task {
+            // Clear any previous error before attempting to add
+            await store.dispatch(action: .schedule(.dismissError))
+
             await store.dispatch(action: .schedule(.addShift(
                 date: selectedDate,
                 shiftType: shiftType,
                 notes: finalNotes
             )))
 
-            // Call the save closure to allow parent to dismiss sheet appropriately
-            onSave()
-
-            // Manually dismiss the sheet
-            isPresented = false
+            // Note: onSave() and isPresented = false are NOT called here
+            // The reducer will handle sheet dismissal on success
+            // On error, the sheet stays open to show the error
         }
     }
 }

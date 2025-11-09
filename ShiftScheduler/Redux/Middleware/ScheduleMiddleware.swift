@@ -103,22 +103,42 @@ func scheduleMiddleware(
                 shiftType: shiftType,
                 notes: notesForEvent
             )
-            // logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
+            logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
 
-            // Dispatch success response (this will dismiss the Add Shift sheet)
+            // Reload shifts to check for overlaps
+            let shifts = try await services.calendarService.loadShiftsForExtendedRange()
+
+            // Check for overlapping shifts on the same date
+            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
+                Calendar.current.startOfDay(for: shift.date)
+            }
+
+            let createdShiftDate = Calendar.current.startOfDay(for: createdShift.date)
+            if let shiftsOnDate = shiftsGroupedByDate[createdShiftDate], shiftsOnDate.count > 1 {
+                // Overlap detected! Rollback by deleting the shift we just created
+                logger.warning("Overlap detected after creating shift - rolling back")
+                try await services.calendarService.deleteShiftEvent(eventIdentifier: createdShift.eventIdentifier)
+
+                // Create error with existing shift names
+                let existingShiftNames = shiftsOnDate
+                    .filter { $0.eventIdentifier != createdShift.eventIdentifier }
+                    .compactMap { $0.shiftType?.title }
+
+                let error = ScheduleError.overlappingShifts(date: date, existingShifts: existingShiftNames)
+                await dispatch(.schedule(.addShiftResponse(.failure(error))))
+                return
+            }
+
+            // No overlap - success!
             await dispatch(.schedule(.addShiftResponse(.success(createdShift))))
-
-            // Wait for SwiftUI to complete sheet dismissal animation before loading shifts
-            // This ensures overlap detection sheet can be shown if needed
-            try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
 
             // Reload shifts to refresh the UI (around the displayed month)
             await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
         } catch let error as ScheduleError {
-            // logger.error("Failed to create shift: \(error.localizedDescription)")
+            logger.error("Failed to create shift: \(error.localizedDescription)")
             await dispatch(.schedule(.addShiftResponse(.failure(error))))
         } catch {
-            // logger.error("Failed to create shift: \(error.localizedDescription)")
+            logger.error("Failed to create shift: \(error.localizedDescription)")
             let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
             await dispatch(.schedule(.addShiftResponse(.failure(scheduleError))))
         }
