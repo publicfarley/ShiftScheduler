@@ -312,6 +312,23 @@ struct TodayView: View {
                     }
                 )
             }
+            .sheet(
+                isPresented: .constant(store.state.schedule.showOverlapResolution),
+                onDismiss: {
+                    Task {
+                        await store.dispatch(action: .schedule(.overlapResolutionDismissed))
+                    }
+                }
+            ) {
+                if let date = store.state.schedule.overlapDate,
+                   !store.state.schedule.overlappingShifts.isEmpty {
+                    OverlapResolutionSheet(
+                        date: date,
+                        overlappingShifts: store.state.schedule.overlappingShifts
+                    )
+                    .environment(\.reduxStore, store)
+                }
+            }
             .task {
                 // Dispatch Redux action
                 await store.dispatch(action: .today(.loadShifts))
