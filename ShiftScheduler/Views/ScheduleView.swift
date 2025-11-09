@@ -51,7 +51,7 @@ struct ScheduleView: View {
                         }
                     }
                     .padding(16)
-                    .background(Color.green.opacity(0.25))
+                    .background(Color.green.opacity(0.9))
                     .border(Color.green, width: 1)
                     .cornerRadius(12)
                     .padding(16)
