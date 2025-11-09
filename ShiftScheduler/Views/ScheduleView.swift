@@ -8,7 +8,7 @@ struct ScheduleView: View {
     @State private var listOpacity: Double = 1
 
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack {
             VStack(spacing: 0) {
                 // Title
                 Text("Schedule")
@@ -23,39 +23,43 @@ struct ScheduleView: View {
                 }
             }
 
-            // Success Toast
+            // Success Toast - Centered overlay
             if store.state.schedule.showSuccessToast, let message = store.state.schedule.successMessage {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.headline)
-                            .foregroundColor(.green)
+                VStack {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.headline)
+                                .foregroundColor(.green)
 
-                        Text(message)
-                            .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-
-                        Spacer()
-
-                        Button(action: {
-                            Task {
-                                await store.dispatch(action: .schedule(.dismissSuccessToast))
-                            }
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
+                            Text(message)
                                 .font(.body)
-                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            Button(action: {
+                                Task {
+                                    await store.dispatch(action: .schedule(.dismissSuccessToast))
+                                }
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
+                    .padding(16)
+                    .background(Color.green.opacity(0.1))
+                    .border(Color.green, width: 1)
+                    .cornerRadius(12)
+                    .padding(16)
+                    .frame(maxWidth: 400)
                 }
-                .padding(16)
-                .background(Color.green.opacity(0.1))
-                .border(Color.green, width: 1)
-                .cornerRadius(12)
-                .padding(16)
-                .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
-                                       removal: .move(edge: .top).combined(with: .opacity)))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.asymmetric(insertion: .scale.combined(with: .opacity),
+                                       removal: .scale.combined(with: .opacity)))
                 .task {
                     // Auto-dismiss after 3 seconds
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
