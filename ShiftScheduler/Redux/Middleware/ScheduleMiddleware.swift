@@ -59,6 +59,8 @@ func scheduleMiddleware(
                 // Dismiss any open add shift sheets before showing overlap resolution
                 await dispatch(.today(.addShiftSheetDismissed))
                 await dispatch(.schedule(.addShiftSheetDismissed))
+                // Small delay to allow SwiftUI to complete sheet dismissal animation
+                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
                 // Dispatch overlap detection - user must resolve
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
@@ -481,6 +483,8 @@ func scheduleMiddleware(
                 // Dismiss any open add shift sheets before showing overlap resolution
                 await dispatch(.today(.addShiftSheetDismissed))
                 await dispatch(.schedule(.addShiftSheetDismissed))
+                // Small delay to allow SwiftUI to complete sheet dismissal animation
+                try? await Task.sleep(nanoseconds: 400_000_000) // 0.4 seconds
                 await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
             }
 
