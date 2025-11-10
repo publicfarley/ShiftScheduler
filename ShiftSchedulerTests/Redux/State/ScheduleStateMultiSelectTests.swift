@@ -5,6 +5,7 @@ import Testing
 
 // MARK: - ScheduleState Multi-Select Tests
 
+@MainActor
 @Suite("ScheduleState Multi-Select Properties")
 struct ScheduleStateMultiSelectTests {
     // MARK: - Initialization Tests
@@ -137,14 +138,7 @@ struct ScheduleStateMultiSelectTests {
         var state = ScheduleState()
 
         // Create test shifts
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shift1 = ScheduledShift(
             id: UUID(),
@@ -183,14 +177,7 @@ struct ScheduleStateMultiSelectTests {
     func selectedShiftsReturnsEmptyWhenNoSelection() {
         var state = ScheduleState()
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         state.scheduledShifts = [
             ScheduledShift(

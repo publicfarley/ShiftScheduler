@@ -546,11 +546,139 @@ func scheduleMiddleware(
         // No middleware side effects needed - reducer handles state update
         break
 
-    case .bulkDeleteConfirmed:
-        // TODO: Implement bulk delete middleware
-        break
+    case .bulkDeleteConfirmed(let shiftIds):
+        logger.debug("Bulk delete confirmed for \(shiftIds.count) shifts")
+        do {
+            // Get the shifts to delete from the state
+            let shiftsToDelete = state.schedule.scheduledShifts.filter { shift in
+                shiftIds.contains(shift.id)
+            }
+
+            guard !shiftsToDelete.isEmpty else {
+                logger.warning("No shifts found for bulk delete")
+                await dispatch(.schedule(.bulkDeleteCompleted(.success(0))))
+                return
+            }
+
+            logger.debug("Found \(shiftsToDelete.count) shifts to delete")
+
+            // Create change log entries for each deleted shift
+            var changeLogEntries: [ChangeLogEntry] = []
+            for shift in shiftsToDelete {
+                let oldSnapshot = shift.shiftType.map { ShiftSnapshot(from: $0) }
+
+                let entry = ChangeLogEntry(
+                    id: UUID(),
+                    timestamp: Date(),
+                    userId: state.userProfile.userId,
+                    userDisplayName: state.userProfile.displayName,
+                    changeType: .deleted,
+                    scheduledShiftDate: shift.date,
+                    oldShiftSnapshot: oldSnapshot,
+                    newShiftSnapshot: nil, // No new shift for deletion
+                    reason: "Bulk deleted"
+                )
+                changeLogEntries.append(entry)
+            }
+
+            // Persist all change log entries
+            try await services.persistenceService.addMultipleChangeLogEntries(changeLogEntries)
+            logger.debug("Persisted \(changeLogEntries.count) change log entries")
+
+            // Delete all shifts from calendar
+            let eventIdentifiers = shiftsToDelete.compactMap { $0.eventIdentifier }
+            let deletedCount = try await services.calendarService.deleteMultipleShiftEvents(eventIdentifiers)
+            logger.debug("Deleted \(deletedCount) shifts from calendar")
+
+            // Update undo/redo stacks
+            var undoStack = state.schedule.undoStack
+            undoStack.append(contentsOf: changeLogEntries)
+            try await services.persistenceService.saveUndoRedoStacks(
+                undo: undoStack,
+                redo: [] // Clear redo stack on new operation
+            )
+
+            logger.debug("Bulk delete completed successfully: \(deletedCount) shifts")
+            await dispatch(.schedule(.bulkDeleteCompleted(.success(deletedCount))))
+
+            // Reload shifts after deletion to refresh from calendar
+            await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
+
+            // Reload change log to show new entries
+            await dispatch(.changeLog(.loadChangeLogEntries))
+
+        } catch {
+            logger.error("Failed to bulk delete shifts: \(error.localizedDescription)")
+            let scheduleError = ScheduleError.calendarEventDeletionFailed(error.localizedDescription)
+            await dispatch(.schedule(.bulkDeleteCompleted(.failure(scheduleError))))
+        }
 
     case .bulkDeleteCompleted:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    // MARK: - Bulk Add Actions
+
+    case .bulkAddRequested:
+        // No middleware side effects needed - reducer shows shift type selection sheet
+        break
+
+    case let .bulkAddConfirmed(shiftType, notes):
+        // Create shifts for all selected dates
+        let selectedDates = state.schedule.selectedDates
+        let userId = state.userProfile.userId
+        let userDisplayName = state.userProfile.displayName
+
+        Task {
+            do {
+                var createdShifts: [ScheduledShift] = []
+                let calendarService = services.calendarService
+                let persistenceService = services.persistenceService
+
+                // Loop through selected dates and create shifts
+                for date in selectedDates.sorted() {
+                    // Create shift event in calendar (returns shift with EventKit identifier)
+                    let shift = try await calendarService.createShiftEvent(
+                        date: date,
+                        shiftType: shiftType,
+                        notes: notes.isEmpty ? nil : notes
+                    )
+                    createdShifts.append(shift)
+
+                    // Create audit trail entry for shift creation
+                    let entry = ChangeLogEntry(
+                        id: UUID(),
+                        timestamp: Date(),
+                        userId: userId,
+                        userDisplayName: userDisplayName,
+                        changeType: .created,
+                        scheduledShiftDate: date,
+                        oldShiftSnapshot: nil,
+                        newShiftSnapshot: ShiftSnapshot(from: shiftType),
+                        reason: notes.isEmpty ? nil : notes
+                    )
+
+                    // Persist change log entry
+                    try await persistenceService.addChangeLogEntry(entry)
+                }
+
+                // Dispatch completion with created shifts
+                await dispatch(.schedule(.bulkAddCompleted(.success(createdShifts))))
+            } catch {
+                let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
+                await dispatch(.schedule(.bulkAddCompleted(.failure(scheduleError))))
+            }
+        }
+
+    case .bulkAddCompleted:
+        // Reload shifts to refresh calendar view after bulk add completes
+        await dispatch(.schedule(.loadShifts))
+
+    case .toggleDateSelection:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .clearSelectedDates:
         // No middleware side effects needed - reducer handles state update
         break
     }

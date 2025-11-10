@@ -2,11 +2,29 @@ import SwiftUI
 
 /// A reusable shift card component used across multiple screens (Today, Schedule, etc.)
 /// Displays detailed shift information in a professional card layout
+/// Supports selection mode for multi-select operations with long-press gesture
 struct UnifiedShiftCard: View {
     let shift: ScheduledShift?
     let onTap: (() -> Void)?
+    let isSelected: Bool
+    let onSelectionToggle: ((UUID) -> Void)?
+    let isInSelectionMode: Bool
 
     @State private var isPressed = false
+
+    init(
+        shift: ScheduledShift?,
+        onTap: (() -> Void)? = nil,
+        isSelected: Bool = false,
+        onSelectionToggle: ((UUID) -> Void)? = nil,
+        isInSelectionMode: Bool = false
+    ) {
+        self.shift = shift
+        self.onTap = onTap
+        self.isSelected = isSelected
+        self.onSelectionToggle = onSelectionToggle
+        self.isInSelectionMode = isInSelectionMode
+    }
 
     private var shiftStatus: ShiftStatus {
         guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
@@ -197,17 +215,46 @@ struct UnifiedShiftCard: View {
                 .fill(Color(.systemBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(cardColor, lineWidth: 2.5)
+                        .stroke(
+                            isSelected ? Color.blue : cardColor,
+                            lineWidth: isSelected ? 3 : 2.5
+                        )
                 )
-                .shadow(color: cardColor.opacity(0.15), radius: 6, x: 0, y: 3)
+                .shadow(color: isSelected ? Color.blue.opacity(0.3) : cardColor.opacity(0.15), radius: 6, x: 0, y: 3)
         )
+        .overlay(alignment: .topTrailing) {
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .background(
+                        Circle()
+                            .fill(Color(.systemBackground))
+                    )
+                    .offset(x: 8, y: -8)
+            }
+        }
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
         .onTapGesture {
-            // Add haptic feedback
-            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-            impactFeedback.impactOccurred()
+            handleTap()
+        }
+        .onLongPressGesture {
+            handleLongPress()
+        }
+    }
 
+    private func handleTap() {
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+
+        // If in selection mode, toggle selection instead of calling onTap
+        if isInSelectionMode, let shiftId = shift?.id {
+            onSelectionToggle?(shiftId)
+        } else {
+            // Normal tap behavior
             withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                 isPressed = true
             }
@@ -222,6 +269,16 @@ struct UnifiedShiftCard: View {
                 onTap?()
             }
         }
+    }
+
+    private func handleLongPress() {
+        // Long press to enter selection mode (if not already in it)
+        guard !isInSelectionMode, let shiftId = shift?.id else { return }
+
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+
+        onSelectionToggle?(shiftId)
     }
 }
 
@@ -262,25 +319,52 @@ struct UnifiedShiftCard: View {
             .font(.caption)
             .foregroundColor(.secondary)
 
-        UnifiedShiftCard(shift: sampleShift, onTap: {
-            print("Shift tapped!")
-        })
+        UnifiedShiftCard(
+            shift: sampleShift,
+            onTap: { print("Shift tapped!") },
+            isSelected: false,
+            onSelectionToggle: nil,
+            isInSelectionMode: false
+        )
 
         Text("Shift with notes:")
             .font(.caption)
             .foregroundColor(.secondary)
             .padding(.top, 8)
 
-        UnifiedShiftCard(shift: sampleShiftWithNotes, onTap: {
-            print("Shift with notes tapped!")
-        })
+        UnifiedShiftCard(
+            shift: sampleShiftWithNotes,
+            onTap: { print("Shift with notes tapped!") },
+            isSelected: false,
+            onSelectionToggle: nil,
+            isInSelectionMode: false
+        )
+
+        Text("Selected state:")
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.top, 8)
+
+        UnifiedShiftCard(
+            shift: sampleShiftWithNotes,
+            onTap: nil,
+            isSelected: true,
+            onSelectionToggle: { _ in print("Selection toggled") },
+            isInSelectionMode: true
+        )
 
         Text("Empty state:")
             .font(.caption)
             .foregroundColor(.secondary)
             .padding(.top, 8)
 
-        UnifiedShiftCard(shift: nil, onTap: nil)
+        UnifiedShiftCard(
+            shift: nil,
+            onTap: nil,
+            isSelected: false,
+            onSelectionToggle: nil,
+            isInSelectionMode: false
+        )
     }
     .padding()
 }

@@ -4,7 +4,7 @@ import Testing
 @testable import ShiftScheduler
 
 // MARK: - ScheduleAction Multi-Select Tests
-
+@MainActor
 @Suite("ScheduleAction Multi-Select Cases")
 struct ScheduleActionMultiSelectTests {
     // MARK: - Action Creation Tests
@@ -18,7 +18,7 @@ struct ScheduleActionMultiSelectTests {
             #expect(mode == .delete)
             #expect(firstId == shiftId)
         } else {
-            #fail("Action should be enterSelectionMode")
+            Issue.record("Action should be enterSelectionMode")
         }
     }
 
@@ -31,7 +31,7 @@ struct ScheduleActionMultiSelectTests {
             #expect(mode == .add)
             #expect(firstId == dateId)
         } else {
-            #fail("Action should be enterSelectionMode")
+            Issue.record("Action should be enterSelectionMode")
         }
     }
 
@@ -42,7 +42,7 @@ struct ScheduleActionMultiSelectTests {
         if case .exitSelectionMode = action {
             // Successfully pattern matched
         } else {
-            #fail("Action should be exitSelectionMode")
+            Issue.record("Action should be exitSelectionMode")
         }
     }
 
@@ -54,7 +54,7 @@ struct ScheduleActionMultiSelectTests {
         if case .toggleShiftSelection(let id) = action {
             #expect(id == shiftId)
         } else {
-            #fail("Action should be toggleShiftSelection")
+            Issue.record("Action should be toggleShiftSelection")
         }
     }
 
@@ -65,7 +65,7 @@ struct ScheduleActionMultiSelectTests {
         if case .selectAllVisible = action {
             // Successfully pattern matched
         } else {
-            #fail("Action should be selectAllVisible")
+            Issue.record("Action should be selectAllVisible")
         }
     }
 
@@ -76,7 +76,7 @@ struct ScheduleActionMultiSelectTests {
         if case .clearSelection = action {
             // Successfully pattern matched
         } else {
-            #fail("Action should be clearSelection")
+            Issue.record("Action should be clearSelection")
         }
     }
 
@@ -87,7 +87,7 @@ struct ScheduleActionMultiSelectTests {
         if case .bulkDeleteRequested = action {
             // Successfully pattern matched
         } else {
-            #fail("Action should be bulkDeleteRequested")
+            Issue.record("Action should be bulkDeleteRequested")
         }
     }
 
@@ -100,7 +100,7 @@ struct ScheduleActionMultiSelectTests {
             #expect(ids.count == 3)
             #expect(ids == shiftIds)
         } else {
-            #fail("Action should be bulkDeleteConfirmed")
+            Issue.record("Action should be bulkDeleteConfirmed")
         }
     }
 
@@ -111,19 +111,19 @@ struct ScheduleActionMultiSelectTests {
         if case .bulkDeleteCompleted(.success(let count)) = action {
             #expect(count == 5)
         } else {
-            #fail("Action should be bulkDeleteCompleted with success")
+            Issue.record("Action should be bulkDeleteCompleted with success")
         }
     }
 
     @Test("Can create bulkDeleteCompleted action with failure")
     func canCreateBulkDeleteCompletedFailure() {
-        let error = ScheduleError.deletionFailed("Test error")
+        let error = ScheduleError.calendarEventDeletionFailed("Test error")
         let action = ScheduleAction.bulkDeleteCompleted(.failure(error))
 
         if case .bulkDeleteCompleted(.failure) = action {
             // Successfully pattern matched
         } else {
-            #fail("Action should be bulkDeleteCompleted with failure")
+            Issue.record("Action should be bulkDeleteCompleted with failure")
         }
     }
 
@@ -231,8 +231,8 @@ struct ScheduleActionMultiSelectTests {
 
     @Test("bulkDeleteCompleted failure actions are equal")
     func bulkDeleteCompletedFailureActionsEqual() {
-        let action1 = ScheduleAction.bulkDeleteCompleted(.failure(ScheduleError.deletionFailed("Error")))
-        let action2 = ScheduleAction.bulkDeleteCompleted(.failure(ScheduleError.deletionFailed("Error")))
+        let action1 = ScheduleAction.bulkDeleteCompleted(.failure(ScheduleError.calendarEventDeletionFailed("Error")))
+        let action2 = ScheduleAction.bulkDeleteCompleted(.failure(ScheduleError.calendarEventDeletionFailed("Error")))
 
         #expect(action1 == action2)
     }

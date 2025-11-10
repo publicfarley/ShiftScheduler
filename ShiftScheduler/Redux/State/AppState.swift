@@ -239,6 +239,15 @@ struct ScheduleState: Equatable {
     /// Whether to show bulk delete confirmation dialog
     var showBulkDeleteConfirmation: Bool = false
 
+    /// Whether to show bulk add sheet for shift type selection
+    var showBulkAddSheet: Bool = false
+
+    /// Whether currently performing bulk add operation
+    var isAddingToSelectedDates: Bool = false
+
+    /// Dates selected for bulk add operations (used when in .add selection mode)
+    var selectedDates: Set<Date> = []
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states
@@ -307,9 +316,16 @@ struct ScheduleState: Equatable {
         return scheduledShifts.filter { selectedIds.contains($0.id) }
     }
 
-    /// Count of currently selected shifts
+    /// Count of currently selected items (shifts or dates based on mode)
     var selectionCount: Int {
-        selectedShiftIds.count
+        switch selectionMode {
+        case .delete:
+            return selectedShiftIds.count
+        case .add:
+            return selectedDates.count
+        case .none:
+            return 0
+        }
     }
 
     /// Whether user can delete selected shifts (must be in delete mode with selection)
@@ -319,7 +335,7 @@ struct ScheduleState: Equatable {
 
     /// Whether user can add to selected dates (must be in add mode with selection)
     var canAddToSelectedDates: Bool {
-        selectionMode == .add && !selectedShiftIds.isEmpty
+        selectionMode == .add && !selectedDates.isEmpty
     }
 }
 

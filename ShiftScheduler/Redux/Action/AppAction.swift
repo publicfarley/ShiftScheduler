@@ -401,6 +401,23 @@ enum ScheduleAction: Equatable {
     /// Bulk delete completed
     case bulkDeleteCompleted(Result<Int, ScheduleError>)
 
+    // MARK: - Bulk Add Actions
+
+    /// Bulk add was requested (user wants to select dates to add shifts)
+    case bulkAddRequested
+
+    /// Bulk add was confirmed with shift type selection
+    case bulkAddConfirmed(shiftType: ShiftType, notes: String)
+
+    /// Bulk add completed
+    case bulkAddCompleted(Result<[ScheduledShift], ScheduleError>)
+
+    /// Toggle selection of a date for bulk add
+    case toggleDateSelection(Date)
+
+    /// Clear all selected dates for bulk add
+    case clearSelectedDates
+
     // MARK: - Sliding Window Actions
 
     /// User navigated to a different month in the calendar view
@@ -432,7 +449,8 @@ enum ScheduleAction: Equatable {
              (.exitSelectionMode, .exitSelectionMode),
              (.selectAllVisible, .selectAllVisible),
              (.clearSelection, .clearSelection),
-             (.bulkDeleteRequested, .bulkDeleteRequested):
+             (.bulkDeleteRequested, .bulkDeleteRequested),
+             (.bulkAddRequested, .bulkAddRequested):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs
@@ -533,21 +551,22 @@ enum ScheduleAction: Equatable {
             return true
         case let (.enterSelectionMode(lhsMode, lhsId), .enterSelectionMode(rhsMode, rhsId)):
             return lhsMode == rhsMode && lhsId == rhsId
-        case (.exitSelectionMode, .exitSelectionMode):
-            return true
         case let (.toggleShiftSelection(lhs), .toggleShiftSelection(rhs)):
             return lhs == rhs
-        case (.selectAllVisible, .selectAllVisible):
-            return true
-        case (.clearSelection, .clearSelection):
-            return true
-        case (.bulkDeleteRequested, .bulkDeleteRequested):
-            return true
         case let (.bulkDeleteConfirmed(lhs), .bulkDeleteConfirmed(rhs)):
             return lhs == rhs
         case (.bulkDeleteCompleted(.success(let lhs)), .bulkDeleteCompleted(.success(let rhs))):
             return lhs == rhs
         case (.bulkDeleteCompleted(.failure), .bulkDeleteCompleted(.failure)):
+            return true
+        case let (.bulkAddConfirmed(lhsType, lhsNotes), .bulkAddConfirmed(rhsType, rhsNotes)):
+            return lhsType.id == rhsType.id && lhsNotes == rhsNotes
+        case (.bulkAddCompleted(.success), .bulkAddCompleted(.success)),
+             (.bulkAddCompleted(.failure), .bulkAddCompleted(.failure)):
+            return true
+        case let (.toggleDateSelection(lhs), .toggleDateSelection(rhs)):
+            return Calendar.current.isDate(lhs, inSameDayAs: rhs)
+        case (.clearSelectedDates, .clearSelectedDates):
             return true
         default:
             return false

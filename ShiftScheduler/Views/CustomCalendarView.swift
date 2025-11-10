@@ -14,6 +14,8 @@ private struct CalendarCell: Identifiable {
 struct CustomCalendarView: View {
     @Binding var selectedDate: Date
     let scheduledDates: Set<Date>
+    let selectionMode: SelectionMode?
+    let selectedDates: Set<Date>
 
     @State private var currentMonth = Date()
     @Environment(\.reduxStore) var store
@@ -69,15 +71,35 @@ struct CustomCalendarView: View {
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(daysInMonth()) { cell in
                     if let date = cell.date {
-                        DayView(
-                            date: date,
-                            isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                            hasShift: scheduledDates.contains { scheduledDate in
-                                calendar.isDate(date, inSameDayAs: scheduledDate)
-                            },
-                            isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
-                        ) {
-                            selectedDate = date
+                        let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
+                        let hasShift = scheduledDates.contains { scheduledDate in
+                            calendar.isDate(date, inSameDayAs: scheduledDate)
+                        }
+
+                        // Show EmptyDateCard in bulk add mode (.add) if no shift on that date
+                        if selectionMode == .add && !hasShift {
+                            let isSelected = selectedDates.contains { selectedDate in
+                                calendar.isDate(date, inSameDayAs: selectedDate)
+                            }
+                            EmptyDateCard(
+                                date: date,
+                                isSelected: isSelected,
+                                isCurrentMonth: isCurrentMonth
+                            ) {
+                                Task {
+                                    await store.dispatch(action: .schedule(.toggleDateSelection(date)))
+                                }
+                            }
+                        } else {
+                            // Show normal DayView for dates with shifts or when not in bulk add mode
+                            DayView(
+                                date: date,
+                                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                                hasShift: hasShift,
+                                isCurrentMonth: isCurrentMonth
+                            ) {
+                                selectedDate = date
+                            }
                         }
                     } else {
                         // Empty space for dates outside current month
@@ -214,7 +236,9 @@ struct DayView: View {
             Date(),
             Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
             Calendar.current.date(byAdding: .day, value: 5, to: Date())!
-        ])
+        ]),
+        selectionMode: nil,
+        selectedDates: []
     )
     .padding()
 }

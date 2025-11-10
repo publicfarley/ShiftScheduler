@@ -568,6 +568,42 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isDeletingShift = false
         state.currentError = error
         // Keep selection and mode active for retry
+
+    // MARK: - Bulk Add Actions
+
+    case .bulkAddRequested:
+        state.showBulkAddSheet = true
+
+    case .bulkAddConfirmed:
+        state.isAddingToSelectedDates = true
+        state.currentError = nil
+
+    case .bulkAddCompleted(.success(let shifts)):
+        state.isAddingToSelectedDates = false
+        state.isInSelectionMode = false
+        state.selectionMode = nil
+        state.selectedShiftIds.removeAll()
+        state.selectedDates.removeAll()  // Clear selected dates after successful bulk add
+        state.showBulkAddSheet = false
+        // Add newly created shifts to the schedule
+        state.scheduledShifts.append(contentsOf: shifts)
+        state.successMessage = "\(shifts.count) shifts added"
+        state.showSuccessToast = true
+
+    case .bulkAddCompleted(.failure(let error)):
+        state.isAddingToSelectedDates = false
+        state.currentError = error
+        // Keep selection and mode active for retry
+
+    case .toggleDateSelection(let date):
+        if state.selectedDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            state.selectedDates = Set(state.selectedDates.filter { !Calendar.current.isDate($0, inSameDayAs: date) })
+        } else {
+            state.selectedDates.insert(date)
+        }
+
+    case .clearSelectedDates:
+        state.selectedDates.removeAll()
     }
 
     return state

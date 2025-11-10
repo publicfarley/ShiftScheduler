@@ -3,6 +3,7 @@ import Testing
 
 @testable import ShiftScheduler
 
+@MainActor
 @Suite("CalendarService Batch Operations")
 struct CalendarServiceBatchOperationsTests {
     // MARK: - DeleteMultipleShiftEvents Tests
@@ -11,16 +12,7 @@ struct CalendarServiceBatchOperationsTests {
     func deleteMultipleShiftEventsDeletesAllEvents() async throws {
         let mockService = MockCalendarService()
 
-        // Create test shifts
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
-
+        let shiftType = ShiftTypeBuilder.nightShift()
         let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
         let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "event3", shiftType: shiftType, date: Date(), notes: nil)
@@ -39,14 +31,7 @@ struct CalendarServiceBatchOperationsTests {
     func deleteMultipleShiftEventsReturnsCorrectCount() async throws {
         let mockService = MockCalendarService()
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shifts = (0..<5).map { i in
             ScheduledShift(
@@ -71,14 +56,7 @@ struct CalendarServiceBatchOperationsTests {
     func deleteMultipleShiftEventsHandlesNonExistentEvents() async throws {
         let mockService = MockCalendarService()
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
@@ -97,14 +75,7 @@ struct CalendarServiceBatchOperationsTests {
         let mockService = MockCalendarService()
         mockService.mockIsAuthorized = false
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
@@ -112,7 +83,7 @@ struct CalendarServiceBatchOperationsTests {
         // Should throw authorization error
         do {
             _ = try await mockService.deleteMultipleShiftEvents(["event1"])
-            #fail("Should throw authorization error")
+            Issue.record("Should have thrown a CalendarServiceError")
         } catch {
             #expect(error is CalendarServiceError)
         }
@@ -122,14 +93,7 @@ struct CalendarServiceBatchOperationsTests {
     func deleteMultipleShiftEventsHandlesEmptyArray() async throws {
         let mockService = MockCalendarService()
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
@@ -161,21 +125,14 @@ struct CalendarServiceBatchOperationsTests {
         mockService.shouldThrowError = true
         mockService.throwError = PersistenceError.saveFailed("Test error")
 
-        let shiftType = ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: 8.0,
-            title: "Night Shift",
-            shiftDescription: "Night shift",
-            location: Location(id: UUID(), name: "Office")
-        )
+        let shiftType = ShiftTypeBuilder.nightShift()
 
         let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
 
         do {
             _ = try await mockService.deleteMultipleShiftEvents(["event1"])
-            #fail("Should throw error")
+            Issue.record("Should have thrown an error")
         } catch {
             #expect(error is PersistenceError)
         }

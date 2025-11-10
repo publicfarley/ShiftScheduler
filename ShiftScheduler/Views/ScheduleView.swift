@@ -6,6 +6,8 @@ private let logger = Logger(subsystem: "com.shiftscheduler.views", category: "Sc
 struct ScheduleView: View {
     @Environment(\.reduxStore) var store
     @State private var listOpacity: Double = 1
+    @State private var showBulkDeleteConfirmation = false
+    @State private var showBulkAddSheet = false
 
     var body: some View {
         ZStack {
@@ -153,6 +155,31 @@ struct ScheduleView: View {
                 .environment(\.reduxStore, store)
             }
         }
+        .sheet(
+            isPresented: $showBulkAddSheet,
+            onDismiss: {
+                Task {
+                    await store.dispatch(action: .schedule(.clearSelectedDates))
+                }
+            }
+        ) {
+            ShiftTypeSelectionView(
+                isPresented: $showBulkAddSheet,
+                availableShiftTypes: store.state.shiftTypes.shiftTypes,
+                selectedDateCount: store.state.schedule.selectedDates.count,
+                onConfirm: { shiftType, notes in
+                    Task {
+                        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: notes)))
+                        showBulkAddSheet = false
+                    }
+                },
+                onDismiss: {
+                    Task {
+                        await store.dispatch(action: .schedule(.clearSelectedDates))
+                    }
+                }
+            )
+        }
         .onAppear {
             logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
             Task {
@@ -163,6 +190,16 @@ struct ScheduleView: View {
             logger.debug("Shifts loaded - count: \(shifts.count), selectedDate: \(store.state.schedule.selectedDate.formatted()), filtered: \(store.state.schedule.filteredShifts.count)")
         }
         .dismissKeyboardOnTap()
+        .bulkDeleteConfirmationAlert(
+            isPresented: $showBulkDeleteConfirmation,
+            count: store.state.schedule.selectionCount,
+            onConfirm: {
+                Task {
+                    await store.dispatch(action: .schedule(.bulkDeleteConfirmed(Array(store.state.schedule.selectedShiftIds))))
+                }
+            },
+            onCancel: {}
+        )
     }
 
     // MARK: - Computed Properties
@@ -198,15 +235,70 @@ struct ScheduleView: View {
 
     private var scheduleContentView: some View {
         VStack(spacing: 0) {
-            // Header with buttons
-            HStack(spacing: 16) {
-                addShiftButton
-                Spacer()
-                todayButton
-                filterButton
+            // Header: Selection toolbar or action buttons
+            if store.state.schedule.isInSelectionMode {
+                SelectionToolbarView(
+                    selectionCount: store.state.schedule.selectionCount,
+                    canDelete: store.state.schedule.canDeleteSelectedShifts,
+                    isDeleting: store.state.schedule.isDeletingShift,
+                    selectionMode: store.state.schedule.selectionMode,
+                    onDelete: {
+                        // Show confirmation dialog before deleting
+                        showBulkDeleteConfirmation = true
+                    },
+                    onAdd: {
+                        // Show shift type selection sheet for bulk add
+                        showBulkAddSheet = true
+                    },
+                    onSelectAll: {
+                        Task {
+                            await store.dispatch(action: .schedule(.selectAllVisible))
+                        }
+                    },
+                    onClear: {
+                        Task {
+                            await store.dispatch(action: .schedule(.clearSelection))
+                        }
+                    },
+                    onExit: {
+                        Task {
+                            await store.dispatch(action: .schedule(.exitSelectionMode))
+                        }
+                    }
+                )
+            } else {
+                // Normal header buttons
+                HStack(spacing: 16) {
+                    // Menu with add and bulk add options
+                    Menu {
+                        Button(action: {
+                            Task {
+                                await store.dispatch(action: .schedule(.addShiftButtonTapped))
+                            }
+                        }) {
+                            Label("Add Single Shift", systemImage: "plus.circle")
+                        }
+
+                        Button(action: {
+                            Task {
+                                await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
+                                showBulkAddSheet = false  // Reset to prepare for bulk add
+                            }
+                        }) {
+                            Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle")
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+                    todayButton
+                    filterButton
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
 
             // Calendar month view - FIXED SIZE
             VStack(spacing: 0) {
@@ -223,7 +315,9 @@ struct ScheduleView: View {
                         store.state.schedule.scheduledShifts.map { shift in
                             Calendar.current.startOfDay(for: shift.date)
                         }
-                    )
+                    ),
+                    selectionMode: store.state.schedule.selectionMode,
+                    selectedDates: store.state.schedule.selectedDates
                 )
                 .padding()
                 .background(Color(.systemGray6))
@@ -471,7 +565,20 @@ struct ScheduleView: View {
                 Task {
                     await store.dispatch(action: .schedule(.shiftTapped(shift)))
                 }
-            }
+            },
+            isSelected: store.state.schedule.selectedShiftIds.contains(shift.id),
+            onSelectionToggle: { shiftId in
+                Task {
+                    if store.state.schedule.isInSelectionMode {
+                        // Already in selection mode - toggle selection
+                        await store.dispatch(action: .schedule(.toggleShiftSelection(shiftId)))
+                    } else {
+                        // Not in selection mode - enter it
+                        await store.dispatch(action: .schedule(.enterSelectionMode(mode: .delete, firstId: shiftId)))
+                    }
+                }
+            },
+            isInSelectionMode: store.state.schedule.isInSelectionMode
         )
         .padding(.horizontal)
     }
