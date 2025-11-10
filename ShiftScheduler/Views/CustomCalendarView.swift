@@ -189,6 +189,17 @@ struct DayView: View {
         Calendar.current.isDateInToday(date)
     }
 
+    private var displaySymbol: String? {
+        guard let symbol = shiftSymbol else { return nil }
+
+        // Limit to 3 characters, add ellipsis if longer
+        if symbol.count > 3 {
+            let index = symbol.index(symbol.startIndex, offsetBy: 3)
+            return String(symbol[..<index]) + "…"
+        }
+        return symbol
+    }
+
     var body: some View {
         Button(action: onTap) {
             ZStack {
@@ -204,7 +215,7 @@ struct DayView: View {
                 }
 
                 // Day number and shift symbol layout
-                if let symbol = shiftSymbol, hasShift {
+                if let symbol = displaySymbol, hasShift {
                     VStack(spacing: -2) {
                         Text(symbol)
                             .font(.system(size: 14))
@@ -251,14 +262,16 @@ struct DayView: View {
     let today = Date()
     let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)!
     let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)!
+    let date7 = Calendar.current.date(byAdding: .day, value: 7, to: today)!
 
     CustomCalendarView(
         selectedDate: .constant(today),
-        scheduledDates: Set([today, date2, date5]),
+        scheduledDates: Set([today, date2, date5, date7]),
         shiftSymbols: [
             today: "🌅",
             date2: "🌃",
-            date5: "🏢"
+            date5: "🏢",
+            date7: "LONG"  // Test truncation with 4+ chars
         ],
         selectionMode: nil,
         selectedDates: []
