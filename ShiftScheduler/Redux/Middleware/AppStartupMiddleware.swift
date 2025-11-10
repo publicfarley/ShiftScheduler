@@ -91,7 +91,18 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         // State updates handled by reducer, no middleware action needed
         break
 
-    case .tabSelected, .userProfileUpdated, .displayNameChanged, .profileLoaded:
+    case .displayNameChanged:
+        // Persist user profile immediately when name is changed (e.g., during onboarding)
+        // This ensures the name is saved even if user never navigates to Settings
+        logger.debug("Display name changed - persisting user profile")
+        do {
+            try await services.persistenceService.saveUserProfile(state.userProfile)
+            logger.debug("User profile persisted successfully with name: \(state.userProfile.displayName)")
+        } catch {
+            logger.error("Failed to persist user profile after name change: \(error.localizedDescription)")
+        }
+
+    case .tabSelected, .userProfileUpdated, .profileLoaded:
         // Not handled by this middleware
         break
     }
