@@ -62,8 +62,8 @@ struct AddEditShiftTypeView: View {
                 }
 
                 Section("Shift Type Details") {
-                    TextField("Symbol (e.g., M, N, D)", text: $symbol)
-                        .textInputAutocapitalization(.characters)
+                    TextField("Symbol (e.g., m, n, d)", text: $symbol)
+                        .textInputAutocapitalization(.never)
                         .onChange(of: symbol) { oldValue, newValue in
                             if newValue.count > 20 {
                                 symbol = String(newValue.prefix(20))
