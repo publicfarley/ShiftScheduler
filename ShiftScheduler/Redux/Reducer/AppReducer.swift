@@ -547,6 +547,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
 
     case .clearSelection:
         state.selectedShiftIds.removeAll()
+        state.selectedDates.removeAll()
 
     case .bulkDeleteRequested:
         state.showBulkDeleteConfirmation = true

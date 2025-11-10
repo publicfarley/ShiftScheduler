@@ -264,11 +264,6 @@ struct ScheduleView: View {
                         // Show shift type selection sheet for bulk add
                         showBulkAddSheet = true
                     },
-                    onSelectAll: {
-                        Task {
-                            await store.dispatch(action: .schedule(.selectAllVisible))
-                        }
-                    },
                     onClear: {
                         Task {
                             await store.dispatch(action: .schedule(.clearSelection))

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Selection toolbar for multi-select operations
-/// Displays selection count and provides actions: Delete/Add, Select All, Clear, Exit
+/// Displays selection count and provides actions: Delete/Add, Clear, Exit
 struct SelectionToolbarView: View {
     let selectionCount: Int
     let canDelete: Bool
@@ -9,7 +9,6 @@ struct SelectionToolbarView: View {
     let selectionMode: SelectionMode?
     let onDelete: () async -> Void
     let onAdd: () -> Void
-    let onSelectAll: () -> Void
     let onClear: () -> Void
     let onExit: () -> Void
 
@@ -117,30 +116,6 @@ struct SelectionToolbarView: View {
 
                 // Secondary action buttons
                 HStack(spacing: 12) {
-                    // Select All button
-                    Button(action: onSelectAll) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.square.fill")
-                                .font(.system(size: 16, weight: .semibold))
-
-                            Text("Select All")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color(.systemGray5))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                                }
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
                     // Clear selection button
                     Button(action: onClear) {
                         HStack(spacing: 6) {
@@ -192,7 +167,6 @@ struct SelectionToolbarView: View {
             selectionMode: .delete,
             onDelete: {},
             onAdd: {},
-            onSelectAll: {},
             onClear: {},
             onExit: {}
         )
@@ -205,7 +179,6 @@ struct SelectionToolbarView: View {
             selectionMode: .delete,
             onDelete: {},
             onAdd: {},
-            onSelectAll: {},
             onClear: {},
             onExit: {}
         )
@@ -218,7 +191,6 @@ struct SelectionToolbarView: View {
             selectionMode: .add,
             onDelete: {},
             onAdd: {},
-            onSelectAll: {},
             onClear: {},
             onExit: {}
         )
