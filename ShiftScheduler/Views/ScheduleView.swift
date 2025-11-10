@@ -210,6 +210,20 @@ struct ScheduleView: View {
         return formatter.string(from: store.state.schedule.selectedDate)
     }
 
+    private var shiftSymbolsByDate: [Date: String] {
+        var symbols: [Date: String] = [:]
+        let calendar = Calendar.current
+
+        for shift in store.state.schedule.scheduledShifts {
+            if let symbol = shift.shiftType?.symbol {
+                let dateKey = calendar.startOfDay(for: shift.date)
+                symbols[dateKey] = symbol
+            }
+        }
+
+        return symbols
+    }
+
     // MARK: - View Components
 
     private var authorizationRequiredView: some View {
@@ -316,6 +330,7 @@ struct ScheduleView: View {
                             Calendar.current.startOfDay(for: shift.date)
                         }
                     ),
+                    shiftSymbols: shiftSymbolsByDate,
                     selectionMode: store.state.schedule.selectionMode,
                     selectedDates: store.state.schedule.selectedDates
                 )

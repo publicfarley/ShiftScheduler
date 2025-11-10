@@ -14,6 +14,7 @@ private struct CalendarCell: Identifiable {
 struct CustomCalendarView: View {
     @Binding var selectedDate: Date
     let scheduledDates: Set<Date>
+    let shiftSymbols: [Date: String]  // Map of dates to shift symbols
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
@@ -92,10 +93,15 @@ struct CustomCalendarView: View {
                             }
                         } else {
                             // Show normal DayView for dates with shifts or when not in bulk add mode
+                            let shiftSymbol = shiftSymbols.first(where: { symbolDate, _ in
+                                calendar.isDate(date, inSameDayAs: symbolDate)
+                            })?.value
+
                             DayView(
                                 date: date,
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
+                                shiftSymbol: shiftSymbol,
                                 isCurrentMonth: isCurrentMonth
                             ) {
                                 selectedDate = date
@@ -169,6 +175,7 @@ struct DayView: View {
     let date: Date
     let isSelected: Bool
     let hasShift: Bool
+    let shiftSymbol: String?
     let isCurrentMonth: Bool
     let onTap: () -> Void
 
@@ -196,10 +203,21 @@ struct DayView: View {
                         .frame(width: 36, height: 36)
                 }
 
-                // Day number
-                Text(dayNumber)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(textColor)
+                // Day number and shift symbol layout
+                if let symbol = shiftSymbol, hasShift {
+                    VStack(spacing: -2) {
+                        Text(symbol)
+                            .font(.system(size: 14))
+                        Text(dayNumber)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(textColor)
+                    }
+                } else {
+                    // Just day number
+                    Text(dayNumber)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(textColor)
+                }
             }
         }
         .frame(height: 40)
@@ -230,13 +248,18 @@ struct DayView: View {
 }
 
 #Preview {
+    let today = Date()
+    let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)!
+    let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)!
+
     CustomCalendarView(
-        selectedDate: .constant(Date()),
-        scheduledDates: Set([
-            Date(),
-            Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
-            Calendar.current.date(byAdding: .day, value: 5, to: Date())!
-        ]),
+        selectedDate: .constant(today),
+        scheduledDates: Set([today, date2, date5]),
+        shiftSymbols: [
+            today: "🌅",
+            date2: "🌃",
+            date5: "🏢"
+        ],
         selectionMode: nil,
         selectedDates: []
     )
