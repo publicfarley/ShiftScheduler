@@ -3,6 +3,7 @@ import SwiftUI
 struct ShiftTypeCountCard: View {
     let shiftType: ShiftType
     let count: Int
+    let scheduledShifts: [ScheduledShift]
 
     @State private var isPressed = false
 
@@ -10,12 +11,32 @@ struct ShiftTypeCountCard: View {
         ShiftColorPalette.colorForShift(shiftType)
     }
 
+    private var daysWithShifts: String {
+        let dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+        let calendar = Calendar.current
+        var daysSet = Set<Int>()
+
+        for shift in scheduledShifts.filter({ $0.shiftType?.id == shiftType.id }) {
+            let weekday = calendar.component(.weekday, from: shift.date)
+            // weekday: 1 = Sunday, 2 = Monday, etc.
+            daysSet.insert(weekday)
+        }
+
+        let sortedDays = daysSet.sorted()
+        let displayDays = sortedDays.map { dayIndex -> String in
+            let adjustedIndex = dayIndex == 1 ? 6 : dayIndex - 2
+            return dayNames[adjustedIndex]
+        }
+
+        return displayDays.joined(separator: ", ")
+    }
+
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             // Symbol in colored circle
             Text(shiftType.symbol)
-                .font(.system(size: 32))
-                .frame(width: 56, height: 56)
+                .font(.system(size: 28))
+                .frame(width: 48, height: 48)
                 .background(
                     Circle()
                         .fill(
@@ -36,21 +57,19 @@ struct ShiftTypeCountCard: View {
 
             // Shift Title
             Text(shiftType.title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
             // Count Display
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 Text("\(count)")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(cardColor)
 
                 Text(count == 1 ? "shift" : "shifts")
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
             }
 
@@ -69,13 +88,20 @@ struct ShiftTypeCountCard: View {
                     )
                     .frame(height: 3)
                     .cornerRadius(1.5)
+
+                // Day indicators
+                Text(daysWithShifts)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
 
             Spacer()
         }
         .frame(width: 115, height: 145)
-        .padding(.vertical, 16)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
@@ -116,22 +142,35 @@ struct ShiftTypeCountCard: View {
 }
 
 #Preview {
-    ShiftTypeCountCard(
-        shiftType: ShiftType(
-            id: UUID(),
-            symbol: "🌅",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 9, minute: 0),
-                to: HourMinuteTime(hour: 17, minute: 0)
-            ),
-            title: "Morning Shift",
-            description: "Standard morning shift",
-            location: Location(
-                id: UUID(),
-                name: "Main Office",
-                address: "123 Main St"
-            )
+    let shiftType = ShiftType(
+        id: UUID(),
+        symbol: "🌅",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 9, minute: 0),
+            to: HourMinuteTime(hour: 17, minute: 0)
         ),
-        count: 5
+        title: "Morning Shift",
+        description: "Standard morning shift",
+        location: Location(
+            id: UUID(),
+            name: "Main Office",
+            address: "123 Main St"
+        )
+    )
+
+    let calendar = Calendar.current
+    let today = calendar.startOfDay(for: Date())
+    let shifts = [
+        ScheduledShift(id: UUID(), eventIdentifier: UUID().uuidString, shiftType: shiftType, date: today),
+        ScheduledShift(id: UUID(), eventIdentifier: UUID().uuidString, shiftType: shiftType, date: calendar.date(byAdding: .day, value: 1, to: today)!),
+        ScheduledShift(id: UUID(), eventIdentifier: UUID().uuidString, shiftType: shiftType, date: calendar.date(byAdding: .day, value: 2, to: today)!),
+        ScheduledShift(id: UUID(), eventIdentifier: UUID().uuidString, shiftType: shiftType, date: calendar.date(byAdding: .day, value: 5, to: today)!),
+        ScheduledShift(id: UUID(), eventIdentifier: UUID().uuidString, shiftType: shiftType, date: calendar.date(byAdding: .day, value: 6, to: today)!)
+    ]
+
+    ShiftTypeCountCard(
+        shiftType: shiftType,
+        count: 5,
+        scheduledShifts: shifts
     )
 }

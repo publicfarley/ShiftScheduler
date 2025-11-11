@@ -299,7 +299,8 @@ struct TodayView: View {
                                                     }) {
                                                         ShiftTypeCountCard(
                                                             shiftType: typeCount.shiftType,
-                                                            count: typeCount.count
+                                                            count: typeCount.count,
+                                                            scheduledShifts: weekShifts
                                                         )
                                                     }
                                                     .buttonStyle(PlainButtonStyle())
