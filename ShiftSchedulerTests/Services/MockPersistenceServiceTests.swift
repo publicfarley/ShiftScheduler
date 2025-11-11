@@ -207,7 +207,7 @@ struct MockPersistenceServiceTests {
         service.shouldThrowError = true
         service.throwError = testError
 
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let entry = ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -329,7 +329,7 @@ struct MockPersistenceServiceTests {
         // Given
         let service = MockPersistenceService()
         let userId = UUID()
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let entry = ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -356,7 +356,7 @@ struct MockPersistenceServiceTests {
         // Given
         let service = MockPersistenceService()
         let userId = UUID()
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let entry = ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,

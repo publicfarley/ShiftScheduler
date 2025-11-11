@@ -207,15 +207,29 @@ struct ScheduleStateMultiSelectTests {
         #expect(selectedShifts.isEmpty)
     }
 
-    @Test("selectionCount returns correct count")
+    @Test("selectionCount returns correct count for delete mode")
     func selectionCountReturnsCorrectCount() {
         var state = ScheduleState()
 
+        // Set selection mode to .delete to test selectedShiftIds.count
+        state.selectionMode = .delete
+        state.isInSelectionMode = true
         state.selectedShiftIds = [UUID(), UUID(), UUID()]
 
         #expect(state.selectionCount == 3)
     }
 
+    @Test("selectionCount returns correct count for add mode")
+    func selectionCountReturnsCorrectCountForAddMode() throws {
+        var state = ScheduleState()
+
+        state.selectionMode = .add
+        state.isInSelectionMode = true
+        let date = try Calendar.current.startOfDay(for: Date.fixedTestDate_Nov11_2025())
+        state.selectedDates = [date, try #require(Calendar.current.date(byAdding: .day, value: 1, to: date))]
+
+        #expect(state.selectionCount == 2)
+    }
     @Test("selectionCount returns zero when no selection")
     func selectionCountReturnsZeroWhenEmpty() {
         let state = ScheduleState()
@@ -254,17 +268,17 @@ struct ScheduleStateMultiSelectTests {
         #expect(state.canAddToSelectedDates == false)
 
         // Has selection but not in add mode
-        state.selectedShiftIds.insert(UUID())
+        state.selectedDates.insert(Date())
         state.selectionMode = .delete
         #expect(state.canAddToSelectedDates == false)
 
         // In add mode but no selection
-        state.selectedShiftIds.removeAll()
+        state.selectedDates.removeAll()
         state.selectionMode = .add
         #expect(state.canAddToSelectedDates == false)
 
         // In add mode with selection
-        state.selectedShiftIds.insert(UUID())
+        state.selectedDates.insert(Date())
         state.selectionMode = .add
         #expect(state.canAddToSelectedDates == true)
     }

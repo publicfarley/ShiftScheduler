@@ -21,12 +21,16 @@ struct Card: Identifiable {
 // MARK: - Sample Data
 func generateSampleCards() -> [Card] {
     let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .red, .indigo, .teal]
-    return (1...10).map { i in
-        Card(
+    return (1...10).compactMap { i in
+        guard let randomColor = colors.randomElement() else {
+            return nil
+        }
+        
+        return Card(
             title: "Card Title \(i)",
             description: "This is a sample description for card number \(i). It can contain a few lines of text.",
             creationDate: Date().addingTimeInterval(-Double(i) * 3600 * 24),
-            color: colors.randomElement()!
+            color: randomColor
         )
     }
 }

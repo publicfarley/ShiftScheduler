@@ -59,8 +59,8 @@ struct PersistenceServiceIntegrationTests {
     }
 
     /// Create a test change log entry with fixed date
-    static func createTestChangeLogEntry() -> ChangeLogEntry {
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+    static func createTestChangeLogEntry() throws -> ChangeLogEntry {
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         return ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -160,7 +160,7 @@ struct PersistenceServiceIntegrationTests {
         // Given
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
 
         // When
         try await service.addChangeLogEntry(entry)
@@ -176,7 +176,7 @@ struct PersistenceServiceIntegrationTests {
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
 
         let switchedEntry = ChangeLogEntry(
             id: UUID(),
@@ -277,7 +277,7 @@ struct PersistenceServiceIntegrationTests {
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let entry1 = ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -327,7 +327,7 @@ struct PersistenceServiceIntegrationTests {
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         var entries: [ChangeLogEntry] = []
         for i in 0..<3 {
             let entry = ChangeLogEntry(
@@ -359,7 +359,7 @@ struct PersistenceServiceIntegrationTests {
         let (service, tempDir) = Self.createTestService()
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         let entry1 = ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,

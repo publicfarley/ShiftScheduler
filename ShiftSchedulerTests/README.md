@@ -317,11 +317,11 @@ func testAsyncOperation() async throws {
 let today = Date()
 
 // ✅ RIGHT - Deterministic
-let today = Calendar.current.date(from: DateComponents(
-    year: 2025, month: 10, day: 30
+let today = try #require(Calendar.current.date(from: DateComponents(
+    year: 2025, month: 10, day: 30)))
 ))!
 
-// ✅ Also acceptable for relative dates
+// ❌ WRONG Never force unwrap
 let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
 ```
 

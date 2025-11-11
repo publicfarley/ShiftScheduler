@@ -28,7 +28,7 @@ struct BulkAddMiddlewareTests {
     // MARK: - Bulk Add Confirmed Action Tests
 
     @Test("bulkAddConfirmed creates shifts for all selected dates")
-    async func testBulkAddCreatesShiftsForAllDates() {
+    func testBulkAddCreatesShiftsForAllDates() async throws {
         // Given
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
@@ -38,50 +38,45 @@ struct BulkAddMiddlewareTests {
 
         var state = AppState()
         state.schedule.selectionMode = .add
-        let date1 = Calendar.current.startOfDay(for: Date())
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
+        let date1 = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
         state.schedule.selectedDates = [date1, date2]
 
         let shiftType = Self.createTestShiftType()
         state.shiftTypes.shiftTypes = [shiftType]
 
-        var dispatchedActions: [AppAction] = []
+        var isBulkAddCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.bulkAddCompleted):
+                isBulkAddCompleted = true
+            default:
+                break
+            }
+        }
 
         let store = Store(
             state: state,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [
-                { state, action, dispatch in
-                    // Record dispatch calls for verification
-                    Task {
-                        if case .schedule = action {
-                            dispatchedActions.append(action)
-                        }
-                        await scheduleMiddleware(state, action, dispatch, mockServices)
-                    }
-                }
-            ]
+            middlewares: [scheduleMiddleware, mockTrackingMiddleware]
         )
 
         // When
         await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "Test notes")))
 
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
-
         // Then - should have triggered bulk add completion
-        let completionActions = dispatchedActions.filter { action in
-            if case .schedule(.bulkAddCompleted) = action {
-                return true
-            }
-            return false
-        }
-        #expect(!completionActions.isEmpty)
+        #expect(isBulkAddCompleted)
     }
 
     @Test("bulkAddConfirmed includes notes in change log entries")
-    async func testBulkAddIncludesNotesInChangeLog() {
+    func testBulkAddIncludesNotesInChangeLog() async {
         // Given
         let mockPersistence = MockPersistenceService()
         let mockServices = ServiceContainer(
@@ -110,9 +105,6 @@ struct BulkAddMiddlewareTests {
         let testNotes = "Important shift notes"
         await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: testNotes)))
 
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
-
         // Then - change log entries should include notes
         let changeLogEntries = mockPersistence.mockChangeLogEntries
         #expect(!changeLogEntries.isEmpty)
@@ -125,7 +117,7 @@ struct BulkAddMiddlewareTests {
     }
 
     @Test("bulkAddConfirmed handles empty notes correctly")
-    async func testBulkAddWithEmptyNotes() {
+    func testBulkAddWithEmptyNotes() async {
         // Given
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
@@ -141,38 +133,40 @@ struct BulkAddMiddlewareTests {
         let shiftType = Self.createTestShiftType()
         state.shiftTypes.shiftTypes = [shiftType]
 
-        var successAction: ScheduleAction?
+        var isBulkAddCompleted = false
+
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.bulkAddCompleted(.success)):
+                isBulkAddCompleted = true
+            case .schedule(.bulkAddCompleted(.failure)):
+                Issue.record("Should not get failure when handling empty notes")
+            default:
+                break
+            }
+        }
 
         let store = Store(
             state: state,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [
-                { state, action, dispatch in
-                    Task {
-                        if case .schedule(let scheduleAction) = action {
-                            if case .bulkAddCompleted = scheduleAction {
-                                successAction = scheduleAction
-                            }
-                        }
-                        await scheduleMiddleware(state, action, dispatch, mockServices)
-                    }
-                }
-            ]
+            middlewares: [scheduleMiddleware, mockTrackingMiddleware]
         )
 
         // When - no notes provided
         await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "")))
 
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
-
         // Then - should complete successfully without crashing
-        #expect(successAction != nil)
+        #expect(isBulkAddCompleted)
     }
 
     @Test("bulkAddConfirmed creates ChangeLogEntry for each shift")
-    async func testBulkAddCreatesChangeLogEntry() {
+    func testBulkAddCreatesChangeLogEntry() async throws {
         // Given
         let mockPersistence = MockPersistenceService()
         let mockServices = ServiceContainer(
@@ -184,8 +178,8 @@ struct BulkAddMiddlewareTests {
         var state = AppState()
         state.userProfile = UserProfile(userId: UUID(), displayName: "Test User")
         state.schedule.selectionMode = .add
-        let date1 = Calendar.current.startOfDay(for: Date())
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
+        let date1 = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
         state.schedule.selectedDates = [date1, date2]
 
         let shiftType = Self.createTestShiftType()
@@ -201,9 +195,6 @@ struct BulkAddMiddlewareTests {
         // When
         await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "Test")))
 
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
-
         // Then - should have created 2 change log entries (one per date)
         let entries = mockPersistence.mockChangeLogEntries
         #expect(entries.count == 2)
@@ -216,7 +207,7 @@ struct BulkAddMiddlewareTests {
     }
 
     @Test("bulkAddConfirmed dispatches loadShifts to refresh calendar")
-    async func testBulkAddDispatchesLoadShifts() {
+    func testBulkAddDispatchesLoadShifts() async {
         // Given
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
@@ -234,27 +225,29 @@ struct BulkAddMiddlewareTests {
 
         var dispatchedLoadShifts = false
 
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.loadShifts):
+                dispatchedLoadShifts = true
+            default:
+                break
+            }
+        }
+
         let store = Store(
             state: state,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [
-                { state, action, dispatch in
-                    Task {
-                        if case .schedule(.loadShifts) = action {
-                            dispatchedLoadShifts = true
-                        }
-                        await scheduleMiddleware(state, action, dispatch, mockServices)
-                    }
-                }
-            ]
+            middlewares: [scheduleMiddleware, mockTrackingMiddleware]
         )
 
         // When
-        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: nil)))
-
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "")))
 
         // Then
         #expect(dispatchedLoadShifts)
@@ -263,7 +256,7 @@ struct BulkAddMiddlewareTests {
     // MARK: - Error Handling Tests
 
     @Test("bulkAddConfirmed handles calendar service error gracefully")
-    async func testBulkAddHandlesCalendarError() {
+    func testBulkAddHandlesCalendarError() async {
         // Given
         let mockCalendar = MockCalendarService()
         mockCalendar.mockIsAuthorized = false  // Will cause error
@@ -284,27 +277,31 @@ struct BulkAddMiddlewareTests {
 
         var completedWithError = false
 
+        func mockTrackingMiddleware(
+            state: AppState,
+            action: AppAction,
+            services: ServiceContainer,
+            dispatch: @escaping Dispatcher<AppAction>
+        ) async {
+            switch action {
+            case .schedule(.bulkAddCompleted(.failure)):
+                completedWithError = true
+            case .schedule(.bulkAddCompleted(.success)):
+                Issue.record("Should not succeed when calendar service error occurs")
+            default:
+                break
+            }
+        }
+
         let store = Store(
             state: state,
             reducer: appReducer,
             services: mockServices,
-            middlewares: [
-                { state, action, dispatch in
-                    Task {
-                        if case .schedule(.bulkAddCompleted(.failure)) = action {
-                            completedWithError = true
-                        }
-                        await scheduleMiddleware(state, action, dispatch, mockServices)
-                    }
-                }
-            ]
+            middlewares: [scheduleMiddleware, mockTrackingMiddleware]
         )
 
         // When
-        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: nil)))
-
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "")))
 
         // Then - should handle error gracefully
         #expect(completedWithError)
@@ -313,7 +310,7 @@ struct BulkAddMiddlewareTests {
     // MARK: - Date Ordering Tests
 
     @Test("bulkAddConfirmed creates shifts in chronological order")
-    async func testBulkAddCreatesShiftsInOrder() {
+    func testBulkAddCreatesShiftsInOrder() async throws {
         // Given
         let mockCalendar = MockCalendarService()
         mockCalendar.mockIsAuthorized = true
@@ -328,10 +325,10 @@ struct BulkAddMiddlewareTests {
         state.schedule.selectionMode = .add
 
         // Add dates in random order
-        let baseDate = Calendar.current.startOfDay(for: Date())
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: baseDate)!
+        let baseDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: baseDate))
         let date1 = baseDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: baseDate)!
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: baseDate))
 
         // Insert in non-chronological order
         state.schedule.selectedDates = [date3, date1, date2]
@@ -347,10 +344,7 @@ struct BulkAddMiddlewareTests {
         )
 
         // When
-        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: nil)))
-
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "")))
 
         // Then - shifts should be created (middleware sorts them)
         // This test validates the middleware processes dates chronologically
@@ -360,7 +354,7 @@ struct BulkAddMiddlewareTests {
     // MARK: - Integration Tests
 
     @Test("Complete bulk add flow: select dates → confirm → shifts created")
-    async func testCompleteBulkAddFlow() {
+    func testCompleteBulkAddFlow() async throws {
         // Given
         let mockCalendar = MockCalendarService()
         mockCalendar.mockIsAuthorized = true
@@ -375,7 +369,7 @@ struct BulkAddMiddlewareTests {
         state.userProfile = UserProfile(userId: UUID(), displayName: "Test User")
         state.schedule.selectionMode = .add
         let date1 = Calendar.current.startOfDay(for: Date())
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
         state.schedule.selectedDates = [date1, date2]
 
         let shiftType = Self.createTestShiftType()
@@ -391,9 +385,6 @@ struct BulkAddMiddlewareTests {
         // When - confirm bulk add
         await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: "Test notes")))
 
-        // Give time for async operations
-        try? await Task.sleep(nanoseconds: 100_000_000)
-
         // Then
         // 1. Shifts should be created in calendar
         #expect(!mockCalendar.mockShifts.isEmpty)
@@ -406,16 +397,16 @@ struct BulkAddMiddlewareTests {
     }
 
     @Test("bulkAddCompleted success clears selected dates")
-    async func testBulkAddCompletedClearsSelection() {
+    func testBulkAddCompletedClearsSelection() async {
         // Given
         var state = AppState()
         state.schedule.selectedDates = [Date()]
         let shift = ScheduledShift(id: UUID(), eventIdentifier: "test", shiftType: nil, date: Date())
 
         // When
-        appReducer(&state, .schedule(.bulkAddCompleted(.success([shift]))))
+        let newState = appReducer(state: state, action: .schedule(.bulkAddCompleted(.success([shift]))))
 
         // Then
-        #expect(state.schedule.selectedDates.isEmpty)
+        #expect(newState.schedule.selectedDates.isEmpty)
     }
 }

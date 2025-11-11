@@ -42,8 +42,8 @@ struct PersistenceServiceErrorTests {
     }
 
     /// Create test change log entry
-    static func createTestChangeLogEntry() -> ChangeLogEntry {
-        let fixedDate = Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29))!
+    static func createTestChangeLogEntry() throws -> ChangeLogEntry {
+        let fixedDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 29)))
         return ChangeLogEntry(
             id: UUID(),
             timestamp: fixedDate,
@@ -367,7 +367,7 @@ struct PersistenceServiceErrorTests {
         mockService.shouldThrowError = true
         mockService.throwError = ScheduleError.persistenceFailed("Cannot add entry")
 
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
 
         do {
             try await mockService.addChangeLogEntry(entry)
@@ -413,7 +413,7 @@ struct PersistenceServiceErrorTests {
             changeLogRepository: ChangeLogRepository(directoryURL: tempDir)
         )
 
-        let entry = Self.createTestChangeLogEntry()
+        let entry = try Self.createTestChangeLogEntry()
         try await service.addChangeLogEntry(entry)
 
         let loaded = try await service.loadChangeLogEntries()

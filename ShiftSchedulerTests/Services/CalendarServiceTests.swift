@@ -951,7 +951,7 @@ struct CalendarServiceTests {
 
         // End time should be 24 hours later (next day at midnight)
         let rawEndTime = HourMinuteTime(hour: 0, minute: 0).toDate(on: date)
-        let expectedEndTime = Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime)!
+        let expectedEndTime = try #require(Calendar.current.date(byAdding: .day, value: 1, to: rawEndTime))
         #expect(mockService.lastCreatedEventEndTime == expectedEndTime)
     }
 }

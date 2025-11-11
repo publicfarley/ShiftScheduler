@@ -629,45 +629,43 @@ func scheduleMiddleware(
         let userId = state.userProfile.userId
         let userDisplayName = state.userProfile.displayName
 
-        Task {
-            do {
-                var createdShifts: [ScheduledShift] = []
-                let calendarService = services.calendarService
-                let persistenceService = services.persistenceService
+        do {
+            var createdShifts: [ScheduledShift] = []
+            let calendarService = services.calendarService
+            let persistenceService = services.persistenceService
 
-                // Loop through selected dates and create shifts
-                for date in selectedDates.sorted() {
-                    // Create shift event in calendar (returns shift with EventKit identifier)
-                    let shift = try await calendarService.createShiftEvent(
-                        date: date,
-                        shiftType: shiftType,
-                        notes: notes.isEmpty ? nil : notes
-                    )
-                    createdShifts.append(shift)
+            // Loop through selected dates and create shifts
+            for date in selectedDates.sorted() {
+                // Create shift event in calendar (returns shift with EventKit identifier)
+                let shift = try await calendarService.createShiftEvent(
+                    date: date,
+                    shiftType: shiftType,
+                    notes: notes.isEmpty ? nil : notes
+                )
+                createdShifts.append(shift)
 
-                    // Create audit trail entry for shift creation
-                    let entry = ChangeLogEntry(
-                        id: UUID(),
-                        timestamp: Date(),
-                        userId: userId,
-                        userDisplayName: userDisplayName,
-                        changeType: .created,
-                        scheduledShiftDate: date,
-                        oldShiftSnapshot: nil,
-                        newShiftSnapshot: ShiftSnapshot(from: shiftType),
-                        reason: notes.isEmpty ? nil : notes
-                    )
+                // Create audit trail entry for shift creation
+                let entry = ChangeLogEntry(
+                    id: UUID(),
+                    timestamp: Date(),
+                    userId: userId,
+                    userDisplayName: userDisplayName,
+                    changeType: .created,
+                    scheduledShiftDate: date,
+                    oldShiftSnapshot: nil,
+                    newShiftSnapshot: ShiftSnapshot(from: shiftType),
+                    reason: notes.isEmpty ? nil : notes
+                )
 
-                    // Persist change log entry
-                    try await persistenceService.addChangeLogEntry(entry)
-                }
-
-                // Dispatch completion with created shifts
-                await dispatch(.schedule(.bulkAddCompleted(.success(createdShifts))))
-            } catch {
-                let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
-                await dispatch(.schedule(.bulkAddCompleted(.failure(scheduleError))))
+                // Persist change log entry
+                try await persistenceService.addChangeLogEntry(entry)
             }
+
+            // Dispatch completion with created shifts
+            await dispatch(.schedule(.bulkAddCompleted(.success(createdShifts))))
+        } catch {
+            let scheduleError = ScheduleError.calendarEventCreationFailed(error.localizedDescription)
+            await dispatch(.schedule(.bulkAddCompleted(.failure(scheduleError))))
         }
 
     case .bulkAddCompleted:

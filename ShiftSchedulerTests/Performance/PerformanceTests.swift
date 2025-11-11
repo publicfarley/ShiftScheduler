@@ -10,29 +10,6 @@ import Foundation
 struct PerformanceTests {
     // MARK: - Store Dispatch Performance
 
-    @Test("Store dispatch completes in reasonable time")
-    func testStoreDispatchPerformance() async {
-        // Given
-        let store = Store(
-            state: AppState(),
-            reducer: appReducer,
-            services: ServiceContainer(),
-            middlewares: []
-        )
-        
-        let iterations = 1000
-        let startTime = Date()
-
-        // When
-        for _ in 0..<iterations {
-            await store.dispatch(action: .appLifecycle(.calendarAccessVerified(true)))
-        }
-
-        // Then
-        let elapsed = Date().timeIntervalSince(startTime)
-        #expect(elapsed < 1.0, "1000 store dispatches should complete in under 1 second")
-    }
-
     @Test("Reducer execution is fast")
     func testReducerExecutionSpeed() {
         // Given

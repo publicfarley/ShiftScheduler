@@ -525,6 +525,7 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         state.isInSelectionMode = false
         state.selectionMode = nil
         state.selectedShiftIds.removeAll()
+        state.selectedDates.removeAll()
 
     case .toggleShiftSelection(let shiftId):
         if state.selectedShiftIds.contains(shiftId) {
@@ -597,10 +598,11 @@ nonisolated func scheduleReducer(state: ScheduleState, action: ScheduleAction) -
         // Keep selection and mode active for retry
 
     case .toggleDateSelection(let date):
-        if state.selectedDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
-            state.selectedDates = Set(state.selectedDates.filter { !Calendar.current.isDate($0, inSameDayAs: date) })
+        let normalizedDate = Calendar.current.startOfDay(for: date)
+        if state.selectedDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: normalizedDate) }) {
+            state.selectedDates = Set(state.selectedDates.filter { !Calendar.current.isDate($0, inSameDayAs: normalizedDate) })
         } else {
-            state.selectedDates.insert(date)
+            state.selectedDates.insert(normalizedDate)
         }
 
     case .clearSelectedDates:

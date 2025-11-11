@@ -70,7 +70,7 @@ struct CalendarServiceErrorTests {
         mockService.throwError = CalendarServiceError.notAuthorized
 
         let startDate = Calendar.current.startOfDay(for: Date())
-        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
+        let endDate = try #require(Calendar.current.date(byAdding: .day, value: 7, to: startDate))
 
         do {
             _ = try await mockService.loadShifts(from: startDate, to: endDate)
@@ -126,7 +126,7 @@ struct CalendarServiceErrorTests {
     func testLoadShiftsHandlesInvalidDateRanges() async throws {
         let service = CalendarService()
         let startDate = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: -1, to: startDate)! // End before start
+        let endDate = try #require(Calendar.current.date(byAdding: .day, value: -1, to: startDate)) // End before start
 
         do {
             _ = try await service.loadShifts(from: startDate, to: endDate)
@@ -250,7 +250,7 @@ struct CalendarServiceErrorTests {
         mockService.throwError = CalendarServiceError.dateCalculationFailed
 
         let startDate = Calendar.current.startOfDay(for: Date())
-        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
+        let endDate = try #require(Calendar.current.date(byAdding: .day, value: 7, to: startDate))
 
         do {
             _ = try await mockService.loadShiftData(from: startDate, to: endDate)

@@ -260,21 +260,28 @@ struct DayView: View {
 
 #Preview {
     let today = Date()
-    let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)!
-    let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)!
-    let date7 = Calendar.current.date(byAdding: .day, value: 7, to: today)!
+    let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)
+    let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)
+    let date7 = Calendar.current.date(byAdding: .day, value: 7, to: today)
 
-    CustomCalendarView(
-        selectedDate: .constant(today),
-        scheduledDates: Set([today, date2, date5, date7]),
-        shiftSymbols: [
-            today: "🌅",
-            date2: "🌃",
-            date5: "🏢",
-            date7: "LONG"  // Test truncation with 4+ chars
-        ],
-        selectionMode: nil,
-        selectedDates: []
-    )
-    .padding()
+    Group {
+        if let date2, let date5, let date7 {
+            CustomCalendarView(
+                selectedDate: .constant(today),
+                scheduledDates: Set([today, date2, date5, date7].compactMap { $0 }),
+                shiftSymbols: [
+                    today: "🌅",
+                    date2: "🌃",
+                    date5: "🏢",
+                    date7: "LONG"  // Test truncation with 4+ chars
+                ].mapValues { $0 },
+                selectionMode: nil,
+                selectedDates: []
+            )
+            .padding()
+        } else {
+            EmptyView()
+        }
+        
+    }
 }

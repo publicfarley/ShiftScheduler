@@ -156,11 +156,11 @@ struct CurrentDayServiceTests {
         // Given
         let service = CurrentDayService()
         let calendar = Calendar.current
-        // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = Self.testDate
+        // Use fixed testDate
+        let testDate = try Date.fixedTestDate_Nov11_2025()
 
         // When
-        let startOfWeek = service.getStartOfWeek(for: try #require(testDate))
+        let startOfWeek = service.getStartOfWeek(for: testDate)
 
         // Then
         let components = calendar.dateComponents([.weekday], from: startOfWeek)
@@ -174,7 +174,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = try #require(Self.testDate)
+        let testDate = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let startOfWeek = service.getStartOfWeek(for: testDate)
@@ -191,7 +191,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = try #require(Self.testDate)
+        let testDate = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let startOfMonth = service.getStartOfMonth(for: testDate)
@@ -207,7 +207,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
         let calendar = Calendar.current
         // Use fixed testDate (October 23, 2025 - Wednesday)
-        let testDate = try #require(Self.testDate)
+        let testDate = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let endOfMonth = service.getEndOfMonth(for: testDate)
@@ -225,7 +225,7 @@ struct CurrentDayServiceTests {
     func testDaysBetweenCalculatesCorrectly() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = try #require(Self.testDate)
+        let date1 = try Date.fixedTestDate_Nov11_2025()
         let date2 = try #require(Calendar.current.date(byAdding: .day, value: 7, to: date1))
 
         // When
@@ -239,7 +239,7 @@ struct CurrentDayServiceTests {
     func testDaysBetweenHandlesNegativeDifference() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = try #require(Self.testDate)
+        let date1 = try Date.fixedTestDate_Nov11_2025()
         let date2 = try #require(Calendar.current.date(byAdding: .day, value: -5, to: date1))
 
         // When
@@ -253,7 +253,7 @@ struct CurrentDayServiceTests {
     func testDaysBetweenReturnZeroForSameDay() throws {
         // Given
         let service = CurrentDayService()
-        let date = try #require(Self.testDate)
+        let date = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let days = service.daysBetween(date, date)
@@ -266,7 +266,7 @@ struct CurrentDayServiceTests {
     func testDaysBetweenHandlesMultipleWeeks() throws {
         // Given
         let service = CurrentDayService()
-        let date1 = try #require(Self.testDate)
+        let date1 = try Date.fixedTestDate_Nov11_2025()
         let date2 = try #require(Calendar.current.date(byAdding: .day, value: 30, to: date1))
 
         // When
@@ -282,12 +282,12 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
         let calendar = Calendar.current
 
-        var components1 = calendar.dateComponents([.year, .month, .day], from: try #require(Self.testDate))
+        var components1 = calendar.dateComponents([.year, .month, .day], from: try Date.fixedTestDate_Nov11_2025())
         components1.hour = 8
         components1.minute = 30
         let date1 = try #require(calendar.date(from: components1))
 
-        var components2 = calendar.dateComponents([.year, .month, .day], from: try #require(Self.testDate))
+        var components2 = calendar.dateComponents([.year, .month, .day], from: try Date.fixedTestDate_Nov11_2025())
         if let day = components2.day {
             components2.day = day + 5
         }

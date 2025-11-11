@@ -84,6 +84,30 @@ Each TCA feature manages its own state through the reducer's `@ObservableState` 
 
 Tests use Swift's Testing framework (not XCTest) with the `@Test` macro and `#expect` assertions.
 
+#### Build Verification
+
+**CRITICAL: Always verify both app and test targets compile successfully.**
+
+When completing work or making changes, you MUST validate that the entire project builds correctly by compiling both targets:
+
+1. **App Target Build:**
+   ```bash
+   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' build
+   ```
+
+2. **Test Target Build:**
+   ```bash
+   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-978E-148A74A72499' -only-testing:ShiftSchedulerTests test
+   ```
+
+**Why Both Targets Matter:**
+- App target compilation validates production code
+- Test target compilation validates test code and catches API signature mismatches
+- Test code can have compilation errors even when app code compiles successfully
+- Missing either check can result in broken tests being committed
+
+**Rule:** Never report work as complete without verifying both targets build successfully.
+
 ## UI Patterns
 
 ### Design Reference
