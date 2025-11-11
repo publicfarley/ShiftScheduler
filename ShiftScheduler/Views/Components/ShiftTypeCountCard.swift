@@ -22,7 +22,16 @@ struct ShiftTypeCountCard: View {
             daysSet.insert(weekday)
         }
 
-        let sortedDays = daysSet.sorted()
+        // Get today's weekday (1 = Sunday, 2 = Monday, etc.)
+        let todayWeekday = calendar.component(.weekday, from: Date())
+
+        // Sort days starting from today, wrapping around the week
+        let sortedDays = daysSet.sorted { day1, day2 in
+            let distance1 = (day1 - todayWeekday + 7) % 7
+            let distance2 = (day2 - todayWeekday + 7) % 7
+            return distance1 < distance2
+        }
+
         let displayDays = sortedDays.map { dayIndex -> String in
             let adjustedIndex = dayIndex == 1 ? 6 : dayIndex - 2
             return dayNames[adjustedIndex]
@@ -91,13 +100,11 @@ struct ShiftTypeCountCard: View {
 
                 // Day indicators
                 Text(daysWithShifts)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-
-            Spacer()
         }
         .frame(width: 115, height: 145)
         .padding(.vertical, 12)
