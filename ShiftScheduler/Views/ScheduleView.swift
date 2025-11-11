@@ -321,8 +321,8 @@ struct ScheduleView: View {
                         }
                     ),
                     scheduledDates: Set(
-                        store.state.schedule.scheduledShifts.map { shift in
-                            Calendar.current.startOfDay(for: shift.date)
+                        store.state.schedule.scheduledShifts.flatMap { shift in
+                            shift.affectedDates()
                         }
                     ),
                     shiftSymbols: shiftSymbolsByDate,

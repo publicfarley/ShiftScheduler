@@ -128,9 +128,9 @@ struct TodayView: View {
                                     }
                                 }
 
-                                // Display today's shift
+                                // Display today's shift (includes multi-day shifts that occur today)
                                 let todayShifts = store.state.today.scheduledShifts.filter { shift in
-                                    Calendar.current.isDate(shift.date, inSameDayAs: Date())
+                                    shift.occursOn(date: Date())
                                 }
 
                                 if let shift = todayShifts.first {
@@ -215,10 +215,10 @@ struct TodayView: View {
                                         .foregroundColor(.secondary)
                                 }
 
-                                // Display tomorrow's shift - using compact half-height card
+                                // Display tomorrow's shift (includes multi-day shifts that occur tomorrow)
                                 let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
                                     let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                                    return Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
+                                    return shift.occursOn(date: tomorrow)
                                 }
 
                                 CompactHalfHeightShiftCard(shift: tomorrowShifts.first, onTap: nil)
@@ -461,29 +461,18 @@ struct EnhancedTodayShiftCard: View {
         guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
 
         let now = Date()
-        let calendar = Calendar.current
 
-        // Check if shift is today
-        if calendar.isDate(shift.date, inSameDayAs: now) {
-            switch shiftType.duration {
-            case .allDay:
-                return .active
-            case .scheduled(let startTime, let endTime):
-                let shiftStart = startTime.toDate(on: shift.date)
-                let shiftEnd = endTime.toDate(on: shift.date)
+        // Use actual start/end date-times for multi-day shift support
+        let shiftStart = shift.actualStartDateTime()
+        let shiftEnd = shift.actualEndDateTime()
 
-                if now < shiftStart {
-                    return .upcoming
-                } else if now >= shiftStart && now <= shiftEnd {
-                    return .active
-                } else {
-                    return .completed
-                }
-            }
-        } else if shift.date < now {
-            return .completed
-        } else {
+        // Determine status based on current time relative to shift date-time range
+        if now < shiftStart {
             return .upcoming
+        } else if now >= shiftStart && now <= shiftEnd {
+            return .active
+        } else {
+            return .completed
         }
     }
 
@@ -1347,29 +1336,18 @@ struct OptimizedTodayShiftCard: View {
         guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
 
         let now = Date()
-        let calendar = Calendar.current
 
-        // Check if shift is today
-        if calendar.isDate(shift.date, inSameDayAs: now) {
-            switch shiftType.duration {
-            case .allDay:
-                return .active
-            case .scheduled(let startTime, let endTime):
-                let shiftStart = startTime.toDate(on: shift.date)
-                let shiftEnd = endTime.toDate(on: shift.date)
+        // Use actual start/end date-times for multi-day shift support
+        let shiftStart = shift.actualStartDateTime()
+        let shiftEnd = shift.actualEndDateTime()
 
-                if now < shiftStart {
-                    return .upcoming
-                } else if now >= shiftStart && now <= shiftEnd {
-                    return .active
-                } else {
-                    return .completed
-                }
-            }
-        } else if shift.date < now {
-            return .completed
-        } else {
+        // Determine status based on current time relative to shift date-time range
+        if now < shiftStart {
             return .upcoming
+        } else if now >= shiftStart && now <= shiftEnd {
+            return .active
+        } else {
+            return .completed
         }
     }
 
