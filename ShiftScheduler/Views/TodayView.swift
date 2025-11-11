@@ -225,9 +225,9 @@ struct TodayView: View {
                             .offset(x: tomorrowCardOffset)
                             .opacity(tomorrowCardOpacity)
 
-                            // Week Summary Section
+                            // Week Summary Section - Enhanced Design
                             if !store.state.today.isLoading {
-                                VStack(alignment: .leading, spacing: 10) {
+                                VStack(alignment: .leading, spacing: 16) {
                                     let today = Calendar.current.startOfDay(for: Date())
                                     let next7Days = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today
 
@@ -235,14 +235,31 @@ struct TodayView: View {
                                     let _ = dateFormatter.dateFormat = "EEE, MMM d"
                                     let dateRangeText = "\(dateFormatter.string(from: today)) – \(dateFormatter.string(from: next7Days))"
 
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Next 7 Days")
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
+                                    // Section Header
+                                    HStack {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "calendar.badge.clock")
+                                                .font(.callout)
+                                                .foregroundColor(.blue)
+                                                .frame(width: 28, height: 28)
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.blue.opacity(0.1))
+                                                )
 
-                                        Text(dateRangeText)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Next 7 Days")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.primary)
+
+                                                Text(dateRangeText)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+
+                                        Spacer()
                                     }
                                     .padding(.horizontal, 16)
 
@@ -250,12 +267,57 @@ struct TodayView: View {
                                         return shift.date >= today && shift.date <= next7Days
                                     }
 
-                                    HStack(spacing: 12) {
-                                        CompactWeekStatView(
-                                            count: weekShifts.count,
-                                            label: "Scheduled",
-                                            color: .blue,
-                                            icon: "calendar"
+                                    // Enhanced Statistics Card
+                                    HStack(spacing: 16) {
+                                        // Scheduled Shifts Stat
+                                        VStack(spacing: 8) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "calendar")
+                                                    .font(.caption)
+                                                    .foregroundColor(.blue)
+
+                                                Text("\(weekShifts.count)")
+                                                    .font(.system(size: 28, weight: .bold))
+                                                    .foregroundColor(.blue)
+                                            }
+
+                                            Text("Scheduled")
+                                                .font(.caption)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.secondary)
+
+                                            // Visual indicator bar
+                                            if weekShifts.count > 0 {
+                                                Rectangle()
+                                                    .fill(
+                                                        LinearGradient(
+                                                            colors: [.blue.opacity(0.6), .blue.opacity(0.3)],
+                                                            startPoint: .leading,
+                                                            endPoint: .trailing
+                                                        )
+                                                    )
+                                                    .frame(height: 3)
+                                                    .cornerRadius(1.5)
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 20)
+                                        .padding(.horizontal, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(.ultraThinMaterial)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 16)
+                                                        .stroke(
+                                                            LinearGradient(
+                                                                colors: [.blue.opacity(0.3), .blue.opacity(0.1)],
+                                                                startPoint: .topLeading,
+                                                                endPoint: .bottomTrailing
+                                                            ),
+                                                            lineWidth: 1.5
+                                                        )
+                                                )
+                                                .shadow(color: .blue.opacity(0.15), radius: 8, x: 0, y: 4)
                                         )
                                     }
                                     .padding(.horizontal, 16)

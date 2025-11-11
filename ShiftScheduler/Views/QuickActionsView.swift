@@ -12,6 +12,28 @@ struct QuickActionsView: View {
 
     var body: some View {
         VStack(spacing: 12) {
+            // Section Title
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "bolt.fill")
+                        .font(.callout)
+                        .foregroundColor(.purple)
+                        .frame(width: 24, height: 24)
+                        .background(
+                            Circle()
+                                .fill(Color.purple.opacity(0.1))
+                        )
+
+                    Text("Quick Actions")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+
             // Three action buttons in a row
             HStack(spacing: 12) {
                 // Switch Shift Button
