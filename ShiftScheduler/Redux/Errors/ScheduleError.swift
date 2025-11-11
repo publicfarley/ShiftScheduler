@@ -32,7 +32,7 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
         case .overlappingShifts(let date, let shifts):
             let shiftList = shifts.joined(separator: ", ")
             let dateStr = date.formatted(date: .abbreviated, time: .omitted)
-            return "Cannot create overlapping shift on \(dateStr). Existing: \(shiftList)"
+            return "Cannot create shift on \(dateStr) - time conflict with existing shift(s): \(shiftList)"
         case .shiftNotFound:
             return "Shift not found"
         case .persistenceFailed(let reason):
@@ -63,7 +63,7 @@ enum ScheduleError: Error, LocalizedError, Sendable, Equatable {
         case .duplicateShift:
             return "Delete the existing shift or choose a different date."
         case .overlappingShifts:
-            return "On a given date, shifts cannot overlap. Delete or move the existing shift first."
+            return "Shifts cannot overlap in time. This includes overnight shifts that span multiple dates. Delete or move the conflicting shift first."
         case .shiftNotFound:
             return "The shift may have been deleted. Please refresh your calendar."
         case .persistenceFailed:

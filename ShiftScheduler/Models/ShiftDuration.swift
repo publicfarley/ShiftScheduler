@@ -62,7 +62,11 @@ enum ShiftDuration: Codable, Equatable, Hashable, Sendable {
         case .allDay:
             return "All Day"
         case .scheduled(let from, let to):
-            return "\(from.timeString) - \(to.timeString)"
+            if spansNextDay {
+                return "\(from.timeString) - \(to.timeString) +1"
+            } else {
+                return "\(from.timeString) - \(to.timeString)"
+            }
         }
     }
 
@@ -82,5 +86,53 @@ enum ShiftDuration: Codable, Equatable, Hashable, Sendable {
         case .scheduled(_, let to):
             return to
         }
+    }
+
+    /// Returns true if the shift spans to the next day (overnight shift)
+    /// Detected when end time is earlier than start time (e.g., 11 PM - 7 AM)
+    var spansNextDay: Bool {
+        switch self {
+        case .allDay:
+            return false
+        case .scheduled(let from, let to):
+            // If end hour < start hour, it spans to next day
+            if to.hour < from.hour {
+                return true
+            }
+            // If hours equal, check minutes
+            if to.hour == from.hour && to.minute < from.minute {
+                return true
+            }
+            return false
+        }
+    }
+
+    /// Calculates the actual duration of the shift in hours
+    /// Returns nil for all-day shifts
+    var durationInHours: Double? {
+        switch self {
+        case .allDay:
+            return nil
+        case .scheduled(let from, let to):
+            let startMinutes = from.hour * 60 + from.minute
+            var endMinutes = to.hour * 60 + to.minute
+
+            // If shift spans next day, add 24 hours to end time
+            if spansNextDay {
+                endMinutes += 24 * 60
+            }
+
+            let durationMinutes = endMinutes - startMinutes
+            return Double(durationMinutes) / 60.0
+        }
+    }
+
+    /// Validates that the shift duration is less than 24 hours
+    /// Returns true if valid (< 24 hours), false if invalid (≥ 24 hours)
+    var isValidDuration: Bool {
+        guard let duration = durationInHours else {
+            return true // All-day shifts are always valid
+        }
+        return duration < 24.0
     }
 }

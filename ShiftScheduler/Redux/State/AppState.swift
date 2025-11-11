@@ -265,8 +265,9 @@ struct ScheduleState: Equatable {
             }
         } else {
             // If no date range filter, use selected date
+            // Use occursOn helper to include multi-day shifts
             result = result.filter { shift in
-                Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
+                shift.occursOn(date: selectedDate)
             }
         }
 
@@ -295,9 +296,10 @@ struct ScheduleState: Equatable {
     }
 
     /// Shifts for the currently selected date
+    /// Includes multi-day shifts that occur on the selected date
     var shiftsForSelectedDate: [ScheduledShift] {
         scheduledShifts.filter { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: selectedDate)
+            shift.occursOn(date: selectedDate)
         }
     }
 

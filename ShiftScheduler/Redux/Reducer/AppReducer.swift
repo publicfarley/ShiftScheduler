@@ -141,12 +141,13 @@ nonisolated func todayReducer(state: TodayState, action: TodayAction) -> TodaySt
         let today = Calendar.current.startOfDay(for: Date())
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
 
+        // Use occursOn helper to include multi-day shifts that span today/tomorrow
         state.todayShift = state.scheduledShifts.first { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: today)
+            shift.occursOn(date: today)
         }
 
         state.tomorrowShift = state.scheduledShifts.first { shift in
-            Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
+            shift.occursOn(date: tomorrow)
         }
 
         let next7DaysEnd = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today

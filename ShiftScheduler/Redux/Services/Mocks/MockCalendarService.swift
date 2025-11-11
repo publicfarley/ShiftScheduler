@@ -203,11 +203,21 @@ final class MockCalendarService: CalendarServiceProtocol {
         // Note: Production stores notes in EventKit but returns them in ScheduledShift for testing
         // Convert empty notes to nil to match production behavior
         let finalNotes = notes?.isEmpty == true ? nil : notes
+
+        // Calculate endDate based on whether the shift spans next day
+        let calculatedEndDate: Date
+        if shiftType.duration.spansNextDay {
+            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        } else {
+            calculatedEndDate = startDate
+        }
+
         let shift = ScheduledShift(
             id: UUID(),
             eventIdentifier: UUID().uuidString,
             shiftType: shiftType,
             date: startDate,
+            endDate: calculatedEndDate,
             notes: finalNotes
         )
 
@@ -263,12 +273,21 @@ final class MockCalendarService: CalendarServiceProtocol {
             }
         }
 
+        // Calculate endDate based on whether the new shift type spans next day
+        let calculatedEndDate: Date
+        if newShiftType.duration.spansNextDay {
+            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        } else {
+            calculatedEndDate = startDate
+        }
+
         // Update the shift with the new shift type (preserve notes)
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
             shiftType: newShiftType,
             date: mockShifts[index].date,
+            endDate: calculatedEndDate,
             notes: mockShifts[index].notes
         )
     }
@@ -338,12 +357,21 @@ final class MockCalendarService: CalendarServiceProtocol {
                 continue
             }
 
+            // Calculate endDate based on whether the new shift type spans next day
+            let calculatedEndDate: Date
+            if shiftType.duration.spansNextDay {
+                calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: shift.date) ?? shift.date
+            } else {
+                calculatedEndDate = shift.date
+            }
+
             // Update the shift with new ShiftType data while preserving notes and date
             mockShifts[index] = ScheduledShift(
                 id: shift.id,
                 eventIdentifier: shift.eventIdentifier,
                 shiftType: shiftType,
                 date: shift.date,
+                endDate: calculatedEndDate,
                 notes: shift.notes
             )
             updatedCount += 1
@@ -369,12 +397,13 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
-        // Update the shift with new notes
+        // Update the shift with new notes (preserve endDate)
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
             shiftType: mockShifts[index].shiftType,
             date: mockShifts[index].date,
+            endDate: mockShifts[index].endDate,
             notes: notes.isEmpty ? nil : notes
         )
     }

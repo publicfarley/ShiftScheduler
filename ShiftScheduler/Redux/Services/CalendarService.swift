@@ -250,12 +250,21 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw ScheduleError.calendarEventCreationFailed(error.localizedDescription)
         }
 
-        // Return the created shift
+        // Return the created shift with proper endDate
+        // Calculate endDate based on whether the shift spans next day
+        let calculatedEndDate: Date
+        if shiftType.duration.spansNextDay {
+            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        } else {
+            calculatedEndDate = startDate
+        }
+
         let shift = ScheduledShift(
             id: UUID(),
             eventIdentifier: event.eventIdentifier,
             shiftType: shiftType,
-            date: startDate
+            date: startDate,
+            endDate: calculatedEndDate
         )
 
         return shift
@@ -590,10 +599,15 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             return nil
         }
 
+        // Extract start and end dates from event
+        let startDate = Calendar.current.startOfDay(for: event.startDate)
+        let endDate = Calendar.current.startOfDay(for: event.endDate)
+
         return ScheduledShiftData(
             eventIdentifier: event.eventIdentifier,
             shiftTypeId: shiftTypeId,
-            date: Calendar.current.startOfDay(for: event.startDate),
+            date: startDate,
+            endDate: endDate,
             title: event.title,
             location: event.location,
             notes: userNotes
@@ -621,11 +635,16 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             return nil
         }
 
+        // Extract start and end dates from event
+        let startDate = Calendar.current.startOfDay(for: event.startDate)
+        let endDate = Calendar.current.startOfDay(for: event.endDate)
+
         let shift = ScheduledShift(
             id: UUID(uuidString: event.eventIdentifier) ?? UUID(),
             eventIdentifier: event.eventIdentifier,
             shiftType: shiftType,
-            date: Calendar.current.startOfDay(for: event.startDate),
+            date: startDate,
+            endDate: endDate,
             notes: userNotes
         )
 

@@ -48,16 +48,23 @@ func scheduleMiddleware(
             let shifts = try await services.calendarService.loadShiftsForExtendedRange()
             logger.debug("Successfully loaded \(shifts.count) shifts")
 
-            // Check for overlapping shifts on the same date
-            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
-                Calendar.current.startOfDay(for: shift.date)
-            }
-
-            // Find any dates with multiple shifts
-            if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
-                logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
-                // Dispatch overlap detection - user must resolve
-                await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
+            // Check for overlapping shifts using date-time range intersection
+            // This properly handles multi-day shifts (e.g., overnight shifts)
+            var foundOverlap = false
+            for i in 0..<shifts.count {
+                guard !foundOverlap else { break }
+                for j in (i+1)..<shifts.count {
+                    if shifts[i].overlaps(with: shifts[j]) {
+                        let overlappingShifts = [shifts[i], shifts[j]]
+                        logger.warning("Found overlapping shifts: \(shifts[i].shiftType?.title ?? "Unknown") and \(shifts[j].shiftType?.title ?? "Unknown")")
+                        // Dispatch overlap detection - user must resolve
+                        // Use the earlier date for display purposes
+                        let earlierDate = min(shifts[i].date, shifts[j].date)
+                        await dispatch(.schedule(.overlappingShiftsDetected(date: earlierDate, shifts: overlappingShifts)))
+                        foundOverlap = true
+                        break
+                    }
+                }
             }
 
             await dispatch(.schedule(.shiftsLoaded(.success(shifts))))
@@ -105,24 +112,23 @@ func scheduleMiddleware(
             )
             logger.debug("Shift created successfully: \(shiftType.title) on \(date.formatted())")
 
-            // Reload shifts to check for overlaps
+            // Reload shifts to check for overlaps using date-time range intersection
             let shifts = try await services.calendarService.loadShiftsForExtendedRange()
 
-            // Check for overlapping shifts on the same date
-            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
-                Calendar.current.startOfDay(for: shift.date)
+            // Check if newly created shift overlaps with any existing shift
+            // This properly handles multi-day shifts (e.g., overnight shifts)
+            let conflictingShifts = shifts.filter { existingShift in
+                existingShift.eventIdentifier != createdShift.eventIdentifier &&
+                existingShift.overlaps(with: createdShift)
             }
 
-            let createdShiftDate = Calendar.current.startOfDay(for: createdShift.date)
-            if let shiftsOnDate = shiftsGroupedByDate[createdShiftDate], shiftsOnDate.count > 1 {
+            if !conflictingShifts.isEmpty {
                 // Overlap detected! Rollback by deleting the shift we just created
                 logger.warning("Overlap detected after creating shift - rolling back")
                 try await services.calendarService.deleteShiftEvent(eventIdentifier: createdShift.eventIdentifier)
 
                 // Create error with existing shift names
-                let existingShiftNames = shiftsOnDate
-                    .filter { $0.eventIdentifier != createdShift.eventIdentifier }
-                    .compactMap { $0.shiftType?.title }
+                let existingShiftNames = conflictingShifts.compactMap { $0.shiftType?.title }
 
                 let error = ScheduleError.overlappingShifts(date: date, existingShifts: existingShiftNames)
                 await dispatch(.schedule(.addShiftResponse(.failure(error))))

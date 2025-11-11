@@ -6,6 +6,7 @@ struct ScheduledShiftData: Hashable, Equatable, Sendable {
     let eventIdentifier: String
     let shiftTypeId: UUID
     let date: Date
+    let endDate: Date
     let title: String
     let location: String?
     let notes: String?
