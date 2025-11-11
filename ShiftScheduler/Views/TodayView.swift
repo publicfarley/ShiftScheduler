@@ -202,12 +202,12 @@ struct TodayView: View {
                             .padding(.horizontal, 16)
                             .padding(.top)
 
-                            // Tomorrow Section
-                            VStack(alignment: .leading, spacing: 16) {
+                            // Tomorrow Section - Half Height
+                            VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: "sun.max.fill")
+                                    Image(systemName: "moon.stars.fill")
                                         .font(.title2)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.indigo)
 
                                     Text("Tomorrow")
                                         .font(.callout)
@@ -215,13 +215,13 @@ struct TodayView: View {
                                         .foregroundColor(.secondary)
                                 }
 
-                                // Display tomorrow's shift
+                                // Display tomorrow's shift - using compact half-height card
                                 let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
                                     let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
                                     return Calendar.current.isDate(shift.date, inSameDayAs: tomorrow)
                                 }
 
-                                UnifiedShiftCard(shift: tomorrowShifts.first, onTap: nil)
+                                CompactHalfHeightShiftCard(shift: tomorrowShifts.first, onTap: nil)
                             }
                             .padding(.horizontal, 16)
                             .offset(x: tomorrowCardOffset)
