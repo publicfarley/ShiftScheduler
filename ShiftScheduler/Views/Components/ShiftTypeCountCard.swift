@@ -41,74 +41,83 @@ struct ShiftTypeCountCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Symbol in colored circle
-            Text(shiftType.symbol)
-                .font(.system(size: 28))
-                .frame(width: 48, height: 48)
-                .background(
-                    Circle()
+        VStack(spacing: 4) {
+            // Top row: Symbol and Title
+            HStack(spacing: 6) {
+                // Symbol in smaller colored circle
+                Text(shiftType.symbol)
+                    .font(.system(size: 18))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        cardColor.opacity(0.15),
+                                        cardColor.opacity(0.08)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(cardColor.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+
+                // Shift Title
+                Text(shiftType.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Spacer()
+            }
+
+            // Count Display - Compact
+            HStack(spacing: 0) {
+                Text("\(count)")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(cardColor)
+
+                Spacer()
+
+                Text(count == 1 ? "shift" : "shifts")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+
+            // Progress Indicator and Day indicators combined
+            if count > 0 {
+                VStack(spacing: 2) {
+                    Rectangle()
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    cardColor.opacity(0.15),
-                                    cardColor.opacity(0.08)
+                                    cardColor.opacity(0.6),
+                                    cardColor.opacity(0.3)
                                 ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
                         )
-                        .overlay(
-                            Circle()
-                                .stroke(cardColor.opacity(0.3), lineWidth: 1.5)
-                        )
-                )
+                        .frame(height: 2)
+                        .cornerRadius(1)
 
-            // Shift Title
-            Text(shiftType.title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            // Count Display
-            VStack(spacing: 2) {
-                Text("\(count)")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(cardColor)
-
-                Text(count == 1 ? "shift" : "shifts")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-
-            // Progress Indicator
-            if count > 0 {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                cardColor.opacity(0.6),
-                                cardColor.opacity(0.3)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(height: 3)
-                    .cornerRadius(1.5)
-
-                // Day indicators
-                Text(daysWithShifts)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    // Day indicators
+                    Text(daysWithShifts)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
             }
         }
-        .frame(width: 115, height: 145)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 10)
+        .frame(width: 115, height: 73)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
