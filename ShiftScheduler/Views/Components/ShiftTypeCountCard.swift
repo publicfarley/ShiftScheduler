@@ -76,17 +76,19 @@ struct ShiftTypeCountCard: View {
                 Spacer()
             }
 
-            // Count Display - Compact
-            HStack(spacing: 0) {
+            // Count Display - Compact, aligned with symbol
+            HStack(spacing: 6) {
+                // Spacer to align number with symbol (32pt frame)
                 Text("\(count)")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(cardColor)
-
-                Spacer()
+                    .frame(width: 32, alignment: .center)
 
                 Text(count == 1 ? "shift" : "shifts")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.secondary)
+
+                Spacer()
             }
 
             // Progress Indicator and Day indicators combined
@@ -109,7 +111,7 @@ struct ShiftTypeCountCard: View {
                     // Day indicators
                     Text(daysWithShifts)
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
