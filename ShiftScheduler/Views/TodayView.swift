@@ -73,6 +73,8 @@ struct TodayView: View {
     @State private var todayCardOpacity: Double = 0
     @State private var tomorrowCardOffset: CGFloat = 400
     @State private var tomorrowCardOpacity: Double = 0
+    @State private var cardOffsets: [Int: CGFloat] = [:]
+    @State private var cardOpacities: [Int: Double] = [:]
 
     var body: some View {
         NavigationView {
@@ -267,60 +269,64 @@ struct TodayView: View {
                                         return shift.date >= today && shift.date <= next7Days
                                     }
 
-                                    // Enhanced Statistics Card
-                                    HStack(spacing: 16) {
-                                        // Scheduled Shifts Stat
-                                        VStack(spacing: 8) {
-                                            HStack(spacing: 6) {
-                                                Image(systemName: "calendar")
-                                                    .font(.caption)
-                                                    .foregroundColor(.blue)
+                                    // Calculate shift counts by type
+                                    let shiftTypeCounts = Dictionary(grouping: weekShifts, by: { $0.shiftType?.id })
+                                        .compactMap { (typeId, shifts) -> ShiftTypeSummary? in
+                                            guard let shiftType = shifts.first?.shiftType else { return nil }
+                                            return ShiftTypeSummary(shiftType: shiftType, count: shifts.count)
+                                        }
+                                        .filter { $0.count > 0 }
+                                        .sorted { $0.count > $1.count }
 
-                                                Text("\(weekShifts.count)")
-                                                    .font(.system(size: 28, weight: .bold))
-                                                    .foregroundColor(.blue)
+                                    // Categorized Shift Type Cards
+                                    if shiftTypeCounts.isEmpty {
+                                        EmptyWeekSummaryCard(onScheduleShifts: {
+                                            Task {
+                                                await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
                                             }
-
-                                            Text("Scheduled")
-                                                .font(.caption)
-                                                .fontWeight(.medium)
-                                                .foregroundColor(.secondary)
-
-                                            // Visual indicator bar
-                                            if weekShifts.count > 0 {
-                                                Rectangle()
-                                                    .fill(
-                                                        LinearGradient(
-                                                            colors: [.blue.opacity(0.6), .blue.opacity(0.3)],
-                                                            startPoint: .leading,
-                                                            endPoint: .trailing
+                                        })
+                                    } else {
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 12) {
+                                                ForEach(Array(shiftTypeCounts.enumerated()), id: \.element.id) { index, typeCount in
+                                                    Button(action: {
+                                                        Task {
+                                                            // Navigate to Schedule tab with filter
+                                                            await store.dispatch(action: .schedule(.filterShiftTypeChanged(typeCount.shiftType)))
+                                                            await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
+                                                        }
+                                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                                    }) {
+                                                        ShiftTypeCountCard(
+                                                            shiftType: typeCount.shiftType,
+                                                            count: typeCount.count
                                                         )
-                                                    )
-                                                    .frame(height: 3)
-                                                    .cornerRadius(1.5)
+                                                    }
+                                                    .buttonStyle(PlainButtonStyle())
+                                                    .offset(x: cardOffsets[index] ?? 200)
+                                                    .opacity(cardOpacities[index] ?? 0)
+                                                }
+                                            }
+                                            .padding(.horizontal, 16)
+                                        }
+                                        .onAppear {
+                                            // Staggered animation for cards
+                                            for (index, _) in shiftTypeCounts.enumerated() {
+                                                Task {
+                                                    if !reduceMotion {
+                                                        try? await Task.sleep(nanoseconds: UInt64(0.08 * Double(index) * 1_000_000_000))
+                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                            cardOffsets[index] = 0
+                                                            cardOpacities[index] = 1
+                                                        }
+                                                    } else {
+                                                        cardOffsets[index] = 0
+                                                        cardOpacities[index] = 1
+                                                    }
+                                                }
                                             }
                                         }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 20)
-                                        .padding(.horizontal, 16)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .fill(.ultraThinMaterial)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 16)
-                                                        .stroke(
-                                                            LinearGradient(
-                                                                colors: [.blue.opacity(0.3), .blue.opacity(0.1)],
-                                                                startPoint: .topLeading,
-                                                                endPoint: .bottomTrailing
-                                                            ),
-                                                            lineWidth: 1.5
-                                                        )
-                                                )
-                                                .shadow(color: .blue.opacity(0.15), radius: 8, x: 0, y: 4)
-                                        )
                                     }
-                                    .padding(.horizontal, 16)
                                 }
                             }
 
