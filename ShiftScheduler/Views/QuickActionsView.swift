@@ -50,7 +50,7 @@ struct QuickActionsView: View {
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 9)
                     .background(
                         LinearGradient(
                             colors: [Color.blue.opacity(0.8), Color.blue.opacity(0.6)],
@@ -77,7 +77,7 @@ struct QuickActionsView: View {
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 9)
                     .background(
                         LinearGradient(
                             colors: [Color.red.opacity(0.8), Color.red.opacity(0.6)],
@@ -106,7 +106,7 @@ struct QuickActionsView: View {
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 9)
                     .background(
                         LinearGradient(
                             colors: [Color.green.opacity(0.8), Color.green.opacity(0.6)],
@@ -132,7 +132,7 @@ struct QuickActionsView: View {
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 9)
                     .background(
                         LinearGradient(
                             colors: [Color.purple.opacity(0.8), Color.indigo.opacity(0.6)],
@@ -144,7 +144,7 @@ struct QuickActionsView: View {
                     .cornerRadius(10)
                 }
             }
-            .frame(height: 60)
+            .frame(height: 45)
         }
         .alert("Delete Shift", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {
