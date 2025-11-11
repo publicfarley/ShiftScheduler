@@ -21,29 +21,18 @@ struct ShiftDetailsView: View {
               let shiftType = shift.shiftType else { return .upcoming }
 
         let now = Date()
-        let calendar = Calendar.current
 
-        // Check if shift is today
-        if calendar.isDate(shift.date, inSameDayAs: now) {
-            switch shiftType.duration {
-            case .allDay:
-                return .active
-            case .scheduled(let startTime, let endTime):
-                let shiftStart = startTime.toDate(on: shift.date)
-                let shiftEnd = endTime.toDate(on: shift.date)
+        // Use actual start/end date-times for multi-day shift support
+        let shiftStart = shift.actualStartDateTime()
+        let shiftEnd = shift.actualEndDateTime()
 
-                if now < shiftStart {
-                    return .upcoming
-                } else if now >= shiftStart && now <= shiftEnd {
-                    return .active
-                } else {
-                    return .completed
-                }
-            }
-        } else if shift.date < now {
-            return .completed
-        } else {
+        // Determine status based on current time relative to shift date-time range
+        if now < shiftStart {
             return .upcoming
+        } else if now >= shiftStart && now <= shiftEnd {
+            return .active
+        } else {
+            return .completed
         }
     }
 
@@ -62,14 +51,8 @@ struct ShiftDetailsView: View {
         guard let shift = shift,
               let shiftType = shift.shiftType else { return "All Day" }
 
-        switch shiftType.duration {
-        case .allDay:
-            return "All Day"
-        case .scheduled(let from, let to):
-            let startStr = from.timeString
-            let endStr = to.timeString
-            return "\(startStr) - \(endStr)"
-        }
+        // Use timeRangeString which includes +1 indicator for overnight shifts
+        return shiftType.duration.timeRangeString
     }
 
     var body: some View {

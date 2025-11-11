@@ -23,11 +23,11 @@ struct OverlapResolutionSheet: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text("Multiple shifts found on \(date.formatted(date: .abbreviated, time: .omitted))")
+                    Text("Time conflict detected on \(date.formatted(date: .abbreviated, time: .omitted))")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 
-                    Text("Select which shift to keep. All others will be deleted.")
+                    Text("These shifts overlap in time (including overnight shifts spanning multiple dates). Select which shift to keep. All others will be deleted.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -115,16 +115,10 @@ struct OverlapResolutionSheet: View {
                     }
 
                     if let shiftType = shift.shiftType {
-                        switch shiftType.duration {
-                        case .allDay:
-                            Text("All Day")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        case .scheduled(let from, let to):
-                            Text("\(from.timeString) - \(to.timeString)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        // Use timeRangeString which includes +1 indicator for overnight shifts
+                        Text(shiftType.duration.timeRangeString)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
 

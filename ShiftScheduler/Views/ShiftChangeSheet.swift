@@ -23,29 +23,24 @@ struct ShiftDisplayCard: View {
 
     private var shiftStatus: ShiftStatus {
         let now = Date()
-        let calendar = Calendar.current
 
-        // Check if shift is today
-        if calendar.isDate(date, inSameDayAs: now) {
-            switch shiftType.duration {
-            case .allDay:
-                return .active
-            case .scheduled(let startTime, let endTime):
-                let shiftStart = startTime.toDate(on: date)
-                let shiftEnd = endTime.toDate(on: date)
+        // Create a temporary ScheduledShift to use actualStartDateTime/actualEndDateTime helpers
+        let tempShift = ScheduledShift(
+            eventIdentifier: "",
+            shiftType: shiftType,
+            date: date
+        )
 
-                if now < shiftStart {
-                    return .upcoming
-                } else if now >= shiftStart && now <= shiftEnd {
-                    return .active
-                } else {
-                    return .completed
-                }
-            }
-        } else if date < now {
-            return .completed
-        } else {
+        let shiftStart = tempShift.actualStartDateTime()
+        let shiftEnd = tempShift.actualEndDateTime()
+
+        // Determine status based on current time relative to shift date-time range
+        if now < shiftStart {
             return .upcoming
+        } else if now >= shiftStart && now <= shiftEnd {
+            return .active
+        } else {
+            return .completed
         }
     }
 
