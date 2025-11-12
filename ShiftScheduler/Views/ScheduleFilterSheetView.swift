@@ -166,25 +166,25 @@ struct ScheduleFilterSheetView: View {
 
 // MARK: - Preview
 
-#Preview {
-    ScheduleFilterSheetView()
-        .environment(\.reduxStore, previewStore)
-}
-
-private let previewStore: Store = {
-    let store = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware,
-            loggingMiddleware
-        ]
-    )
-    return store
-}()
+//#Preview {
+//    ScheduleFilterSheetView()
+//        .environment(\.reduxStore, previewStore)
+//}
+//
+//private let previewStore: Store = {
+//    let store = Store(
+//        state: AppState(),
+//        reducer: appReducer,
+//        services: ServiceContainer(),
+//        middlewares: [
+//            scheduleMiddleware,
+//            todayMiddleware,
+//            locationsMiddleware,
+//            shiftTypesMiddleware,
+//            changeLogMiddleware,
+//            settingsMiddleware,
+//            loggingMiddleware
+//        ]
+//    )
+//    return store
+//}()

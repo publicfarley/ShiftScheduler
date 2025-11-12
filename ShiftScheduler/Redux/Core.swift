@@ -7,7 +7,7 @@
 import Observation
 
 // Core: Reducer, Dispatcher, Middleware
-public typealias Reducer<State, Action> = @Sendable (State, Action) -> State
+public typealias Reducer<State, Action> = (State, Action) -> State
 
 public typealias Dispatcher<Action> = @Sendable (Action) async -> Void
 
@@ -21,7 +21,6 @@ public typealias Middleware<State, Action> = @Sendable (
 // -----------------------------
 // Observable Store
 // -----------------------------
-@MainActor
 @Observable
 public final class Store<State: Sendable, Action: Sendable> {
     public private(set) var state: State

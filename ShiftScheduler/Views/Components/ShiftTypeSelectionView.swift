@@ -350,72 +350,72 @@ struct ShiftTypeOptionCard: View {
 
 // MARK: - Preview
 
-#Preview("Shift Type Selection") {
-    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
-    let sampleShiftTypes = [
-        ShiftType(
-            id: UUID(),
-            symbol: "🌅",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 9, minute: 0),
-                to: HourMinuteTime(hour: 17, minute: 0)
-            ),
-            title: "Morning Shift",
-            description: "Regular morning shift",
-            location: sampleLocation
-        ),
-        ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 17, minute: 0),
-                to: HourMinuteTime(hour: 1, minute: 0)
-            ),
-            title: "Evening Shift",
-            description: "Evening shift with late hours",
-            location: sampleLocation
-        ),
-        ShiftType(
-            id: UUID(),
-            symbol: "🌃",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 1, minute: 0),
-                to: HourMinuteTime(hour: 9, minute: 0)
-            ),
-            title: "Night Shift",
-            description: "Overnight shift",
-            location: sampleLocation
-        )
-    ]
-
-    ShiftTypeSelectionView(
-        isPresented: .constant(true),
-        availableShiftTypes: sampleShiftTypes,
-        selectedDateCount: 5,
-        onConfirm: { shiftType, notes in
-            print("Confirming bulk add: \(shiftType.title) with notes: \(notes)")
-        },
-        onDismiss: {
-            print("Dismissing shift type selection")
-        }
-    )
-    .environment(\.reduxStore, previewStore)
-}
-
-private let previewStore: Store = {
-    let store = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware,
-            loggingMiddleware
-        ]
-    )
-    return store
-}()
+//#Preview("Shift Type Selection") {
+//    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
+//    let sampleShiftTypes = [
+//        ShiftType(
+//            id: UUID(),
+//            symbol: "🌅",
+//            duration: .scheduled(
+//                from: HourMinuteTime(hour: 9, minute: 0),
+//                to: HourMinuteTime(hour: 17, minute: 0)
+//            ),
+//            title: "Morning Shift",
+//            description: "Regular morning shift",
+//            location: sampleLocation
+//        ),
+//        ShiftType(
+//            id: UUID(),
+//            symbol: "🌙",
+//            duration: .scheduled(
+//                from: HourMinuteTime(hour: 17, minute: 0),
+//                to: HourMinuteTime(hour: 1, minute: 0)
+//            ),
+//            title: "Evening Shift",
+//            description: "Evening shift with late hours",
+//            location: sampleLocation
+//        ),
+//        ShiftType(
+//            id: UUID(),
+//            symbol: "🌃",
+//            duration: .scheduled(
+//                from: HourMinuteTime(hour: 1, minute: 0),
+//                to: HourMinuteTime(hour: 9, minute: 0)
+//            ),
+//            title: "Night Shift",
+//            description: "Overnight shift",
+//            location: sampleLocation
+//        )
+//    ]
+//
+//    ShiftTypeSelectionView(
+//        isPresented: .constant(true),
+//        availableShiftTypes: sampleShiftTypes,
+//        selectedDateCount: 5,
+//        onConfirm: { shiftType, notes in
+//            print("Confirming bulk add: \(shiftType.title) with notes: \(notes)")
+//        },
+//        onDismiss: {
+//            print("Dismissing shift type selection")
+//        }
+//    )
+//    .environment(\.reduxStore, previewStore)
+//}
+//
+//private let previewStore: Store = {
+//    let store = Store(
+//        state: AppState(),
+//        reducer: appReducer,
+//        services: ServiceContainer(),
+//        middlewares: [
+//            scheduleMiddleware,
+//            todayMiddleware,
+//            locationsMiddleware,
+//            shiftTypesMiddleware,
+//            changeLogMiddleware,
+//            settingsMiddleware,
+//            loggingMiddleware
+//        ]
+//    )
+//    return store
+//}()

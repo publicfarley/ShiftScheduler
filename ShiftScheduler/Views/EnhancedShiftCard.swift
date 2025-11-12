@@ -12,8 +12,6 @@ struct EnhancedShiftCard: View {
     @State private var showingDeleteConfirmation = false
 
     private var shiftStatus: ShiftStatus {
-        guard let shiftType = shift.shiftType else { return .upcoming }
-
         let now = Date()
 
         // Use actual start/end date-times for multi-day shift support

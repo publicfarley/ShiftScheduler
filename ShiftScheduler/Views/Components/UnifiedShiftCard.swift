@@ -27,7 +27,9 @@ struct UnifiedShiftCard: View {
     }
 
     private var shiftStatus: ShiftStatus {
-        guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
+        guard let shift = shift else {
+            return .upcoming
+        }
 
         let now = Date()
 

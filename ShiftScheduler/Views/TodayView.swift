@@ -458,7 +458,7 @@ struct EnhancedTodayShiftCard: View {
     @State private var pulseOpacity = 0.3
 
     private var shiftStatus: ShiftStatus {
-        guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
+        guard let shift = shift else { return .upcoming }
 
         let now = Date()
 
@@ -1333,7 +1333,7 @@ struct OptimizedTodayShiftCard: View {
     let shift: ScheduledShift?
 
     private var shiftStatus: ShiftStatus {
-        guard let shift = shift, let shiftType = shift.shiftType else { return .upcoming }
+        guard let shift = shift else { return .upcoming }
 
         let now = Date()
 

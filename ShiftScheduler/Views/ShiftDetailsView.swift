@@ -17,8 +17,7 @@ struct ShiftDetailsView: View {
     }
 
     private var shiftStatus: ShiftStatus {
-        guard let shift = shift,
-              let shiftType = shift.shiftType else { return .upcoming }
+        guard let shift = shift else { return .upcoming }
 
         let now = Date()
 
@@ -308,51 +307,51 @@ struct DetailRow: View {
     }
 }
 
-#Preview {
-    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
-    let sampleShiftType = ShiftType(
-        id: UUID(),
-        symbol: "🌅",
-        duration: .scheduled(
-            from: HourMinuteTime(hour: 9, minute: 0),
-            to: HourMinuteTime(hour: 17, minute: 0)
-        ),
-        title: "Morning Shift",
-        description: "Regular morning shift with breaks",
-        location: sampleLocation
-    )
-    let sampleShift = ScheduledShift(
-        id: UUID(),
-        eventIdentifier: UUID().uuidString,
-        shiftType: sampleShiftType,
-        date: Date()
-    )
-
-    let store = shiftDetailsPreviewStore
-    // Configure preview store with sample shift
-    var previewState = store.state
-    previewState.schedule.selectedShiftId = sampleShift.id
-    previewState.schedule.selectedShiftForDetail = sampleShift
-    previewState.schedule.showShiftDetail = true
-
-    return ShiftDetailsView(initialShiftId: sampleShift.id)
-        .environment(\.reduxStore, store)
-}
-
-private let shiftDetailsPreviewStore: Store = {
-    let store = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware,
-            loggingMiddleware
-        ]
-    )
-    return store
-}()
+//#Preview {
+//    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
+//    let sampleShiftType = ShiftType(
+//        id: UUID(),
+//        symbol: "🌅",
+//        duration: .scheduled(
+//            from: HourMinuteTime(hour: 9, minute: 0),
+//            to: HourMinuteTime(hour: 17, minute: 0)
+//        ),
+//        title: "Morning Shift",
+//        description: "Regular morning shift with breaks",
+//        location: sampleLocation
+//    )
+//    let sampleShift = ScheduledShift(
+//        id: UUID(),
+//        eventIdentifier: UUID().uuidString,
+//        shiftType: sampleShiftType,
+//        date: Date()
+//    )
+//
+//    let store = shiftDetailsPreviewStore
+//    // Configure preview store with sample shift
+//    var previewState = store.state
+//    previewState.schedule.selectedShiftId = sampleShift.id
+//    previewState.schedule.selectedShiftForDetail = sampleShift
+//    previewState.schedule.showShiftDetail = true
+//
+//    return ShiftDetailsView(initialShiftId: sampleShift.id)
+//        .environment(\.reduxStore, store)
+//}
+//
+//private let shiftDetailsPreviewStore: Store = {
+//    let store = Store(
+//        state: AppState(),
+//        reducer: appReducer,
+//        services: ServiceContainer(),
+//        middlewares: [
+//            scheduleMiddleware,
+//            todayMiddleware,
+//            locationsMiddleware,
+//            shiftTypesMiddleware,
+//            changeLogMiddleware,
+//            settingsMiddleware,
+//            loggingMiddleware
+//        ]
+//    )
+//    return store
+//}()

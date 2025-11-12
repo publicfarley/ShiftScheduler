@@ -504,61 +504,61 @@ struct DatePickerSheet: View {
     }
 }
 
-#Preview {
-    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
-    let sampleShiftTypes = [
-        ShiftType(
-            id: UUID(),
-            symbol: "🌅",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 9, minute: 0),
-                to: HourMinuteTime(hour: 17, minute: 0)
-            ),
-            title: "Morning Shift",
-            description: "Regular morning shift",
-            location: sampleLocation
-        ),
-        ShiftType(
-            id: UUID(),
-            symbol: "🌙",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 17, minute: 0),
-                to: HourMinuteTime(hour: 1, minute: 0)
-            ),
-            title: "Evening Shift",
-            description: "Evening shift with late hours",
-            location: sampleLocation
-        )
-    ]
-
-    AddShiftModalView(
-        isPresented: .constant(true),
-        availableShiftTypes: sampleShiftTypes,
-        currentError: nil,
-        onAddShift: { date, shiftType, notes in
-            print("Adding shift: \(shiftType.title) on \(date)")
-        },
-        onDismissError: {
-            print("Dismissing error")
-        }
-    )
-    .environment(\.reduxStore, previewStore)
-}
-
-private let previewStore: Store = {
-    let store = Store(
-        state: AppState(),
-        reducer: appReducer,
-        services: ServiceContainer(),
-        middlewares: [
-            scheduleMiddleware,
-            todayMiddleware,
-            locationsMiddleware,
-            shiftTypesMiddleware,
-            changeLogMiddleware,
-            settingsMiddleware,
-            loggingMiddleware
-        ]
-    )
-    return store
-}()
+//#Preview {
+//    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
+//    let sampleShiftTypes = [
+//        ShiftType(
+//            id: UUID(),
+//            symbol: "🌅",
+//            duration: .scheduled(
+//                from: HourMinuteTime(hour: 9, minute: 0),
+//                to: HourMinuteTime(hour: 17, minute: 0)
+//            ),
+//            title: "Morning Shift",
+//            description: "Regular morning shift",
+//            location: sampleLocation
+//        ),
+//        ShiftType(
+//            id: UUID(),
+//            symbol: "🌙",
+//            duration: .scheduled(
+//                from: HourMinuteTime(hour: 17, minute: 0),
+//                to: HourMinuteTime(hour: 1, minute: 0)
+//            ),
+//            title: "Evening Shift",
+//            description: "Evening shift with late hours",
+//            location: sampleLocation
+//        )
+//    ]
+//
+//    AddShiftModalView(
+//        isPresented: .constant(true),
+//        availableShiftTypes: sampleShiftTypes,
+//        currentError: nil,
+//        onAddShift: { date, shiftType, notes in
+//            print("Adding shift: \(shiftType.title) on \(date)")
+//        },
+//        onDismissError: {
+//            print("Dismissing error")
+//        }
+//    )
+//    .environment(\.reduxStore, previewStore)
+//}
+//
+//private let previewStore: Store = {
+//    let store = Store(
+//        state: AppState(),
+//        reducer: appReducer,
+//        services: ServiceContainer(),
+//        middlewares: [
+//            scheduleMiddleware,
+//            todayMiddleware,
+//            locationsMiddleware,
+//            shiftTypesMiddleware,
+//            changeLogMiddleware,
+//            settingsMiddleware,
+//            loggingMiddleware
+//        ]
+//    )
+//    return store
+//}()
