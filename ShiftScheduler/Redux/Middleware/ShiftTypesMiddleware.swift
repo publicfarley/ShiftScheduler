@@ -51,17 +51,16 @@ func shiftTypesMiddleware(
             await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
             return
         }
-        
-        // Validate time range (end time must be after start time)
-        if case .scheduled(let from, let to) = shiftType.duration {
-            if from.toDate() >= to.toDate() {
-                let errorMessage = "End time must be after start time."
-                let error = NSError(domain: "ValidationError", code: 3, userInfo: [NSLocalizedDescriptionKey: errorMessage])
-                await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
-                return
-            }
+
+        // Validate shift duration (must be less than 24 hours)
+        // Note: Overnight shifts (end < start) are now supported
+        if !shiftType.duration.isValidDuration {
+            let errorMessage = "Shift duration must be less than 24 hours."
+            let error = NSError(domain: "ValidationError", code: 3, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+            await dispatch(.shiftTypes(.shiftTypeSaved(.failure(error))))
+            return
         }
-        
+
         do {
             // Save the shift type
             try await services.persistenceService.saveShiftType(shiftType)
