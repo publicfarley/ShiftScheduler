@@ -40,19 +40,19 @@ struct CalendarServiceUpdateTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType,
-            date: Date()
+            date: try Date.fixedTestDate_Nov11_2025()
         )
         let shift2 = ScheduledShift(
             id: UUID(),
             eventIdentifier: "event2",
             shiftType: shiftType,
-            date: Date().addingTimeInterval(86400)
+            date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(86400)
         )
         let shift3 = ScheduledShift(
             id: UUID(),
             eventIdentifier: "event3",
             shiftType: shiftType,
-            date: Date().addingTimeInterval(172800)
+            date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(172800)
         )
 
         service.mockShifts = [shift1, shift2, shift3]
@@ -111,7 +111,7 @@ struct CalendarServiceUpdateTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType2,
-            date: Date()
+            date: try Date.fixedTestDate_Nov11_2025()
         )
         service.mockShifts = [shift]
 
@@ -156,7 +156,7 @@ struct CalendarServiceUpdateTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType,
-            date: Date()
+            date: try Date.fixedTestDate_Nov11_2025()
         )
         service.mockShifts = [shift]
 
@@ -198,7 +198,7 @@ struct CalendarServiceUpdateTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType,
-            date: Date(),
+            date: try Date.fixedTestDate_Nov11_2025(),
             notes: "Important meeting at 3pm"
         )
         service.mockShifts = [shiftWithNotes]
@@ -246,11 +246,11 @@ struct CalendarServiceUpdateTests {
         )
 
         // Create 5 events: 3 from shiftType1, 2 from shiftType2
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "e1", shiftType: shiftType1, date: Date())
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "e2", shiftType: shiftType2, date: Date())
-        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "e3", shiftType: shiftType1, date: Date())
-        let shift4 = ScheduledShift(id: UUID(), eventIdentifier: "e4", shiftType: shiftType2, date: Date())
-        let shift5 = ScheduledShift(id: UUID(), eventIdentifier: "e5", shiftType: shiftType1, date: Date())
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "e1", shiftType: shiftType1, date: try Date.fixedTestDate_Nov11_2025())
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "e2", shiftType: shiftType2, date: try Date.fixedTestDate_Nov11_2025())
+        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "e3", shiftType: shiftType1, date: try Date.fixedTestDate_Nov11_2025())
+        let shift4 = ScheduledShift(id: UUID(), eventIdentifier: "e4", shiftType: shiftType2, date: try Date.fixedTestDate_Nov11_2025())
+        let shift5 = ScheduledShift(id: UUID(), eventIdentifier: "e5", shiftType: shiftType1, date: try Date.fixedTestDate_Nov11_2025())
 
         service.mockShifts = [shift1, shift2, shift3, shift4, shift5]
 
@@ -328,7 +328,7 @@ struct CalendarServiceUpdateTests {
                 id: UUID(),
                 eventIdentifier: "event\(dayOffset)",
                 shiftType: shiftType,
-                date: Date().addingTimeInterval(Double(dayOffset) * 86400)
+                date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(Double(dayOffset) * 86400)
             )
         }
         service.mockShifts = shifts

@@ -44,13 +44,13 @@ struct ShiftTypeUpdateCascadeTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType,
-            date: Date()
+            date: try Date.fixedTestDate_Nov11_2025()
         )
         let shift2 = ScheduledShift(
             id: UUID(),
             eventIdentifier: "event2",
             shiftType: shiftType,
-            date: Date().addingTimeInterval(86400)
+            date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(86400)
         )
         mockCalendar.mockShifts = [shift1, shift2]
 
@@ -129,7 +129,7 @@ struct ShiftTypeUpdateCascadeTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: otherShiftType,
-            date: Date()
+            date: try Date.fixedTestDate_Nov11_2025()
         )
         mockCalendar.mockShifts = [shift]
 
@@ -272,7 +272,7 @@ struct ShiftTypeUpdateCascadeTests {
                 id: UUID(),
                 eventIdentifier: "event\(index)",
                 shiftType: shiftType,
-                date: Date().addingTimeInterval(Double(index) * 86400)
+                date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(Double(index) * 86400)
             )
         }
         mockCalendar.mockShifts = shifts

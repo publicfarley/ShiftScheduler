@@ -388,7 +388,7 @@ struct PersistenceServiceErrorTests {
         mockService.throwError = ScheduleError.persistenceFailed("Cannot purge")
 
         do {
-            let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+            let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: try Date.fixedTestDate_Nov11_2025()) ?? try Date.fixedTestDate_Nov11_2025()
             _ = try await mockService.purgeOldChangeLogEntries(olderThan: cutoffDate)
             #expect(Bool(false), "Expected error to be thrown")
         } catch let error as ScheduleError {

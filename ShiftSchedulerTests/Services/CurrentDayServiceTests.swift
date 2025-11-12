@@ -35,7 +35,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService(calendar: calendar)
 
         // When
-        let result = service.getCurrentDate()
+        let result = service.getCurrenttry Date.fixedTestDate_Nov11_2025()
 
         // Then
         let components = calendar.dateComponents([.hour, .minute, .second], from: result)
@@ -49,10 +49,10 @@ struct CurrentDayServiceTests {
         // Given
         let calendar = Calendar.current
         let service = CurrentDayService(calendar: calendar)
-        let startOfToday = calendar.startOfDay(for: Date())
+        let startOfToday = calendar.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
 
         // When
-        let result = service.getCurrentDate()
+        let result = service.getCurrenttry Date.fixedTestDate_Nov11_2025()
 
         // Then
         #expect(result == startOfToday)
@@ -64,7 +64,7 @@ struct CurrentDayServiceTests {
     func testIsTodayIdentifiesToday() {
         // Given
         let service = CurrentDayService()
-        let today = Date()
+        let today = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let result = service.isToday(today)
@@ -77,7 +77,7 @@ struct CurrentDayServiceTests {
     func testIsTodayReturnsFalseForYesterday() throws {
         // Given
         let service = CurrentDayService()
-        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: Date()))
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: try Date.fixedTestDate_Nov11_2025()))
 
         // When
         let result = service.isToday(yesterday)
@@ -90,7 +90,7 @@ struct CurrentDayServiceTests {
     func testIsTodayReturnsFalseForTomorrow() throws {
         // Given
         let service = CurrentDayService()
-        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: try Date.fixedTestDate_Nov11_2025()))
 
         // When
         let result = service.isToday(tomorrow)
@@ -103,7 +103,7 @@ struct CurrentDayServiceTests {
     func testIsTomorrowIdentifiesTomorrow() throws {
         // Given
         let service = CurrentDayService()
-        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: try Date.fixedTestDate_Nov11_2025()))
 
         // When
         let result = service.isTomorrow(tomorrow)
@@ -118,7 +118,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
 
         // When
-        let result = service.isTomorrow(Date())
+        let result = service.isTomorrow(try Date.fixedTestDate_Nov11_2025())
 
         // Then
         #expect(result == false)
@@ -128,7 +128,7 @@ struct CurrentDayServiceTests {
     func testIsYesterdayIdentifiesYesterday() throws {
         // Given
         let service = CurrentDayService()
-        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: Date()))
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: try Date.fixedTestDate_Nov11_2025()))
 
         // When
         let result = service.isYesterday(yesterday)
@@ -143,7 +143,7 @@ struct CurrentDayServiceTests {
         let service = CurrentDayService()
 
         // When
-        let result = service.isYesterday(Date())
+        let result = service.isYesterday(try Date.fixedTestDate_Nov11_2025())
 
         // Then
         #expect(result == false)
@@ -398,10 +398,10 @@ struct CurrentDayServiceTests {
     func testGetTomorrowDateReturnsNextDay() {
         // Given
         let service = CurrentDayService()
-        let today = service.getTodayDate()
+        let today = service.getTodaytry Date.fixedTestDate_Nov11_2025()
 
         // When
-        let tomorrow = service.getTomorrowDate()
+        let tomorrow = service.getTomorrowtry Date.fixedTestDate_Nov11_2025()
 
         // Then
         let components = Calendar.current.dateComponents([.day], from: today, to: tomorrow)
@@ -412,10 +412,10 @@ struct CurrentDayServiceTests {
     func testGetYesterdayDateReturnsPreviousDay() {
         // Given
         let service = CurrentDayService()
-        let today = service.getTodayDate()
+        let today = service.getTodaytry Date.fixedTestDate_Nov11_2025()
 
         // When
-        let yesterday = service.getYesterdayDate()
+        let yesterday = service.getYesterdaytry Date.fixedTestDate_Nov11_2025()
 
         // Then
         let components = Calendar.current.dateComponents([.day], from: yesterday, to: today)

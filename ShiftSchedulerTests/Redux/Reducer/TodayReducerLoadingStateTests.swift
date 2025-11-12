@@ -33,7 +33,7 @@ struct TodayReducerLoadingStateTests {
             ScheduledShift(
                 eventIdentifier: UUID().uuidString,
                 shiftType: Self.createTestShiftType(),
-                date: Date(),
+                date: try Date.fixedTestDate_Nov11_2025(),
                 notes: nil
             )
         ]
@@ -58,7 +58,7 @@ struct TodayReducerLoadingStateTests {
             ScheduledShift(
                 eventIdentifier: UUID().uuidString,
                 shiftType: Self.createTestShiftType(),
-                date: Date(),
+                date: try Date.fixedTestDate_Nov11_2025(),
                 notes: nil
             )
         ]
@@ -132,7 +132,7 @@ struct TodayReducerLoadingStateTests {
         state.selectedShift = ScheduledShift(
             eventIdentifier: UUID().uuidString,
             shiftType: Self.createTestShiftType(),
-            date: Date(),
+            date: try Date.fixedTestDate_Nov11_2025(),
             notes: nil
         )
 
@@ -188,7 +188,7 @@ struct TodayReducerLoadingStateTests {
         let testShift = ScheduledShift(
             eventIdentifier: UUID().uuidString,
             shiftType: Self.createTestShiftType(),
-            date: Date(),
+            date: try Date.fixedTestDate_Nov11_2025(),
             notes: nil
         )
         state = todayReducer(

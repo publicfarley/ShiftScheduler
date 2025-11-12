@@ -9,7 +9,7 @@ struct ChangeLogRetentionPolicyTests {
 
     /// Fixed reference date for deterministic testing
     /// Using a known date ensures tests are reproducible regardless of when they run
-    private static func referenceDate() throws -> Date {
+    private static func referencetry Date.fixedTestDate_Nov11_2025() throws -> Date {
         try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30)))
     }
     
@@ -26,61 +26,61 @@ struct ChangeLogRetentionPolicyTests {
     @Test("Forever policy has no cutoff date")
     func testForeverPolicyNoCutoff() async throws {
         let policy = ChangeLogRetentionPolicy.forever
-        #expect(policy.cutoffDate(from: try Self.referenceDate()) == nil)
+        #expect(policy.cutoffDate(from: try Self.referencetry Date.fixedTestDate_Nov11_2025()) == nil)
     }
 
     @Test("30 days policy calculates correct cutoff date")
-    func testDays30CutoffDate() async throws {
+    func testDays30Cutofftry Date.fixedTestDate_Nov11_2025() async throws {
         let policy = ChangeLogRetentionPolicy.days30
-        let cutoff = try #require(policy.cutoffDate(from: Self.referenceDate()))
+        let cutoff = try #require(policy.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Calculate expected cutoff from fixed reference date
-        let expectedCutoff = try #require(Calendar.current.date(byAdding: .day, value: -30, to: Self.referenceDate()))
+        let expectedCutoff = try #require(Calendar.current.date(byAdding: .day, value: -30, to: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Should match exactly since we're using the same reference date
         #expect(Calendar.current.dateComponents([.day, .month, .year], from: cutoff) == Calendar.current.dateComponents([.day, .month, .year], from: expectedCutoff))
     }
 
     @Test("90 days policy calculates correct cutoff date")
-    func testDays90CutoffDate() async throws {
+    func testDays90Cutofftry Date.fixedTestDate_Nov11_2025() async throws {
         let policy = ChangeLogRetentionPolicy.days90
-        let cutoff = try #require(policy.cutoffDate(from: Self.referenceDate()))
+        let cutoff = try #require(policy.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Calculate expected cutoff from fixed reference date
-        let expectedCutoff = try #require(Calendar.current.date(byAdding: .day, value: -90, to: Self.referenceDate()))
+        let expectedCutoff = try #require(Calendar.current.date(byAdding: .day, value: -90, to: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         #expect(Calendar.current.dateComponents([.day, .month, .year], from: cutoff) == Calendar.current.dateComponents([.day, .month, .year], from: expectedCutoff))
     }
 
     @Test("6 months policy calculates correct cutoff date")
-    func testMonths6CutoffDate() async throws {
+    func testMonths6Cutofftry Date.fixedTestDate_Nov11_2025() async throws {
         let policy = ChangeLogRetentionPolicy.months6
-        let cutoff = try #require(policy.cutoffDate(from: Self.referenceDate()))
+        let cutoff = try #require(policy.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Calculate expected cutoff from fixed reference date
-        let expectedCutoff = try #require(Calendar.current.date(byAdding: .month, value: -6, to: Self.referenceDate()))
+        let expectedCutoff = try #require(Calendar.current.date(byAdding: .month, value: -6, to: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         #expect(Calendar.current.dateComponents([.day, .month, .year], from: cutoff) == Calendar.current.dateComponents([.day, .month, .year], from: expectedCutoff))
     }
 
     @Test("1 year policy calculates correct cutoff date")
-    func testYear1CutoffDate() async throws {
+    func testYear1Cutofftry Date.fixedTestDate_Nov11_2025() async throws {
         let policy = ChangeLogRetentionPolicy.year1
-        let cutoff = try #require(policy.cutoffDate(from: Self.referenceDate()))
+        let cutoff = try #require(policy.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Calculate expected cutoff from fixed reference date
-        let expectedCutoff = try #require(Calendar.current.date(byAdding: .year, value: -1, to: Self.referenceDate()))
+        let expectedCutoff = try #require(Calendar.current.date(byAdding: .year, value: -1, to: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         #expect(Calendar.current.dateComponents([.day, .month, .year], from: cutoff) == Calendar.current.dateComponents([.day, .month, .year], from: expectedCutoff))
     }
 
     @Test("2 years policy calculates correct cutoff date")
-    func testYears2CutoffDate() async throws {
+    func testYears2Cutofftry Date.fixedTestDate_Nov11_2025() async throws {
         let policy = ChangeLogRetentionPolicy.years2
-        let cutoff = try #require(policy.cutoffDate(from: Self.referenceDate()))
+        let cutoff = try #require(policy.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Calculate expected cutoff from fixed reference date
-        let expectedCutoff = try #require(Calendar.current.date(byAdding: .year, value: -2, to: Self.referenceDate()))
+        let expectedCutoff = try #require(Calendar.current.date(byAdding: .year, value: -2, to: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         #expect(Calendar.current.dateComponents([.day, .month, .year], from: cutoff) == Calendar.current.dateComponents([.day, .month, .year], from: expectedCutoff))
     }
@@ -113,7 +113,7 @@ struct ChangeLogRetentionPolicyTests {
 
     @Test("Cutoff dates are in the past")
     func testCutoffDatesInPast() async throws {
-        let referenceDate = try Self.referenceDate()
+        let referenceDate = try Self.referencetry Date.fixedTestDate_Nov11_2025()
 
         for policy in ChangeLogRetentionPolicy.allCases where policy != .forever {
             let cutoff = try #require(policy.cutoffDate(from: referenceDate))
@@ -125,11 +125,11 @@ struct ChangeLogRetentionPolicyTests {
 
     @Test("Longer retention policies have earlier cutoff dates")
     func testRetentionPolicyOrdering() async throws {
-        let days30Cutoff = try #require(ChangeLogRetentionPolicy.days30.cutoffDate(from: Self.referenceDate()))
-        let days90Cutoff = try #require(ChangeLogRetentionPolicy.days90.cutoffDate(from: Self.referenceDate()))
-        let months6Cutoff = try #require(ChangeLogRetentionPolicy.months6.cutoffDate(from: Self.referenceDate()))
-        let year1Cutoff = try #require(ChangeLogRetentionPolicy.year1.cutoffDate(from: Self.referenceDate()))
-        let years2Cutoff = try #require(ChangeLogRetentionPolicy.years2.cutoffDate(from: Self.referenceDate()))
+        let days30Cutoff = try #require(ChangeLogRetentionPolicy.days30.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
+        let days90Cutoff = try #require(ChangeLogRetentionPolicy.days90.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
+        let months6Cutoff = try #require(ChangeLogRetentionPolicy.months6.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
+        let year1Cutoff = try #require(ChangeLogRetentionPolicy.year1.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
+        let years2Cutoff = try #require(ChangeLogRetentionPolicy.years2.cutoffDate(from: Self.referencetry Date.fixedTestDate_Nov11_2025()))
 
         // Earlier cutoff dates mean longer retention
         #expect(days30Cutoff > days90Cutoff)

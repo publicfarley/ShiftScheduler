@@ -144,7 +144,7 @@ struct TodayReducerTests {
     func testUpdateCachedShiftsComputesDates() {
         var state = TodayState()
 
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
 
         let todayShift = ScheduledShiftBuilder(date: today).build()

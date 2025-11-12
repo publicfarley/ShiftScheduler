@@ -88,7 +88,7 @@ struct BulkAddMiddlewareTests {
         var state = AppState()
         state.userProfile = UserProfile(userId: UUID(), displayName: "Test User")
         state.schedule.selectionMode = .add
-        let date1 = Calendar.current.startOfDay(for: Date())
+        let date1 = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         state.schedule.selectedDates = [date1]
 
         let shiftType = Self.createTestShiftType()
@@ -127,7 +127,7 @@ struct BulkAddMiddlewareTests {
 
         var state = AppState()
         state.schedule.selectionMode = .add
-        let testDate = Calendar.current.startOfDay(for: Date())
+        let testDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         state.schedule.selectedDates = [testDate]
 
         let shiftType = Self.createTestShiftType()
@@ -217,7 +217,7 @@ struct BulkAddMiddlewareTests {
 
         var state = AppState()
         state.schedule.selectionMode = .add
-        let testDate = Calendar.current.startOfDay(for: Date())
+        let testDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         state.schedule.selectedDates = [testDate]
 
         let shiftType = Self.createTestShiftType()
@@ -269,7 +269,7 @@ struct BulkAddMiddlewareTests {
 
         var state = AppState()
         state.schedule.selectionMode = .add
-        let testDate = Calendar.current.startOfDay(for: Date())
+        let testDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         state.schedule.selectedDates = [testDate]
 
         let shiftType = Self.createTestShiftType()
@@ -368,7 +368,7 @@ struct BulkAddMiddlewareTests {
         var state = AppState()
         state.userProfile = UserProfile(userId: UUID(), displayName: "Test User")
         state.schedule.selectionMode = .add
-        let date1 = Calendar.current.startOfDay(for: Date())
+        let date1 = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
         let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
         state.schedule.selectedDates = [date1, date2]
 
@@ -400,8 +400,8 @@ struct BulkAddMiddlewareTests {
     func testBulkAddCompletedClearsSelection() async {
         // Given
         var state = AppState()
-        state.schedule.selectedDates = [Date()]
-        let shift = ScheduledShift(id: UUID(), eventIdentifier: "test", shiftType: nil, date: Date())
+        state.schedule.selectedDates = [try Date.fixedTestDate_Nov11_2025()]
+        let shift = ScheduledShift(id: UUID(), eventIdentifier: "test", shiftType: nil, date: try Date.fixedTestDate_Nov11_2025())
 
         // When
         let newState = appReducer(state: state, action: .schedule(.bulkAddCompleted(.success([shift]))))

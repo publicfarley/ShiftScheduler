@@ -30,7 +30,7 @@ struct BulkAddReducerTests {
     // MARK: - Toggle Date Selection Tests
 
     @Test("toggleDateSelection adds date when not selected")
-    func testToggleDateSelectionAddsDate() throws {
+    func testToggleDateSelectionAddstry Date.fixedTestDate_Nov11_2025() throws {
         // Given
         var state = AppState()
         state.schedule.selectedDates = []
@@ -48,7 +48,7 @@ struct BulkAddReducerTests {
     }
 
     @Test("toggleDateSelection removes date when already selected")
-    func testToggleDateSelectionRemovesDate() throws {
+    func testToggleDateSelectionRemovestry Date.fixedTestDate_Nov11_2025() throws {
         // Given
         var state = AppState()
         let testDate = try Date.fixedTestDate_Nov11_2025()
@@ -360,7 +360,7 @@ struct BulkAddReducerTests {
     // MARK: - Edge Cases
 
     @Test("Bulk add with single date selected")
-    func testBulkAddWithSingleDate() throws {
+    func testBulkAddWithSingletry Date.fixedTestDate_Nov11_2025() throws {
         // Given
         var state = AppState()
         let testDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())

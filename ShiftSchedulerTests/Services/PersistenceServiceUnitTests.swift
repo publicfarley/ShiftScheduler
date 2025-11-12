@@ -250,7 +250,7 @@ struct PersistenceServiceUnitTests {
         let mockService = Self.createMockService()
 
         // Create entry from 60 days ago
-        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -60, to: Date()))
+        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -60, to: try Date.fixedTestDate_Nov11_2025()))
         let oldEntry = ChangeLogEntry(
             id: UUID(),
             timestamp: oldDate,
@@ -271,7 +271,7 @@ struct PersistenceServiceUnitTests {
         #expect(mockService.mockChangeLogEntries.count == 2)
 
         // When - Purge entries older than 30 days
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: try Date.fixedTestDate_Nov11_2025()) ?? try Date.fixedTestDate_Nov11_2025()
         let purgedCount = try await mockService.purgeOldChangeLogEntries(olderThan: cutoffDate)
 
         // Then

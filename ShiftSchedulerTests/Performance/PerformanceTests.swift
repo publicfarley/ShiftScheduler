@@ -16,7 +16,7 @@ struct PerformanceTests {
         var state = AppState()
         let action = AppAction.appLifecycle(.tabSelected(.schedule))
         let iterations = 10000
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         for _ in 0..<iterations {
@@ -24,7 +24,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(elapsed < 0.5, "10000 reducer calls should complete in under 0.5 seconds")
     }
 
@@ -34,7 +34,7 @@ struct PerformanceTests {
     func testBuildingLargeLocationCollection() {
         // Given
         let locationCount = 10000
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let locations = (0..<locationCount).map { index in
@@ -45,7 +45,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(locations.count == locationCount)
         #expect(elapsed < 1.0, "Building 10000 locations should complete in under 1 second")
     }
@@ -55,7 +55,7 @@ struct PerformanceTests {
         // Given
         let shiftTypeCount = 5000
         let location = LocationBuilder().build()
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let shiftTypes = (0..<shiftTypeCount).map { index in
@@ -66,7 +66,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(shiftTypes.count == shiftTypeCount)
         #expect(elapsed < 1.0, "Building 5000 shift types should complete in under 1 second")
     }
@@ -75,8 +75,8 @@ struct PerformanceTests {
     func testBuildingLargeScheduledShiftCollection() {
         // Given
         let shiftCount = 10000
-        let baseDate = Date()
-        let startTime = Date()
+        let baseDate = try Date.fixedTestDate_Nov11_2025()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let shifts = (0..<shiftCount).map { index in
@@ -88,7 +88,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(shifts.count == shiftCount)
         #expect(elapsed < 2.0, "Building 10000 scheduled shifts should complete in under 2 seconds")
     }
@@ -107,11 +107,11 @@ struct PerformanceTests {
                 ).build()
             }
 
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let _ = service.mockLocations.count
-        let elapsed1 = Date().timeIntervalSince(startTime)
+        let elapsed1 = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
 
         // Then
         #expect(service.mockLocations.count == locationCount)
@@ -126,11 +126,11 @@ struct PerformanceTests {
         let allShifts = TestDataCollections.weekOfShifts() +
             (0..<1000).map { index in
                 ScheduledShiftBuilder(
-                    date: Date().addingTimeInterval(TimeInterval(index * 86400))
+                    date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(TimeInterval(index * 86400))
                 ).build()
             }
 
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let _ = allShifts.filter { shift in
@@ -138,7 +138,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(elapsed < 0.1, "Filtering 1000+ shifts should complete in under 0.1 seconds")
     }
 
@@ -149,16 +149,16 @@ struct PerformanceTests {
         // Given
         var shifts = (0..<1000).map { index in
             ScheduledShiftBuilder(
-                date: Date().addingTimeInterval(TimeInterval(Int.random(in: 0..<(365*86400))))
+                date: try Date.fixedTestDate_Nov11_2025().addingTimeInterval(TimeInterval(Int.random(in: 0..<(365*86400))))
             ).build()
         }
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         shifts.sort { $0.date < $1.date }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(elapsed < 0.1, "Sorting 1000 shifts should complete in under 0.1 seconds")
     }
 
@@ -166,13 +166,13 @@ struct PerformanceTests {
     func testUUIDGenerationPerformance() {
         // Given
         let generationCount = 100000
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let uuids = (0..<generationCount).map { _ in UUID() }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(uuids.count == generationCount)
         #expect(elapsed < 0.5, "Generating 100000 UUIDs should complete in under 0.5 seconds")
     }
@@ -183,9 +183,9 @@ struct PerformanceTests {
     func testDateArithmeticPerformance() throws {
         // Given
         let calendar = Calendar.current
-        let baseDate = Date()
+        let baseDate = try Date.fixedTestDate_Nov11_2025()
         let iterations = 10000
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         var computedDate = baseDate
@@ -194,7 +194,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(elapsed < 0.5, "10000 date arithmetic operations should complete in under 0.5 seconds")
     }
 
@@ -203,9 +203,9 @@ struct PerformanceTests {
         // Given
         let calendar = Calendar.current
         let testDates = (0..<1000).map { index in
-            Date().addingTimeInterval(TimeInterval(index * 86400))
+            try Date.fixedTestDate_Nov11_2025().addingTimeInterval(TimeInterval(index * 86400))
         }
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let startOfDays = testDates.map { date in
@@ -213,7 +213,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(startOfDays.count == 1000)
         #expect(elapsed < 0.1, "Computing start of day for 1000 dates should complete in under 0.1 seconds")
     }
@@ -225,7 +225,7 @@ struct PerformanceTests {
         // Given
         let snapshotCount = 5000
         let longDescription = String(repeating: "A", count: 100)
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let snapshots = (0..<snapshotCount).map { index in
@@ -237,7 +237,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(snapshots.count == snapshotCount)
         #expect(elapsed < 1.0, "Building 5000 shift snapshots with descriptions should complete in under 1 second")
     }
@@ -253,13 +253,13 @@ struct PerformanceTests {
                 name: "Location \(index)"
             ).build()
         }
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let locationIds = Set(locations.map { $0.id })
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(locationIds.count == 5000)
         #expect(elapsed < 0.1, "Converting 5000 items to set should complete in under 0.1 seconds")
     }
@@ -272,7 +272,7 @@ struct PerformanceTests {
         }
         let locationDictionary: [UUID: Location] = Dictionary(uniqueKeysWithValues: locations.map { ($0.id, $0) })
         let lookupIds = locations.prefix(1000).map { $0.id }
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let foundLocations = lookupIds.compactMap { id in
@@ -280,7 +280,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(foundLocations.count == 1000)
         #expect(elapsed < 0.01, "1000 dictionary lookups should complete in under 0.01 seconds")
     }
@@ -291,13 +291,13 @@ struct PerformanceTests {
     func testChangeLogEntryCreationPerformance() {
         // Given
         let entryCount = 10000
-        let startTime = Date()
+        let startTime = try Date.fixedTestDate_Nov11_2025()
 
         // When
         let entries = (0..<entryCount).map { index in
             ChangeLogEntryBuilder(
                 id: UUID(),
-                timestamp: Date(),
+                timestamp: try Date.fixedTestDate_Nov11_2025(),
                 userId: UUID(),
                 userDisplayName: "User \(index)",
                 reason: "Change reason \(index)"
@@ -305,7 +305,7 @@ struct PerformanceTests {
         }
 
         // Then
-        let elapsed = Date().timeIntervalSince(startTime)
+        let elapsed = try Date.fixedTestDate_Nov11_2025().timeIntervalSince(startTime)
         #expect(entries.count == entryCount)
         #expect(elapsed < 1.0, "Creating 10000 change log entries should complete in under 1 second")
     }
