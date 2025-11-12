@@ -30,7 +30,7 @@ struct ScheduledShift: Identifiable, Equatable, Sendable {
         self.id = UUID()
         self.eventIdentifier = shiftData.eventIdentifier
         self.shiftType = shiftType
-        self.date = shiftData.date
+        self.date = shiftData.startDate
         self.notes = shiftData.notes
         self.endDate = shiftData.endDate
     }

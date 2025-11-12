@@ -15,4 +15,8 @@ extension Date {
         
         return try #require(Calendar.current.date(from: components))
     }
+    
+    static func nextDay(after date: Date) throws -> Date {
+        try #require(Calendar.current.date(byAdding: .day, value: 1, to: date))
+    }
 }

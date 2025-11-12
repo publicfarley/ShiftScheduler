@@ -133,7 +133,7 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw CalendarServiceError.notAuthorized
         }
         return mockShiftData.filter { data in
-            data.date >= startDate && data.date <= endDate
+            data.startDate >= startDate && data.startDate <= endDate
         }
     }
 

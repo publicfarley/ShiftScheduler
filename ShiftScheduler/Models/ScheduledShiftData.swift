@@ -5,7 +5,7 @@ import Foundation
 struct ScheduledShiftData: Hashable, Equatable, Sendable {
     let eventIdentifier: String
     let shiftTypeId: UUID
-    let date: Date
+    let startDate: Date
     let endDate: Date
     let title: String
     let location: String?

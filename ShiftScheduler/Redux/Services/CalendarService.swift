@@ -183,7 +183,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             shiftDataArray.append(shiftData)
         }
 
-        return shiftDataArray.sorted { $0.date < $1.date }
+        return shiftDataArray.sorted { $0.startDate < $1.startDate }
     }
 
     /// Load shift data for today only
@@ -606,7 +606,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return ScheduledShiftData(
             eventIdentifier: event.eventIdentifier,
             shiftTypeId: shiftTypeId,
-            date: startDate,
+            startDate: startDate,
             endDate: endDate,
             title: event.title,
             location: event.location,
