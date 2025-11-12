@@ -77,7 +77,7 @@ struct ChangeLogViewTests {
     @Test("Change type color returns correct color for switched")
     func testChangeTypeColor_switched() {
         let entry = ChangeLogEntryBuilder(changeType: .switched).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeColor == .blue)
     }
@@ -85,7 +85,7 @@ struct ChangeLogViewTests {
     @Test("Change type color returns correct color for deleted")
     func testChangeTypeColor_deleted() {
         let entry = ChangeLogEntryBuilder(changeType: .deleted).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeColor == .red)
     }
@@ -93,7 +93,7 @@ struct ChangeLogViewTests {
     @Test("Change type color returns correct color for created")
     func testChangeTypeColor_created() {
         let entry = ChangeLogEntryBuilder(changeType: .created).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeColor == .green)
     }
@@ -101,7 +101,7 @@ struct ChangeLogViewTests {
     @Test("Change type color returns correct color for undo")
     func testChangeTypeColor_undo() {
         let entry = ChangeLogEntryBuilder(changeType: .undo).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeColor == .orange)
     }
@@ -109,7 +109,7 @@ struct ChangeLogViewTests {
     @Test("Change type color returns correct color for redo")
     func testChangeTypeColor_redo() {
         let entry = ChangeLogEntryBuilder(changeType: .redo).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeColor == .purple)
     }
@@ -119,7 +119,7 @@ struct ChangeLogViewTests {
     @Test("Change type icon returns correct icon for switched")
     func testChangeTypeIcon_switched() {
         let entry = ChangeLogEntryBuilder(changeType: .switched).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeIcon == "arrow.triangle.2.circlepath")
     }
@@ -127,7 +127,7 @@ struct ChangeLogViewTests {
     @Test("Change type icon returns correct icon for deleted")
     func testChangeTypeIcon_deleted() {
         let entry = ChangeLogEntryBuilder(changeType: .deleted).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeIcon == "trash.fill")
     }
@@ -135,7 +135,7 @@ struct ChangeLogViewTests {
     @Test("Change type icon returns correct icon for created")
     func testChangeTypeIcon_created() {
         let entry = ChangeLogEntryBuilder(changeType: .created).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeIcon == "plus.circle.fill")
     }
@@ -143,7 +143,7 @@ struct ChangeLogViewTests {
     @Test("Change type icon returns correct icon for undo")
     func testChangeTypeIcon_undo() {
         let entry = ChangeLogEntryBuilder(changeType: .undo).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeIcon == "arrow.uturn.backward.circle.fill")
     }
@@ -151,15 +151,15 @@ struct ChangeLogViewTests {
     @Test("Change type icon returns correct icon for redo")
     func testChangeTypeIcon_redo() {
         let entry = ChangeLogEntryBuilder(changeType: .redo).build()
-        let card = EnhancedChangeLogCard(entry: entry, currentDate: try Date.fixedTestDate_Nov11_2025())
+        let card = EnhancedChangeLogCard(entry: entry, currentDate: Date())
 
         #expect(card.changeTypeIcon == "arrow.uturn.forward.circle.fill")
     }
 
     // MARK: - Deterministic Date Tests
 
-    @Test("EnhancedChangeLogCard uses passed current date not try Date.fixedTestDate_Nov11_2025()")
-    func testDeterministicCurrenttry Date.fixedTestDate_Nov11_2025() throws {
+    @Test("EnhancedChangeLogCard uses passed current date not Date()")
+    func testDeterministicCurrentDate() throws {
         // Fixed dates for deterministic testing
         let fixedCurrentDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 15, minute: 0)))
         let fixedTimestamp = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 10, day: 30, hour: 13, minute: 0)))

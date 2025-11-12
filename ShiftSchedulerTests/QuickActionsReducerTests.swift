@@ -139,7 +139,7 @@ private func makeTestShift() -> ScheduledShift {
             description: "A test shift",
             location: Location(id: UUID(), name: "Test Office", address: "123 Main St")
         ),
-        date: try Date.fixedTestDate_Nov11_2025(),
+        date: Date(),
         notes: nil
     )
 }

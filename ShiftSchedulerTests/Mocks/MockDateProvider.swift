@@ -7,7 +7,7 @@ struct MockDateProvider: DateProviderProtocol {
     var fixedToday: Date
     var fixedTomorrow: Date
 
-    init(fixedNow: Date = try Date.fixedTestDate_Nov11_2025()) {
+    init(fixedNow: Date = Date()) {
         self.fixedNow = fixedNow
         self.fixedToday = Calendar.current.startOfDay(for: fixedNow)
         self.fixedTomorrow = Calendar.current.date(byAdding: .day, value: 1, to: fixedToday) ?? fixedToday

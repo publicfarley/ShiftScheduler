@@ -69,7 +69,7 @@ struct CalendarServiceErrorTests {
         mockService.shouldThrowError = true
         mockService.throwError = CalendarServiceError.notAuthorized
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = try #require(Calendar.current.date(byAdding: .day, value: 7, to: startDate))
 
         do {
@@ -125,7 +125,7 @@ struct CalendarServiceErrorTests {
     @Test("loadShifts handles invalid date ranges")
     func testLoadShiftsHandlesInvalidDateRanges() async throws {
         let service = CalendarService()
-        let startDate = try Date.fixedTestDate_Nov11_2025()
+        let startDate = Date()
         let endDate = try #require(Calendar.current.date(byAdding: .day, value: -1, to: startDate)) // End before start
 
         do {
@@ -141,7 +141,7 @@ struct CalendarServiceErrorTests {
     @Test("loadShifts with same start and end date returns appropriate result")
     func testLoadShiftsWithSameDateRange() async throws {
         let service = CalendarService()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         do {
             let shifts = try await service.loadShifts(from: date, to: date)
@@ -158,7 +158,7 @@ struct CalendarServiceErrorTests {
     @Test("createShiftEvent throws overlappingShifts error when shift exists")
     func testCreateShiftEventThrowsOverlappingShifts() async throws {
         let mockService = MockCalendarService()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
         let shiftType = Self.createTestShiftType()
 
         // Add an existing shift for the same date
@@ -188,7 +188,7 @@ struct CalendarServiceErrorTests {
         mockService.shouldThrowError = true
         mockService.throwError = CalendarServiceError.eventConversionFailed("Creation failed")
 
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
         let shiftType = Self.createTestShiftType()
 
         do {
@@ -210,7 +210,7 @@ struct CalendarServiceErrorTests {
         let mockService = MockCalendarService()
         let invalidEventId = "nonexistent-event-id"
         let shiftType = Self.createTestShiftType()
-        let date = try Date.fixedTestDate_Nov11_2025()
+        let date = Date()
 
         do {
             try await mockService.updateShiftEvent(eventIdentifier: invalidEventId, newShiftType: shiftType, date: date)
@@ -249,7 +249,7 @@ struct CalendarServiceErrorTests {
         mockService.shouldThrowError = true
         mockService.throwError = CalendarServiceError.dateCalculationFailed
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = try #require(Calendar.current.date(byAdding: .day, value: 7, to: startDate))
 
         do {

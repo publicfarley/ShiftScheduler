@@ -22,9 +22,9 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "event3", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
+        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "event3", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1, shift2, shift3]
@@ -69,8 +69,8 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1, shift2]
@@ -104,7 +104,7 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1]
@@ -142,7 +142,7 @@ struct BulkDeleteMiddlewareTests {
                 id: UUID(),
                 eventIdentifier: "event\(i)",
                 shiftType: shiftType,
-                date: try Date.fixedTestDate_Nov11_2025(),
+                date: Date(),
                 notes: nil
             )
         }
@@ -224,7 +224,7 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1]
@@ -266,7 +266,7 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1]
@@ -307,7 +307,7 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1]
@@ -346,7 +346,7 @@ struct BulkDeleteMiddlewareTests {
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
 
         var state = AppState()
         state.schedule.scheduledShifts = [shift1]
@@ -392,7 +392,7 @@ struct BulkDeleteMiddlewareTests {
                 id: UUID(),
                 eventIdentifier: "event\(i)",
                 shiftType: shiftType,
-                date: try Date.fixedTestDate_Nov11_2025(),
+                date: Date(),
                 notes: nil
             )
         }

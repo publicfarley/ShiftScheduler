@@ -97,7 +97,7 @@ struct QuickActionsMiddlewareTests {
 
     @Test
     func deleteCreatesChangeLogEntry() async {
-        let testShift = makeTestShift(date: try Date.fixedTestDate_Nov11_2025())
+        let testShift = makeTestShift(date: Date())
         let mockPersistence = MockPersistenceService()
 
         let mockServices = ServiceContainer(
@@ -129,7 +129,7 @@ struct QuickActionsMiddlewareTests {
 
     @Test
     func notesPersistedOnSheetClose() async {
-        let testShift = makeTestShift(date: try Date.fixedTestDate_Nov11_2025())
+        let testShift = makeTestShift(date: Date())
         let testNotes = "Updated shift notes"
 
         let mockServices = ServiceContainer(
@@ -211,7 +211,7 @@ private func makeAppStateWithShift(_ shift: ScheduledShift) -> AppState {
 }
 
 @MainActor
-private func makeTestShift(date: Date = try Date.fixedTestDate_Nov11_2025()) -> ScheduledShift {
+private func makeTestShift(date: Date = Date()) -> ScheduledShift {
     ScheduledShift(
         id: UUID(),
         eventIdentifier: "test-event-\(UUID().uuidString)",

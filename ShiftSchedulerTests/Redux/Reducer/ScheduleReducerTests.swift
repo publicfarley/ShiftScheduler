@@ -80,7 +80,7 @@ struct ScheduleReducerTests {
     func testSelectedDateChangedUpdatesState() {
         var state = ScheduleState()
         state.searchText = "Morning"
-        let newDate = try Date.fixedTestDate_Nov11_2025()
+        let newDate = Date()
 
         let newState = scheduleReducer(state: state, action: .selectedDateChanged(newDate))
 
@@ -162,7 +162,7 @@ struct ScheduleReducerTests {
         let newState = scheduleReducer(
             state: state,
             action: .addShift(
-                date: try Date.fixedTestDate_Nov11_2025(),
+                date: Date(),
                 shiftType: createTestShiftType(),
                 notes: ""
             )
@@ -404,8 +404,8 @@ struct ScheduleReducerTests {
     @Test("filterDateRangeChanged updates filter dates")
     func testFilterDateRangeChangedUpdatesState() {
         let state = ScheduleState()
-        let startDate = try Date.fixedTestDate_Nov11_2025()
-        let endDate = try Date.fixedTestDate_Nov11_2025().addingTimeInterval(86400)
+        let startDate = Date()
+        let endDate = Date().addingTimeInterval(86400)
 
         let newState = scheduleReducer(
             state: state,
@@ -439,8 +439,8 @@ struct ScheduleReducerTests {
     @Test("clearFilters resets all filter state")
     func testClearFiltersResetsAll() {
         var state = ScheduleState()
-        state.filterDateRangeStart = try Date.fixedTestDate_Nov11_2025()
-        state.filterDateRangeEnd = try Date.fixedTestDate_Nov11_2025()
+        state.filterDateRangeStart = Date()
+        state.filterDateRangeEnd = Date()
         state.filterSelectedLocation = LocationBuilder().build()
         state.filterSelectedShiftType = ShiftTypeBuilder().build()
         state.searchText = "Morning"

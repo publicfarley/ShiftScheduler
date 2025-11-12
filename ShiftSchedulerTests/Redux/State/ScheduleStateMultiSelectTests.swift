@@ -144,21 +144,21 @@ struct ScheduleStateMultiSelectTests {
             id: UUID(),
             eventIdentifier: "event1",
             shiftType: shiftType,
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             notes: nil
         )
         let shift2 = ScheduledShift(
             id: UUID(),
             eventIdentifier: "event2",
             shiftType: shiftType,
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             notes: nil
         )
         let shift3 = ScheduledShift(
             id: UUID(),
             eventIdentifier: "event3",
             shiftType: shiftType,
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             notes: nil
         )
 
@@ -184,7 +184,7 @@ struct ScheduleStateMultiSelectTests {
                 id: UUID(),
                 eventIdentifier: "event1",
                 shiftType: shiftType,
-                date: try Date.fixedTestDate_Nov11_2025(),
+                date: Date(),
                 notes: nil
             )
         ]
@@ -268,7 +268,7 @@ struct ScheduleStateMultiSelectTests {
         #expect(state.canAddToSelectedDates == false)
 
         // Has selection but not in add mode
-        state.selectedDates.insert(try Date.fixedTestDate_Nov11_2025())
+        state.selectedDates.insert(Date())
         state.selectionMode = .delete
         #expect(state.canAddToSelectedDates == false)
 
@@ -278,7 +278,7 @@ struct ScheduleStateMultiSelectTests {
         #expect(state.canAddToSelectedDates == false)
 
         // In add mode with selection
-        state.selectedDates.insert(try Date.fixedTestDate_Nov11_2025())
+        state.selectedDates.insert(Date())
         state.selectionMode = .add
         #expect(state.canAddToSelectedDates == true)
     }

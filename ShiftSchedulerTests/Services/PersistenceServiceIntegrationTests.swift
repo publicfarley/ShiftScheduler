@@ -219,7 +219,7 @@ struct PersistenceServiceIntegrationTests {
         defer { Self.cleanupTemporaryDirectory(tempDir) }
 
         // When
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: try Date.fixedTestDate_Nov11_2025()) ?? try Date.fixedTestDate_Nov11_2025()
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let count = try await service.purgeOldChangeLogEntries(olderThan: cutoffDate)
 
         // Then - purge should return non-negative count of purged entries

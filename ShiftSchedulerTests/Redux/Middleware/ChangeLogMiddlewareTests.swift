@@ -289,7 +289,7 @@ struct ChangeLogMiddlewareTests {
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         // Create entries - some old, some recent
-        let now = try Date.fixedTestDate_Nov11_2025()
+        let now = Date()
         let fiftyDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -50, to: now))
         let tenDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -10, to: now))
 
@@ -342,7 +342,7 @@ struct ChangeLogMiddlewareTests {
         let mockPersistence = try #require(mockServices.persistenceService as? MockPersistenceService)
 
         // Create old entries that would normally be purged
-        let fiftyDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -50, to: try Date.fixedTestDate_Nov11_2025()))
+        let fiftyDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -50, to: Date()))
         mockPersistence.mockChangeLogEntries = [
             ChangeLogEntryBuilder(timestamp: fiftyDaysAgo).build()
         ]

@@ -13,9 +13,9 @@ struct CalendarServiceBatchOperationsTests {
         let mockService = MockCalendarService()
 
         let shiftType = ShiftTypeBuilder.nightShift()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "event3", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
+        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "event3", shiftType: shiftType, date: Date(), notes: nil)
 
         mockService.mockShifts = [shift1, shift2, shift3]
 
@@ -38,7 +38,7 @@ struct CalendarServiceBatchOperationsTests {
                 id: UUID(),
                 eventIdentifier: "event\(i)",
                 shiftType: shiftType,
-                date: try Date.fixedTestDate_Nov11_2025(),
+                date: Date(),
                 notes: nil
             )
         }
@@ -58,8 +58,8 @@ struct CalendarServiceBatchOperationsTests {
 
         let shiftType = ShiftTypeBuilder.nightShift()
 
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "event2", shiftType: shiftType, date: Date(), notes: nil)
 
         mockService.mockShifts = [shift1, shift2]
 
@@ -77,7 +77,7 @@ struct CalendarServiceBatchOperationsTests {
 
         let shiftType = ShiftTypeBuilder.nightShift()
 
-        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
 
         // Should throw authorization error
@@ -95,7 +95,7 @@ struct CalendarServiceBatchOperationsTests {
 
         let shiftType = ShiftTypeBuilder.nightShift()
 
-        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
 
         let deletedCount = try await mockService.deleteMultipleShiftEvents([])
@@ -127,7 +127,7 @@ struct CalendarServiceBatchOperationsTests {
 
         let shiftType = ShiftTypeBuilder.nightShift()
 
-        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: try Date.fixedTestDate_Nov11_2025(), notes: nil)
+        let shift = ScheduledShift(id: UUID(), eventIdentifier: "event1", shiftType: shiftType, date: Date(), notes: nil)
         mockService.mockShifts = [shift]
 
         do {

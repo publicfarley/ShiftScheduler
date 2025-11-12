@@ -85,7 +85,7 @@ struct AppReducerTests {
     func testTabSelectionPreservesOtherStates() {
         var state = AppState()
         state.selectedTab = .today
-        state.schedule.selectedDate = try Date.fixedTestDate_Nov11_2025()
+        state.schedule.selectedDate = Date()
         state.locations.searchText = "Office"
 
         let newState = appReducer(state: state, action: .appLifecycle(.tabSelected(.locations)))

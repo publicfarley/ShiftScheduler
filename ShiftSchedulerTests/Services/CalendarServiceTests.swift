@@ -80,7 +80,7 @@ struct CalendarServiceTests {
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         mockService.mockShifts = []  // Explicitly empty
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         // When
@@ -99,11 +99,11 @@ struct CalendarServiceTests {
             id: UUID(),
             eventIdentifier: "test-event-123",
             shiftType: nil,
-            date: try Date.fixedTestDate_Nov11_2025()
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         // When
@@ -119,7 +119,7 @@ struct CalendarServiceTests {
         // Given - Mock service NOT authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         // When/Then - should throw CalendarServiceError
@@ -136,7 +136,7 @@ struct CalendarServiceTests {
             id: UUID(),
             eventIdentifier: "monthly-shift",
             shiftType: nil,
-            date: try Date.fixedTestDate_Nov11_2025()
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
@@ -156,7 +156,7 @@ struct CalendarServiceTests {
             id: UUID(),
             eventIdentifier: "future-shift",
             shiftType: nil,
-            date: try Date.fixedTestDate_Nov11_2025()
+            date: Date()
         )
         mockService.mockShifts = [testShift]
 
@@ -177,14 +177,14 @@ struct CalendarServiceTests {
         let testShiftData = ScheduledShiftData(
             eventIdentifier: "data-event",
             shiftTypeId: UUID(),
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test Shift",
             location: "Test Location",
             notes: "Test Notes"
         )
         mockService.mockShiftData = [testShiftData]
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         // When
@@ -200,7 +200,7 @@ struct CalendarServiceTests {
         // Given - Mock service NOT authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
         // When/Then - should throw error
@@ -216,7 +216,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When
         let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
@@ -231,7 +231,7 @@ struct CalendarServiceTests {
         // Given - Mock service NOT authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = try Date.fixedTestDate_Nov11_2025()
+        let date = Date()
 
         // When/Then - should throw error
         await #expect(throws: CalendarServiceError.self) {
@@ -244,7 +244,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized with existing shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType(title: "Original Shift")
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // First create a shift to update
         let createdShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
@@ -270,7 +270,7 @@ struct CalendarServiceTests {
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = false; return mock }()
         let eventId = "test-event"
         let shiftType = Self.createTestShiftType()
-        let date = try Date.fixedTestDate_Nov11_2025()
+        let date = Date()
 
         // When/Then - should throw error
         await #expect(throws: CalendarServiceError.self) {
@@ -287,7 +287,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized with existing shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // First create a shift to delete
         let createdShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
@@ -332,12 +332,12 @@ struct CalendarServiceTests {
     func testLoadMultipleShifts() async throws {
         // Given - Mock service with multiple shifts
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "shift-1", shiftType: nil, date: try Date.fixedTestDate_Nov11_2025())
-        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "shift-2", shiftType: nil, date: try Date.fixedTestDate_Nov11_2025())
-        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "shift-3", shiftType: nil, date: try Date.fixedTestDate_Nov11_2025())
+        let shift1 = ScheduledShift(id: UUID(), eventIdentifier: "shift-1", shiftType: nil, date: Date())
+        let shift2 = ScheduledShift(id: UUID(), eventIdentifier: "shift-2", shiftType: nil, date: Date())
+        let shift3 = ScheduledShift(id: UUID(), eventIdentifier: "shift-3", shiftType: nil, date: Date())
         mockService.mockShifts = [shift1, shift2, shift3]
 
-        let startDate = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let startDate = Calendar.current.startOfDay(for: Date())
         let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate) ?? startDate
 
         // When
@@ -357,7 +357,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
         let testNotes = "Bring laptop and charger"
 
         // When
@@ -372,7 +372,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create without notes
         let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: nil)
@@ -386,7 +386,7 @@ struct CalendarServiceTests {
         // Given - Mock service authorized
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
         let shiftType = Self.createTestShiftType()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create with empty string notes
         let scheduledShift = try await mockService.createShiftEvent(date: date, shiftType: shiftType, notes: "")
@@ -399,7 +399,7 @@ struct CalendarServiceTests {
     func testScheduledShiftEqualityWithSameNotes() {
         // Given
         let shiftType = Self.createTestShiftType()
-        let date = try Date.fixedTestDate_Nov11_2025()
+        let date = Date()
         let notes = "Test notes"
 
         let shift1 = ScheduledShift(
@@ -426,7 +426,7 @@ struct CalendarServiceTests {
     func testScheduledShiftEqualityWithDifferentNotes() {
         // Given
         let shiftType = Self.createTestShiftType()
-        let date = try Date.fixedTestDate_Nov11_2025()
+        let date = Date()
 
         let shift1 = ScheduledShift(
             id: UUID(),
@@ -456,7 +456,7 @@ struct CalendarServiceTests {
         let shiftData = ScheduledShiftData(
             eventIdentifier: "test-event",
             shiftTypeId: shiftTypeId,
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test Shift",
             location: "Test Location",
             notes: testNotes
@@ -478,7 +478,7 @@ struct CalendarServiceTests {
         let shiftData = ScheduledShiftData(
             eventIdentifier: "test-event",
             shiftTypeId: shiftTypeId,
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test Shift",
             location: "Test Location",
             notes: nil
@@ -499,7 +499,7 @@ struct CalendarServiceTests {
         let shiftData = ScheduledShiftData(
             eventIdentifier: "event-123",
             shiftTypeId: UUID(),
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test",
             location: "Office",
             notes: notes
@@ -515,7 +515,7 @@ struct CalendarServiceTests {
         let shiftData1 = ScheduledShiftData(
             eventIdentifier: "event-123",
             shiftTypeId: UUID(),
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test",
             location: "Office",
             notes: "Notes 1"
@@ -524,7 +524,7 @@ struct CalendarServiceTests {
         let shiftData2 = ScheduledShiftData(
             eventIdentifier: "event-123",
             shiftTypeId: UUID(),
-            date: try Date.fixedTestDate_Nov11_2025(),
+            date: Date(),
             title: "Test",
             location: "Office",
             notes: "Notes 2"
@@ -697,7 +697,7 @@ struct CalendarServiceTests {
             title: "Day Shift",
             duration: scheduledDuration
         )
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create shift event
         let shift = try await mockService.createShiftEvent(
@@ -726,7 +726,7 @@ struct CalendarServiceTests {
             title: "All Day Shift",
             duration: allDayDuration
         )
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create shift event
         let shift = try await mockService.createShiftEvent(
@@ -746,7 +746,7 @@ struct CalendarServiceTests {
     func testUpdateShiftEventFromAllDayToScheduled() async throws {
         // Given - Mock service with existing all-day shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // Create an all-day shift first
         let allDayShiftType = Self.createTestShiftType(
@@ -791,7 +791,7 @@ struct CalendarServiceTests {
     func testUpdateShiftEventFromScheduledToAllDay() async throws {
         // Given - Mock service with existing scheduled shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // Create a scheduled shift first
         let scheduledDuration = ShiftDuration.scheduled(
@@ -841,7 +841,7 @@ struct CalendarServiceTests {
             title: "Night Shift",
             duration: overnightDuration
         )
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create overnight shift event
         let shift = try await mockService.createShiftEvent(
@@ -873,7 +873,7 @@ struct CalendarServiceTests {
     func testUpdateToOvernightShiftEvent() async throws {
         // Given - Mock service with existing day shift
         let mockService = { let mock = MockCalendarService(); mock.mockIsAuthorized = true; return mock }()
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // Create a regular day shift first
         let dayShiftType = Self.createTestShiftType(
@@ -933,7 +933,7 @@ struct CalendarServiceTests {
             title: "24-Hour Shift",
             duration: fullDayDuration
         )
-        let date = Calendar.current.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let date = Calendar.current.startOfDay(for: Date())
 
         // When - create 24-hour shift event
         let shift = try await mockService.createShiftEvent(

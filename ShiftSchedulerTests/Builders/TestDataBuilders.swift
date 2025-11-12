@@ -156,7 +156,7 @@ struct ScheduledShiftBuilder {
 
     init(
         id: UUID = UUID(),
-        date: Date = try Date.fixedTestDate_Nov11_2025(),
+        date: Date = Date(),
         shiftType: ShiftType? = nil,
         notes: String? = nil
     ) {
@@ -182,14 +182,14 @@ struct ScheduledShiftBuilder {
 
     static func today() -> ScheduledShift {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let today = calendar.startOfDay(for: Date())
         return ScheduledShiftBuilder(date: today).build()
     }
 
     static func tomorrow() -> ScheduledShift? {
         let calendar = Calendar.current
         
-        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: try Date.fixedTestDate_Nov11_2025())) else {
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) else {
             return nil
         }
         
@@ -212,11 +212,11 @@ struct ChangeLogEntryBuilder {
 
     init(
         id: UUID = UUID(),
-        timestamp: Date = try Date.fixedTestDate_Nov11_2025(),
+        timestamp: Date = Date(),
         userId: UUID = UUID(),
         userDisplayName: String = "Test User",
         changeType: ChangeType = .created,
-        scheduledShiftDate: Date = try Date.fixedTestDate_Nov11_2025(),
+        scheduledShiftDate: Date = Date(),
         oldShiftSnapshot: ShiftSnapshot? = nil,
         newShiftSnapshot: ShiftSnapshot? = nil,
         reason: String = ""
@@ -306,7 +306,7 @@ struct TestDataCollections {
     /// Create a standard week of scheduled shifts
     static func weekOfShifts() -> [ScheduledShift] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: try Date.fixedTestDate_Nov11_2025())
+        let today = calendar.startOfDay(for: Date())
         let shiftTypes = standardShiftTypes()
 
         return (0..<7).compactMap { dayOffset in
