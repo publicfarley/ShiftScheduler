@@ -499,16 +499,23 @@ func scheduleMiddleware(
             logger.debug("Successfully loaded \(result.shifts.count) shifts")
             logger.debug("New range: \(result.rangeStart.formatted()) to \(result.rangeEnd.formatted())")
 
-            // Check for overlapping shifts on the same date
-            let shiftsGroupedByDate = Dictionary(grouping: result.shifts) { shift in
-                Calendar.current.startOfDay(for: shift.date)
-            }
-
-            // Find any dates with multiple shifts
-            if let (date, overlappingShifts) = shiftsGroupedByDate.first(where: { $0.value.count > 1 }) {
-                logger.warning("Found \(overlappingShifts.count) overlapping shifts on \(date.formatted())")
-                // Dispatch overlap detection - user must resolve
-                await dispatch(.schedule(.overlappingShiftsDetected(date: date, shifts: overlappingShifts)))
+            // Check for overlapping shifts using date-time range intersection
+            // This properly handles multi-day shifts (e.g., overnight shifts)
+            var foundOverlap = false
+            for i in 0..<result.shifts.count {
+                guard !foundOverlap else { break }
+                for j in (i+1)..<result.shifts.count {
+                    if result.shifts[i].overlaps(with: result.shifts[j]) {
+                        let overlappingShifts = [result.shifts[i], result.shifts[j]]
+                        logger.warning("Found overlapping shifts: \(result.shifts[i].shiftType?.title ?? "Unknown") and \(result.shifts[j].shiftType?.title ?? "Unknown")")
+                        // Dispatch overlap detection - user must resolve
+                        // Use the earlier date for display purposes
+                        let earlierDate = min(result.shifts[i].date, result.shifts[j].date)
+                        await dispatch(.schedule(.overlappingShiftsDetected(date: earlierDate, shifts: overlappingShifts)))
+                        foundOverlap = true
+                        break
+                    }
+                }
             }
 
             await dispatch(.schedule(.shiftsLoadedAroundMonth(.success((shifts: result.shifts, rangeStart: result.rangeStart, rangeEnd: result.rangeEnd)))))
