@@ -32,9 +32,10 @@ struct AddEditShiftTypeView: View {
         let hasTrimmedTitle = !title.trimmingCharacters(in: .whitespaces).isEmpty
         let hasTrimmedSymbol = !symbol.trimmingCharacters(in: .whitespaces).isEmpty
         let hasLocation = selectedLocation != nil
-        let hasValidTimes = isAllDay || (endTime > startTime)
+        // Note: Overnight shifts (endTime < startTime) are now supported
+        // No time validation needed - all time combinations are valid
 
-        return hasTrimmedTitle && hasTrimmedSymbol && hasLocation && hasValidTimes
+        return hasTrimmedTitle && hasTrimmedSymbol && hasLocation
     }
 
     var formTitle: String {
@@ -109,17 +110,16 @@ struct AddEditShiftTypeView: View {
                             displayedComponents: .hourAndMinute
                         )
 
-                        if endTime <= startTime {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Image(systemName: "exclamationmark.circle.fill")
-                                        .foregroundColor(.red)
-                                    Text("End time must be after start time")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                }
-                                .padding(.vertical, 4)
+                        // Show info badge for overnight shifts
+                        if endTime < startTime {
+                            HStack {
+                                Image(systemName: "moon.stars.fill")
+                                    .foregroundColor(.blue)
+                                Text("Overnight shift (ends next day)")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
                             }
+                            .padding(.vertical, 4)
                         }
                     }
                 }
