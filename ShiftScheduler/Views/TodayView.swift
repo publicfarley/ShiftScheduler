@@ -59,6 +59,193 @@ struct StatusBadge: View {
     }
 }
 
+// MARK: - Multi-Shift Featuring Algorithm
+
+/// Result of featuring algorithm determining which shift should be primary
+struct ShiftFeaturingResult {
+    let featuredShift: ScheduledShift
+    let nonFeaturedShift: ScheduledShift
+    let featuredPosition: FeaturedPosition
+
+    enum FeaturedPosition {
+        case left   // Featured shift is on left, other is on right
+        case right  // Featured shift is on right, other is on left
+    }
+}
+
+/// Determines which shift should be featured based on current time
+/// - Parameters:
+///   - shifts: Array of shifts (should contain exactly 2 shifts)
+///   - currentTime: The current time to evaluate against
+/// - Returns: ShiftFeaturingResult indicating which shift is featured and positioning
+func determineFeaturedShift(shifts: [ScheduledShift], currentTime: Date) -> ShiftFeaturingResult? {
+    guard shifts.count == 2 else { return nil }
+
+    let shift1 = shifts[0]
+    let shift2 = shifts[1]
+
+    // Get actual start/end times for both shifts
+    let shift1Start = shift1.actualStartDateTime()
+    let shift1End = shift1.actualEndDateTime()
+    let shift2Start = shift2.actualStartDateTime()
+    let shift2End = shift2.actualEndDateTime()
+
+    // Check if current time falls within shift1's boundaries
+    let isWithinShift1 = currentTime >= shift1Start && currentTime <= shift1End
+
+    // Check if current time falls within shift2's boundaries
+    let isWithinShift2 = currentTime >= shift2Start && currentTime <= shift2End
+
+    // Case 1: Current time is within shift1
+    if isWithinShift1 {
+        // shift1 is featured
+        // Determine if shift2 is before or after shift1
+        let position: ShiftFeaturingResult.FeaturedPosition = shift2End <= shift1Start ? .right : .left
+        return ShiftFeaturingResult(featuredShift: shift1, nonFeaturedShift: shift2, featuredPosition: position)
+    }
+
+    // Case 2: Current time is within shift2
+    if isWithinShift2 {
+        // shift2 is featured
+        // Determine if shift1 is before or after shift2
+        let position: ShiftFeaturingResult.FeaturedPosition = shift1End <= shift2Start ? .right : .left
+        return ShiftFeaturingResult(featuredShift: shift2, nonFeaturedShift: shift1, featuredPosition: position)
+    }
+
+    // Case 3: Current time is outside all shifts
+    // Feature the shift whose start time is upcoming first
+    if shift1Start > currentTime && shift2Start > currentTime {
+        // Both shifts are in the future - feature the earlier one
+        if shift1Start < shift2Start {
+            // shift1 starts first
+            let position: ShiftFeaturingResult.FeaturedPosition = .left
+            return ShiftFeaturingResult(featuredShift: shift1, nonFeaturedShift: shift2, featuredPosition: position)
+        } else {
+            // shift2 starts first
+            let position: ShiftFeaturingResult.FeaturedPosition = .left
+            return ShiftFeaturingResult(featuredShift: shift2, nonFeaturedShift: shift1, featuredPosition: position)
+        }
+    } else if shift1Start > currentTime {
+        // Only shift1 is upcoming
+        let position: ShiftFeaturingResult.FeaturedPosition = .left
+        return ShiftFeaturingResult(featuredShift: shift1, nonFeaturedShift: shift2, featuredPosition: position)
+    } else if shift2Start > currentTime {
+        // Only shift2 is upcoming
+        let position: ShiftFeaturingResult.FeaturedPosition = .left
+        return ShiftFeaturingResult(featuredShift: shift2, nonFeaturedShift: shift1, featuredPosition: position)
+    }
+
+    // Case 4: Both shifts are in the past - feature the most recent one
+    if shift1End > shift2End {
+        let position: ShiftFeaturingResult.FeaturedPosition = .left
+        return ShiftFeaturingResult(featuredShift: shift1, nonFeaturedShift: shift2, featuredPosition: position)
+    } else {
+        let position: ShiftFeaturingResult.FeaturedPosition = .left
+        return ShiftFeaturingResult(featuredShift: shift2, nonFeaturedShift: shift1, featuredPosition: position)
+    }
+}
+
+// MARK: - Multi-Shift Carousel Component
+
+struct MultiShiftCarousel: View {
+    let shifts: [ScheduledShift]
+    @State private var scrollPosition: CGFloat = 0
+    @State private var currentFeaturedIndex: Int = 0
+
+    var body: some View {
+        GeometryReader { geometry in
+            let cardWidth = geometry.size.width - 40  // Full width with padding
+
+            if shifts.isEmpty {
+                EmptyShiftCard()
+            } else if shifts.count == 1 {
+                // Single shift - display normally
+                UnifiedShiftCard(shift: shifts[0], onTap: nil)
+            } else if shifts.count == 2 {
+                // Two shifts - use featuring algorithm
+                let featuringResult = determineFeaturedShift(shifts: shifts, currentTime: Date())
+
+                if let result = featuringResult {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 20) {
+                            if result.featuredPosition == .right {
+                                // Non-featured shift on left (slightly off-screen)
+                                UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
+                                    .frame(width: cardWidth)
+                                    .opacity(0.6)
+                                    .scaleEffect(0.95)
+
+                                // Featured shift
+                                UnifiedShiftCard(shift: result.featuredShift, onTap: nil)
+                                    .frame(width: cardWidth)
+                            } else {
+                                // Featured shift on left
+                                UnifiedShiftCard(shift: result.featuredShift, onTap: nil)
+                                    .frame(width: cardWidth)
+
+                                // Non-featured shift on right (slightly off-screen)
+                                UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
+                                    .frame(width: cardWidth)
+                                    .opacity(0.6)
+                                    .scaleEffect(0.95)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                    .scrollTargetBehavior(.paging)
+                } else {
+                    // Fallback - show first shift
+                    UnifiedShiftCard(shift: shifts[0], onTap: nil)
+                }
+            } else {
+                // More than 2 shifts - show in scrollable carousel
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        ForEach(shifts) { shift in
+                            UnifiedShiftCard(shift: shift, onTap: nil)
+                                .frame(width: cardWidth)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .scrollTargetBehavior(.paging)
+            }
+        }
+    }
+}
+
+struct EmptyShiftCard: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+
+            VStack(spacing: 4) {
+                Text("No shift scheduled")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("Add today's shift or enjoy your day off")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.systemGray4), lineWidth: 2)
+                )
+                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+        )
+    }
+}
+
 struct TodayView: View {
     @Environment(\.reduxStore) var store
     @Environment(\.accessibilityReduceMotion) var reduceMotion
@@ -128,17 +315,21 @@ struct TodayView: View {
                                     }
                                 }
 
-                                // Display today's shift (includes multi-day shifts that occur today)
+                                // Display today's shifts (only shifts that START today)
                                 let todayShifts = store.state.today.scheduledShifts.filter { shift in
-                                    shift.occursOn(date: Date())
+                                    shift.startsOn(date: Date())
                                 }
 
-                                if let shift = todayShifts.first {
+                                if !todayShifts.isEmpty {
                                     VStack(spacing: 12) {
-                                        UnifiedShiftCard(shift: shift, onTap: nil)
+                                        // Use Multi-Shift Carousel
+                                        MultiShiftCarousel(shifts: todayShifts)
+                                            .frame(height: 220)
 
-                                        // Quick Actions Section
-                                        QuickActionsView(shift: shift)
+                                        // Quick Actions Section (show for first shift)
+                                        if let firstShift = todayShifts.first {
+                                            QuickActionsView(shift: firstShift)
+                                        }
                                     }
                                     .offset(x: todayCardOffset)
                                     .opacity(todayCardOpacity)
@@ -215,13 +406,18 @@ struct TodayView: View {
                                         .foregroundColor(.secondary)
                                 }
 
-                                // Display tomorrow's shift (includes multi-day shifts that occur tomorrow)
+                                // Display tomorrow's shifts (only shifts that START tomorrow)
                                 let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
                                     let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                                    return shift.occursOn(date: tomorrow)
+                                    return shift.startsOn(date: tomorrow)
                                 }
 
-                                CompactHalfHeightShiftCard(shift: tomorrowShifts.first, onTap: nil)
+                                if !tomorrowShifts.isEmpty {
+                                    MultiShiftCarousel(shifts: tomorrowShifts)
+                                        .frame(height: 180)
+                                } else {
+                                    CompactHalfHeightShiftCard(shift: nil, onTap: nil)
+                                }
                             }
                             .padding(.horizontal, 16)
                             .offset(x: tomorrowCardOffset)

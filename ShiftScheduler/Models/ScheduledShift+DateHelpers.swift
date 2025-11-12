@@ -1,6 +1,17 @@
 import Foundation
 
 extension ScheduledShift {
+    /// Checks if the shift STARTS on the given date
+    /// For multi-day shifts, only returns true if the shift's start date matches the target date
+    /// This is different from occursOn() which returns true for all dates the shift spans
+    func startsOn(date targetDate: Date) -> Bool {
+        let calendar = Calendar.current
+        let targetDay = calendar.startOfDay(for: targetDate)
+        let startDay = calendar.startOfDay(for: date)
+
+        return targetDay == startDay
+    }
+
     /// Checks if the shift occurs on the given date
     /// For multi-day shifts, returns true if the date falls within the shift's date range
     func occursOn(date targetDate: Date) -> Bool {
