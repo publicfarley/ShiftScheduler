@@ -47,7 +47,31 @@ extension ScheduledShift {
 
     /// Checks if this shift overlaps with another shift based on date-time ranges
     /// Returns true if the actual start/end DateTimes intersect
+    ///
+    /// **Special Case for All-Day Shifts:**
+    /// An all-day shift only overlaps with shifts that START on the same day.
+    /// This allows overnight shifts from the previous day to extend into an "Off" day.
+    ///
+    /// Examples:
+    /// - ✅ Valid: Nov 11 Night (11 PM - 7 AM) + Nov 12 Off (all-day)
+    /// - ❌ Invalid: Nov 12 Off (all-day) + Nov 12 Night (11 PM - 7 AM)
     func overlaps(with other: ScheduledShift) -> Bool {
+        // Special case: all-day shifts only overlap with shifts that START on the same day
+        if let thisType = self.shiftType, case .allDay = thisType.duration {
+            // This shift is all-day, check if other shift starts on the same day
+            let thisDay = Calendar.current.startOfDay(for: self.date)
+            let otherDay = Calendar.current.startOfDay(for: other.date)
+            return thisDay == otherDay
+        }
+
+        if let otherType = other.shiftType, case .allDay = otherType.duration {
+            // Other shift is all-day, check if this shift starts on the same day
+            let thisDay = Calendar.current.startOfDay(for: self.date)
+            let otherDay = Calendar.current.startOfDay(for: other.date)
+            return thisDay == otherDay
+        }
+
+        // Regular overlap check for scheduled shifts
         let thisStart = actualStartDateTime()
         let thisEnd = actualEndDateTime()
         let otherStart = other.actualStartDateTime()
