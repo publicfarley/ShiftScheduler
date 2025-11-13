@@ -154,20 +154,22 @@ struct MultiShiftCarousel: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let cardWidth = geometry.size.width - 40  // Full width with padding
+            // Make cards slightly narrower than screen width so next card peeks out (carousel effect)
+            let cardWidth = geometry.size.width * 0.85  // 85% of screen width
 
             if shifts.isEmpty {
                 EmptyShiftCard()
             } else if shifts.count == 1 {
-                // Single shift - display normally
+                // Single shift - display centered with full width
                 UnifiedShiftCard(shift: shifts[0], onTap: nil)
+                    .padding(.horizontal, 20)
             } else if shifts.count == 2 {
-                // Two shifts - use featuring algorithm
+                // Two shifts - use featuring algorithm with carousel
                 let featuringResult = determineFeaturedShift(shifts: shifts, currentTime: Date())
 
                 if let result = featuringResult {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 20) {
+                        HStack(spacing: 16) {
                             if result.featuredPosition == .right {
                                 // Non-featured shift on left (slightly off-screen)
                                 UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
@@ -183,7 +185,7 @@ struct MultiShiftCarousel: View {
                                 UnifiedShiftCard(shift: result.featuredShift, onTap: nil)
                                     .frame(width: cardWidth)
 
-                                // Non-featured shift on right (slightly off-screen)
+                                // Non-featured shift on right (slightly visible for peek effect)
                                 UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
                                     .frame(width: cardWidth)
                                     .opacity(0.6)
@@ -196,11 +198,12 @@ struct MultiShiftCarousel: View {
                 } else {
                     // Fallback - show first shift
                     UnifiedShiftCard(shift: shifts[0], onTap: nil)
+                        .padding(.horizontal, 20)
                 }
             } else {
                 // More than 2 shifts - show in scrollable carousel
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) {
+                    HStack(spacing: 16) {
                         ForEach(shifts) { shift in
                             UnifiedShiftCard(shift: shift, onTap: nil)
                                 .frame(width: cardWidth)
@@ -210,6 +213,33 @@ struct MultiShiftCarousel: View {
                 }
                 .scrollTargetBehavior(.paging)
             }
+        }
+    }
+}
+
+// MARK: - Compact Multi-Shift Carousel Component (for Tomorrow section)
+
+struct CompactMultiShiftCarousel: View {
+    let shifts: [ScheduledShift]
+
+    var body: some View {
+        if shifts.isEmpty {
+            CompactHalfHeightShiftCard(shift: nil, onTap: nil)
+        } else if shifts.count == 1 {
+            // Single shift - display with full width
+            CompactHalfHeightShiftCard(shift: shifts[0], onTap: nil)
+        } else {
+            // Multiple shifts - show in scrollable horizontal carousel
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(shifts) { shift in
+                        CompactHalfHeightShiftCard(shift: shift, onTap: nil)
+                            .frame(width: UIScreen.main.bounds.width * 0.85)  // 85% width for peek effect
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            .scrollTargetBehavior(.paging)
         }
     }
 }
@@ -412,12 +442,8 @@ struct TodayView: View {
                                     return shift.startsOn(date: tomorrow)
                                 }
 
-                                if !tomorrowShifts.isEmpty {
-                                    MultiShiftCarousel(shifts: tomorrowShifts)
-                                        .frame(height: 180)
-                                } else {
-                                    CompactHalfHeightShiftCard(shift: nil, onTap: nil)
-                                }
+                                // Use compact carousel for half-height display
+                                CompactMultiShiftCarousel(shifts: tomorrowShifts)
                             }
                             .padding(.horizontal, 16)
                             .offset(x: tomorrowCardOffset)
