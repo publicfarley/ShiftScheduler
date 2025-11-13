@@ -593,16 +593,56 @@ struct ShiftChangeSheet: View {
             await store.dispatch(action: .schedule(.performSwitchShift(currentShift, newShiftType, reasonText)))
         }
 
-        // Show success feedback
-        await MainActor.run {
-            showSuccess = true
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        // Wait a tiny bit for the middleware to complete and reducer to update state
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+        // Check for errors in Redux state
+        let hasError: Bool
+        let errorText: String?
+
+        switch feature {
+        case .today:
+            // Check toast message for errors
+            if case .error(let message) = store.state.today.toastMessage {
+                hasError = true
+                errorText = message
+            } else if let error = store.state.today.currentError {
+                hasError = true
+                errorText = error.localizedDescription
+            } else {
+                hasError = false
+                errorText = nil
+            }
+        case .schedule:
+            // Check current error
+            if let error = store.state.schedule.currentError {
+                hasError = true
+                errorText = error.localizedDescription
+            } else {
+                hasError = false
+                errorText = nil
+            }
         }
 
-        // Dismiss after a delay
-        try? await Task.sleep(seconds: 1.5)
         await MainActor.run {
-            handleDismiss()
+            isProcessing = false
+
+            if hasError {
+                // Show error - keep sheet open so user sees it
+                errorMessage = errorText ?? "Failed to switch shift"
+            } else {
+                // Show success feedback and dismiss
+                showSuccess = true
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+                // Dismiss after showing success
+                Task {
+                    try? await Task.sleep(seconds: 1.5)
+                    await MainActor.run {
+                        handleDismiss()
+                    }
+                }
+            }
         }
     }
 
