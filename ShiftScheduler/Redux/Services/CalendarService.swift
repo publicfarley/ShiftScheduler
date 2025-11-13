@@ -229,7 +229,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             calculatedEndDate = startDate
         }
 
-        // Create a temporary shift object to use the overlaps(with:) method
+        // Create a temporary shift object to check for overlaps
         let newShift = ScheduledShift(
             id: UUID(),
             eventIdentifier: "",
@@ -238,13 +238,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             endDate: calculatedEndDate
         )
 
-        // Check for actual time-based overlaps
-        for existingShift in existingShifts {
-            if newShift.overlaps(with: existingShift) {
-                let shiftTitles = [existingShift.shiftType?.title].compactMap { $0 }
-                logger.warning("Shift overlap detected: \(shiftType.title) overlaps with \(existingShift.shiftType?.title ?? "Unknown")")
-                throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
-            }
+        // Check for actual time-based overlaps using shared helper
+        if let overlappingShift = newShift.findOverlap(in: existingShifts) {
+            let shiftTitles = [overlappingShift.shiftType?.title].compactMap { $0 }
+            logger.warning("Shift overlap detected: \(shiftType.title) overlaps with \(overlappingShift.shiftType?.title ?? "Unknown")")
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
         // Create event with correct timing based on shift duration
@@ -326,7 +324,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             calculatedEndDate = startDate
         }
 
-        // Create a temporary shift object to use the overlaps(with:) method
+        // Create a temporary shift object to check for overlaps
         let updatedShift = ScheduledShift(
             id: UUID(),
             eventIdentifier: "",
@@ -335,13 +333,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             endDate: calculatedEndDate
         )
 
-        // Check for actual time-based overlaps
-        for otherShift in otherShifts {
-            if updatedShift.overlaps(with: otherShift) {
-                let shiftTitles = [otherShift.shiftType?.title].compactMap { $0 }
-                logger.warning("Shift overlap detected: \(newShiftType.title) overlaps with \(otherShift.shiftType?.title ?? "Unknown")")
-                throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
-            }
+        // Check for actual time-based overlaps using shared helper
+        if let overlappingShift = updatedShift.findOverlap(in: otherShifts) {
+            let shiftTitles = [overlappingShift.shiftType?.title].compactMap { $0 }
+            logger.warning("Shift overlap detected: \(newShiftType.title) overlaps with \(overlappingShift.shiftType?.title ?? "Unknown")")
+            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
         }
 
         // Update event with new shift type information

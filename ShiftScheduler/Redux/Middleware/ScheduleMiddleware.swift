@@ -499,23 +499,15 @@ func scheduleMiddleware(
             logger.debug("Successfully loaded \(result.shifts.count) shifts")
             logger.debug("New range: \(result.rangeStart.formatted()) to \(result.rangeEnd.formatted())")
 
-            // Check for overlapping shifts using date-time range intersection
+            // Check for overlapping shifts using shared helper
             // This properly handles multi-day shifts (e.g., overnight shifts)
-            var foundOverlap = false
-            for i in 0..<result.shifts.count {
-                guard !foundOverlap else { break }
-                for j in (i+1)..<result.shifts.count {
-                    if result.shifts[i].overlaps(with: result.shifts[j]) {
-                        let overlappingShifts = [result.shifts[i], result.shifts[j]]
-                        logger.warning("Found overlapping shifts: \(result.shifts[i].shiftType?.title ?? "Unknown") and \(result.shifts[j].shiftType?.title ?? "Unknown")")
-                        // Dispatch overlap detection - user must resolve
-                        // Use the earlier date for display purposes
-                        let earlierDate = min(result.shifts[i].date, result.shifts[j].date)
-                        await dispatch(.schedule(.overlappingShiftsDetected(date: earlierDate, shifts: overlappingShifts)))
-                        foundOverlap = true
-                        break
-                    }
-                }
+            if let (shift1, shift2) = ScheduledShift.findOverlappingPair(in: result.shifts) {
+                let overlappingShifts = [shift1, shift2]
+                logger.warning("Found overlapping shifts: \(shift1.shiftType?.title ?? "Unknown") and \(shift2.shiftType?.title ?? "Unknown")")
+                // Dispatch overlap detection - user must resolve
+                // Use the earlier date for display purposes
+                let earlierDate = min(shift1.date, shift2.date)
+                await dispatch(.schedule(.overlappingShiftsDetected(date: earlierDate, shifts: overlappingShifts)))
             }
 
             await dispatch(.schedule(.shiftsLoadedAroundMonth(.success((shifts: result.shifts, rangeStart: result.rangeStart, rangeEnd: result.rangeEnd)))))

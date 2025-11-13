@@ -57,6 +57,32 @@ extension ScheduledShift {
         return thisStart < otherEnd && thisEnd > otherStart
     }
 
+    /// Finds the first shift in the collection that overlaps with this shift
+    /// Returns nil if no overlaps found
+    /// Useful for checking if a new shift can be added without conflicts
+    func findOverlap(in shifts: [ScheduledShift]) -> ScheduledShift? {
+        for shift in shifts {
+            if self.overlaps(with: shift) {
+                return shift
+            }
+        }
+        return nil
+    }
+
+    /// Finds any pair of overlapping shifts in the collection
+    /// Returns the pair if found, or nil if no overlaps
+    /// Useful for validating that a collection of shifts has no conflicts
+    static func findOverlappingPair(in shifts: [ScheduledShift]) -> (ScheduledShift, ScheduledShift)? {
+        for i in 0..<shifts.count {
+            for j in (i+1)..<shifts.count {
+                if shifts[i].overlaps(with: shifts[j]) {
+                    return (shifts[i], shifts[j])
+                }
+            }
+        }
+        return nil
+    }
+
     /// Returns the actual start date-time by combining date with shift's start time
     /// For all-day shifts, returns the start of the day
     func actualStartDateTime() -> Date {
