@@ -198,24 +198,20 @@ func todayMiddleware(
             )
             logger.debug("Shift created successfully from Today: \(shiftType.title) on \(date.formatted())")
 
-            // Reload shifts to check for overlaps
+            // Reload shifts to check for overlaps using proper date-time range intersection
             let shifts = try await services.calendarService.loadShiftsForExtendedRange()
 
-            // Check for overlapping shifts on the same date
-            let shiftsGroupedByDate = Dictionary(grouping: shifts) { shift in
-                Calendar.current.startOfDay(for: shift.date)
-            }
-
-            let createdShiftDate = Calendar.current.startOfDay(for: createdShift.date)
-            if let shiftsOnDate = shiftsGroupedByDate[createdShiftDate], shiftsOnDate.count > 1 {
+            // Check for overlapping shifts using shared helper (handles multi-day shifts and all-day special case)
+            let otherShifts = shifts.filter { $0.eventIdentifier != createdShift.eventIdentifier }
+            if let overlappingShift = createdShift.findOverlap(in: otherShifts) {
                 // Overlap detected! Rollback by deleting the shift we just created
                 logger.warning("Overlap detected after creating shift from Today - rolling back")
+                logger.warning("  Created: \(createdShift.shiftType?.title ?? "Unknown") on \(createdShift.date.formatted())")
+                logger.warning("  Conflicts with: \(overlappingShift.shiftType?.title ?? "Unknown") on \(overlappingShift.date.formatted())")
                 try await services.calendarService.deleteShiftEvent(eventIdentifier: createdShift.eventIdentifier)
 
                 // Create error with existing shift names
-                let existingShiftNames = shiftsOnDate
-                    .filter { $0.eventIdentifier != createdShift.eventIdentifier }
-                    .compactMap { $0.shiftType?.title }
+                let existingShiftNames = [overlappingShift.shiftType?.title].compactMap { $0 }
 
                 let error = ScheduleError.overlappingShifts(date: date, existingShifts: existingShiftNames)
                 await dispatch(.today(.addShiftResponse(.failure(error))))
