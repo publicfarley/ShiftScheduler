@@ -276,11 +276,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Return the created shift with proper endDate
         // Calculate endDate based on whether the shift spans next day
-        let calculatedEndDate: Date
+        let calculatedEndDate2: Date
         if shiftType.duration.spansNextDay {
-            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+            calculatedEndDate2 = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
         } else {
-            calculatedEndDate = startDate
+            calculatedEndDate2 = startDate
         }
 
         let shift = ScheduledShift(
@@ -288,7 +288,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             eventIdentifier: event.eventIdentifier,
             shiftType: shiftType,
             date: startDate,
-            endDate: calculatedEndDate
+            endDate: calculatedEndDate2
         )
 
         return shift
