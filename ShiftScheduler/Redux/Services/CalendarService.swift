@@ -211,14 +211,40 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.notAuthorized
         }
 
-        // Check for overlapping shifts on the same date (business rule: no overlaps allowed)
+        // Check for overlapping shifts using date-time range intersection
+        // This properly handles multi-day shifts (e.g., overnight shifts)
         let startDate = Calendar.current.startOfDay(for: date)
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
-        let existingShifts = try await loadShifts(from: startDate, to: endDate)
-        if !existingShifts.isEmpty {
-            let shiftTitles = existingShifts.compactMap { $0.shiftType?.title }
-            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+        // Load shifts that might overlap (check broader range for multi-day shifts)
+        let rangeStart = Calendar.current.date(byAdding: .day, value: -1, to: startDate) ?? startDate
+        let rangeEnd = Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate
+
+        let existingShifts = try await loadShifts(from: rangeStart, to: rangeEnd)
+
+        // Calculate endDate for the new shift based on whether it spans next day
+        let calculatedEndDate: Date
+        if shiftType.duration.spansNextDay {
+            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        } else {
+            calculatedEndDate = startDate
+        }
+
+        // Create a temporary shift object to use the overlaps(with:) method
+        let newShift = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: "",
+            shiftType: shiftType,
+            date: startDate,
+            endDate: calculatedEndDate
+        )
+
+        // Check for actual time-based overlaps
+        for existingShift in existingShifts {
+            if newShift.overlaps(with: existingShift) {
+                let shiftTitles = [existingShift.shiftType?.title].compactMap { $0 }
+                logger.warning("Shift overlap detected: \(shiftType.title) overlaps with \(existingShift.shiftType?.title ?? "Unknown")")
+                throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+            }
         }
 
         // Create event with correct timing based on shift duration
@@ -281,16 +307,41 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
-        // Check for overlapping shifts on the same date (excluding the current shift being updated)
+        // Check for overlapping shifts using date-time range intersection (excluding the current shift being updated)
+        // This properly handles multi-day shifts (e.g., overnight shifts)
         let startDate = Calendar.current.startOfDay(for: date)
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
 
-        let existingShifts = try await loadShifts(from: startDate, to: endDate)
+        // Load shifts that might overlap (check broader range for multi-day shifts)
+        let rangeStart = Calendar.current.date(byAdding: .day, value: -1, to: startDate) ?? startDate
+        let rangeEnd = Calendar.current.date(byAdding: .day, value: 2, to: startDate) ?? startDate
+
+        let existingShifts = try await loadShifts(from: rangeStart, to: rangeEnd)
         let otherShifts = existingShifts.filter { $0.eventIdentifier != eventIdentifier }
 
-        if !otherShifts.isEmpty {
-            let shiftTitles = otherShifts.compactMap { $0.shiftType?.title }
-            throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+        // Calculate endDate for the updated shift based on whether it spans next day
+        let calculatedEndDate: Date
+        if newShiftType.duration.spansNextDay {
+            calculatedEndDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        } else {
+            calculatedEndDate = startDate
+        }
+
+        // Create a temporary shift object to use the overlaps(with:) method
+        let updatedShift = ScheduledShift(
+            id: UUID(),
+            eventIdentifier: "",
+            shiftType: newShiftType,
+            date: startDate,
+            endDate: calculatedEndDate
+        )
+
+        // Check for actual time-based overlaps
+        for otherShift in otherShifts {
+            if updatedShift.overlaps(with: otherShift) {
+                let shiftTitles = [otherShift.shiftType?.title].compactMap { $0 }
+                logger.warning("Shift overlap detected: \(newShiftType.title) overlaps with \(otherShift.shiftType?.title ?? "Unknown")")
+                throw ScheduleError.overlappingShifts(date: startDate, existingShifts: shiftTitles)
+            }
         }
 
         // Update event with new shift type information
