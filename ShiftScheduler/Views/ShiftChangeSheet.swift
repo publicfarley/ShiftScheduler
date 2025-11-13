@@ -603,9 +603,9 @@ struct ShiftChangeSheet: View {
         switch feature {
         case .today:
             // Check toast message for errors
-            if case .error(let message) = store.state.today.toastMessage {
+            if let toastMessage = store.state.today.toastMessage {
                 hasError = true
-                errorText = message
+                errorText = toastMessage.message
             } else if let error = store.state.today.currentError {
                 hasError = true
                 errorText = error.localizedDescription
@@ -613,6 +613,7 @@ struct ShiftChangeSheet: View {
                 hasError = false
                 errorText = nil
             }
+            
         case .schedule:
             // Check current error
             if let error = store.state.schedule.currentError {
