@@ -68,15 +68,22 @@ struct UnifiedShiftCard: View {
             if let shift = shift, let shiftType = shift.shiftType {
                 // Has shift scheduled - Enhanced design
                 VStack(alignment: .leading, spacing: 8) {
-                    // Status badge - simplified
-                    HStack {
+                    // Status badge with shift title
+                    HStack(alignment: .center, spacing: 12) {
                         StatusBadge(status: shiftStatus)
+
+                        Text(shiftType.title)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+
                         Spacer()
                     }
 
                     // Main content - Symbol + Details (Time/Location stacked)
                     HStack(alignment: .top, spacing: 8) {
-                        ShiftCardSymbolColumn(symbol: shiftType.symbol, title: shiftType.title, color: cardColor)
+                        ShiftCardSymbolColumn(symbol: shiftType.symbol, color: cardColor)
 
                         ShiftCardDetailsColumn(
                             timeString: shiftType.timeRangeString,
@@ -211,7 +218,6 @@ struct UnifiedShiftCard: View {
 // MARK: - Subviews
 struct ShiftCardSymbolColumn: View {
     let symbol: String
-    let title: String
     let color: Color
 
     var body: some View {
@@ -228,13 +234,6 @@ struct ShiftCardSymbolColumn: View {
                                 .stroke(color.opacity(0.15), lineWidth: 1)
                         )
                 )
-
-            Text(title)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-                .lineLimit(2)
-                .frame(width: 40)
         }
     }
 }
