@@ -23,58 +23,53 @@ struct EmptyDateCard: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onTap()
         }) {
-            ZStack {
-                // Background for selection state
-                if isSelected {
-                    // Selected state: filled circle with primary color
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue, .blue.opacity(0.8)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 36, height: 36)
-                        .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 2)
-                } else if isToday {
-                    // Today state: orange background with subtle styling
-                    Circle()
-                        .fill(.orange.opacity(0.2))
-                        .frame(width: 36, height: 36)
-                } else {
-                    // Default: subtle background for hover state
-                    Circle()
-                        .fill(Color(.systemGray5))
-                        .frame(width: 36, height: 36)
-                        .opacity(0)
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                // Day number in top-left
+                Text(dayNumber)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                // Selection indicator when selected
+                Spacer()
+
+                // Checkmark indicator centered at bottom when selected
                 if isSelected {
-                    VStack(spacing: 0) {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                } else {
-                    // Day number
-                    Text(dayNumber)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(dayNumberColor)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.accentColor)
+                        .frame(maxWidth: .infinity)
                 }
             }
+            .padding(8)
+            .frame(height: 64)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 2.5)
+            )
+            .shadow(
+                color: isSelected ? Color.accentColor.opacity(0.2) : .clear,
+                radius: 4,
+                y: 2
+            )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
+            .animation(.spring(duration: 0.3, bounce: 0.15), value: isSelected)
         }
-        .frame(height: 40)
-        .opacity(isCurrentMonth ? 1.0 : 0.3)
+        .opacity(isCurrentMonth ? 1.0 : 0.5)
         .disabled(!isCurrentMonth)
     }
 
-    private var dayNumberColor: Color {
-        if isToday {
-            return .orange
-        } else {
-            return .primary
+    private var backgroundColor: some View {
+        Group {
+            if isSelected {
+                Color.accentColor.opacity(0.12)
+            } else if isToday {
+                Color.orange.opacity(0.15)
+            } else {
+                Color(.systemGray6)
+            }
         }
     }
 }

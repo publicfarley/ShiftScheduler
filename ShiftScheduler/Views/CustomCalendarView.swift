@@ -28,10 +28,10 @@ struct CustomCalendarView: View {
         return formatter
     }()
 
-    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             // Header with month/year and navigation
             HStack {
                 Button(action: previousMonth) {
@@ -54,7 +54,7 @@ struct CustomCalendarView: View {
                         .font(.system(size: 14, weight: .medium))
                 }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 12)
 
             // Days of week header
             HStack(spacing: 0) {
@@ -66,10 +66,11 @@ struct CustomCalendarView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 4)
 
             // Calendar grid
-            LazyVGrid(columns: columns, spacing: 6) {
+            LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(daysInMonth()) { cell in
                     if let date = cell.date {
                         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
@@ -110,11 +111,11 @@ struct CustomCalendarView: View {
                     } else {
                         // Empty space for dates outside current month
                         Color.clear
-                            .frame(height: 40)
+                            .frame(height: 64)
                     }
                 }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 12)
         }
         .onChange(of: selectedDate) { _, newDate in
             // Update current month if selected date is in a different month
@@ -202,58 +203,66 @@ struct DayView: View {
 
     var body: some View {
         Button(action: onTap) {
-            ZStack {
-                // Background circle or stroke for selected
-                if isSelected {
-                    Circle()
-                        .stroke(.blue, lineWidth: 2)
-                        .frame(width: 36, height: 36)
-                } else {
-                    Circle()
-                        .fill(backgroundColor)
-                        .frame(width: 36, height: 36)
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                // Day number in top-left
+                Text(dayNumber)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                // Day number and shift symbol layout
+                Spacer()
+
+                // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
-                    VStack(spacing: -2) {
-                        Text(symbol)
-                            .font(.system(size: 14))
-                        Text(dayNumber)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(textColor)
-                    }
-                } else {
-                    // Just day number
-                    Text(dayNumber)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(textColor)
+                    Text(symbol)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
                 }
             }
+            .padding(8)
+            .frame(height: 64)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 2.5)
+            )
+            .shadow(
+                color: isSelected ? Color.accentColor.opacity(0.2) : .clear,
+                radius: 4,
+                y: 2
+            )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
+            .animation(.spring(duration: 0.3, bounce: 0.15), value: isSelected)
         }
-        .frame(height: 40)
-        .opacity(isCurrentMonth ? 1.0 : 0.3)
+        .opacity(isCurrentMonth ? 1.0 : 0.5)
     }
 
-    private var backgroundColor: Color {
-        if hasShift {
-            return .green.opacity(0.3)
-        } else if isToday {
-            return .orange.opacity(0.3)
-        } else {
-            return .clear
-        }
-    }
-
-    private var textColor: Color {
-        if isSelected {
-            return .blue
-        } else if isToday {
-            return .orange
-        } else if hasShift {
-            return .green
-        } else {
-            return .primary
+    private var backgroundColor: some View {
+        Group {
+            if isToday && hasShift {
+                // Today with shift: gradient
+                LinearGradient(
+                    colors: [
+                        Color.orange.opacity(0.2),
+                        Color.green.opacity(0.15)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            } else if hasShift {
+                // Has shift: subtle green
+                Color.green.opacity(0.12)
+            } else if isToday {
+                // Today: subtle orange
+                Color.orange.opacity(0.15)
+            } else {
+                // Empty day
+                Color.clear
+            }
         }
     }
 }
