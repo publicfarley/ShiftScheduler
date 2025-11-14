@@ -248,111 +248,115 @@ struct ScheduleView: View {
     }
 
     private var scheduleContentView: some View {
-        VStack(spacing: 0) {
-            // Header: Selection toolbar or action buttons
-            if store.state.schedule.isInSelectionMode {
-                SelectionToolbarView(
-                    selectionCount: store.state.schedule.selectionCount,
-                    canDelete: store.state.schedule.canDeleteSelectedShifts,
-                    isDeleting: store.state.schedule.isDeletingShift,
-                    selectionMode: store.state.schedule.selectionMode,
-                    onDelete: {
-                        // Show confirmation dialog before deleting
-                        showBulkDeleteConfirmation = true
-                    },
-                    onAdd: {
-                        // Show shift type selection sheet for bulk add
-                        showBulkAddSheet = true
-                    },
-                    onClear: {
-                        Task {
-                            await store.dispatch(action: .schedule(.clearSelection))
-                        }
-                    },
-                    onExit: {
-                        Task {
-                            await store.dispatch(action: .schedule(.exitSelectionMode))
-                        }
-                    }
-                )
-            } else {
-                // Normal header buttons
-                HStack(spacing: 16) {
-                    // Menu with add and bulk add options
-                    Menu {
-                        Button(action: {
-                            Task {
-                                await store.dispatch(action: .schedule(.addShiftButtonTapped))
-                            }
-                        }) {
-                            Label("Add Single Shift", systemImage: "plus.circle")
-                        }
-
-                        Button(action: {
-                            Task {
-                                await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
-                                showBulkAddSheet = false  // Reset to prepare for bulk add
-                            }
-                        }) {
-                            Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
-                        }
-                    } label: {
-                        Image(systemName: "plus.circle")
-                            .foregroundColor(.primary)
-                    }
-
-                    Spacer()
-                    todayButton
-                    filterButton
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-            }
-
-            // Calendar month view - FIXED SIZE
+        GeometryReader { geometry in
             VStack(spacing: 0) {
-                CustomCalendarView(
-                    selectedDate: Binding(
-                        get: { store.state.schedule.selectedDate },
-                        set: { date in
+                // Header: Selection toolbar or action buttons
+                if store.state.schedule.isInSelectionMode {
+                    SelectionToolbarView(
+                        selectionCount: store.state.schedule.selectionCount,
+                        canDelete: store.state.schedule.canDeleteSelectedShifts,
+                        isDeleting: store.state.schedule.isDeletingShift,
+                        selectionMode: store.state.schedule.selectionMode,
+                        onDelete: {
+                            // Show confirmation dialog before deleting
+                            showBulkDeleteConfirmation = true
+                        },
+                        onAdd: {
+                            // Show shift type selection sheet for bulk add
+                            showBulkAddSheet = true
+                        },
+                        onClear: {
                             Task {
-                                await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                await store.dispatch(action: .schedule(.clearSelection))
+                            }
+                        },
+                        onExit: {
+                            Task {
+                                await store.dispatch(action: .schedule(.exitSelectionMode))
                             }
                         }
-                    ),
-                    scheduledDates: Set(
-                        store.state.schedule.scheduledShifts.flatMap { shift in
-                            shift.affectedDates()
-                        }
-                    ),
-                    shiftSymbols: shiftSymbolsByDate,
-                    selectionMode: store.state.schedule.selectionMode,
-                    selectedDates: store.state.schedule.selectedDates
-                )
-                .padding()
-                .background(Color(.systemGray6))
+                    )
+                } else {
+                    // Normal header buttons
+                    HStack(spacing: 16) {
+                        // Menu with add and bulk add options
+                        Menu {
+                            Button(action: {
+                                Task {
+                                    await store.dispatch(action: .schedule(.addShiftButtonTapped))
+                                }
+                            }) {
+                                Label("Add Single Shift", systemImage: "plus.circle")
+                            }
 
-                // Selected date display
-                Text(formattedSelectedDate)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                            Button(action: {
+                                Task {
+                                    await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
+                                    showBulkAddSheet = false  // Reset to prepare for bulk add
+                                }
+                            }) {
+                                Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
+                            }
+                        } label: {
+                            Image(systemName: "plus.circle")
+                                .foregroundColor(.primary)
+                        }
+
+                        Spacer()
+                        todayButton
+                        filterButton
+                    }
                     .padding(.horizontal)
                     .padding(.vertical, 12)
-            }
-            .fixedSize(horizontal: false, vertical: true)
-
-            // Shifts list or empty state - FILLS REMAINING SPACE
-            Group {
-                if store.state.schedule.filteredShifts.isEmpty {
-                    emptyStateView
-                } else {
-                    shiftsListView
                 }
-            }
-            .frame(maxHeight: .infinity, alignment: .top)
-            .opacity(listOpacity)
-            .onChange(of: store.state.schedule.selectedDate) { _, _ in
-                resetListAnimation()
+
+                // Combined scrollable section: Calendar + Date + Shifts
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Calendar month view
+                        CustomCalendarView(
+                            selectedDate: Binding(
+                                get: { store.state.schedule.selectedDate },
+                                set: { date in
+                                    Task {
+                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                    }
+                                }
+                            ),
+                            scheduledDates: Set(
+                                store.state.schedule.scheduledShifts.flatMap { shift in
+                                    shift.affectedDates()
+                                }
+                            ),
+                            shiftSymbols: shiftSymbolsByDate,
+                            selectionMode: store.state.schedule.selectionMode,
+                            selectedDates: store.state.schedule.selectedDates
+                        )
+                        .padding()
+                        .background(Color(.systemGray6))
+
+                        // Selected date display
+                        Text(formattedSelectedDate)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // Shifts list or empty state
+                        Group {
+                            if store.state.schedule.filteredShifts.isEmpty {
+                                emptyStateView
+                            } else {
+                                shiftsListView
+                            }
+                        }
+                        .opacity(listOpacity)
+                    }
+                }
+                .onChange(of: store.state.schedule.selectedDate) { _, _ in
+                    resetListAnimation()
+                }
             }
         }
     }
