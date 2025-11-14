@@ -74,38 +74,45 @@ struct UnifiedShiftCard: View {
                         Spacer()
                     }
 
-                    // Main content - cleaner, more professional layout
-                    HStack(spacing: 14) {
-                        // Symbol - simple circle without gradient
-                        Text(shiftType.symbol)
-                            .font(.title2)
-                            .foregroundColor(cardColor)
-                            .frame(width: 48, height: 48)
-                            .background(
-                                Circle()
-                                    .fill(cardColor.opacity(0.08))
-                                    .overlay(
-                                        Circle()
-                                            .stroke(cardColor.opacity(0.15), lineWidth: 1)
-                                    )
-                            )
+                    // Main content - 2-column compact layout
+                    HStack(spacing: 12) {
+                        // Left column: Symbol + Title/Description
+                        VStack(alignment: .leading, spacing: 4) {
+                            // Symbol - simple circle without gradient
+                            Text(shiftType.symbol)
+                                .font(.title2)
+                                .foregroundColor(cardColor)
+                                .frame(width: 48, height: 48)
+                                .background(
+                                    Circle()
+                                        .fill(cardColor.opacity(0.08))
+                                        .overlay(
+                                            Circle()
+                                                .stroke(cardColor.opacity(0.15), lineWidth: 1)
+                                        )
+                                )
 
-                        // Shift details
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(shiftType.title)
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
+                            // Title and description below symbol
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(shiftType.title)
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
 
-                            // Add missing description
-                            if !shiftType.shiftDescription.isEmpty {
-                                Text(shiftType.shiftDescription)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(2)
+                                // Compact description
+                                if !shiftType.shiftDescription.isEmpty {
+                                    Text(shiftType.shiftDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
                             }
+                        }
 
-                            // Time - simplified badge
+                        // Right column: Time, Location, Address
+                        VStack(alignment: .trailing, spacing: 4) {
+                            // Time badge
                             HStack(spacing: 4) {
                                 Image(systemName: "clock")
                                     .font(.caption)
@@ -115,6 +122,7 @@ struct UnifiedShiftCard: View {
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .foregroundColor(cardColor)
+                                    .lineLimit(1)
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
@@ -123,47 +131,51 @@ struct UnifiedShiftCard: View {
                                     .fill(cardColor.opacity(0.08))
                             )
 
-                            // Location name
+                            // Location details stacked
                             let location = shiftType.location
-                            HStack(spacing: 4) {
-                                Image(systemName: "location")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Text(location.name)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            // Location address
-                            if !location.address.isEmpty {
-                                HStack(alignment: .top, spacing: 4) {
-                                    Image(systemName: "mappin.and.ellipse")
+                            VStack(alignment: .trailing, spacing: 2) {
+                                // Location name
+                                HStack(spacing: 4) {
+                                    Image(systemName: "location")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
-                                        .padding(.top, 2)
-                                    Text(location.address)
+                                    Text(location.name)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                                        .lineLimit(1)
                                 }
-                            }
 
-                            // User notes
-                            if let notes = shift.notes, !notes.isEmpty {
-                                HStack(alignment: .top, spacing: 4) {
-                                    Image(systemName: "note.text")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    Text(notes)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(3)
+                                // Location address - single line with truncation
+                                if !location.address.isEmpty {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "mappin.and.ellipse")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        Text(location.address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                    }
                                 }
-                                .accessibilityElement(children: .combine)
-                                .accessibilityLabel("Notes: \(notes)")
                             }
                         }
 
                         Spacer()
+                    }
+
+                    // User notes - full width if present
+                    if let notes = shift.notes, !notes.isEmpty {
+                        HStack(alignment: .top, spacing: 4) {
+                            Image(systemName: "note.text")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(notes)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Notes: \(notes)")
                     }
                 }
                 .padding(16)
