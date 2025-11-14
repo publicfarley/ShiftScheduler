@@ -42,17 +42,14 @@ struct EmptyDateCard: View {
                 }
             }
             .padding(8)
-            .frame(height: 64)
+            .frame(maxWidth: .infinity, maxHeight: 64, alignment: .topLeading)
             .background(backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .border(Color(.systemGray3), width: 1)
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 2.5)
-            )
-            .shadow(
-                color: isSelected ? Color.accentColor.opacity(0.2) : .clear,
-                radius: 4,
-                y: 2
+                isSelected ?
+                    RoundedRectangle(cornerRadius: 0)
+                        .strokeBorder(Color.accentColor, lineWidth: 2)
+                    : nil
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
             .animation(.spring(duration: 0.3, bounce: 0.15), value: isSelected)
