@@ -351,10 +351,10 @@ struct TodayView: View {
                                 }
 
                                 if !todayShifts.isEmpty {
-                                    VStack(spacing: 12) {
+                                    VStack(spacing: 8) {
                                         // Use Multi-Shift Carousel
                                         MultiShiftCarousel(shifts: todayShifts)
-                                            .frame(height: 220)
+                                            .frame(height: 200)
 
                                         // Quick Actions Section (show for first shift)
                                         if let firstShift = todayShifts.first {
