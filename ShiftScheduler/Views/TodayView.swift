@@ -360,6 +360,7 @@ struct TodayView: View {
                                         // Quick Actions Section (show for first shift)
                                         if let firstShift = todayShifts.first {
                                             QuickActionsView(shift: firstShift)
+                                                .padding(.horizontal, 16)
                                         }
                                     }
                                     .offset(x: todayCardOffset)
