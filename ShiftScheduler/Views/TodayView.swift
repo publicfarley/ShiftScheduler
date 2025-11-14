@@ -344,6 +344,7 @@ struct TodayView: View {
                                             .scaleEffect(0.8)
                                     }
                                 }
+                                .padding(.horizontal, 16)
 
                                 // Display today's shifts (only shifts that START today)
                                 let todayShifts = store.state.today.scheduledShifts.filter { shift in
@@ -406,7 +407,7 @@ struct TodayView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 20)
-                                    .padding(.horizontal, 16)
+                                    .padding(.horizontal, 20)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color(.systemBackground))
@@ -416,11 +417,11 @@ struct TodayView: View {
                                             )
                                             .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
                                     )
+                                    .padding(.horizontal, 16)
                                     .offset(x: todayCardOffset)
                                     .opacity(todayCardOpacity)
                                 }
                             }
-                            .padding(.horizontal, 16)
                             .padding(.top)
 
                             // Tomorrow Section - Half Height
