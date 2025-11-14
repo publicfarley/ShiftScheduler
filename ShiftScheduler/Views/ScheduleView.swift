@@ -627,3 +627,10 @@ struct ScheduleView: View {
 //    )
 //    return store
 //}()
+
+
+// If your Store type and previewStore are available, you may want to uncomment and use them as shown below:
+// #Preview {
+//     ScheduleView()
+//         .environment(\._reduxStore, previewStore)
+// }

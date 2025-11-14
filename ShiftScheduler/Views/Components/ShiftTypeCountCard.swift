@@ -110,7 +110,8 @@ struct ShiftTypeCountCard: View {
 
                     // Day indicators
                     Text(daysWithShifts)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.body)
+                        .bold()
                         .foregroundColor(.primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
