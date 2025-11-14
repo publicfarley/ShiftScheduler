@@ -95,7 +95,7 @@ struct UnifiedShiftCard: View {
                             Text(notes)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                                .lineLimit(1)
+                                .lineLimit(2)
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("Notes: \(notes)")
@@ -233,7 +233,7 @@ struct ShiftCardSymbolColumn: View {
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
-                .lineLimit(1)
+                .lineLimit(2)
                 .frame(width: 40)
         }
     }
