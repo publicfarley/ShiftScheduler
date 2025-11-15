@@ -248,9 +248,9 @@ struct ScheduleView: View {
     }
 
     private var scheduleContentView: some View {
-        GeometryReader { geometry in
+        GeometryReader { fullGeometry in
             VStack(spacing: 0) {
-                // Header: Selection toolbar or action buttons
+                // FIXED TOOLBAR - Non-negotiable 60pt height
                 if store.state.schedule.isInSelectionMode {
                     SelectionToolbarView(
                         selectionCount: store.state.schedule.selectionCount,
@@ -276,6 +276,7 @@ struct ScheduleView: View {
                             }
                         }
                     )
+                    .frame(height: 60)
                 } else {
                     // Normal header buttons
                     HStack(spacing: 16) {
@@ -299,6 +300,7 @@ struct ScheduleView: View {
                             }
                         } label: {
                             Image(systemName: "plus.circle")
+                                .font(.title2)
                                 .foregroundColor(.primary)
                         }
 
@@ -306,12 +308,22 @@ struct ScheduleView: View {
                         todayButton
                         filterButton
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
                     .padding(.vertical, 12)
+                    .frame(height: 60)
+                    .background(
+                        Color(.systemBackground)
+                            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                    )
                 }
 
-                // Combined scrollable section: Calendar + Date + Shifts
-                ScrollView {
+                // CONTENT AREA - 50/50 split of REMAINING space after toolbar
+                let toolbarHeight: CGFloat = 60
+                let availableHeight = fullGeometry.size.height - toolbarHeight
+                let halfHeight = availableHeight * 0.5
+
+                VStack(spacing: 0) {
+                    // CALENDAR SECTION - 50% of available height
                     VStack(spacing: 0) {
                         // Calendar month view
                         CustomCalendarView(
@@ -342,51 +354,59 @@ struct ScheduleView: View {
                             .padding(.horizontal)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, alignment: .leading)
-
-                        // Shifts list or empty state
-                        Group {
-                            if store.state.schedule.filteredShifts.isEmpty {
-                                emptyStateView
-                            } else {
-                                shiftsListView
-                            }
-                        }
-                        .opacity(listOpacity)
+                            .background(Color(.systemBackground))
                     }
-                }
-                .onChange(of: store.state.schedule.selectedDate) { _, _ in
-                    resetListAnimation()
+                    .frame(height: halfHeight)
+
+                    // SHIFTS SECTION - 50% of available height (scrollable)
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            // Shifts list or empty state
+                            Group {
+                                if store.state.schedule.filteredShifts.isEmpty {
+                                    emptyStateView
+                                } else {
+                                    shiftsContentView
+                                }
+                            }
+                            .opacity(listOpacity)
+                        }
+                        .padding(.top, 12)
+                    }
+                    .frame(height: halfHeight)
+                    .background(Color(.systemBackground))
+                    .onChange(of: store.state.schedule.selectedDate) { _, _ in
+                        resetListAnimation()
+                    }
                 }
             }
         }
     }
 
-    private var shiftsListView: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                // Active filters indicator
+    private var shiftsContentView: some View {
+        VStack(spacing: 12) {
+            // Active filters indicator
+            if store.state.schedule.hasActiveFilters {
+                activeFiltersIndicator
+            }
+
+            // Shift count
+            HStack {
                 if store.state.schedule.hasActiveFilters {
-                    activeFiltersIndicator
-                }
-
-                // Shift count
-                HStack {
-                    if store.state.schedule.hasActiveFilters {
-                        Button(action: clearAllFilters) {
-                            Text("Clear filters")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                        }
+                    Button(action: clearAllFilters) {
+                        Text("Clear filters")
+                            .font(.caption)
+                            .foregroundColor(.blue)
                     }
-                    Spacer()
                 }
-                .padding(.horizontal)
+                Spacer()
+            }
+            .padding(.horizontal)
 
-                // Shifts
-                VStack(spacing: 12) {
-                    ForEach(store.state.schedule.filteredShifts, id: \.id) { shift in
-                        shiftCard(for: shift)
-                    }
+            // Shifts
+            VStack(spacing: 12) {
+                ForEach(store.state.schedule.filteredShifts, id: \.id) { shift in
+                    shiftCard(for: shift)
                 }
             }
         }
@@ -554,6 +574,7 @@ struct ScheduleView: View {
             }
         }) {
             Image(systemName: "calendar.badge.clock")
+                .font(.title2)
                 .foregroundColor(.primary)
         }
         .transaction { transaction in
@@ -568,6 +589,7 @@ struct ScheduleView: View {
             }
         }) {
             Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.title2)
                 .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
         }
     }
