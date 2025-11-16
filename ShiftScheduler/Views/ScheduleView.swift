@@ -248,9 +248,9 @@ struct ScheduleView: View {
     }
 
     private var scheduleContentView: some View {
-        GeometryReader { fullGeometry in
-            VStack(spacing: 0) {
-                // FIXED TOOLBAR - Non-negotiable 60pt height
+        ScrollView {
+            VStack(spacing: 16) {
+                // TOOLBAR
                 if store.state.schedule.isInSelectionMode {
                     SelectionToolbarView(
                         selectionCount: store.state.schedule.selectionCount,
@@ -276,7 +276,6 @@ struct ScheduleView: View {
                             }
                         }
                     )
-                    .frame(height: 60)
                 } else {
                     // Normal header buttons
                     HStack(spacing: 16) {
@@ -310,76 +309,66 @@ struct ScheduleView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .frame(height: 60)
                     .background(
                         Color(.systemBackground)
                             .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                     )
                 }
 
-                // CONTENT AREA - 50/50 split of REMAINING space after toolbar
-                let toolbarHeight: CGFloat = 60
-                let availableHeight = fullGeometry.size.height - toolbarHeight
-                let halfHeight = availableHeight * 0.5
-
+                // CALENDAR SECTION
                 VStack(spacing: 0) {
-                    // CALENDAR SECTION - 50% of available height
-                    VStack(spacing: 0) {
-                        // Calendar month view
-                        CustomCalendarView(
-                            selectedDate: Binding(
-                                get: { store.state.schedule.selectedDate },
-                                set: { date in
-                                    Task {
-                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
-                                    }
-                                }
-                            ),
-                            scheduledDates: Set(
-                                store.state.schedule.scheduledShifts.flatMap { shift in
-                                    shift.affectedDates()
-                                }
-                            ),
-                            shiftSymbols: shiftSymbolsByDate,
-                            selectionMode: store.state.schedule.selectionMode,
-                            selectedDates: store.state.schedule.selectedDates
-                        )
-                        .padding()
-                        .background(Color(.systemGray6))
-
-                        // Selected date display
-                        Text(formattedSelectedDate)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.systemBackground))
-                    }
-                    .frame(height: halfHeight)
-
-                    // SHIFTS SECTION - 50% of available height (scrollable)
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            // Shifts list or empty state
-                            Group {
-                                if store.state.schedule.filteredShifts.isEmpty {
-                                    emptyStateView
-                                } else {
-                                    shiftsContentView
+                    // Calendar month view
+                    CustomCalendarView(
+                        selectedDate: Binding(
+                            get: { store.state.schedule.selectedDate },
+                            set: { date in
+                                Task {
+                                    await store.dispatch(action: .schedule(.selectedDateChanged(date)))
                                 }
                             }
-                            .opacity(listOpacity)
-                        }
-                        .padding(.top, 12)
-                    }
-                    .frame(height: halfHeight)
-                    .background(Color(.systemBackground))
-                    .onChange(of: store.state.schedule.selectedDate) { _, _ in
-                        resetListAnimation()
-                    }
+                        ),
+                        scheduledDates: Set(
+                            store.state.schedule.scheduledShifts.flatMap { shift in
+                                shift.affectedDates()
+                            }
+                        ),
+                        shiftSymbols: shiftSymbolsByDate,
+                        selectionMode: store.state.schedule.selectionMode,
+                        selectedDates: store.state.schedule.selectedDates
+                    )
+                    .padding()
+                    .background(Color(.systemGray6))
+
+                    // Selected date display
+                    Text(formattedSelectedDate)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemBackground))
                 }
+
+                // SHIFTS SECTION
+                VStack(spacing: 12) {
+                    // Shifts list or empty state
+                    Group {
+                        if store.state.schedule.filteredShifts.isEmpty {
+                            emptyStateView
+                        } else {
+                            shiftsContentView
+                        }
+                    }
+                    .opacity(listOpacity)
+                }
+                .padding(.bottom, 20)
             }
+            .padding(.vertical, 8)
+        }
+        .background(Color(.systemBackground))
+        .ignoresSafeArea(edges: .bottom)
+        .onChange(of: store.state.schedule.selectedDate) { _, _ in
+            resetListAnimation()
         }
     }
 
