@@ -339,8 +339,8 @@ struct ScheduleView: View {
                             selectedDates: store.state.schedule.selectedDates
                         )
                         .padding()
+                        .frame(height: 448, alignment: .top)
                         .background(Color(.systemGray6))
-                        .frame(height: 448)
 
                         // Selected date display - fixed position at bottom
                         Text(formattedSelectedDate)
