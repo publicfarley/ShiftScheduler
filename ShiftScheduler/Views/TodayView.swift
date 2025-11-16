@@ -322,237 +322,239 @@ struct TodayView: View {
                 } else {
                     // Main Content
                     ScrollView {
-                        VStack(spacing: 20) {
-                            // Today Section
-                            VStack(alignment: .leading, spacing: 16) {
-                                HStack {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "sun.max.fill")
-                                            .font(.title2)
-                                            .foregroundColor(.orange)
+                        VStack(spacing: 0) {
+                            // Today Section - Primary Card
+                            SectionCard(accentColor: .orange, prominence: .primary) {
+                                VStack(alignment: .leading, spacing: 16) {
+                                    HStack {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "sun.max.fill")
+                                                .font(.title2)
+                                                .foregroundColor(.orange)
 
-                                        Text(Date(), style: .date)
+                                            Text(Date(), style: .date)
+                                                .font(.callout)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(.secondary)
+                                        }
+
+                                        Spacer()
+
+                                        if store.state.today.isLoading {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                        }
+                                    }
+
+                                    // Display today's shifts (only shifts that START today)
+                                    let todayShifts = store.state.today.scheduledShifts.filter { shift in
+                                        shift.startsOn(date: Date())
+                                    }
+
+                                    if !todayShifts.isEmpty {
+                                        VStack(spacing: 16) {
+                                            // Use Multi-Shift Carousel
+                                            MultiShiftCarousel(shifts: todayShifts)
+                                                .frame(height: 200)
+
+                                            // Divider between shift and quick actions
+                                            Divider()
+                                                .padding(.vertical, 8)
+
+                                            // Quick Actions Section (show for first shift)
+                                            if let firstShift = todayShifts.first {
+                                                QuickActionsView(shift: firstShift)
+                                            }
+                                        }
+                                        .offset(x: todayCardOffset)
+                                        .opacity(todayCardOpacity)
+                                    } else {
+                                        VStack(spacing: 16) {
+                                            Image(systemName: "calendar.badge.exclamationmark")
+                                                .font(.largeTitle)
+                                                .foregroundColor(.secondary)
+
+                                            VStack(spacing: 4) {
+                                                Text("No shift scheduled")
+                                                    .font(.headline)
+                                                    .foregroundColor(.primary)
+
+                                                Text("Add today's shift or enjoy your day off")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
+                                            }
+
+                                            Button(action: {
+                                                Task {
+                                                    await store.dispatch(action: .today(.addShiftButtonTapped))
+                                                }
+                                            }) {
+                                                HStack(spacing: 8) {
+                                                    Image(systemName: "plus.circle.fill")
+                                                        .font(.system(size: 18))
+
+                                                    Text("Add Shift")
+                                                        .fontWeight(.semibold)
+                                                }
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 10)
+                                                .foregroundColor(.white)
+                                                .background(
+                                                    LinearGradient(
+                                                        gradient: Gradient(colors: [.purple, .indigo]),
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .cornerRadius(8)
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .offset(x: todayCardOffset)
+                                        .opacity(todayCardOpacity)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+
+                            // Spacing between major sections
+                            Spacer().frame(height: 24)
+
+                            // Tomorrow Section - Secondary Card
+                            SectionCard(accentColor: .indigo, prominence: .secondary) {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "moon.stars.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.indigo)
+
+                                        Text("Tomorrow")
                                             .font(.callout)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.secondary)
                                     }
 
-                                    Spacer()
-
-                                    if store.state.today.isLoading {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
+                                    // Display tomorrow's shifts (only shifts that START tomorrow)
+                                    let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
+                                        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+                                        return shift.startsOn(date: tomorrow)
                                     }
+
+                                    // Use compact carousel for half-height display
+                                    CompactMultiShiftCarousel(shifts: tomorrowShifts)
                                 }
-                                .padding(.horizontal, 16)
-
-                                // Display today's shifts (only shifts that START today)
-                                let todayShifts = store.state.today.scheduledShifts.filter { shift in
-                                    shift.startsOn(date: Date())
-                                }
-
-                                if !todayShifts.isEmpty {
-                                    VStack(spacing: 8) {
-                                        // Use Multi-Shift Carousel
-                                        MultiShiftCarousel(shifts: todayShifts)
-                                            .frame(height: 200)
-
-                                        // Quick Actions Section (show for first shift)
-                                        if let firstShift = todayShifts.first {
-                                            QuickActionsView(shift: firstShift)
-                                                .padding(.horizontal, 16)
-                                        }
-                                    }
-                                    .offset(x: todayCardOffset)
-                                    .opacity(todayCardOpacity)
-                                } else {
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "calendar.badge.exclamationmark")
-                                            .font(.largeTitle)
-                                            .foregroundColor(.secondary)
-
-                                        VStack(spacing: 4) {
-                                            Text("No shift scheduled")
-                                                .font(.headline)
-                                                .foregroundColor(.primary)
-
-                                            Text("Add today's shift or enjoy your day off")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-
-                                        Button(action: {
-                                            Task {
-                                                await store.dispatch(action: .today(.addShiftButtonTapped))
-                                            }
-                                        }) {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .font(.system(size: 18))
-
-                                                Text("Add Shift")
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 10)
-                                            .foregroundColor(.white)
-                                            .background(
-                                                LinearGradient(
-                                                    gradient: Gradient(colors: [.purple, .indigo]),
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 20)
-                                    .padding(.horizontal, 20)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(.systemBackground))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color(.systemGray4), lineWidth: 2)
-                                            )
-                                            .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-                                    )
-                                    .padding(.horizontal, 16)
-                                    .offset(x: todayCardOffset)
-                                    .opacity(todayCardOpacity)
-                                }
-                            }
-                            .padding(.top)
-
-                            // Tomorrow Section - Half Height
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "moon.stars.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.indigo)
-
-                                    Text("Tomorrow")
-                                        .font(.callout)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                // Display tomorrow's shifts (only shifts that START tomorrow)
-                                let tomorrowShifts = store.state.today.scheduledShifts.filter { shift in
-                                    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-                                    return shift.startsOn(date: tomorrow)
-                                }
-
-                                // Use compact carousel for half-height display
-                                CompactMultiShiftCarousel(shifts: tomorrowShifts)
                             }
                             .padding(.horizontal, 16)
                             .offset(x: tomorrowCardOffset)
                             .opacity(tomorrowCardOpacity)
 
-                            // Week Summary Section - Enhanced Design
+                            // Spacing between major sections
+                            Spacer().frame(height: 24)
+
+                            // Week Summary Section - Tertiary Card
                             if !store.state.today.isLoading {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    let today = Calendar.current.startOfDay(for: Date())
-                                    let next7Days = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today
+                                SectionCard(accentColor: .blue, prominence: .tertiary) {
+                                    VStack(alignment: .leading, spacing: 16) {
+                                        let today = Calendar.current.startOfDay(for: Date())
+                                        let next7Days = Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today
 
-                                    let dateFormatter = retrieveDataFormatter()
-                                    let _ = dateFormatter.dateFormat = "EEE, MMM d"
-                                    let dateRangeText = "\(dateFormatter.string(from: today)) – \(dateFormatter.string(from: next7Days))"
+                                        let dateFormatter = retrieveDataFormatter()
+                                        let _ = dateFormatter.dateFormat = "EEE, MMM d"
+                                        let dateRangeText = "\(dateFormatter.string(from: today)) – \(dateFormatter.string(from: next7Days))"
 
-                                    // Section Header
-                                    HStack {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "calendar.badge.clock")
-                                                .font(.callout)
-                                                .foregroundColor(.blue)
-                                                .frame(width: 28, height: 28)
-                                                .background(
-                                                    Circle()
-                                                        .fill(Color.blue.opacity(0.1))
-                                                )
+                                        // Section Header
+                                        HStack {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "calendar.badge.clock")
+                                                    .font(.callout)
+                                                    .foregroundColor(.blue)
+                                                    .frame(width: 28, height: 28)
+                                                    .background(
+                                                        Circle()
+                                                            .fill(Color.blue.opacity(0.1))
+                                                    )
 
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text("Next 7 Days")
-                                                    .font(.subheadline)
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(.primary)
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text("Next 7 Days")
+                                                        .font(.subheadline)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(.primary)
 
-                                                Text(dateRangeText)
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-
-                                        Spacer()
-                                    }
-                                    .padding(.horizontal, 16)
-
-                                    let weekShifts = store.state.today.scheduledShifts.filter { shift in
-                                        return shift.date >= today && shift.date <= next7Days
-                                    }
-
-                                    // Calculate shift counts by type
-                                    let shiftTypeCounts = Dictionary(grouping: weekShifts, by: { $0.shiftType?.id })
-                                        .compactMap { (typeId, shifts) -> ShiftTypeSummary? in
-                                            guard let shiftType = shifts.first?.shiftType else { return nil }
-                                            return ShiftTypeSummary(shiftType: shiftType, count: shifts.count)
-                                        }
-                                        .filter { $0.count > 0 }
-                                        .sorted { $0.count > $1.count }
-
-                                    // Categorized Shift Type Cards
-                                    if shiftTypeCounts.isEmpty {
-                                        EmptyWeekSummaryCard(onScheduleShifts: {
-                                            Task {
-                                                await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-                                            }
-                                        })
-                                    } else {
-                                        ScrollView(.horizontal, showsIndicators: false) {
-                                            HStack(spacing: 12) {
-                                                ForEach(Array(shiftTypeCounts.enumerated()), id: \.element.id) { index, typeCount in
-                                                    Button(action: {
-                                                        Task {
-                                                            // Navigate to Schedule tab with filter
-                                                            await store.dispatch(action: .schedule(.filterShiftTypeChanged(typeCount.shiftType)))
-                                                            await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
-                                                        }
-                                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                                    }) {
-                                                        ShiftTypeCountCard(
-                                                            shiftType: typeCount.shiftType,
-                                                            count: typeCount.count,
-                                                            scheduledShifts: weekShifts
-                                                        )
-                                                    }
-                                                    .buttonStyle(PlainButtonStyle())
-                                                    .offset(x: cardOffsets[index] ?? 200)
-                                                    .opacity(cardOpacities[index] ?? 0)
+                                                    Text(dateRangeText)
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
                                                 }
                                             }
-                                            .padding(.horizontal, 16)
+
+                                            Spacer()
                                         }
-                                        .onAppear {
-                                            // Staggered animation for cards
-                                            for (index, _) in shiftTypeCounts.enumerated() {
+
+                                        let weekShifts = store.state.today.scheduledShifts.filter { shift in
+                                            return shift.date >= today && shift.date <= next7Days
+                                        }
+
+                                        // Calculate shift counts by type
+                                        let shiftTypeCounts = Dictionary(grouping: weekShifts, by: { $0.shiftType?.id })
+                                            .compactMap { (typeId, shifts) -> ShiftTypeSummary? in
+                                                guard let shiftType = shifts.first?.shiftType else { return nil }
+                                                return ShiftTypeSummary(shiftType: shiftType, count: shifts.count)
+                                            }
+                                            .filter { $0.count > 0 }
+                                            .sorted { $0.count > $1.count }
+
+                                        // Categorized Shift Type Cards
+                                        if shiftTypeCounts.isEmpty {
+                                            EmptyWeekSummaryCard(onScheduleShifts: {
                                                 Task {
-                                                    if !reduceMotion {
-                                                        try? await Task.sleep(nanoseconds: UInt64(0.08 * Double(index) * 1_000_000_000))
-                                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                    await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
+                                                }
+                                            })
+                                        } else {
+                                            ScrollView(.horizontal, showsIndicators: false) {
+                                                HStack(spacing: 12) {
+                                                    ForEach(Array(shiftTypeCounts.enumerated()), id: \.element.id) { index, typeCount in
+                                                        Button(action: {
+                                                            Task {
+                                                                // Navigate to Schedule tab with filter
+                                                                await store.dispatch(action: .schedule(.filterShiftTypeChanged(typeCount.shiftType)))
+                                                                await store.dispatch(action: .appLifecycle(.tabSelected(.schedule)))
+                                                            }
+                                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                                        }) {
+                                                            ShiftTypeCountCard(
+                                                                shiftType: typeCount.shiftType,
+                                                                count: typeCount.count,
+                                                                scheduledShifts: weekShifts
+                                                            )
+                                                        }
+                                                        .buttonStyle(PlainButtonStyle())
+                                                        .offset(x: cardOffsets[index] ?? 200)
+                                                        .opacity(cardOpacities[index] ?? 0)
+                                                    }
+                                                }
+                                            }
+                                            .onAppear {
+                                                // Staggered animation for cards
+                                                for (index, _) in shiftTypeCounts.enumerated() {
+                                                    Task {
+                                                        if !reduceMotion {
+                                                            try? await Task.sleep(nanoseconds: UInt64(0.08 * Double(index) * 1_000_000_000))
+                                                            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                                                                cardOffsets[index] = 0
+                                                                cardOpacities[index] = 1
+                                                            }
+                                                        } else {
                                                             cardOffsets[index] = 0
                                                             cardOpacities[index] = 1
                                                         }
-                                                    } else {
-                                                        cardOffsets[index] = 0
-                                                        cardOpacities[index] = 1
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                                .padding(.horizontal, 16)
                             }
 
                             Spacer(minLength: 100)
