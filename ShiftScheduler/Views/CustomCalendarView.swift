@@ -212,9 +212,10 @@ struct DayView: View {
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
                     .lineLimit(1)
-                    .padding(8)
+                    .padding(.top, 8)
+                    .padding(.leading, 8)
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
@@ -223,11 +224,13 @@ struct DayView: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(4)
+                        .padding(.bottom, 4)
                 }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .frame(height: 64)
+            .fixedSize(horizontal: false, vertical: true)
+            .clipped()
             .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(

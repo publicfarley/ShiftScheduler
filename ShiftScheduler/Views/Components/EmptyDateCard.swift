@@ -23,15 +23,16 @@ struct EmptyDateCard: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onTap()
         }) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 0) {
                 // Day number in top-left
                 Text(dayNumber)
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
                     .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(.top, 8)
+                    .padding(.leading, 8)
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 // Checkmark indicator centered at bottom when selected
                 if isSelected {
@@ -39,11 +40,13 @@ struct EmptyDateCard: View {
                         .font(.system(size: 16))
                         .foregroundStyle(Color.accentColor)
                         .frame(maxWidth: .infinity)
+                        .padding(.bottom, 4)
                 }
             }
-            .padding(8)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .frame(height: 64)
+            .fixedSize(horizontal: false, vertical: true)
+            .clipped()
             .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(
