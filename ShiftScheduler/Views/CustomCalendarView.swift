@@ -111,7 +111,7 @@ struct CustomCalendarView: View {
                     } else {
                         // Empty space for dates outside current month
                         Color.clear
-                            .frame(height: 54)
+                            .frame(height: 64)
                     }
                 }
             }
@@ -203,10 +203,7 @@ struct DayView: View {
 
     var body: some View {
         Button(action: onTap) {
-            ZStack(alignment: .topLeading) {
-                // Background
-                backgroundColor
-
+            VStack(alignment: .leading, spacing: 0) {
                 // Day number in top-left
                 Text(dayNumber)
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -214,18 +211,20 @@ struct DayView: View {
                     .lineLimit(1)
                     .padding(8)
 
+                Spacer()
+
                 // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
                     Text(symbol)
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                        .frame(maxWidth: .infinity)
-                        .padding(8)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(4)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: 54)
+            .frame(maxWidth: .infinity, maxHeight: 64)
+            .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(
                 isSelected ?

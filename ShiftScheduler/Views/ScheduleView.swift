@@ -340,7 +340,7 @@ struct ScheduleView: View {
                         )
                         .padding(.vertical, 8)
                         .padding(.horizontal)
-                        .frame(height: 396, alignment: .top)
+                        .frame(height: 428, alignment: .top)
                         .background(Color(.systemGray6))
 
                         // Selected date display - fixed position at bottom
