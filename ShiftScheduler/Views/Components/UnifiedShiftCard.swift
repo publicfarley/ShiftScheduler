@@ -1,9 +1,9 @@
 import SwiftUI
-
+typealias UnifiedShiftCard = CardDesign2
 /// A reusable shift card component used across multiple screens (Today, Schedule, etc.)
 /// Displays detailed shift information in a professional card layout
 /// Supports selection mode for multi-select operations with long-press gesture
-struct UnifiedShiftCard: View {
+struct UnifiedShiftCard_: View {
     let shift: ScheduledShift?
     let onTap: (() -> Void)?
     let isSelected: Bool
