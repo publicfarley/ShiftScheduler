@@ -248,122 +248,126 @@ struct ScheduleView: View {
     }
 
     private var scheduleContentView: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                // TOOLBAR
-                if store.state.schedule.isInSelectionMode {
-                    SelectionToolbarView(
-                        selectionCount: store.state.schedule.selectionCount,
-                        canDelete: store.state.schedule.canDeleteSelectedShifts,
-                        isDeleting: store.state.schedule.isDeletingShift,
-                        selectionMode: store.state.schedule.selectionMode,
-                        onDelete: {
-                            // Show confirmation dialog before deleting
-                            showBulkDeleteConfirmation = true
-                        },
-                        onAdd: {
-                            // Show shift type selection sheet for bulk add
-                            showBulkAddSheet = true
-                        },
-                        onClear: {
-                            Task {
-                                await store.dispatch(action: .schedule(.clearSelection))
-                            }
-                        },
-                        onExit: {
-                            Task {
-                                await store.dispatch(action: .schedule(.exitSelectionMode))
-                            }
+        VStack(spacing: 0) {
+            // TOOLBAR - Always visible at top
+            if store.state.schedule.isInSelectionMode {
+                SelectionToolbarView(
+                    selectionCount: store.state.schedule.selectionCount,
+                    canDelete: store.state.schedule.canDeleteSelectedShifts,
+                    isDeleting: store.state.schedule.isDeletingShift,
+                    selectionMode: store.state.schedule.selectionMode,
+                    onDelete: {
+                        // Show confirmation dialog before deleting
+                        showBulkDeleteConfirmation = true
+                    },
+                    onAdd: {
+                        // Show shift type selection sheet for bulk add
+                        showBulkAddSheet = true
+                    },
+                    onClear: {
+                        Task {
+                            await store.dispatch(action: .schedule(.clearSelection))
                         }
-                    )
-                } else {
-                    // Normal header buttons
-                    HStack(spacing: 16) {
-                        // Menu with add and bulk add options
-                        Menu {
-                            Button(action: {
-                                Task {
-                                    await store.dispatch(action: .schedule(.addShiftButtonTapped))
-                                }
-                            }) {
-                                Label("Add Single Shift", systemImage: "plus.circle")
-                            }
-
-                            Button(action: {
-                                Task {
-                                    await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
-                                    showBulkAddSheet = false  // Reset to prepare for bulk add
-                                }
-                            }) {
-                                Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
-                            }
-                        } label: {
-                            Image(systemName: "plus.circle")
-                                .font(.title2)
-                                .foregroundColor(.primary)
-                        }
-
-                        Spacer()
-                        todayButton
-                        filterButton
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(
-                        Color(.systemBackground)
-                            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                    )
-                }
-
-                // CALENDAR SECTION
-                VStack(spacing: 0) {
-                    // Calendar month view
-                    CustomCalendarView(
-                        selectedDate: Binding(
-                            get: { store.state.schedule.selectedDate },
-                            set: { date in
-                                Task {
-                                    await store.dispatch(action: .schedule(.selectedDateChanged(date)))
-                                }
-                            }
-                        ),
-                        scheduledDates: Set(
-                            store.state.schedule.scheduledShifts.flatMap { shift in
-                                shift.affectedDates()
-                            }
-                        ),
-                        shiftSymbols: shiftSymbolsByDate,
-                        selectionMode: store.state.schedule.selectionMode,
-                        selectedDates: store.state.schedule.selectedDates
-                    )
-                    .padding()
-                    .background(Color(.systemGray6))
-
-                    // Selected date display
-                    Text(formattedSelectedDate)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemBackground))
-                }
-
-                // SHIFTS SECTION
-                VStack(spacing: 12) {
-                    // Shifts list or empty state
-                    Group {
-                        if store.state.schedule.filteredShifts.isEmpty {
-                            emptyStateView
-                        } else {
-                            shiftsContentView
+                    },
+                    onExit: {
+                        Task {
+                            await store.dispatch(action: .schedule(.exitSelectionMode))
                         }
                     }
-                    .opacity(listOpacity)
+                )
+            } else {
+                // Normal header buttons
+                HStack(spacing: 16) {
+                    // Menu with add and bulk add options
+                    Menu {
+                        Button(action: {
+                            Task {
+                                await store.dispatch(action: .schedule(.addShiftButtonTapped))
+                            }
+                        }) {
+                            Label("Add Single Shift", systemImage: "plus.circle")
+                        }
+
+                        Button(action: {
+                            Task {
+                                await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
+                                showBulkAddSheet = false  // Reset to prepare for bulk add
+                            }
+                        }) {
+                            Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle")
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+                    todayButton
+                    filterButton
                 }
-                .padding(.bottom, 20)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(
+                    Color(.systemBackground)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                )
             }
-            .padding(.vertical, 8)
+
+            // SCROLLABLE CONTENT
+            ScrollView {
+                VStack(spacing: 16) {
+                    // CALENDAR SECTION
+                    VStack(spacing: 0) {
+                        // Calendar month view
+                        CustomCalendarView(
+                            selectedDate: Binding(
+                                get: { store.state.schedule.selectedDate },
+                                set: { date in
+                                    Task {
+                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                    }
+                                }
+                            ),
+                            scheduledDates: Set(
+                                store.state.schedule.scheduledShifts.flatMap { shift in
+                                    shift.affectedDates()
+                                }
+                            ),
+                            shiftSymbols: shiftSymbolsByDate,
+                            selectionMode: store.state.schedule.selectionMode,
+                            selectedDates: store.state.schedule.selectedDates
+                        )
+                        .padding()
+                        .background(Color(.systemGray6))
+
+                        // Selected date display
+                        Text(formattedSelectedDate)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(.systemBackground))
+                    }
+
+                    // SHIFTS SECTION
+                    VStack(spacing: 12) {
+                        // Shifts list or empty state
+                        Group {
+                            if store.state.schedule.filteredShifts.isEmpty {
+                                emptyStateView
+                            } else {
+                                shiftsContentView
+                            }
+                        }
+                        .opacity(listOpacity)
+                    }
+                    .padding(.bottom, 20)
+                }
+                .padding(.vertical, 8)
+            }
+            .background(Color(.systemBackground))
         }
         .background(Color(.systemBackground))
         .ignoresSafeArea(edges: .bottom)
