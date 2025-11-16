@@ -316,7 +316,7 @@ struct ScheduleView: View {
 
             // SCROLLABLE CONTENT
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 5) {
                     // CALENDAR SECTION - Fixed height for consistent layout
                     VStack(spacing: 0) {
                         // Calendar month view with fixed height (6-week layout)
