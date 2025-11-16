@@ -317,9 +317,9 @@ struct ScheduleView: View {
             // SCROLLABLE CONTENT
             ScrollView {
                 VStack(spacing: 5) {
-                    // CALENDAR SECTION - Fixed height for consistent layout
+                    // CALENDAR SECTION - Consistent natural height (6 rows × 7 columns)
                     VStack(spacing: 0) {
-                        // Calendar month view with fixed height (6-week layout)
+                        // Calendar month view - naturally sized to 6-week layout
                         CustomCalendarView(
                             selectedDate: Binding(
                                 get: { store.state.schedule.selectedDate },
@@ -338,10 +338,6 @@ struct ScheduleView: View {
                             selectionMode: store.state.schedule.selectionMode,
                             selectedDates: store.state.schedule.selectedDates
                         )
-                        .padding(.vertical, 8
-                        )
-                        .padding(.horizontal)
-                        .frame(height: 428, alignment: .top)
                         .background(Color(.systemGray6))
 
                         // Selected date display - fixed position at bottom

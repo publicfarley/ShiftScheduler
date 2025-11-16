@@ -69,7 +69,7 @@ struct CustomCalendarView: View {
             .padding(.horizontal, 12)
             .padding(.bottom, 4)
 
-            // Calendar grid
+            // Calendar grid - 6 rows × 7 columns (42 cells total)
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(daysInMonth()) { cell in
                     if let date = cell.date {
@@ -109,13 +109,15 @@ struct CustomCalendarView: View {
                             }
                         }
                     } else {
-                        // Empty space for dates outside current month
+                        // Invisible cell for dates outside current month
+                        // Takes up space but is not visible - no border, no content
                         Color.clear
-                            .frame(height: 64)
+                            .frame(maxWidth: .infinity, maxHeight: 64)
+                            .opacity(0)
                     }
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(12)
         }
         .onChange(of: selectedDate) { _, newDate in
             // Update current month if selected date is in a different month
