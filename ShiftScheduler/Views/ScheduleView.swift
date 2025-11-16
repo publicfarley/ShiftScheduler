@@ -338,7 +338,8 @@ struct ScheduleView: View {
                             selectionMode: store.state.schedule.selectionMode,
                             selectedDates: store.state.schedule.selectedDates
                         )
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 8
+                        )
                         .padding(.horizontal)
                         .frame(height: 428, alignment: .top)
                         .background(Color(.systemGray6))
