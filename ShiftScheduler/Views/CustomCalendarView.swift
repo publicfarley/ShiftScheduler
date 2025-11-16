@@ -29,6 +29,7 @@ struct CustomCalendarView: View {
     }()
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+    static let cellHeight: CGFloat = 54
 
     var body: some View {
         VStack(spacing: 8) {
@@ -113,7 +114,7 @@ struct CustomCalendarView: View {
                         // Takes up space but is not visible - no border, no content
                         Color.clear
                             .frame(maxWidth: .infinity)
-                            .frame(height: 64)
+                            .frame(height: CustomCalendarView.cellHeight)
                             .opacity(0)
                     }
                 }
@@ -220,7 +221,7 @@ struct DayView: View {
                 // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
                     Text(symbol)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -228,7 +229,7 @@ struct DayView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(height: 64)
+            .frame(height: CustomCalendarView.cellHeight)
             .fixedSize(horizontal: false, vertical: true)
             .clipped()
             .background(backgroundColor)

@@ -68,29 +68,37 @@ struct UnifiedShiftCard: View {
             if let shift = shift, let shiftType = shift.shiftType {
                 // Has shift scheduled - Enhanced design
                 VStack(alignment: .leading, spacing: 8) {
-                    // Status badge with shift title
-                    HStack(alignment: .center, spacing: 12) {
+                    // Status badge with shift title and location (top row)
+                    HStack(alignment: .top, spacing: 12) {
                         StatusBadge(status: shiftStatus)
 
-                        Text(shiftType.title)
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-                            .lineLimit(2)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(shiftType.title)
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .lineLimit(2)
+                        }
 
-                        Spacer()
+                        Spacer(minLength: 0)
+
+                        // Location on right, top-aligned with title
+                        ShiftCardLocationColumn(location: shiftType.location)
                     }
 
-                    // Main content - Symbol + Details (Time/Location stacked)
+                    // Main content - Symbol + Time/Description (left)
                     HStack(alignment: .top, spacing: 8) {
+                        // Symbol on left
                         ShiftCardSymbolColumn(symbol: shiftType.symbol, color: cardColor)
 
-                        ShiftCardDetailsColumn(
+                        // Time and description in middle
+                        ShiftCardTimeDescriptionColumn(
                             timeString: shiftType.timeRangeString,
                             description: shiftType.shiftDescription,
-                            location: shiftType.location,
                             color: cardColor
                         )
+
+                        Spacer(minLength: 0)
                     }
 
                     // User notes - full width if present
@@ -238,10 +246,9 @@ struct ShiftCardSymbolColumn: View {
     }
 }
 
-struct ShiftCardDetailsColumn: View {
+struct ShiftCardTimeDescriptionColumn: View {
     let timeString: String
     let description: String
-    let location: Location
     let color: Color
 
     var body: some View {
@@ -272,35 +279,39 @@ struct ShiftCardDetailsColumn: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
+        }
+    }
+}
 
-            // Location info stacked below, with aligned leading edges
-            VStack(alignment: .leading, spacing: 2) {
-                // Location name
-                HStack(spacing: 4) {
-                    Image(systemName: "location")
+struct ShiftCardLocationColumn: View {
+    let location: Location
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            // Location name
+            HStack(spacing: 4) {
+                Image(systemName: "location")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text(location.name)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            // Location address
+            if !location.address.isEmpty {
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "mappin.and.ellipse")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    Text(location.name)
+                    Text(location.address)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-
-                // Location address - full width, no truncation
-                if !location.address.isEmpty {
-                    HStack(alignment: .top, spacing: 4) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(location.address)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                        .lineLimit(2)
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
