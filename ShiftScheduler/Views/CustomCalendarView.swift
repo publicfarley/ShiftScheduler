@@ -203,15 +203,16 @@ struct DayView: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 4) {
+            ZStack(alignment: .topLeading) {
+                // Background
+                backgroundColor
+
                 // Day number in top-left
                 Text(dayNumber)
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
                     .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-
-                Spacer()
+                    .padding(8)
 
                 // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
@@ -220,11 +221,11 @@ struct DayView: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity)
+                        .padding(8)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
                 }
             }
-            .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: 54, alignment: .topLeading)
-            .background(backgroundColor)
+            .frame(maxWidth: .infinity, maxHeight: 54)
             .border(Color(.systemGray3), width: 1)
             .overlay(
                 isSelected ?
