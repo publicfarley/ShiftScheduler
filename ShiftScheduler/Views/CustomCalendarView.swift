@@ -111,7 +111,7 @@ struct CustomCalendarView: View {
                     } else {
                         // Empty space for dates outside current month
                         Color.clear
-                            .frame(height: 43)
+                            .frame(height: 54)
                     }
                 }
             }
@@ -223,7 +223,7 @@ struct DayView: View {
                 }
             }
             .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: 43, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: 54, alignment: .topLeading)
             .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(
