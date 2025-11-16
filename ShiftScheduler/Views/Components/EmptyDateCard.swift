@@ -42,7 +42,8 @@ struct EmptyDateCard: View {
                 }
             }
             .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: 64, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(height: 64)
             .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(

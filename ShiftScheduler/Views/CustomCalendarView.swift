@@ -112,7 +112,8 @@ struct CustomCalendarView: View {
                         // Invisible cell for dates outside current month
                         // Takes up space but is not visible - no border, no content
                         Color.clear
-                            .frame(maxWidth: .infinity, maxHeight: 64)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 64)
                             .opacity(0)
                     }
                 }
@@ -225,7 +226,8 @@ struct DayView: View {
                         .padding(4)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: 64)
+            .frame(maxWidth: .infinity)
+            .frame(height: 64)
             .background(backgroundColor)
             .border(Color(.systemGray3), width: 1)
             .overlay(
