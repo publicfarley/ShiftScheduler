@@ -38,7 +38,8 @@ struct ScrollableMonthView: View {
                                 selectedDates: selectedDates
                             )
                             // Each month takes full width minus peek amounts
-                            .frame(width: geometry.size.width - (peekWidth * 2), height: geometry.size.height)
+                            // Let height size naturally based on content
+                            .frame(width: geometry.size.width - (peekWidth * 2))
                             .id(month)
                         }
                     }

@@ -44,7 +44,7 @@ struct EmptyDateCard: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(height: 64)
+            .frame(height: CustomCalendarView.cellHeight)
             .fixedSize(horizontal: false, vertical: true)
             .clipped()
             .background(backgroundColor)
