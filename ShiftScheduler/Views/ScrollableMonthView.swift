@@ -23,8 +23,8 @@ struct ScrollableMonthView: View {
     private let peekWidth: CGFloat = 40
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollViewReader { proxy in
+        ScrollViewReader { proxy in
+            GeometryReader { geometry in
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 0) {
                         // Generate months: -12 to +12 months from today
@@ -38,7 +38,6 @@ struct ScrollableMonthView: View {
                                 selectedDates: selectedDates
                             )
                             // Each month takes full width minus peek amounts
-                            // Let height size naturally based on content
                             .frame(width: geometry.size.width - (peekWidth * 2))
                             .id(month)
                         }
@@ -49,17 +48,17 @@ struct ScrollableMonthView: View {
                 }
                 .contentMargins(.horizontal, 0, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned)
-                .onAppear {
-                    // Start with current month displayed
-                    let currentMonth = getCurrentMonth()
-                    scrollPosition = currentMonth
-                    proxy.scrollTo(currentMonth, anchor: .leading)
-                }
-                .onChange(of: displayedMonth) { _, newMonth in
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        scrollPosition = newMonth
-                        proxy.scrollTo(newMonth, anchor: .leading)
-                    }
+            }
+            .onAppear {
+                // Start with current month displayed
+                let currentMonth = getCurrentMonth()
+                scrollPosition = currentMonth
+                proxy.scrollTo(currentMonth, anchor: .leading)
+            }
+            .onChange(of: displayedMonth) { _, newMonth in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    scrollPosition = newMonth
+                    proxy.scrollTo(newMonth, anchor: .leading)
                 }
             }
         }
