@@ -25,16 +25,17 @@ struct ScheduleViewColorPalette {
     // MARK: - Semantic Color Usage
 
     /// Background color for today's date (no shift scheduled)
-    static let todayBackground = goldenHarvest.opacity(0.15)
+    static let todayBackground = goldenHarvest.opacity(0.25)
 
     /// Background color for dates with scheduled shifts
     static let scheduledShiftBackground = forestGreen.opacity(0.12)
 
     /// Gradient background for today's date with a shift
+    /// Uses stronger opacity and brighter golden harvest for clear distinction
     static let todayWithShiftGradient = LinearGradient(
         colors: [
-            goldenHarvest.opacity(0.2),
-            forestGreen.opacity(0.15)
+            goldenHarvest.opacity(0.35),
+            warmSand.opacity(0.25)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
