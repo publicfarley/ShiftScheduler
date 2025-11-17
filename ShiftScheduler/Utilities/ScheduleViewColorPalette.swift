@@ -1,51 +1,51 @@
 import SwiftUI
 
 /// Color palette for Schedule view calendar dates
-/// Based on AWSMCOLOR blue-themed palette for cohesive, modern aesthetic
+/// Based on warm earth-toned palette for natural, inviting aesthetic
 struct ScheduleViewColorPalette {
 
     // MARK: - Core Palette Colors
 
-    /// Continental Blue - Deep, rich blue for scheduled shifts
-    /// HEX: #023E8A | RGB: 2, 62, 138 | CMYK: 100, 86, 21, 27
-    static let continentalBlue = Color(red: 2/255, green: 62/255, blue: 138/255)
+    /// Forest Green - Deep, rich green for scheduled shifts
+    /// HEX: #17421A | RGB: 23, 66, 26
+    static let forestGreen = Color(red: 23/255, green: 66/255, blue: 26/255)
 
-    /// Coastal Surge - Vibrant cyan/turquoise for today highlights
-    /// HEX: #48CAE4 | RGB: 72, 202, 228 | CMYK: 62, 2, 13, 0
-    static let coastalSurge = Color(red: 72/255, green: 202/255, blue: 228/255)
+    /// Golden Harvest - Warm golden brown for today highlights
+    /// HEX: #B67B13 | RGB: 182, 123, 19
+    static let goldenHarvest = Color(red: 182/255, green: 123/255, blue: 19/255)
 
-    /// Frostline Pale - Very light cyan for subtle backgrounds
-    /// HEX: #CAF0F8 | RGB: 202, 240, 248 | CMYK: 20, 0, 4, 0
-    static let frostlinePale = Color(red: 202/255, green: 240/255, blue: 248/255)
+    /// Warm Sand - Light peachy beige for subtle backgrounds
+    /// HEX: #F0BE6D | RGB: 240, 190, 109
+    static let warmSand = Color(red: 240/255, green: 190/255, blue: 109/255)
 
-    /// Trench Blue - Navy/midnight blue for emphasis and borders
-    /// HEX: #03045E | RGB: 3, 4, 94 | CMYK: 100, 98, 25, 37
-    static let trenchBlue = Color(red: 3/255, green: 4/255, blue: 94/255)
+    /// Terracotta - Rich burnt orange/red for emphasis and borders
+    /// HEX: #AA2704 | RGB: 170, 39, 4
+    static let terracotta = Color(red: 170/255, green: 39/255, blue: 4/255)
 
     // MARK: - Semantic Color Usage
 
     /// Background color for today's date (no shift scheduled)
-    static let todayBackground = coastalSurge.opacity(0.15)
+    static let todayBackground = goldenHarvest.opacity(0.15)
 
     /// Background color for dates with scheduled shifts
-    static let scheduledShiftBackground = continentalBlue.opacity(0.12)
+    static let scheduledShiftBackground = forestGreen.opacity(0.12)
 
     /// Gradient background for today's date with a shift
     static let todayWithShiftGradient = LinearGradient(
         colors: [
-            coastalSurge.opacity(0.2),
-            continentalBlue.opacity(0.15)
+            goldenHarvest.opacity(0.2),
+            forestGreen.opacity(0.15)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
 
     /// Background color for selected empty dates (bulk add mode)
-    static let selectedEmptyDateBackground = frostlinePale.opacity(0.2)
+    static let selectedEmptyDateBackground = warmSand.opacity(0.2)
 
     /// Border color for selected dates
-    static let selectedDateBorder = trenchBlue
+    static let selectedDateBorder = terracotta
 
     /// Accent color overlay for selected dates
-    static let selectedDateOverlay = trenchBlue.opacity(0.12)
+    static let selectedDateOverlay = terracotta.opacity(0.12)
 }
