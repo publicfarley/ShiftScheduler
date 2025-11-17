@@ -341,6 +341,12 @@ struct ScheduleView: View {
                                     }
                                 }
                             ),
+                            scrollToDateTrigger: Binding(
+                                get: { store.state.schedule.scrollToDateTrigger },
+                                set: { _ in
+                                    // Binding is read-only - reducer controls scroll trigger
+                                }
+                            ),
                             scheduledDates: Set(
                                 store.state.schedule.scheduledShifts.flatMap { shift in
                                     shift.affectedDates()

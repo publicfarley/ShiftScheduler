@@ -432,6 +432,9 @@ enum ScheduleAction: Equatable {
     /// Jump to today's date in the calendar (animated)
     case jumpToToday
 
+    /// Scroll to date completed (clears scroll trigger)
+    case scrollCompleted
+
     static func == (lhs: ScheduleAction, rhs: ScheduleAction) -> Bool {
         switch (lhs, rhs) {
         case (.initializeAndLoadScheduleData, .initializeAndLoadScheduleData), (.checkAuthorization, .checkAuthorization),
@@ -446,6 +449,7 @@ enum ScheduleAction: Equatable {
              (.clearFilters, .clearFilters),
              (.restoreUndoRedoStacks, .restoreUndoRedoStacks),
              (.jumpToToday, .jumpToToday),
+             (.scrollCompleted, .scrollCompleted),
              (.exitSelectionMode, .exitSelectionMode),
              (.selectAllVisible, .selectAllVisible),
              (.clearSelection, .clearSelection),

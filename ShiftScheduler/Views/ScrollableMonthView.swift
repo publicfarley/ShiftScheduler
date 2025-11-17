@@ -6,11 +6,13 @@ import SwiftUI
 struct ScrollableMonthView: View {
     @Binding var selectedDate: Date
     @Binding var displayedMonth: Date
+    @Binding var scrollToDateTrigger: Date?
     let scheduledDates: Set<Date>
     let shiftSymbols: [Date: String]
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
+    @Environment(\.reduxStore) var store
     @State private var scrollPosition: Date?
     private let calendar = Calendar.current
     private let dateFormatter: DateFormatter = {
@@ -60,6 +62,23 @@ struct ScrollableMonthView: View {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     scrollPosition = newMonth
                     proxy.scrollTo(newMonth, anchor: .leading)
+                }
+            }
+            .onChange(of: scrollToDateTrigger) { _, triggerDate in
+                guard let date = triggerDate else { return }
+
+                // Extract the month from the trigger date
+                let components = calendar.dateComponents([.year, .month], from: date)
+                if let targetMonth = calendar.date(from: components) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        scrollPosition = targetMonth
+                        proxy.scrollTo(targetMonth, anchor: .leading)
+                    }
+                }
+
+                // Dispatch scrollCompleted to clear the trigger
+                Task {
+                    await store.dispatch(action: .schedule(.scrollCompleted))
                 }
             }
         }
@@ -259,6 +278,7 @@ private struct CalendarCell: Identifiable {
         ScrollableMonthView(
             selectedDate: .constant(today),
             displayedMonth: .constant(today),
+            scrollToDateTrigger: .constant(nil),
             scheduledDates: shiftDates,
             shiftSymbols: symbols,
             selectionMode: nil,

@@ -522,7 +522,11 @@ func scheduleMiddleware(
 
     case .jumpToToday:
         // No middleware side effects needed - reducer handles state update
-        // Animation is handled by SwiftUI's @State in CustomCalendarView
+        // Animation is handled by SwiftUI's onChange in ScrollableMonthView
+        break
+
+    case .scrollCompleted:
+        // No middleware side effects needed - reducer handles state update
         break
 
     // MARK: - Multi-Select Actions

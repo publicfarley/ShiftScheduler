@@ -513,7 +513,11 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
         let today = Calendar.current.startOfDay(for: Date())
         state.selectedDate = today
         state.displayedMonth = today
+        state.scrollToDateTrigger = today
         state.searchText = ""
+
+    case .scrollCompleted:
+        state.scrollToDateTrigger = nil
 
     // MARK: - Multi-Select Actions
 

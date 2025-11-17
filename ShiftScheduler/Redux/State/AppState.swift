@@ -225,6 +225,9 @@ struct ScheduleState: Equatable {
     /// Loading state for fetching additional shifts (during range fault)
     var isLoadingAdditionalShifts: Bool = false
 
+    /// Trigger for scrolling to a specific date (set when jump-to-date is requested)
+    var scrollToDateTrigger: Date? = nil
+
     // MARK: - Multi-Select State
 
     /// IDs of shifts currently selected for bulk operations
