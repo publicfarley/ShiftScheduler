@@ -45,6 +45,7 @@ struct HorizontalMonthScrollView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .scrollTargetLayout()
                 }
                 .contentMargins(.horizontal, 0, for: .scrollContent)
                 .scrollTargetBehavior(.viewAligned)
@@ -129,14 +130,18 @@ struct HorizontalMonthScrollView: View {
     // MARK: - Helper Methods
 
     /// Generate a range of months for scrolling (-12 to +12 months from today)
+    /// All dates are normalized to start-of-day for consistent month comparison
     private func monthRange() -> [Date] {
         var months: [Date] = []
-        let today = Date()
-        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
 
         for offset in -12...12 {
             if let month = calendar.date(byAdding: .month, value: offset, to: today) {
-                months.append(month)
+                // Extract just the year and month, set to 1st of month at start-of-day
+                let components = calendar.dateComponents([.year, .month], from: month)
+                if let normalized = calendar.date(from: components) {
+                    months.append(normalized)
+                }
             }
         }
 

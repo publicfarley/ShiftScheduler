@@ -325,7 +325,11 @@ struct ScheduleView: View {
                                 get: { store.state.schedule.displayedMonth },
                                 set: { month in
                                     Task {
-                                        await store.dispatch(action: .schedule(.displayedMonthChanged(month)))
+                                        // Normalize month to first day at start-of-day
+                                        let calendar = Calendar.current
+                                        let components = calendar.dateComponents([.year, .month], from: month)
+                                        let normalizedMonth = calendar.date(from: components) ?? month
+                                        await store.dispatch(action: .schedule(.displayedMonthChanged(normalizedMonth)))
                                     }
                                 }
                             ),
