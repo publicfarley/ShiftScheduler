@@ -22,6 +22,10 @@ struct ScrollableMonthView: View {
     // Peek width for adjacent months (in points)
     private let peekWidth: CGFloat = 40
 
+    // Calculate natural height for calendar:
+    // Month header (~48pt) + Day names (~30pt) + 6 rows (324pt) + padding (24pt) = ~426pt
+    private let calendarHeight: CGFloat = 426
+
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
@@ -47,6 +51,7 @@ struct ScrollableMonthView: View {
             }
             .contentMargins(.horizontal, peekWidth, for: .scrollContent)
             .scrollTargetBehavior(.paging)
+            .frame(height: calendarHeight)
             .onAppear {
                 // Start with current month displayed
                 let currentMonth = getCurrentMonth()
