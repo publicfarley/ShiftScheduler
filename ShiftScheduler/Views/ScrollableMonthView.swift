@@ -19,41 +19,58 @@ struct ScrollableMonthView: View {
         return formatter
     }()
 
+    // Peek width for adjacent months (in points)
+    private let peekWidth: CGFloat = 40
+
     var body: some View {
         VStack(spacing: 0) {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 0) {
-                        // Generate months: -12 to +12 months from today
-                        ForEach(monthRange(), id: \.self) { month in
-                            SingleMonthView(
-                                month: month,
-                                selectedDate: $selectedDate,
-                                scheduledDates: scheduledDates,
-                                shiftSymbols: shiftSymbols,
-                                selectionMode: selectionMode,
-                                selectedDates: selectedDates
-                            )
-                            .frame(maxWidth: .infinity)
-                            .id(month)
+            GeometryReader { geometry in
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 0) {
+                            // Generate months: -12 to +12 months from today
+                            ForEach(monthRange(), id: \.self) { month in
+                                SingleMonthView(
+                                    month: month,
+                                    selectedDate: $selectedDate,
+                                    scheduledDates: scheduledDates,
+                                    shiftSymbols: shiftSymbols,
+                                    selectionMode: selectionMode,
+                                    selectedDates: selectedDates
+                                )
+                                // Each month takes full width minus peek amounts
+                                .frame(width: geometry.size.width - (peekWidth * 2))
+                                .id(month)
+                            }
                         }
+                        .scrollTargetLayout()
+                        // Add padding to create peek effect on sides
+                        .padding(.horizontal, peekWidth)
                     }
-                    .scrollTargetLayout()
-                }
-                .contentMargins(.horizontal, 0, for: .scrollContent)
-                .scrollTargetBehavior(.viewAligned)
-                .onAppear {
-                    scrollPosition = displayedMonth
-                    proxy.scrollTo(displayedMonth, anchor: .leading)
-                }
-                .onChange(of: displayedMonth) { _, newMonth in
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        scrollPosition = newMonth
-                        proxy.scrollTo(newMonth, anchor: .leading)
+                    .contentMargins(.horizontal, 0, for: .scrollContent)
+                    .scrollTargetBehavior(.viewAligned)
+                    .onAppear {
+                        // Start with current month displayed
+                        let currentMonth = getCurrentMonth()
+                        scrollPosition = currentMonth
+                        proxy.scrollTo(currentMonth, anchor: .leading)
+                    }
+                    .onChange(of: displayedMonth) { _, newMonth in
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            scrollPosition = newMonth
+                            proxy.scrollTo(newMonth, anchor: .leading)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /// Get the current month (today's month) normalized to start-of-day
+    private func getCurrentMonth() -> Date {
+        let today = calendar.startOfDay(for: Date())
+        let components = calendar.dateComponents([.year, .month], from: today)
+        return calendar.date(from: components) ?? today
     }
 
     // MARK: - Helper Methods
