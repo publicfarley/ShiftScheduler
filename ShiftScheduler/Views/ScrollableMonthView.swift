@@ -105,6 +105,7 @@ private struct SingleMonthView: View {
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
+    @Environment(\.reduxStore) var store
     private let calendar = Calendar.current
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -155,7 +156,9 @@ private struct SingleMonthView: View {
                                 isSelected: isSelected,
                                 isCurrentMonth: isCurrentMonth
                             ) {
-                                // Selection dispatch handled by parent view
+                                Task {
+                                    await store.dispatch(action: .schedule(.toggleDateSelection(date)))
+                                }
                             }
                         } else {
                             let shiftSymbol = shiftSymbols.first(where: { symbolDate, _ in

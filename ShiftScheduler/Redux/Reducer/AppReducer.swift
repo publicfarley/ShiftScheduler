@@ -520,7 +520,14 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
     case .enterSelectionMode(let mode, let firstId):
         state.isInSelectionMode = true
         state.selectionMode = mode
-        state.selectedShiftIds = [firstId]
+        // Initialize appropriate collection based on mode
+        switch mode {
+        case .delete:
+            state.selectedShiftIds = [firstId]
+        case .add:
+            state.selectedShiftIds.removeAll()
+            state.selectedDates.removeAll()
+        }
 
     case .exitSelectionMode:
         state.isInSelectionMode = false
