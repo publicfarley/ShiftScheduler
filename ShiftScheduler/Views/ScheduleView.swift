@@ -317,15 +317,15 @@ struct ScheduleView: View {
             // SCROLLABLE CONTENT
             ScrollView {
                 VStack(spacing: 5) {
-                    // CALENDAR SECTION - Consistent natural height (6 rows × 7 columns)
+                    // CALENDAR SECTION - Horizontal month scroll with calendar grid
                     VStack(spacing: 0) {
-                        // Calendar month view - naturally sized to 6-week layout
-                        CustomCalendarView(
-                            selectedDate: Binding(
-                                get: { store.state.schedule.selectedDate },
-                                set: { date in
+                        // Horizontal month carousel with calendar grid
+                        HorizontalMonthScrollView(
+                            selectedMonth: Binding(
+                                get: { store.state.schedule.displayedMonth },
+                                set: { month in
                                     Task {
-                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                        await store.dispatch(action: .schedule(.displayedMonthChanged(month)))
                                     }
                                 }
                             ),
@@ -336,7 +336,15 @@ struct ScheduleView: View {
                             ),
                             shiftSymbols: shiftSymbolsByDate,
                             selectionMode: store.state.schedule.selectionMode,
-                            selectedDates: store.state.schedule.selectedDates
+                            selectedDates: store.state.schedule.selectedDates,
+                            selectedDate: Binding(
+                                get: { store.state.schedule.selectedDate },
+                                set: { date in
+                                    Task {
+                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                    }
+                                }
+                            )
                         )
                         .background(Color(.systemGray6))
 
