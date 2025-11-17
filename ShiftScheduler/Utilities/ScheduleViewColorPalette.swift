@@ -10,6 +10,10 @@ struct ScheduleViewColorPalette {
     /// HEX: #17421A | RGB: 23, 66, 26
     static let forestGreen = Color(red: 23/255, green: 66/255, blue: 26/255)
 
+    /// Lime Green
+    /// RGB: 50, 205, 50
+    static let limeGreen = Color(red: 50/255, green: 205/255, blue: 50/255)
+    
     /// Golden Harvest - Warm golden brown for today highlights
     /// HEX: #B67B13 | RGB: 182, 123, 19
     static let goldenHarvest = Color(red: 182/255, green: 123/255, blue: 19/255)
@@ -28,7 +32,7 @@ struct ScheduleViewColorPalette {
     static let todayBackground = goldenHarvest.opacity(0.25)
 
     /// Background color for dates with scheduled shifts
-    static let scheduledShiftBackground = forestGreen.opacity(0.12)
+    static let scheduledShiftBackground = limeGreen.opacity(0.12)
 
     /// Gradient background for today's date with a shift
     /// Uses stronger opacity and brighter golden harvest for clear distinction
