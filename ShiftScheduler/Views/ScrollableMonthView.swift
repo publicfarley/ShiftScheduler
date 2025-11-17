@@ -23,43 +23,41 @@ struct ScrollableMonthView: View {
     private let peekWidth: CGFloat = 40
 
     var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(spacing: 0) {
-                            // Generate months: -12 to +12 months from today
-                            ForEach(monthRange(), id: \.self) { month in
-                                SingleMonthView(
-                                    month: month,
-                                    selectedDate: $selectedDate,
-                                    scheduledDates: scheduledDates,
-                                    shiftSymbols: shiftSymbols,
-                                    selectionMode: selectionMode,
-                                    selectedDates: selectedDates
-                                )
-                                // Each month takes full width minus peek amounts
-                                .frame(width: geometry.size.width - (peekWidth * 2))
-                                .id(month)
-                            }
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 0) {
+                        // Generate months: -12 to +12 months from today
+                        ForEach(monthRange(), id: \.self) { month in
+                            SingleMonthView(
+                                month: month,
+                                selectedDate: $selectedDate,
+                                scheduledDates: scheduledDates,
+                                shiftSymbols: shiftSymbols,
+                                selectionMode: selectionMode,
+                                selectedDates: selectedDates
+                            )
+                            // Each month takes full width minus peek amounts
+                            .frame(width: geometry.size.width - (peekWidth * 2), height: geometry.size.height)
+                            .id(month)
                         }
-                        .scrollTargetLayout()
-                        // Add padding to create peek effect on sides
-                        .padding(.horizontal, peekWidth)
                     }
-                    .contentMargins(.horizontal, 0, for: .scrollContent)
-                    .scrollTargetBehavior(.viewAligned)
-                    .onAppear {
-                        // Start with current month displayed
-                        let currentMonth = getCurrentMonth()
-                        scrollPosition = currentMonth
-                        proxy.scrollTo(currentMonth, anchor: .leading)
-                    }
-                    .onChange(of: displayedMonth) { _, newMonth in
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            scrollPosition = newMonth
-                            proxy.scrollTo(newMonth, anchor: .leading)
-                        }
+                    .scrollTargetLayout()
+                    // Add padding to create peek effect on sides
+                    .padding(.horizontal, peekWidth)
+                }
+                .contentMargins(.horizontal, 0, for: .scrollContent)
+                .scrollTargetBehavior(.viewAligned)
+                .onAppear {
+                    // Start with current month displayed
+                    let currentMonth = getCurrentMonth()
+                    scrollPosition = currentMonth
+                    proxy.scrollTo(currentMonth, anchor: .leading)
+                }
+                .onChange(of: displayedMonth) { _, newMonth in
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        scrollPosition = newMonth
+                        proxy.scrollTo(newMonth, anchor: .leading)
                     }
                 }
             }
