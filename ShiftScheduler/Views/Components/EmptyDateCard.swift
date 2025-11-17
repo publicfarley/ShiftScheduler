@@ -38,7 +38,7 @@ struct EmptyDateCard: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 16))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(ScheduleViewColorPalette.selectedDateBorder)
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 4)
                 }
@@ -52,7 +52,7 @@ struct EmptyDateCard: View {
             .overlay(
                 isSelected ?
                     RoundedRectangle(cornerRadius: 0)
-                        .strokeBorder(Color.accentColor, lineWidth: 2)
+                        .strokeBorder(ScheduleViewColorPalette.selectedDateBorder, lineWidth: 2)
                     : nil
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
@@ -65,9 +65,9 @@ struct EmptyDateCard: View {
     private var backgroundColor: some View {
         Group {
             if isSelected {
-                Color.accentColor.opacity(0.12)
+                ScheduleViewColorPalette.selectedEmptyDateBackground
             } else if isToday {
-                Color.orange.opacity(0.15)
+                ScheduleViewColorPalette.todayBackground
             } else {
                 Color(.systemGray6)
             }

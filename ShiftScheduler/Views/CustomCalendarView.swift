@@ -237,7 +237,7 @@ struct DayView: View {
             .overlay(
                 isSelected ?
                     RoundedRectangle(cornerRadius: 0)
-                        .strokeBorder(Color.accentColor, lineWidth: 2)
+                        .strokeBorder(ScheduleViewColorPalette.selectedDateBorder, lineWidth: 2)
                     : nil
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
@@ -249,21 +249,14 @@ struct DayView: View {
     private var backgroundColor: some View {
         Group {
             if isToday && hasShift {
-                // Today with shift: gradient
-                LinearGradient(
-                    colors: [
-                        Color.orange.opacity(0.2),
-                        Color.green.opacity(0.15)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                // Today with shift: Coastal Surge to Continental Blue gradient
+                ScheduleViewColorPalette.todayWithShiftGradient
             } else if hasShift {
-                // Has shift: subtle green
-                Color.green.opacity(0.12)
+                // Has shift: Continental Blue
+                ScheduleViewColorPalette.scheduledShiftBackground
             } else if isToday {
-                // Today: subtle orange
-                Color.orange.opacity(0.15)
+                // Today: Coastal Surge
+                ScheduleViewColorPalette.todayBackground
             } else {
                 // Empty day
                 Color.clear
