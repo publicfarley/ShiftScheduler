@@ -24,31 +24,29 @@ struct ScrollableMonthView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            GeometryReader { geometry in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 0) {
-                        // Generate months: -12 to +12 months from today
-                        ForEach(monthRange(), id: \.self) { month in
-                            SingleMonthView(
-                                month: month,
-                                selectedDate: $selectedDate,
-                                scheduledDates: scheduledDates,
-                                shiftSymbols: shiftSymbols,
-                                selectionMode: selectionMode,
-                                selectedDates: selectedDates
-                            )
-                            // Each month takes full width minus peek amounts
-                            .frame(width: geometry.size.width - (peekWidth * 2))
-                            .id(month)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    // Generate months: -12 to +12 months from today
+                    ForEach(monthRange(), id: \.self) { month in
+                        SingleMonthView(
+                            month: month,
+                            selectedDate: $selectedDate,
+                            scheduledDates: scheduledDates,
+                            shiftSymbols: shiftSymbols,
+                            selectionMode: selectionMode,
+                            selectedDates: selectedDates
+                        )
+                        // Each month takes container width minus peek amounts
+                        .containerRelativeFrame(.horizontal) { width, _ in
+                            width - (peekWidth * 2)
                         }
+                        .id(month)
                     }
-                    .scrollTargetLayout()
-                    // Add padding to create peek effect on sides
-                    .padding(.horizontal, peekWidth)
                 }
-                .contentMargins(.horizontal, 0, for: .scrollContent)
-                .scrollTargetBehavior(.viewAligned)
+                .scrollTargetLayout()
             }
+            .contentMargins(.horizontal, peekWidth, for: .scrollContent)
+            .scrollTargetBehavior(.paging)
             .onAppear {
                 // Start with current month displayed
                 let currentMonth = getCurrentMonth()
