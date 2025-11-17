@@ -317,11 +317,19 @@ struct ScheduleView: View {
             // SCROLLABLE CONTENT
             ScrollView {
                 VStack(spacing: 5) {
-                    // CALENDAR SECTION - Horizontal month scroll with calendar grid
+                    // CALENDAR SECTION - Scrollable month views
                     VStack(spacing: 0) {
-                        // Horizontal month carousel with calendar grid
-                        HorizontalMonthScrollView(
-                            selectedMonth: Binding(
+                        // Horizontally scrollable month views
+                        ScrollableMonthView(
+                            selectedDate: Binding(
+                                get: { store.state.schedule.selectedDate },
+                                set: { date in
+                                    Task {
+                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
+                                    }
+                                }
+                            ),
+                            displayedMonth: Binding(
                                 get: { store.state.schedule.displayedMonth },
                                 set: { month in
                                     Task {
@@ -340,15 +348,7 @@ struct ScheduleView: View {
                             ),
                             shiftSymbols: shiftSymbolsByDate,
                             selectionMode: store.state.schedule.selectionMode,
-                            selectedDates: store.state.schedule.selectedDates,
-                            selectedDate: Binding(
-                                get: { store.state.schedule.selectedDate },
-                                set: { date in
-                                    Task {
-                                        await store.dispatch(action: .schedule(.selectedDateChanged(date)))
-                                    }
-                                }
-                            )
+                            selectedDates: store.state.schedule.selectedDates
                         )
                         .background(Color(.systemGray6))
 
