@@ -40,17 +40,15 @@ struct ScrollableMonthView: View {
                             selectionMode: selectionMode,
                             selectedDates: selectedDates
                         )
-                        // Each month takes container width minus peek amounts
-                        .containerRelativeFrame(.horizontal) { width, _ in
-                            width - (peekWidth * 2)
-                        }
+                        // Each month takes FULL container width
+                        .containerRelativeFrame(.horizontal)
                         .id(month)
                     }
                 }
                 .scrollTargetLayout()
             }
-            .contentMargins(.horizontal, peekWidth, for: .scrollContent)
-            .scrollTargetBehavior(.paging)
+            .safeAreaPadding(.horizontal, peekWidth)
+            .scrollTargetBehavior(.viewAligned)
             .frame(height: calendarHeight)
             .onAppear {
                 // Start with current month displayed
