@@ -421,25 +421,27 @@ struct ShimmerEffect: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                .clear,
-                                .white.opacity(0.4),
-                                .clear
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                GeometryReader { geometry in
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    .clear,
+                                    .white.opacity(0.4),
+                                    .clear
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .offset(x: animationOffset * UIScreen.main.bounds.width)
-                    .animation(
-                        isAnimating ?
-                            .linear(duration: 1.5).repeatForever(autoreverses: false) :
-                            .none,
-                        value: animationOffset
-                    )
+                        .offset(x: animationOffset * geometry.size.width)
+                        .animation(
+                            isAnimating ?
+                                .linear(duration: 1.5).repeatForever(autoreverses: false) :
+                                .none,
+                            value: animationOffset
+                        )
+                }
             )
             .clipped()
             .onAppear {

@@ -230,16 +230,18 @@ struct CompactMultiShiftCarousel: View {
             CompactHalfHeightShiftCard(shift: shifts[0], onTap: nil)
         } else {
             // Multiple shifts - show in scrollable horizontal carousel
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(shifts) { shift in
-                        CompactHalfHeightShiftCard(shift: shift, onTap: nil)
-                            .frame(width: UIScreen.main.bounds.width * 0.85)  // 85% width for peek effect
+            GeometryReader { geometry in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(shifts) { shift in
+                            CompactHalfHeightShiftCard(shift: shift, onTap: nil)
+                                .frame(width: geometry.size.width * 0.85)  // 85% width for peek effect
+                        }
                     }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
+                .scrollTargetBehavior(.paging)
             }
-            .scrollTargetBehavior(.paging)
         }
     }
 }
