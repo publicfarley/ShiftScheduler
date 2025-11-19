@@ -417,7 +417,6 @@ struct TodayView: View {
                                 }
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, 12)
 
                             // Spacing between major sections
                             Spacer().frame(height: 12)
