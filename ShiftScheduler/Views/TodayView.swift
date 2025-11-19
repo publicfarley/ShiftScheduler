@@ -162,7 +162,6 @@ struct MultiShiftCarousel: View {
             } else if shifts.count == 1 {
                 // Single shift - display centered with full width
                 UnifiedShiftCard(shift: shifts[0], onTap: nil)
-                    .padding(.horizontal, 20)
             } else if shifts.count == 2 {
                 // Two shifts - use featuring algorithm with carousel
                 let featuringResult = determineFeaturedShift(shifts: shifts, currentTime: Date())

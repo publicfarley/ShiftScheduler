@@ -31,7 +31,7 @@ struct ScrollableMonthView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 0) {
+                LazyHStack(spacing: 16) {
                     // Generate months: -12 to +12 months from today
                     ForEach(monthRange(), id: \.self) { month in
                         SingleMonthView(
@@ -42,7 +42,11 @@ struct ScrollableMonthView: View {
                             selectionMode: selectionMode,
                             selectedDates: selectedDates
                         )
-                        // Each month takes FULL container width
+                        .background {
+                            RoundedRectangle(cornerRadius: 16)
+                                .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1.5)
+                        }
+                        // Each month takes FULL container width minus padding
                         .containerRelativeFrame(.horizontal)
                         .id(month)
                     }
@@ -51,7 +55,7 @@ struct ScrollableMonthView: View {
             }
             .safeAreaPadding(.horizontal, peekWidth)
             .scrollTargetBehavior(.viewAligned)
-            .frame(height: calendarHeight)
+            .frame(height: calendarHeight + 40) // Add space for card padding
             .onAppear {
                 // Start with current month displayed
                 let currentMonth = getCurrentMonth()

@@ -316,7 +316,7 @@ struct ScheduleView: View {
 
             // SCROLLABLE CONTENT
             ScrollView {
-                VStack(spacing: 5) {
+                VStack(spacing: 0) {
                     // CALENDAR SECTION - Scrollable month views
                     VStack(spacing: 0) {
                         // Horizontally scrollable month views
@@ -356,16 +356,13 @@ struct ScheduleView: View {
                             selectionMode: store.state.schedule.selectionMode,
                             selectedDates: store.state.schedule.selectedDates
                         )
-                        .background(Color(.systemGray6))
 
                         // Selected date display - fixed position at bottom
                         Text(formattedSelectedDate)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                            .padding(.vertical, 12)
+                            .padding(.horizontal, 40)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.systemBackground))
                     }
 
                     // SHIFTS SECTION
@@ -384,9 +381,7 @@ struct ScheduleView: View {
                 }
                 .padding(.vertical, 8)
             }
-            .background(Color(.systemBackground))
         }
-        .background(Color(.systemBackground))
         .ignoresSafeArea(edges: .bottom)
         .onChange(of: store.state.schedule.selectedDate) { _, _ in
             resetListAnimation()
@@ -438,31 +433,33 @@ struct ScheduleView: View {
 
             if store.state.schedule.hasActiveFilters {
                 // Filter-specific empty state
-                VStack(spacing: 16) {
+                VStack(spacing: 8) {
                     Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.largeTitle)
+                        .font(.title2)
                         .foregroundColor(.secondary)
 
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text("No Shifts Found")
-                            .font(.headline)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundColor(.primary)
 
                         Text("Try adjusting your filters or clearing them to see more shifts.")
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
 
                     Button(action: clearAllFilters) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 18))
+                                .font(.system(size: 14))
 
                             Text("Clear Filters")
+                                .font(.subheadline)
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 6)
                         .foregroundColor(.white)
                         .background(
                             LinearGradient(
@@ -471,12 +468,12 @@ struct ScheduleView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .cornerRadius(8)
+                        .cornerRadius(6)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.systemBackground))
@@ -486,21 +483,22 @@ struct ScheduleView: View {
                         )
                         .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
                 )
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 40)
             } else {
                 // No filter - standard "No shift scheduled" state matching TodayView
-                VStack(spacing: 16) {
+                VStack(spacing: 8) {
                     Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.largeTitle)
+                        .font(.title2)
                         .foregroundColor(.secondary)
 
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         Text("No shift scheduled")
-                            .font(.headline)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundColor(.primary)
 
                         Text("Add today's shift or enjoy your day off")
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
 
@@ -509,15 +507,16 @@ struct ScheduleView: View {
                             await store.dispatch(action: .schedule(.addShiftButtonTapped))
                         }
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 18))
+                                .font(.system(size: 14))
 
                             Text("Add Shift")
+                                .font(.subheadline)
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 6)
                         .foregroundColor(.white)
                         .background(
                             LinearGradient(
@@ -526,12 +525,12 @@ struct ScheduleView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .cornerRadius(8)
+                        .cornerRadius(6)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color(.systemBackground))
@@ -541,7 +540,7 @@ struct ScheduleView: View {
                         )
                         .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
                 )
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 40)
             }
 
             Spacer()
@@ -626,7 +625,7 @@ struct ScheduleView: View {
             },
             isInSelectionMode: store.state.schedule.isInSelectionMode
         )
-        .padding(.horizontal)
+        .padding(.horizontal, 40)  // Match peekWidth from ScrollableMonthView
     }
 
     private func clearAllFilters() {
@@ -637,32 +636,78 @@ struct ScheduleView: View {
     }
 }
 
-//#Preview {
-//    ScheduleView()
-//        .environment(\.reduxStore, previewStore)
-//}
-//
-//private let previewStore: Store = {
-//    let store = Store(
-//        state: AppState(),
-//        reducer: appReducer,
-//        services: ServiceContainer(),
-//        middlewares: [
-//            scheduleMiddleware,
-//            todayMiddleware,
-//            locationsMiddleware,
-//            shiftTypesMiddleware,
-//            changeLogMiddleware,
-//            settingsMiddleware,
-//            loggingMiddleware
-//        ]
-//    )
-//    return store
-//}()
+// MARK: - Preview
+#Preview("Schedule View with Animations") {
+    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St")
 
+    // Create multiple shift types for visual variety
+    let morningShift = ShiftType(
+        id: UUID(),
+        symbol: "🌅",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 6, minute: 0),
+            to: HourMinuteTime(hour: 14, minute: 0)
+        ),
+        title: "Morning Shift",
+        description: "Early morning shift with team briefing",
+        location: sampleLocation
+    )
 
-// If your Store type and previewStore are available, you may want to uncomment and use them as shown below:
-// #Preview {
-//     ScheduleView()
-//         .environment(\._reduxStore, previewStore)
-// }
+    let eveningShift = ShiftType(
+        id: UUID(),
+        symbol: "🌆",
+        duration: .scheduled(
+            from: HourMinuteTime(hour: 14, minute: 0),
+            to: HourMinuteTime(hour: 22, minute: 0)
+        ),
+        title: "Evening Shift",
+        description: "Evening shift with handover",
+        location: sampleLocation
+    )
+
+    // Today's shift
+    let todayShift = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: morningShift,
+        date: Date()
+    )
+
+    // Tomorrow's shift
+    let tomorrowDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    let tomorrowShift = ScheduledShift(
+        id: UUID(),
+        eventIdentifier: UUID().uuidString,
+        shiftType: eveningShift,
+        date: tomorrowDate
+    )
+
+    // Create preview store with sample data
+    let previewStore: Store = {
+        var state = AppState()
+        state.today.scheduledShifts = [todayShift, tomorrowShift]
+        state.today.isLoading = false
+        state.isCalendarAuthorized = true
+        state.isCalendarAuthorizationVerified = true
+        state.locations.locations = [sampleLocation]
+        state.shiftTypes.shiftTypes = [morningShift, eveningShift]
+
+        return Store(
+            state: state,
+            reducer: appReducer,
+            services: ServiceContainer(),
+            middlewares: [
+                scheduleMiddleware,
+                todayMiddleware,
+                locationsMiddleware,
+                shiftTypesMiddleware,
+                changeLogMiddleware,
+                settingsMiddleware,
+                loggingMiddleware
+            ]
+        )
+    }()
+
+    ScheduleView()
+        .environment(\.reduxStore, previewStore)
+}
