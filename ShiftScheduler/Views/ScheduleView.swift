@@ -16,7 +16,8 @@ struct ScheduleView: View {
                 Text("Schedule")
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
 
                 if !store.state.schedule.isCalendarAuthorized {
                     authorizationRequiredView
@@ -314,7 +315,7 @@ struct ScheduleView: View {
                     filterButton
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.vertical, 6)
                 .background(
                     Color(.systemBackground)
                         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
@@ -386,7 +387,7 @@ struct ScheduleView: View {
                     }
                     .padding(.bottom, 20)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
             }
         }
         .ignoresSafeArea(edges: .bottom)
