@@ -360,7 +360,7 @@ struct TodayView: View {
 
                                             // Divider between shift and quick actions
                                             Divider()
-                                                .padding(.vertical, 8)
+                                                .padding(.vertical, 4)
 
                                             // Quick Actions Section (show for first shift)
                                             if let firstShift = todayShifts.first {
@@ -417,10 +417,10 @@ struct TodayView: View {
                                 }
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, 16)
+                            .padding(.top, 12)
 
                             // Spacing between major sections
-                            Spacer().frame(height: 24)
+                            Spacer().frame(height: 12)
 
                             // Tomorrow Section - Secondary Card
                             SectionCard(accentColor: .indigo, prominence: .secondary) {
@@ -451,7 +451,7 @@ struct TodayView: View {
                             .opacity(tomorrowCardOpacity)
 
                             // Spacing between major sections
-                            Spacer().frame(height: 24)
+                            Spacer().frame(height: 12)
 
                             // Week Summary Section - Tertiary Card
                             if !store.state.today.isLoading {
