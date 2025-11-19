@@ -563,7 +563,7 @@ struct TodayView: View {
                     }
                     .scrollContentBackground(.hidden)
                     .navigationTitle("Today")
-                    .navigationBarTitleDisplayMode(.large)
+                    .navigationBarTitleDisplayMode(.inline)
                 }
             }
             .sheet(
