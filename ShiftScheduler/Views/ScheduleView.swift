@@ -297,9 +297,16 @@ struct ScheduleView: View {
                             Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
                         }
                     } label: {
-                        Image(systemName: "plus.circle")
-                            .font(.title2)
-                            .foregroundColor(.primary)
+                        VStack(spacing: 4) {
+                            Image(systemName: "plus.circle")
+                                .font(.title2)
+                                .foregroundColor(.primary)
+                            Text("Add")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                        }
+                        .frame(maxWidth: .infinity)
                     }
 
                     Spacer()
@@ -582,9 +589,16 @@ struct ScheduleView: View {
                 await store.dispatch(action: .schedule(.jumpToToday))
             }
         }) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.title2)
-                .foregroundColor(.primary)
+            VStack(spacing: 4) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.title2)
+                    .foregroundColor(.primary)
+                Text("Today")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .frame(maxWidth: .infinity)
         }
         .transaction { transaction in
             transaction.animation = .easeInOut(duration: 0.3)
@@ -597,9 +611,16 @@ struct ScheduleView: View {
                 await store.dispatch(action: .schedule(.filterSheetToggled(true)))
             }
         }) {
-            Image(systemName: "line.3.horizontal.decrease.circle")
-                .font(.title2)
-                .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
+            VStack(spacing: 4) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.title2)
+                    .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
+                Text("Filter")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(store.state.schedule.hasActiveFilters ? .blue : .primary)
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 
