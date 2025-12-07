@@ -881,6 +881,9 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
         state.isResyncingCalendar = false
         state.errorMessage = "Calendar resync failed: \(error.localizedDescription)"
         state.toastMessage = .error("Calendar resync failed")
+
+    case .toastMessageCleared:
+        state.toastMessage = nil
     }
 
     return state

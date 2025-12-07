@@ -115,7 +115,7 @@ func settingsMiddleware(
         }
 
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
-         .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted:
+         .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted, .toastMessageCleared:
         // Handled by reducer only
         break
     }

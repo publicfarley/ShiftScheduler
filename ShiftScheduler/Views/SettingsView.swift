@@ -61,6 +61,16 @@ struct SettingsView: View {
             } message: {
                 purgeConfirmationMessage
             }
+            .toast(Binding(
+                get: { store.state.settings.toastMessage },
+                set: { newValue in
+                    if newValue == nil {
+                        Task {
+                            await store.dispatch(action: .settings(.toastMessageCleared))
+                        }
+                    }
+                }
+            ))
         }
     }
 

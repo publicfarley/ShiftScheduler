@@ -821,6 +821,9 @@ enum SettingsAction: Equatable {
     /// Calendar resync completed with result
     case resyncCalendarEventsCompleted(Result<(updated: Int, total: Int), Error>)
 
+    /// Clear toast message
+    case toastMessageCleared
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -874,6 +877,8 @@ enum SettingsAction: Equatable {
             default:
                 return false
             }
+        case (.toastMessageCleared, .toastMessageCleared):
+            return true
         default:
             return false
         }
