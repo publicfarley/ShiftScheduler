@@ -27,8 +27,8 @@ struct EmptyDateCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Day number in top-left
                 Text(dayNumber)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(isCurrentMonth ? .primary : .tertiary)
+                    .font(.system(size: 20, weight: .thin, design: .rounded))
+                    .foregroundStyle(isCurrentMonth ? .black : .black.opacity(0.3))
                     .lineLimit(1)
                     .padding(.top, 8)
                     .padding(.leading, 8)
