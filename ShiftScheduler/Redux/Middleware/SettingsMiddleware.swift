@@ -99,8 +99,23 @@ func settingsMiddleware(
         logger.error("Manual purge failed: \(error.localizedDescription)")
         // Error already handled and logged by ChangeLogMiddleware
 
+    case .resyncCalendarEventsRequested:
+        logger.debug("Calendar event resync requested")
+        do {
+            let result = try await services.calendarService.resyncAllCalendarEvents()
+            await dispatch(.settings(.resyncCalendarEventsCompleted(.success(result))))
+
+            // Refresh schedule to reflect resynced calendar events
+            if result.updated > 0 {
+                await dispatch(.schedule(.loadShifts))
+            }
+        } catch {
+            logger.error("Calendar resync failed: \(error.localizedDescription)")
+            await dispatch(.settings(.resyncCalendarEventsCompleted(.failure(error))))
+        }
+
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
-         .purgeStatisticsLoaded, .lastPurgeDateUpdated:
+         .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted:
         // Handled by reducer only
         break
     }

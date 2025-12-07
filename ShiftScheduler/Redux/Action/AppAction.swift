@@ -815,6 +815,12 @@ enum SettingsAction: Equatable {
     /// Last purge date updated
     case lastPurgeDateUpdated(Date?)
 
+    /// Resync all calendar events with current formatting
+    case resyncCalendarEventsRequested
+
+    /// Calendar resync completed with result
+    case resyncCalendarEventsCompleted(Result<(updated: Int, total: Int), Error>)
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -857,6 +863,17 @@ enum SettingsAction: Equatable {
             return lhs == rhs
         case let (.lastPurgeDateUpdated(lhs), .lastPurgeDateUpdated(rhs)):
             return lhs == rhs
+        case (.resyncCalendarEventsRequested, .resyncCalendarEventsRequested):
+            return true
+        case let (.resyncCalendarEventsCompleted(lhs), .resyncCalendarEventsCompleted(rhs)):
+            switch (lhs, rhs) {
+            case (.success(let l), .success(let r)):
+                return l.updated == r.updated && l.total == r.total
+            case (.failure, .failure):
+                return true
+            default:
+                return false
+            }
         default:
             return false
         }

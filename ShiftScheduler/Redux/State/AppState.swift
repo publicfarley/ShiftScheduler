@@ -484,6 +484,9 @@ struct SettingsState: Equatable {
     /// Whether a purge operation is currently in progress
     var isPurging: Bool = false
 
+    /// Whether a calendar resync operation is currently in progress
+    var isResyncingCalendar: Bool = false
+
     /// Loading state
     var isLoading: Bool = false
 

@@ -140,6 +140,9 @@ struct SettingsView: View {
 
             // Auto-Purge Settings
             autoPurgeSection
+
+            // Calendar Resync
+            calendarResyncSection
         }
     }
 
@@ -340,6 +343,63 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding(.leading, 4)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6).opacity(0.3))
+        )
+    }
+
+    // MARK: - Calendar Resync Section
+
+    private var calendarResyncSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.blue)
+                Text("Calendar Sync")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Text("Update all calendar events with current shift type formatting (symbol and location address).")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: {
+                Task {
+                    await store.dispatch(action: .settings(.resyncCalendarEventsRequested))
+                }
+            }) {
+                HStack {
+                    if store.state.settings.isResyncingCalendar {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                    }
+                    Text(store.state.settings.isResyncingCalendar ? "Resyncing..." : "Resync Calendar Events")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+            .disabled(store.state.settings.isResyncingCalendar || !store.state.isCalendarAuthorized)
+
+            if !store.state.isCalendarAuthorized {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text("Calendar access required")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .padding(16)

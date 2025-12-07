@@ -407,4 +407,14 @@ final class MockCalendarService: CalendarServiceProtocol {
             notes: notes.isEmpty ? nil : notes
         )
     }
+
+    func resyncAllCalendarEvents() async throws -> (updated: Int, total: Int) {
+        if shouldThrowError {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Mock behavior: return count of all scheduled shifts
+        let count = mockShifts.count
+        return (updated: count, total: count)
+    }
 }

@@ -866,6 +866,21 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
 
     case .lastPurgeDateUpdated(let date):
         state.lastPurgeDate = date
+
+    // MARK: - Calendar Resync Cases
+
+    case .resyncCalendarEventsRequested:
+        state.isResyncingCalendar = true
+        state.errorMessage = nil
+
+    case .resyncCalendarEventsCompleted(.success(let result)):
+        state.isResyncingCalendar = false
+        state.toastMessage = .success("Resynced \(result.updated) calendar event\(result.updated == 1 ? "" : "s")")
+
+    case .resyncCalendarEventsCompleted(.failure(let error)):
+        state.isResyncingCalendar = false
+        state.errorMessage = "Calendar resync failed: \(error.localizedDescription)"
+        state.toastMessage = .error("Calendar resync failed")
     }
 
     return state

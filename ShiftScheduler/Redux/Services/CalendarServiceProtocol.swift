@@ -79,4 +79,10 @@ protocol CalendarServiceProtocol: Sendable {
     ///   - notes: The new notes to set (empty string clears notes)
     /// - Throws: CalendarError if the event cannot be found or update fails
     func updateShiftNotes(eventIdentifier: String, notes: String) async throws -> Void
+
+    /// Resync all calendar events with current shift type formatting
+    /// Updates event titles and locations to match current shift type data (symbol and address)
+    /// - Returns: Tuple of (updated count, total count) for user feedback
+    /// - Throws: CalendarServiceError if calendar is not authorized or updates fail
+    func resyncAllCalendarEvents() async throws -> (updated: Int, total: Int)
 }

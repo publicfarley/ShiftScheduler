@@ -247,8 +247,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Create event with correct timing based on shift duration
         let event = EKEvent(eventStore: eventStore)
-        event.title = shiftType.title
-        event.location = shiftType.location.name
+        event.title = "\(shiftType.symbol): \(shiftType.title)"
+        event.location = "\(shiftType.location.name), \(shiftType.location.address)"
         event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
 
         // Configure event dates using shared helper
@@ -341,8 +341,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         }
 
         // Update event with new shift type information
-        event.title = newShiftType.title
-        event.location = newShiftType.location.name
+        event.title = "\(newShiftType.symbol): \(newShiftType.title)"
+        event.location = "\(newShiftType.location.name), \(newShiftType.location.address)"
 
         // Configure event dates using shared helper
         configureEventDates(event, shiftType: newShiftType, baseDate: startDate)
@@ -449,8 +449,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             }
 
             // Update event properties with new ShiftType data
-            event.title = shiftType.title
-            event.location = shiftType.location.name
+            event.title = "\(shiftType.symbol): \(shiftType.title)"
+            event.location = "\(shiftType.location.name), \(shiftType.location.address)"
 
             // Reconfigure event dates based on new shift type duration
             let baseDate = Calendar.current.startOfDay(for: shift.date)
@@ -517,6 +517,35 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             logger.error("Failed to update shift notes: \(error.localizedDescription)")
             throw CalendarServiceError.eventConversionFailed("Failed to save updated notes: \(error.localizedDescription)")
         }
+    }
+
+    func resyncAllCalendarEvents() async throws -> (updated: Int, total: Int) {
+        logger.debug("Resyncing all calendar events with current shift type formatting")
+
+        // Check authorization
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Load all shift types from repository
+        let allShiftTypes = try await shiftTypeRepository.fetchAll()
+
+        guard !allShiftTypes.isEmpty else {
+            logger.debug("No shift types found, skipping resync")
+            return (updated: 0, total: 0)
+        }
+
+        // Update events for each shift type using the existing method
+        // This leverages the updateEventsWithShiftType which already handles
+        // updating title, location, and other properties for all events
+        var totalUpdated = 0
+        for shiftType in allShiftTypes {
+            let count = try await updateEventsWithShiftType(shiftType)
+            totalUpdated += count
+        }
+
+        logger.debug("Resync complete: updated \(totalUpdated) calendar events across \(allShiftTypes.count) shift types")
+        return (updated: totalUpdated, total: totalUpdated)
     }
 
     // MARK: - Private Helpers
