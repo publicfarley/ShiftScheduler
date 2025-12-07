@@ -248,7 +248,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Create event with correct timing based on shift duration
         let event = EKEvent(eventStore: eventStore)
         event.title = "\(shiftType.symbol): \(shiftType.title)"
-        event.location = "\(shiftType.location.name), \(shiftType.location.address.replacingOccurrences(of: "\n", with: ","))"
+        event.location = "\(shiftType.location.name), \(shiftType.location.address.replacingOccurrences(of: "\n", with: " "))"
         event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
 
         // Configure event dates using shared helper
@@ -342,7 +342,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Update event with new shift type information
         event.title = "\(newShiftType.symbol): \(newShiftType.title)"
-        event.location = "\(newShiftType.location.name), \(newShiftType.location.address.replacingOccurrences(of: "\n", with: ","))"
+        event.location = "\(newShiftType.location.name), \(newShiftType.location.address.replacingOccurrences(of: "\n", with: " "))"
 
         // Configure event dates using shared helper
         configureEventDates(event, shiftType: newShiftType, baseDate: startDate)
