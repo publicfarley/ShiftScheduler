@@ -163,7 +163,11 @@ private struct SingleMonthView: View {
 
             // Calendar grid - 6 rows × 7 columns (42 cells total)
             LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(daysInMonth(month)) { cell in
+                let cells = daysInMonth(month)
+                let dateIndices = Set(cells.compactMap { $0.date != nil ? $0.id : nil })
+                ForEach(cells) { cell in
+                    let cellEdges = gridEdgesForCell(at: cell.id, dateIndices: dateIndices)
+
                     if let date = cell.date {
                         let isCurrentMonth = calendar.isDate(date, equalTo: month, toGranularity: .month)
                         let hasShift = scheduledDates.contains { scheduledDate in
@@ -177,7 +181,8 @@ private struct SingleMonthView: View {
                             EmptyDateCard(
                                 date: date,
                                 isSelected: isSelected,
-                                isCurrentMonth: isCurrentMonth
+                                isCurrentMonth: isCurrentMonth,
+                                borderEdges: cellEdges
                             ) {
                                 Task {
                                     await store.dispatch(action: .schedule(.toggleDateSelection(date)))
@@ -193,16 +198,18 @@ private struct SingleMonthView: View {
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
                                 shiftSymbol: shiftSymbol,
-                                isCurrentMonth: isCurrentMonth
+                                isCurrentMonth: isCurrentMonth,
+                                borderEdges: cellEdges
                             ) {
                                 selectedDate = date
                             }
                         }
                     } else {
+                        // Empty cell for dates outside current month
+                        // No borders - adjacent date cells will draw their edges
                         Color.clear
                             .frame(maxWidth: .infinity)
                             .frame(height: CustomCalendarView.cellHeight)
-                            .opacity(0)
                     }
                 }
             }
@@ -291,7 +298,7 @@ private struct CalendarCell: Identifiable {
             selectionMode: nil,
             selectedDates: []
         )
-        .background(Color(.systemGray6))
+        .background(Color(.white))
 
         Spacer()
     }

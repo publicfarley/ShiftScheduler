@@ -1,5 +1,62 @@
 import SwiftUI
 
+/// Shape that draws borders on specific edges using filled rectangles
+struct BorderEdges: Shape {
+    let edges: Edge.Set
+    let width: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        if edges.contains(.top) {
+            path.addRect(CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: width))
+        }
+
+        if edges.contains(.bottom) {
+            path.addRect(CGRect(x: rect.minX, y: rect.maxY - width, width: rect.width, height: width))
+        }
+
+        if edges.contains(.leading) {
+            path.addRect(CGRect(x: rect.minX, y: rect.minY, width: width, height: rect.height))
+        }
+
+        if edges.contains(.trailing) {
+            path.addRect(CGRect(x: rect.maxX - width, y: rect.minY, width: width, height: rect.height))
+        }
+
+        return path
+    }
+}
+
+/// Calculates which border edges a cell should draw based on its position in a 7-column grid
+/// - Parameters:
+///   - cellIndex: The cell's index in the grid (0-41 for a 6-row, 7-column grid)
+///   - dateIndices: Set of indices that have dates (empty cells should not draw borders)
+/// - Returns: The set of edges this cell should draw
+func gridEdgesForCell(at cellIndex: Int, dateIndices: Set<Int>) -> Edge.Set {
+    // Empty cells draw no borders
+    guard dateIndices.contains(cellIndex) else {
+        return []
+    }
+
+    let row = cellIndex / 7
+    let col = cellIndex % 7
+
+    var edges: Edge.Set = [.trailing, .bottom]  // All date cells draw right and bottom
+
+    // Draw top if first row OR cell above is empty
+    if row == 0 || !dateIndices.contains(cellIndex - 7) {
+        edges.insert(.top)
+    }
+
+    // Draw left if first column OR cell to the left is empty
+    if col == 0 || !dateIndices.contains(cellIndex - 1) {
+        edges.insert(.leading)
+    }
+
+    return edges
+}
+
 // Wrapper struct to provide unique identities for calendar cells
 private struct CalendarCell: Identifiable {
     let id: Int
@@ -72,7 +129,11 @@ struct CustomCalendarView: View {
 
             // Calendar grid - 6 rows × 7 columns (42 cells total)
             LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(daysInMonth()) { cell in
+                let cells = daysInMonth()
+                let dateIndices = Set(cells.compactMap { $0.date != nil ? $0.id : nil })
+                ForEach(cells) { cell in
+                    let cellEdges = gridEdgesForCell(at: cell.id, dateIndices: dateIndices)
+
                     if let date = cell.date {
                         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
                         let hasShift = scheduledDates.contains { scheduledDate in
@@ -87,7 +148,8 @@ struct CustomCalendarView: View {
                             EmptyDateCard(
                                 date: date,
                                 isSelected: isSelected,
-                                isCurrentMonth: isCurrentMonth
+                                isCurrentMonth: isCurrentMonth,
+                                borderEdges: cellEdges
                             ) {
                                 Task {
                                     await store.dispatch(action: .schedule(.toggleDateSelection(date)))
@@ -104,18 +166,18 @@ struct CustomCalendarView: View {
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
                                 shiftSymbol: shiftSymbol,
-                                isCurrentMonth: isCurrentMonth
+                                isCurrentMonth: isCurrentMonth,
+                                borderEdges: cellEdges
                             ) {
                                 selectedDate = date
                             }
                         }
                     } else {
-                        // Invisible cell for dates outside current month
-                        // Takes up space but is not visible - no border, no content
+                        // Empty cell for dates outside current month
+                        // No borders - adjacent date cells will draw their edges
                         Color.clear
                             .frame(maxWidth: .infinity)
                             .frame(height: CustomCalendarView.cellHeight)
-                            .opacity(0)
                     }
                 }
             }
@@ -182,6 +244,7 @@ struct DayView: View {
     let hasShift: Bool
     let shiftSymbol: String?
     let isCurrentMonth: Bool
+    let borderEdges: Edge.Set
     let onTap: () -> Void
 
     private var dayNumber: String {
@@ -233,7 +296,10 @@ struct DayView: View {
             .fixedSize(horizontal: false, vertical: true)
             .clipped()
             .background(backgroundColor)
-            .border(Color(.systemGray3), width: 1)
+            .overlay(
+                BorderEdges(edges: borderEdges, width: 1)
+                    .fill(Color.black)
+            )
             .overlay(
                 isSelected ?
                     RoundedRectangle(cornerRadius: 0)
@@ -259,7 +325,7 @@ struct DayView: View {
                 ScheduleViewColorPalette.todayBackground
             } else {
                 // Empty day
-                Color.clear
+                Color.white
             }
         }
     }

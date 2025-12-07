@@ -6,6 +6,7 @@ struct EmptyDateCard: View {
     let date: Date
     let isSelected: Bool
     let isCurrentMonth: Bool
+    let borderEdges: Edge.Set
     let onTap: () -> Void
 
     private var dayNumber: String {
@@ -48,7 +49,10 @@ struct EmptyDateCard: View {
             .fixedSize(horizontal: false, vertical: true)
             .clipped()
             .background(backgroundColor)
-            .border(Color(.systemGray3), width: 1)
+            .overlay(
+                BorderEdges(edges: borderEdges, width: 1)
+                    .fill(Color.black)
+            )
             .overlay(
                 isSelected ?
                     RoundedRectangle(cornerRadius: 0)
@@ -82,6 +86,7 @@ struct EmptyDateCard: View {
         date: Date(),
         isSelected: false,
         isCurrentMonth: true,
+        borderEdges: [.top, .leading, .trailing, .bottom],
         onTap: {}
     )
     .padding()
@@ -92,6 +97,7 @@ struct EmptyDateCard: View {
         date: Date(),
         isSelected: true,
         isCurrentMonth: true,
+        borderEdges: [.top, .leading, .trailing, .bottom],
         onTap: {}
     )
     .padding()
@@ -102,6 +108,7 @@ struct EmptyDateCard: View {
         date: Date(),
         isSelected: false,
         isCurrentMonth: true,
+        borderEdges: [.top, .leading, .trailing, .bottom],
         onTap: {}
     )
     .padding()
@@ -112,6 +119,7 @@ struct EmptyDateCard: View {
         date: Date(),
         isSelected: true,
         isCurrentMonth: true,
+        borderEdges: [.top, .leading, .trailing, .bottom],
         onTap: {}
     )
     .padding()
@@ -122,6 +130,7 @@ struct EmptyDateCard: View {
         date: Date(),
         isSelected: false,
         isCurrentMonth: false,
+        borderEdges: [.top, .leading, .trailing, .bottom],
         onTap: {}
     )
     .padding()
