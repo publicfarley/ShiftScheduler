@@ -32,7 +32,7 @@ struct ScheduleViewColorPalette {
     static let todayBackground = goldenHarvest.opacity(0.25)
 
     /// Background color for dates with scheduled shifts
-    static let scheduledShiftBackground = forestGreen//.opacity(0.12)
+    static let scheduledShiftBackground = forestGreen
 
     /// Gradient background for today's date with a shift
     /// Uses stronger opacity and brighter golden harvest for clear distinction

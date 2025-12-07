@@ -284,7 +284,7 @@ struct DayView: View {
                 // Shift symbol centered at bottom
                 if let symbol = displaySymbol, hasShift {
                     Text(symbol)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(size: 16, weight: .regular, design: .rounded))
                         .foregroundStyle(.black)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
