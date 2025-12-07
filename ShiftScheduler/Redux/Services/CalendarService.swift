@@ -248,7 +248,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         // Create event with correct timing based on shift duration
         let event = EKEvent(eventStore: eventStore)
         event.title = "\(shiftType.symbol): \(shiftType.title)"
-        event.location = "\(shiftType.location.name), \(shiftType.location.address.replacingOccurrences(of: "\n", with: " "))"
+        event.location = "\(shiftType.location.name), \(formatAddress(shiftType.location.address))"
         event.notes = shiftType.id.uuidString  // Store shift type ID in notes for later retrieval
 
         // Configure event dates using shared helper
@@ -342,7 +342,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Update event with new shift type information
         event.title = "\(newShiftType.symbol): \(newShiftType.title)"
-        event.location = "\(newShiftType.location.name), \(newShiftType.location.address.replacingOccurrences(of: "\n", with: " "))"
+        event.location = "\(newShiftType.location.name), \(formatAddress(newShiftType.location.address))"
 
         // Configure event dates using shared helper
         configureEventDates(event, shiftType: newShiftType, baseDate: startDate)
@@ -450,7 +450,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
             // Update event properties with new ShiftType data
             event.title = "\(shiftType.symbol): \(shiftType.title)"
-            event.location = "\(shiftType.location.name), \(shiftType.location.address.replacingOccurrences(of: "\n", with: ","))"
+            event.location = "\(shiftType.location.name), \(formatAddress(shiftType.location.address))"
 
             // Reconfigure event dates based on new shift type duration
             let baseDate = Calendar.current.startOfDay(for: shift.date)
@@ -549,6 +549,16 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     }
 
     // MARK: - Private Helpers
+
+    /// Formats a multi-line address for EventKit location field
+    /// Replaces newlines with spaces and trims whitespace
+    private func formatAddress(_ address: String) -> String {
+        address
+            .split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
 
     /// Configure event dates based on shift type duration
     /// - Parameters:
