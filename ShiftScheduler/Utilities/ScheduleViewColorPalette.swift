@@ -49,7 +49,7 @@ struct ScheduleViewColorPalette {
     static let selectedEmptyDateBackground = warmSand.opacity(0.2)
 
     /// Border color for selected dates
-    static let selectedDateBorder = terracotta
+    static let selectedDateBorder = Color.black
 
     /// Accent color overlay for selected dates
     static let selectedDateOverlay = terracotta.opacity(0.12)
