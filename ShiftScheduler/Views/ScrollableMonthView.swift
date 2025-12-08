@@ -7,8 +7,7 @@ struct ScrollableMonthView: View {
     @Binding var selectedDate: Date
     @Binding var displayedMonth: Date
     @Binding var scrollToDateTrigger: Date?
-    let scheduledDates: Set<Date>
-    let shiftSymbols: [Date: String]
+    let scheduledShiftsByDate: [Date: [ScheduledShift]]
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
@@ -37,8 +36,7 @@ struct ScrollableMonthView: View {
                         SingleMonthView(
                             month: month,
                             selectedDate: $selectedDate,
-                            scheduledDates: scheduledDates,
-                            shiftSymbols: shiftSymbols,
+                            scheduledShiftsByDate: scheduledShiftsByDate,
                             selectionMode: selectionMode,
                             selectedDates: selectedDates
                         )
@@ -123,8 +121,7 @@ struct ScrollableMonthView: View {
 private struct SingleMonthView: View {
     let month: Date
     @Binding var selectedDate: Date
-    let scheduledDates: Set<Date>
-    let shiftSymbols: [Date: String]
+    let scheduledShiftsByDate: [Date: [ScheduledShift]]
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
@@ -170,9 +167,10 @@ private struct SingleMonthView: View {
 
                     if let date = cell.date {
                         let isCurrentMonth = calendar.isDate(date, equalTo: month, toGranularity: .month)
-                        let hasShift = scheduledDates.contains { scheduledDate in
-                            calendar.isDate(date, inSameDayAs: scheduledDate)
-                        }
+                        let shiftsForDate = scheduledShiftsByDate[date] ?? []
+                        let hasShift = !shiftsForDate.isEmpty
+                        let isAllDayShift = shiftsForDate.contains { $0.shiftType?.isAllDay == true }
+                        let shiftSymbol = shiftsForDate.first?.shiftType?.symbol
 
                         if selectionMode == .add && !hasShift {
                             let isSelected = selectedDates.contains { selectedDate in
@@ -189,14 +187,11 @@ private struct SingleMonthView: View {
                                 }
                             }
                         } else {
-                            let shiftSymbol = shiftSymbols.first(where: { symbolDate, _ in
-                                calendar.isDate(date, inSameDayAs: symbolDate)
-                            })?.value
-
                             DayView(
                                 date: date,
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
+                                isAllDayShift: isAllDayShift,
                                 shiftSymbol: shiftSymbol,
                                 isCurrentMonth: isCurrentMonth,
                                 borderEdges: cellEdges
@@ -270,18 +265,52 @@ private struct CalendarCell: Identifiable {
 #Preview("Scrollable Month View") {
     let calendar = Calendar.current
     let today = Date()
-    let shiftDates = Set([
-        today,
-        calendar.date(byAdding: .day, value: 1, to: today)!,
-        calendar.date(byAdding: .day, value: 5, to: today)!,
-        calendar.date(byAdding: .day, value: 15, to: today)!,
-        calendar.date(byAdding: .month, value: 1, to: today)!,
-    ])
+    let mockLocation = Location(name: "Office", address: "123 Main St")
+    let mockShiftTypeRegular = ShiftType(
+        symbol: "🏢",
+        duration: ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 9, minute: 0),
+            to: HourMinuteTime(hour: 17, minute: 0)
+        ),
+        title: "Office Shift",
+        description: "Regular office hours",
+        location: mockLocation
+    )
+    let mockShiftTypeAllDay = ShiftType(
+        symbol: "🗓️",
+        duration: .allDay,
+        title: "All Day Event",
+        description: "Full day meeting",
+        location: mockLocation
+    )
 
-    var symbols: [Date: String] = [:]
-    for date in shiftDates {
-        symbols[date] = ["☀️", "🌙", "⭐", "🎯"].randomElement()!
-    }
+    let shiftTodayRegular = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeRegular,
+        date: today
+    )
+    let shiftTomorrowAllDay = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeAllDay,
+        date: calendar.date(byAdding: .day, value: 1, to: today)!
+    )
+    let shiftNextWeekRegular = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeRegular,
+        date: calendar.date(byAdding: .day, value: 5, to: today)!
+    )
+    let shiftNextMonthRegular = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeRegular,
+        date: calendar.date(byAdding: .month, value: 1, to: today)!
+    )
+
+    let scheduledShiftsByDate: [Date: [ScheduledShift]] = [
+        today: [shiftTodayRegular],
+        calendar.date(byAdding: .day, value: 1, to: today)!: [shiftTomorrowAllDay],
+        calendar.date(byAdding: .day, value: 5, to: today)!: [shiftNextWeekRegular],
+        calendar.date(byAdding: .month, value: 1, to: today)!: [shiftNextMonthRegular]
+    ]
 
     return VStack(spacing: 0) {
         Text("Schedule")
@@ -293,8 +322,7 @@ private struct CalendarCell: Identifiable {
             selectedDate: .constant(today),
             displayedMonth: .constant(today),
             scrollToDateTrigger: .constant(nil),
-            scheduledDates: shiftDates,
-            shiftSymbols: symbols,
+            scheduledShiftsByDate: scheduledShiftsByDate,
             selectionMode: nil,
             selectedDates: []
         )

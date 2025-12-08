@@ -211,19 +211,18 @@ struct ScheduleView: View {
         return formatter.string(from: store.state.schedule.selectedDate)
     }
 
-    private var shiftSymbolsByDate: [Date: String] {
-        var symbols: [Date: String] = [:]
+    private var scheduledShiftsByDate: [Date: [ScheduledShift]] {
+        var shiftsByDate: [Date: [ScheduledShift]] = [:]
         let calendar = Calendar.current
 
         for shift in store.state.schedule.scheduledShifts {
-            if let symbol = shift.shiftType?.symbol {
-                let dateKey = calendar.startOfDay(for: shift.date)
-                symbols[dateKey] = symbol
-            }
+            let dateKey = calendar.startOfDay(for: shift.date)
+            shiftsByDate[dateKey, default: []].append(shift)
         }
-
-        return symbols
+        return shiftsByDate
     }
+
+
 
     // MARK: - View Components
 
@@ -355,12 +354,7 @@ struct ScheduleView: View {
                                     // Binding is read-only - reducer controls scroll trigger
                                 }
                             ),
-                            scheduledDates: Set(
-                                store.state.schedule.scheduledShifts.flatMap { shift in
-                                    shift.affectedDates()
-                                }
-                            ),
-                            shiftSymbols: shiftSymbolsByDate,
+                            scheduledShiftsByDate: scheduledShiftsByDate,
                             selectionMode: store.state.schedule.selectionMode,
                             selectedDates: store.state.schedule.selectedDates
                         )

@@ -70,8 +70,7 @@ private struct CalendarCell: Identifiable {
 
 struct CustomCalendarView: View {
     @Binding var selectedDate: Date
-    let scheduledDates: Set<Date>
-    let shiftSymbols: [Date: String]  // Map of dates to shift symbols
+    let scheduledShiftsByDate: [Date: [ScheduledShift]]
     let selectionMode: SelectionMode?
     let selectedDates: Set<Date>
 
@@ -136,9 +135,10 @@ struct CustomCalendarView: View {
 
                     if let date = cell.date {
                         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
-                        let hasShift = scheduledDates.contains { scheduledDate in
-                            calendar.isDate(date, inSameDayAs: scheduledDate)
-                        }
+                        let shiftsForDate = scheduledShiftsByDate[date] ?? []
+                        let hasShift = !shiftsForDate.isEmpty
+                        let isAllDayShift = shiftsForDate.contains { $0.shiftType?.isAllDay == true }
+                        let shiftSymbol = shiftsForDate.first?.shiftType?.symbol
 
                         // Show EmptyDateCard in bulk add mode (.add) if no shift on that date
                         if selectionMode == .add && !hasShift {
@@ -157,14 +157,11 @@ struct CustomCalendarView: View {
                             }
                         } else {
                             // Show normal DayView for dates with shifts or when not in bulk add mode
-                            let shiftSymbol = shiftSymbols.first(where: { symbolDate, _ in
-                                calendar.isDate(date, inSameDayAs: symbolDate)
-                            })?.value
-
                             DayView(
                                 date: date,
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
+                                isAllDayShift: isAllDayShift,
                                 shiftSymbol: shiftSymbol,
                                 isCurrentMonth: isCurrentMonth,
                                 borderEdges: cellEdges
@@ -242,6 +239,7 @@ struct DayView: View {
     let date: Date
     let isSelected: Bool
     let hasShift: Bool
+    let isAllDayShift: Bool
     let shiftSymbol: String?
     let isCurrentMonth: Bool
     let borderEdges: Edge.Set
@@ -314,17 +312,15 @@ struct DayView: View {
 
     private var backgroundColor: some View {
         Group {
-            if isToday && hasShift {
-                // Today with shift: Coastal Surge to Continental Blue gradient
-                ScheduleViewColorPalette.todayWithShiftGradient
+            if isToday {
+                ScheduleViewColorPalette.todayBackground.opacity(0.80)
             } else if hasShift {
-                // Has shift: Continental Blue
-                ScheduleViewColorPalette.scheduledShiftBackground
-            } else if isToday {
-                // Today: Coastal Surge
-                ScheduleViewColorPalette.todayBackground
+                if isAllDayShift {
+                    ScheduleViewColorPalette.scheduledShiftBackground.opacity(0.40)
+                } else {
+                    ScheduleViewColorPalette.scheduledShiftBackground.opacity(0.80)
+                }
             } else {
-                // Empty day
                 Color.white
             }
         }
@@ -333,28 +329,73 @@ struct DayView: View {
 
 #Preview {
     let today = Date()
-    let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)
-    let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)
-    let date7 = Calendar.current.date(byAdding: .day, value: 7, to: today)
+    let date2 = Calendar.current.date(byAdding: .day, value: 2, to: today)!
+    let date5 = Calendar.current.date(byAdding: .day, value: 5, to: today)!
+    let date7 = Calendar.current.date(byAdding: .day, value: 7, to: today)!
 
-    Group {
-        if let date2, let date5, let date7 {
-            CustomCalendarView(
-                selectedDate: .constant(today),
-                scheduledDates: Set([today, date2, date5, date7].compactMap { $0 }),
-                shiftSymbols: [
-                    today: "🌅",
-                    date2: "🌃",
-                    date5: "🏢",
-                    date7: "LONG"  // Test truncation with 4+ chars
-                ].mapValues { $0 },
-                selectionMode: nil,
-                selectedDates: []
-            )
-            .padding()
-        } else {
-            EmptyView()
-        }
-        
-    }
+    // Mock Location
+    let mockLocation = Location(name: "Office", address: "123 Main St")
+
+    // Mock ShiftTypes
+    let mockShiftTypeRegular = ShiftType(
+        symbol: "🏢",
+        duration: ShiftDuration.scheduled(
+            from: HourMinuteTime(hour: 9, minute: 0),
+            to: HourMinuteTime(hour: 17, minute: 0)
+        ),
+        title: "Office Shift",
+        description: "Regular office hours",
+        location: mockLocation
+    )
+
+    let mockShiftTypeAllDay = ShiftType(
+        symbol: "🗓️",
+        duration: .allDay,
+        title: "All Day Event",
+        description: "Full day meeting",
+        location: mockLocation
+    )
+
+    // Mock ScheduledShifts
+    let shiftTodayRegular = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeRegular,
+        date: today
+    )
+
+    let shiftDate2AllDay = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeAllDay,
+        date: date2
+    )
+
+    let shiftDate5Regular = ScheduledShift(
+        eventIdentifier: UUID().uuidString,
+        shiftType: mockShiftTypeRegular,
+        date: date5
+    )
+    
+    // Shift with a long symbol to test truncation
+    let shiftDate7LongSymbol = ShiftType(
+        symbol: "LON",
+        duration: .allDay,
+        title: "All Day Event",
+        description: "Full day meeting",
+        location: mockLocation
+    )
+
+    let scheduledShiftsByDate: [Date: [ScheduledShift]] = [
+        today: [shiftTodayRegular],
+        date2: [shiftDate2AllDay],
+        date5: [shiftDate5Regular],
+        date7: [ScheduledShift(eventIdentifier: UUID().uuidString, shiftType: shiftDate7LongSymbol, date: date7)]
+    ]
+
+    CustomCalendarView(
+        selectedDate: .constant(today),
+        scheduledShiftsByDate: scheduledShiftsByDate,
+        selectionMode: nil,
+        selectedDates: []
+    )
+    .padding()
 }
