@@ -18,7 +18,9 @@ struct ReducerIntegrationTests {
         return ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
     }
 
@@ -56,7 +58,7 @@ struct ReducerIntegrationTests {
         )
 
         // When - dispatch lifecycle action
-        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
+        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(AppTab.schedule)))
 
         // Then - state updated
         #expect(store.state.selectedTab == .schedule)
@@ -96,7 +98,8 @@ struct ReducerIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -107,7 +110,7 @@ struct ReducerIntegrationTests {
         )
 
         // When
-        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
+        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(AppTab.schedule)))
 
         // Then - middleware used the services
         #expect(store.state.selectedTab == .schedule)
@@ -145,7 +148,9 @@ struct ReducerIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: errorMockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
