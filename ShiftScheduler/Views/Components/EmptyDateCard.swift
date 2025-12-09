@@ -28,7 +28,9 @@ struct EmptyDateCard: View {
                 // Day number in top-left
                 Text(dayNumber)
                     .font(.system(size: 20, weight: .thin, design: .rounded))
-                    .foregroundStyle(isCurrentMonth ? .black : .black.opacity(0.3))
+                    .foregroundStyle(isCurrentMonth
+                        ? ScheduleViewColorPalette.cellTextPrimary
+                        : ScheduleViewColorPalette.cellTextSecondary)
                     .lineLimit(1)
                     .padding(.top, 8)
                     .padding(.leading, 8)
@@ -51,7 +53,13 @@ struct EmptyDateCard: View {
             .background(backgroundColor)
             .overlay(
                 BorderEdges(edges: borderEdges, width: 1)
-                    .fill(Color.black)
+                    .fill(ScheduleViewColorPalette.cellBorder)
+            )
+            .overlay(
+                isToday ?
+                    RoundedRectangle(cornerRadius: 0)
+                        .strokeBorder(ScheduleViewColorPalette.todayBorder, lineWidth: 2)
+                    : nil
             )
             .overlay(
                 isSelected ?

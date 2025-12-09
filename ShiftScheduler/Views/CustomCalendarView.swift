@@ -272,7 +272,9 @@ struct DayView: View {
                 // Day number in top-left
                 Text(dayNumber)
                     .font(.system(size: 20, weight: .thin, design: .rounded))
-                    .foregroundStyle(isCurrentMonth ? .black : .black.opacity(0.3))
+                    .foregroundStyle(isCurrentMonth
+                        ? ScheduleViewColorPalette.cellTextPrimary
+                        : ScheduleViewColorPalette.cellTextSecondary)
                     .lineLimit(1)
                     .padding(.top, 8)
                     .padding(.leading, 8)
@@ -283,7 +285,7 @@ struct DayView: View {
                 if let symbol = displaySymbol, hasShift {
                     Text(symbol)
                         .font(.system(size: 16, weight: .regular, design: .rounded))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(ScheduleViewColorPalette.cellTextPrimary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.bottom, 4)
@@ -296,7 +298,13 @@ struct DayView: View {
             .background(backgroundColor)
             .overlay(
                 BorderEdges(edges: borderEdges, width: 1)
-                    .fill(Color.black)
+                    .fill(ScheduleViewColorPalette.cellBorder)
+            )
+            .overlay(
+                isToday ?
+                    RoundedRectangle(cornerRadius: 0)
+                        .strokeBorder(ScheduleViewColorPalette.todayBorder, lineWidth: 2)
+                    : nil
             )
             .overlay(
                 isSelected ?
@@ -321,7 +329,7 @@ struct DayView: View {
                     ScheduleViewColorPalette.scheduledShiftBackground.opacity(0.80)
                 }
             } else {
-                Color.white
+                ScheduleViewColorPalette.emptyCellBackground
             }
         }
     }
