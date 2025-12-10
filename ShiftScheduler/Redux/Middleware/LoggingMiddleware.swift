@@ -58,9 +58,16 @@ private func logFeatureState(state: AppState, action: AppAction) {
     case .settings:
         logger.debug("[Settings] Policy: \(state.settings.retentionPolicy.displayName)")
         logger.debug("[Settings] Auto-purge: \(state.settings.autoPurgeEnabled)")
-        
+
         break
-        
+
+    case .sync:
+        logger.debug("[Sync] Status: \(String(describing: state.sync.status))")
+        logger.debug("[Sync] Available: \(state.sync.isAvailable)")
+        logger.debug("[Sync] Pending conflicts: \(state.sync.pendingConflicts.count)")
+
+        break
+
     case .appLifecycle:
         logger.debug("[AppLifecycle] Selected tab: \(String(describing: state.selectedTab))")
         logger.debug("[AppLifecycle] User: \(state.userProfile.displayName)")
@@ -168,7 +175,7 @@ private func condensedActionDescription(for action: AppAction) -> String {
         }
 
     // Other features use default description
-    case .appLifecycle, .settings:
+    case .appLifecycle, .settings, .changeLog, .sync:
         return String(describing: action)
     }
 }

@@ -15,7 +15,9 @@ struct ShiftTypeUpdateCascadeTests {
         ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
     }
     
@@ -390,3 +392,4 @@ struct ShiftTypeUpdateCascadeTests {
         #expect(isShiftTypeSavedFailure, "Should dispatch failure when duplicate symbol detected")
     }
 }
+

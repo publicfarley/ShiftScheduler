@@ -6,9 +6,11 @@ import Foundation
 public final class ServiceContainer {
     // MARK: - Stored Properties (Lazy Initialized Services)
 
-    private lazy var _calendarService: CalendarServiceProtocol = CalendarService()
-    private lazy var _persistenceService: PersistenceServiceProtocol = PersistenceService()
-    private lazy var _currentDayService: CurrentDayServiceProtocol = CurrentDayService()
+    private var _calendarService: CalendarServiceProtocol
+    private var _persistenceService: PersistenceServiceProtocol
+    private var _currentDayService: CurrentDayServiceProtocol
+    private var _conflictResolutionService: ConflictResolutionServiceProtocol
+    private var _syncService: SyncServiceProtocol
 
     // MARK: - Public Service Accessors
 
@@ -27,20 +29,44 @@ public final class ServiceContainer {
         _currentDayService
     }
 
+    /// Get the conflict resolution service instance
+    var conflictResolutionService: ConflictResolutionServiceProtocol {
+        _conflictResolutionService
+    }
+
+    /// Get the sync service instance
+    var syncService: SyncServiceProtocol {
+        _syncService
+    }
+
 
     // MARK: - Initialization
 
     /// Create a new service container with production services
-    init() {}
+    init() {
+        self._calendarService = CalendarService()
+        self._persistenceService = PersistenceService()
+        self._currentDayService = CurrentDayService()
+        self._conflictResolutionService = ConflictResolutionService()
+        self._syncService = CloudKitSyncService(
+            persistenceService: self._persistenceService,
+            conflictResolutionService: self._conflictResolutionService
+        )
+    }
 
     /// Create a service container with custom services (for testing)
     init(
         calendarService: CalendarServiceProtocol,
         persistenceService: PersistenceServiceProtocol,
-        currentDayService: CurrentDayServiceProtocol) {
+        currentDayService: CurrentDayServiceProtocol,
+        conflictResolutionService: ConflictResolutionServiceProtocol,
+        syncService: SyncServiceProtocol
+    ) {
         self._calendarService = calendarService
         self._persistenceService = persistenceService
         self._currentDayService = currentDayService
+        self._conflictResolutionService = conflictResolutionService
+        self._syncService = syncService
     }
 
     // MARK: - Test Helpers
@@ -50,11 +76,15 @@ public final class ServiceContainer {
         let calendarService = MockCalendarService()
         let persistenceService = MockPersistenceService()
         let currentDayService = MockCurrentDayService()
+        let conflictResolutionService = ConflictResolutionService()
+        let syncService = MockSyncService()
 
         return ServiceContainer(
             calendarService: calendarService,
             persistenceService: persistenceService,
-            currentDayService: currentDayService
+            currentDayService: currentDayService,
+            conflictResolutionService: conflictResolutionService,
+            syncService: syncService
         )
     }
 
@@ -64,17 +94,24 @@ public final class ServiceContainer {
         mockCalendar: Bool = false,
         mockPersistence: Bool = false,
         mockCurrentDay: Bool = false,
-        mockShiftSwitch: Bool = false
+        mockShiftSwitch: Bool = false,
+        mockSync: Bool = false
     ) -> ServiceContainer {
         let calendarService: CalendarServiceProtocol = mockCalendar ? MockCalendarService() : CalendarService()
         let persistenceService: PersistenceServiceProtocol = mockPersistence ? MockPersistenceService() : PersistenceService()
         let currentDayService: CurrentDayServiceProtocol = mockCurrentDay ? MockCurrentDayService() : CurrentDayService()
-
+        let conflictResolutionService: ConflictResolutionServiceProtocol = ConflictResolutionService()
+        let syncService: SyncServiceProtocol = mockSync ? MockSyncService() : CloudKitSyncService(
+            persistenceService: persistenceService,
+            conflictResolutionService: conflictResolutionService
+        )
 
         return ServiceContainer(
             calendarService: calendarService,
             persistenceService: persistenceService,
-            currentDayService: currentDayService
+            currentDayService: currentDayService,
+            conflictResolutionService: conflictResolutionService,
+            syncService: syncService
         )
     }
 }

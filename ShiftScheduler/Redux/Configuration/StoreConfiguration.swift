@@ -5,6 +5,7 @@ import Foundation
 /// Core middlewares used by the Store (without startup initialization)
 let baseMiddlewares: [Middleware<AppState, AppAction>] = [
     loggingMiddleware,
+    syncMiddleware,
     scheduleMiddleware,
     todayMiddleware,
     locationsMiddleware,
@@ -17,6 +18,7 @@ let baseMiddlewares: [Middleware<AppState, AppAction>] = [
 let productionMiddlewares: [Middleware<AppState, AppAction>] = [
     loggingMiddleware,
     appStartupMiddleware,
+    syncMiddleware,
     scheduleMiddleware,
     todayMiddleware,
     locationsMiddleware,

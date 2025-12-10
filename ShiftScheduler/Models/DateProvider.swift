@@ -1,14 +1,14 @@
 import Foundation
 
 /// Abstraction for date/time operations to enable unit testing with fixed dates
-struct DateProvider: Sendable {
-    let referenceDate: Date
+public struct DateProvider: Sendable {
+    public let referenceDate: Date
     
-    init(referenceDate: Date) {
+    public init(referenceDate: Date) {
         self.referenceDate = referenceDate
     }
     
-    init?(
+    public init?(
         year: Int,
         month: Int,
         day: Int,
@@ -28,15 +28,15 @@ struct DateProvider: Sendable {
     }
 
 
-    var currentDay: Date {
+    public var currentDay: Date {
         referenceDate
     }
     
-    var previousDay: Date? {
+    public var previousDay: Date? {
         Calendar.current.date(byAdding: .day, value: -1, to: currentDay)
     }
     
-    var nextDay: Date? {
+    public var nextDay: Date? {
         Calendar.current.date(byAdding: .day, value: 1, to: currentDay)
     }
 }

@@ -24,7 +24,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch onAppear action
@@ -59,7 +61,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch onAppear action
@@ -103,7 +107,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch verification action
@@ -135,7 +141,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch verification action
@@ -167,7 +175,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch request action
@@ -199,7 +209,9 @@ struct AppStartupMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // Dispatch request action
@@ -215,3 +227,4 @@ struct AppStartupMiddlewareTests {
         }
     }
 }
+

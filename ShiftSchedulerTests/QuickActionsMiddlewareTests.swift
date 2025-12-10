@@ -19,7 +19,9 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -41,24 +43,24 @@ struct QuickActionsMiddlewareTests {
             )
         )
         
-        await store.dispatch(action: .schedule(.loadShifts))
-        
+        await store.dispatch(action: AppAction.schedule(.loadShifts))
+
         #expect(
             store.state.schedule.scheduledShifts.contains(
                 where: { $0.notes == addedShiftNote }
             )
         )
-        
+
         let addedShift = try #require(
             store.state.schedule.scheduledShifts.first(
                 where: { $0.notes == addedShiftNote }
             )
         )
 
-        await store.dispatch(action: .today(.deleteShiftRequested(addedShift)))
-        await store.dispatch(action: .today(.deleteShiftConfirmed))
-        
-        await store.dispatch(action: .schedule(.loadShifts))
+        await store.dispatch(action: AppAction.today(.deleteShiftRequested(addedShift)))
+        await store.dispatch(action: AppAction.today(.deleteShiftConfirmed))
+
+        await store.dispatch(action: AppAction.schedule(.loadShifts))
         
         let removedShift =
             store.state.schedule.scheduledShifts.first(
@@ -73,7 +75,9 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let state = makeAppState()
@@ -87,7 +91,7 @@ struct QuickActionsMiddlewareTests {
         )
 
         // When
-        await store.dispatch(action: .today(.deleteShiftConfirmed))
+        await store.dispatch(action: AppAction.today(.deleteShiftConfirmed))
 
         // Then - No actions should be dispatched when there's no shift to delete
         // The state should remain empty (no side effects should occur)
@@ -103,7 +107,9 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         var state = makeAppStateWithShift(testShift)
@@ -117,7 +123,7 @@ struct QuickActionsMiddlewareTests {
         )
 
         // When
-        await store.dispatch(action: .today(.deleteShiftConfirmed))
+        await store.dispatch(action: AppAction.today(.deleteShiftConfirmed))
 
         // Then - Verify a change log entry was created (check mock persistence)
         let savedEntries = mockPersistence.mockChangeLogEntries
@@ -135,7 +141,9 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         var state = makeAppStateWithShift(testShift)
@@ -164,7 +172,7 @@ struct QuickActionsMiddlewareTests {
         )
 
         // When
-        await store.dispatch(action: .today(.editNotesSheetToggled(false)))
+        await store.dispatch(action: AppAction.today(.editNotesSheetToggled(false)))
 
         // Then - Notes should be persisted (no error actions dispatched)
         #expect(!didDispatchLoadFailure)
@@ -175,7 +183,9 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let state = makeAppState()
@@ -188,7 +198,7 @@ struct QuickActionsMiddlewareTests {
         )
 
         // When
-        await store.dispatch(action: .today(.editNotesSheetToggled(true)))
+        await store.dispatch(action: AppAction.today(.editNotesSheetToggled(true)))
 
         // Then - No persistence actions should be dispatched (sheet opening should not trigger persistence)
         // Verify the sheet state is updated but no side effects occurred

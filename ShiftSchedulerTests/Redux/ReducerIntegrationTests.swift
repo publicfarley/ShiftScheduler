@@ -58,7 +58,7 @@ struct ReducerIntegrationTests {
         )
 
         // When - dispatch lifecycle action
-        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(AppTab.schedule)))
+        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
 
         // Then - state updated
         #expect(store.state.selectedTab == .schedule)
@@ -99,6 +99,7 @@ struct ReducerIntegrationTests {
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
             currentDayService: MockCurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
             syncService: MockSyncService()
         )
 
@@ -110,7 +111,7 @@ struct ReducerIntegrationTests {
         )
 
         // When
-        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(AppTab.schedule)))
+        await store.dispatch(action: AppAction.appLifecycle(.tabSelected(.schedule)))
 
         // Then - middleware used the services
         #expect(store.state.selectedTab == .schedule)

@@ -23,7 +23,9 @@ struct MiddlewareErrorHandlingTests {
         return ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
     }
 
@@ -98,7 +100,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -122,7 +126,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -151,7 +157,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -178,7 +186,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -292,7 +302,9 @@ struct MiddlewareErrorHandlingTests {
         let recoveringServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         // First with failing services
@@ -358,7 +370,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -392,7 +406,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -422,7 +438,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -450,7 +468,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -487,7 +507,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -513,7 +535,9 @@ struct MiddlewareErrorHandlingTests {
         let services = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let store = Store(
@@ -530,3 +554,4 @@ struct MiddlewareErrorHandlingTests {
         #expect(store.state.initializationError != nil)
     }
 }
+

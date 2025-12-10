@@ -28,6 +28,9 @@ func appReducer(state: AppState, action: AppAction) -> AppState {
 
     case .settings(let action):
         state.settings = settingsReducer(state: state.settings, action: action)
+
+    case .sync(let action):
+        state.sync = syncReducer(state: state.sync, action: action)
     }
 
     return state
@@ -884,6 +887,72 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
 
     case .toastMessageCleared:
         state.toastMessage = nil
+    }
+
+    return state
+}
+
+// MARK: - Sync Reducer
+
+/// Handles CloudKit synchronization actions
+func syncReducer(state: SyncState, action: SyncAction) -> SyncState {
+    var state = state
+
+    switch action {
+    case .checkAvailability:
+        // Handled by middleware
+        break
+
+    case .availabilityChecked(let isAvailable):
+        state.isAvailable = isAvailable
+        if !isAvailable {
+            state.status = .notConfigured
+        }
+
+    case .performFullSync, .uploadChanges, .downloadChanges:
+        state.isSyncing = true
+        state.errorMessage = nil
+
+    case .syncCompleted:
+        state.isSyncing = false
+        state.status = .synced
+        state.lastSyncDate = Date()
+        state.errorMessage = nil
+
+    case .syncFailed(let error):
+        state.isSyncing = false
+        state.status = .error(error)
+        state.errorMessage = error
+
+    case .statusUpdated(let status):
+        state.status = status
+        state.isSyncing = (status == .syncing)
+
+    case .conflictDetected(let conflict):
+        if !state.pendingConflicts.contains(where: { $0.id == conflict.id }) {
+            state.pendingConflicts.append(conflict)
+        }
+
+    case .resolveConflict:
+        // Handled by middleware
+        break
+
+    case .conflictResolved(let conflictId):
+        state.pendingConflicts.removeAll { $0.id == conflictId }
+
+    case .showConflictResolution:
+        state.showConflictResolution = true
+
+    case .hideConflictResolution:
+        state.showConflictResolution = false
+
+    case .clearAllConflicts:
+        state.pendingConflicts.removeAll()
+        state.showConflictResolution = false
+
+    case .resetSyncState:
+        // Handled by middleware
+        state = SyncState() // Reset to initial state
     }
 
     return state

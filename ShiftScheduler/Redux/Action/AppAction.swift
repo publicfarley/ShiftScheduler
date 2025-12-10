@@ -23,6 +23,9 @@ enum AppAction: Equatable {
     /// Settings feature actions
     case settings(SettingsAction)
 
+    /// Sync feature actions
+    case sync(SyncAction)
+
     static func == (lhs: AppAction, rhs: AppAction) -> Bool {
         switch (lhs, rhs) {
         case (.appLifecycle(let a), .appLifecycle(let b)):
@@ -38,6 +41,8 @@ enum AppAction: Equatable {
         case (.changeLog(let a), .changeLog(let b)):
             return a == b
         case (.settings(let a), .settings(let b)):
+            return a == b
+        case (.sync(let a), .sync(let b)):
             return a == b
         default:
             return false
@@ -878,6 +883,93 @@ enum SettingsAction: Equatable {
                 return false
             }
         case (.toastMessageCleared, .toastMessageCleared):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+// MARK: - Sync Actions
+
+/// Actions for CloudKit synchronization feature
+enum SyncAction: Equatable {
+    /// Check if CloudKit is available
+    case checkAvailability
+
+    /// CloudKit availability result
+    case availabilityChecked(Bool)
+
+    /// Start full synchronization
+    case performFullSync
+
+    /// Upload local changes to CloudKit
+    case uploadChanges
+
+    /// Download remote changes from CloudKit
+    case downloadChanges
+
+    /// Sync operation completed successfully
+    case syncCompleted
+
+    /// Sync operation failed
+    case syncFailed(String)
+
+    /// Sync status updated
+    case statusUpdated(SyncStatus)
+
+    /// Conflict detected during sync
+    case conflictDetected(PendingConflict)
+
+    /// User requested conflict resolution
+    case resolveConflict(id: UUID, resolution: ConflictResolution)
+
+    /// Conflict resolved successfully
+    case conflictResolved(UUID)
+
+    /// Show conflict resolution UI
+    case showConflictResolution
+
+    /// Hide conflict resolution UI
+    case hideConflictResolution
+
+    /// Clear all pending conflicts
+    case clearAllConflicts
+
+    /// Reset sync state
+    case resetSyncState
+
+    static func == (lhs: SyncAction, rhs: SyncAction) -> Bool {
+        switch (lhs, rhs) {
+        case (.checkAvailability, .checkAvailability):
+            return true
+        case let (.availabilityChecked(lhs), .availabilityChecked(rhs)):
+            return lhs == rhs
+        case (.performFullSync, .performFullSync):
+            return true
+        case (.uploadChanges, .uploadChanges):
+            return true
+        case (.downloadChanges, .downloadChanges):
+            return true
+        case (.syncCompleted, .syncCompleted):
+            return true
+        case let (.syncFailed(lhs), .syncFailed(rhs)):
+            return lhs == rhs
+        case let (.statusUpdated(lhs), .statusUpdated(rhs)):
+            return lhs == rhs
+        case let (.conflictDetected(lhs), .conflictDetected(rhs)):
+            return lhs == rhs
+        case let (.resolveConflict(lid, lres), .resolveConflict(rid, rres)):
+            return lid == rid && lres == rres
+        case let (.conflictResolved(lhs), .conflictResolved(rhs)):
+            return lhs == rhs
+        case (.showConflictResolution, .showConflictResolution):
+            return true
+        case (.hideConflictResolution, .hideConflictResolution):
+            return true
+        case (.clearAllConflicts, .clearAllConflicts):
+            return true
+        case (.resetSyncState, .resetSyncState):
             return true
         default:
             return false

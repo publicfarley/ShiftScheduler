@@ -46,6 +46,9 @@ struct AppState: Equatable {
 
     /// Settings feature state
     var settings: SettingsState = SettingsState()
+
+    /// Sync feature state
+    var sync: SyncState = SyncState()
 }
 
 // MARK: - Today State
@@ -498,4 +501,30 @@ struct SettingsState: Equatable {
 
     /// Whether changes have been made but not saved
     var hasUnsavedChanges: Bool = false
+}
+
+// MARK: - Sync State
+
+/// State for the Sync feature (CloudKit synchronization)
+struct SyncState: Equatable {
+    /// Current synchronization status
+    var status: SyncStatus = .notConfigured
+
+    /// Whether CloudKit is available
+    var isAvailable: Bool = false
+
+    /// Pending conflicts that need resolution
+    var pendingConflicts: [PendingConflict] = []
+
+    /// Last successful sync timestamp
+    var lastSyncDate: Date? = nil
+
+    /// Whether a sync operation is currently in progress
+    var isSyncing: Bool = false
+
+    /// Error message if sync fails
+    var errorMessage: String? = nil
+
+    /// Whether to show the conflict resolution sheet
+    var showConflictResolution: Bool = false
 }

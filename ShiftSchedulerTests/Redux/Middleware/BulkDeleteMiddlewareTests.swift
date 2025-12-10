@@ -18,7 +18,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -65,7 +67,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -100,7 +104,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -133,7 +139,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -183,7 +191,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         var state = AppState()
@@ -220,7 +230,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -262,7 +274,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -303,7 +317,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -342,7 +358,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()
@@ -383,7 +401,9 @@ struct BulkDeleteMiddlewareTests {
         let services = ServiceContainer(
             calendarService: mockCalendarService,
             persistenceService: mockPersistenceService,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            conflictResolutionService: ConflictResolutionService(),
+            syncService: MockSyncService()
         )
 
         let shiftType = ShiftTypeBuilder.nightShift()

@@ -10,13 +10,21 @@ struct ShiftType: Identifiable, Codable, Equatable, Hashable, Sendable {
     var shiftDescription: String
     var location: Location  // ✅ Non-optional, embedded as aggregate part
 
+    // MARK: - Conflict Resolution Fields
+    /// Timestamp of when this shift type was last synced with CloudKit
+    var lastSyncedAt: Date?
+    /// CloudKit change token for tracking server-side changes
+    var changeToken: String?
+
     init(
         id: UUID = UUID(),
         symbol: String,
         duration: ShiftDuration,
         title: String,
         description: String,
-        location: Location  // ✅ Required parameter
+        location: Location,  // ✅ Required parameter
+        lastSyncedAt: Date? = nil,
+        changeToken: String? = nil
     ) {
         self.id = id
         self.symbol = symbol
@@ -24,6 +32,8 @@ struct ShiftType: Identifiable, Codable, Equatable, Hashable, Sendable {
         self.title = title
         self.shiftDescription = description
         self.location = location
+        self.lastSyncedAt = lastSyncedAt
+        self.changeToken = changeToken
     }
 
     /// Convenience method for updating the location

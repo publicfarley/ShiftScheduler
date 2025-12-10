@@ -15,7 +15,9 @@ struct ChangeLogMiddlewareTests {
         ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
     }
 
@@ -768,3 +770,4 @@ struct ChangeLogMiddlewareTests {
         #expect(mockPersistence.purgeOldChangeLogEntriesCallCount == 1)
     }
 }
+

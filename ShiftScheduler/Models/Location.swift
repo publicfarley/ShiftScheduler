@@ -6,9 +6,23 @@ struct Location: Identifiable, Codable, Equatable, Hashable, Sendable {
     var name: String
     var address: String
 
-    init(id: UUID = UUID(), name: String, address: String) {
+    // MARK: - Conflict Resolution Fields
+    /// Timestamp of when this location was last synced with CloudKit
+    var lastSyncedAt: Date?
+    /// CloudKit change token for tracking server-side changes
+    var changeToken: String?
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        address: String,
+        lastSyncedAt: Date? = nil,
+        changeToken: String? = nil
+    ) {
         self.id = id
         self.name = name
         self.address = address
+        self.lastSyncedAt = lastSyncedAt
+        self.changeToken = changeToken
     }
 }

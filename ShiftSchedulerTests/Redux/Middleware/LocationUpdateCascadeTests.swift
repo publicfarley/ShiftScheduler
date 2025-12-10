@@ -15,7 +15,9 @@ struct LocationUpdateCascadeTests {
         ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            conflictResolutionService: MockConflictResolutionService(),
+            syncService: MockSyncService()
         )
     }
 
@@ -276,3 +278,4 @@ struct LocationUpdateCascadeTests {
         #expect(isShiftTypesRefreshed)
     }
 }
+
