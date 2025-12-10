@@ -248,9 +248,11 @@ struct PersistenceServiceUnitTests {
     func testPurgeOldChangeLogEntriesRemovesOldEntries() async throws {
         // Given
         let mockService = Self.createMockService()
+        let dateProvider = try #require(DateProvider(year: 2025, month: 12, day: 9))
+        let today = dateProvider.currentDay
 
-        // Create entry from 60 days ago
-        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -60, to: Date()))
+        // Create entry from 60 days ago (should be purged)
+        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -60, to: today))
         let oldEntry = ChangeLogEntry(
             id: UUID(),
             timestamp: oldDate,
@@ -263,15 +265,26 @@ struct PersistenceServiceUnitTests {
             reason: "Old change"
         )
 
-        // Create recent entry
-        let recentEntry = try Self.createTestChangeLogEntry()
+        // Create recent entry from 15 days ago (should NOT be purged)
+        let recentDate = try #require(Calendar.current.date(byAdding: .day, value: -15, to: today))
+        let recentEntry = ChangeLogEntry(
+            id: UUID(),
+            timestamp: recentDate,
+            userId: UUID(),
+            userDisplayName: "Recent User",
+            changeType: .switched,
+            scheduledShiftDate: recentDate,
+            oldShiftSnapshot: nil,
+            newShiftSnapshot: nil,
+            reason: "Recent change"
+        )
 
         try await mockService.addChangeLogEntry(oldEntry)
         try await mockService.addChangeLogEntry(recentEntry)
         #expect(mockService.mockChangeLogEntries.count == 2)
 
         // When - Purge entries older than 30 days
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        let cutoffDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: today))
         let purgedCount = try await mockService.purgeOldChangeLogEntries(olderThan: cutoffDate)
 
         // Then
