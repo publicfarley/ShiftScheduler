@@ -170,8 +170,8 @@ struct LocationDetailRow: View {
             }
 
             LabeledContent("Address") {
-                Text(location.address ?? "No address")
-                    .foregroundStyle(location.address == nil ? .secondary : .primary)
+                Text(location.address)
+                    .foregroundStyle(.primary)
             }
 
             if let syncDate = location.lastSyncedAt {

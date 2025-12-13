@@ -307,16 +307,12 @@ actor CloudKitSyncService: SyncServiceProtocol {
         for (index, batch) in batches.enumerated() {
             logger.debug("Uploading batch \(index + 1)/\(batches.count) with \(batch.count) records")
 
-            do {
-                let operation = CKModifyRecordsOperation(recordsToSave: batch)
-                operation.savePolicy = .changedKeys
-                operation.qualityOfService = .userInitiated
+            let operation = CKModifyRecordsOperation(recordsToSave: batch)
+            operation.savePolicy = .changedKeys
+            operation.qualityOfService = .userInitiated
 
-                try await database.add(operation)
-                logger.debug("Batch \(index + 1) uploaded successfully")
-            } catch let error as CKError {
-                throw handleCloudKitError(error)
-            }
+            database.add(operation)
+            logger.debug("Batch \(index + 1) uploaded successfully")
         }
     }
 

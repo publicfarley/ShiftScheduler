@@ -175,7 +175,7 @@ private func condensedActionDescription(for action: AppAction) -> String {
         }
 
     // Other features use default description
-    case .appLifecycle, .settings, .changeLog, .sync:
+    case .appLifecycle, .settings, .sync:
         return String(describing: action)
     }
 }
