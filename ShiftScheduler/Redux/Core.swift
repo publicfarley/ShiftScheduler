@@ -27,7 +27,7 @@ public final class Store<State: Sendable, Action: Sendable> {
 
     private let reducer: Reducer<State, Action>
     private let middlewares: [Middleware<State, Action>]
-    private let services: ServiceContainer
+    public let services: ServiceContainer
 
     public init(
         state: State,

@@ -46,6 +46,9 @@ struct ShiftSchedulerApp: App {
                 } else {
                     ContentView(reduxStore: reduxStore)
                         .task {
+                            // Set up time change observer
+                            await setupTimeChangeObserver()
+
                             // Run purge when the app becomes active
                             await performBackgroundTasks()
                         }
@@ -53,6 +56,30 @@ struct ShiftSchedulerApp: App {
                 }
             }
         }
+    }
+
+    // MARK: - Time Change Observer Setup
+
+    @MainActor
+    private func setupTimeChangeObserver() async {
+        logger.debug("Setting up time change observer")
+
+        // Get the time change service from the service container
+        let timeChangeService = reduxStore.services.timeChangeService
+
+        // Start observing time changes
+        timeChangeService.startObserving { [weak reduxStore] in
+            guard let reduxStore = reduxStore else { return }
+
+            logger.debug("Time change detected - dispatching significantTimeChange action")
+
+            // Dispatch action to Redux to refresh Today and Schedule views
+            Task { @MainActor in
+                await reduxStore.dispatch(action: .appLifecycle(.significantTimeChange))
+            }
+        }
+
+        logger.debug("Time change observer started successfully")
     }
 
     // MARK: - Background Tasks

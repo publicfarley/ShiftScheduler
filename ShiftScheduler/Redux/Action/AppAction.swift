@@ -82,11 +82,14 @@ enum AppLifecycleAction: Equatable {
     /// Initial data loading completed
     case initializationComplete(Result<Void, Error>)
 
+    /// Significant time change occurred (midnight crossing, time zone change, etc.)
+    case significantTimeChange
+
     static func == (lhs: AppLifecycleAction, rhs: AppLifecycleAction) -> Bool {
         switch (lhs, rhs) {
         case (.onAppAppear, .onAppAppear), (.verifyCalendarAccessOnStartup, .verifyCalendarAccessOnStartup),
              (.requestCalendarAccess, .requestCalendarAccess), (.loadInitialData, .loadInitialData),
-             (.profileLoaded, .profileLoaded):
+             (.profileLoaded, .profileLoaded), (.significantTimeChange, .significantTimeChange):
             return true
         case let (.tabSelected(a), .tabSelected(b)):
             return a == b

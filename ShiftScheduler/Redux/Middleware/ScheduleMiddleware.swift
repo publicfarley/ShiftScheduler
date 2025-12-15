@@ -5,12 +5,20 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "Sc
 
 /// Middleware for Schedule feature side effects
 /// Handles calendar operations, shift loading, and shift switching
+/// Also handles significant time changes (midnight crossing) to refresh the schedule
 func scheduleMiddleware(
     state: AppState,
     action: AppAction,
     services: ServiceContainer,
     dispatch: @escaping Dispatcher<AppAction>
 ) async {
+    // Handle significant time changes to refresh Schedule view
+    if case .appLifecycle(.significantTimeChange) = action {
+        logger.debug("Significant time change detected - refreshing Schedule view")
+        await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
+        return
+    }
+
     guard case .schedule(let scheduleAction) = action else { return }
 
     switch scheduleAction {

@@ -89,6 +89,10 @@ func appLifecycleReducer(state: AppState, action: AppLifecycleAction) -> AppStat
         // Don't mark as complete on failure - prevents app startup
         state.isInitializationComplete = false
         state.initializationError = error.localizedDescription
+
+    case .significantTimeChange:
+        // Middleware will handle refreshing Today and Schedule views
+        break
     }
 
     return state

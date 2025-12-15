@@ -9,6 +9,7 @@ public final class ServiceContainer {
     private lazy var _calendarService: CalendarServiceProtocol = CalendarService()
     private lazy var _persistenceService: PersistenceServiceProtocol = PersistenceService()
     private lazy var _currentDayService: CurrentDayServiceProtocol = CurrentDayService()
+    private lazy var _timeChangeService: TimeChangeServiceProtocol = TimeChangeService()
 
     // MARK: - Public Service Accessors
 
@@ -27,6 +28,10 @@ public final class ServiceContainer {
         _currentDayService
     }
 
+    /// Get the time change service instance
+    var timeChangeService: TimeChangeServiceProtocol {
+        _timeChangeService
+    }
 
     // MARK: - Initialization
 
@@ -37,10 +42,12 @@ public final class ServiceContainer {
     init(
         calendarService: CalendarServiceProtocol,
         persistenceService: PersistenceServiceProtocol,
-        currentDayService: CurrentDayServiceProtocol) {
+        currentDayService: CurrentDayServiceProtocol,
+        timeChangeService: TimeChangeServiceProtocol) {
         self._calendarService = calendarService
         self._persistenceService = persistenceService
         self._currentDayService = currentDayService
+        self._timeChangeService = timeChangeService
     }
 
     // MARK: - Test Helpers
@@ -50,11 +57,13 @@ public final class ServiceContainer {
         let calendarService = MockCalendarService()
         let persistenceService = MockPersistenceService()
         let currentDayService = MockCurrentDayService()
+        let timeChangeService = MockTimeChangeService()
 
         return ServiceContainer(
             calendarService: calendarService,
             persistenceService: persistenceService,
-            currentDayService: currentDayService
+            currentDayService: currentDayService,
+            timeChangeService: timeChangeService
         )
     }
 
@@ -64,17 +73,19 @@ public final class ServiceContainer {
         mockCalendar: Bool = false,
         mockPersistence: Bool = false,
         mockCurrentDay: Bool = false,
-        mockShiftSwitch: Bool = false
+        mockShiftSwitch: Bool = false,
+        mockTimeChange: Bool = false
     ) -> ServiceContainer {
         let calendarService: CalendarServiceProtocol = mockCalendar ? MockCalendarService() : CalendarService()
         let persistenceService: PersistenceServiceProtocol = mockPersistence ? MockPersistenceService() : PersistenceService()
         let currentDayService: CurrentDayServiceProtocol = mockCurrentDay ? MockCurrentDayService() : CurrentDayService()
-
+        let timeChangeService: TimeChangeServiceProtocol = mockTimeChange ? MockTimeChangeService() : TimeChangeService()
 
         return ServiceContainer(
             calendarService: calendarService,
             persistenceService: persistenceService,
-            currentDayService: currentDayService
+            currentDayService: currentDayService,
+            timeChangeService: timeChangeService
         )
     }
 }

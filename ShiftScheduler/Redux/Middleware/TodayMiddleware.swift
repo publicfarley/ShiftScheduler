@@ -5,12 +5,20 @@ private let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "To
 
 /// Middleware for Today feature side effects
 /// Handles shift loading, caching, and shift switching for today view
+/// Also handles significant time changes (midnight crossing) to refresh the current day
 func todayMiddleware(
     state: AppState,
     action: AppAction,
     services: ServiceContainer,
     dispatch: Dispatcher<AppAction>,
 ) async {
+    // Handle significant time changes to refresh Today view
+    if case .appLifecycle(.significantTimeChange) = action {
+        logger.debug("Significant time change detected - refreshing Today view")
+        await dispatch(.today(.loadShifts))
+        return
+    }
+
     guard case .today(let todayAction) = action else { return }
 
     switch todayAction {
