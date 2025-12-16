@@ -18,7 +18,8 @@ struct ReducerIntegrationTests {
         return ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
     }
 
@@ -96,7 +97,8 @@ struct ReducerIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -145,7 +147,8 @@ struct ReducerIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: errorMockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(

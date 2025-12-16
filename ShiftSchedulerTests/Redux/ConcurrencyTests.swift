@@ -18,7 +18,8 @@ struct ConcurrencyTests {
         return ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
     }
 

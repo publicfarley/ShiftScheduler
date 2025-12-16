@@ -180,7 +180,8 @@ struct OverlapResolutionSheet: View {
         services: ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         ),
         middlewares: []
     ))

@@ -15,7 +15,7 @@ func scheduleMiddleware(
     // Handle significant time changes to refresh Schedule view
     if case .appLifecycle(.significantTimeChange) = action {
         logger.debug("Significant time change detected - refreshing Schedule view")
-        await dispatch(.schedule(.loadShiftsAroundMonth(state.schedule.displayedMonth, monthOffset: 6)))
+        await dispatch(.schedule(.loadShifts))
         return
     }
 

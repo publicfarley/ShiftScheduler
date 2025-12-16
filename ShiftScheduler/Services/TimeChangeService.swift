@@ -28,7 +28,7 @@ final class TimeChangeService: TimeChangeServiceProtocol, @unchecked Sendable {
         // Listen for significant time change notifications from iOS
         cancellable = NotificationCenter.default
             .publisher(for: UIApplication.significantTimeChangeNotification)
-            .sink { [weak self] _ in
+            .sink { _ in
                 Task { @MainActor in
                     print("[TimeChangeService] Significant time change detected")
                     onTimeChange()

@@ -13,13 +13,14 @@ struct QuickActionsMiddlewareTests {
 
     @Test
     func deleteShiftSuccessfully() async throws {
-        
+
         let mockCalendar = MockCalendarService()
         mockCalendar.mockIsAuthorized = true
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -73,7 +74,8 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let state = makeAppState()
@@ -103,7 +105,8 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = makeAppStateWithShift(testShift)
@@ -135,7 +138,8 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = makeAppStateWithShift(testShift)
@@ -175,7 +179,8 @@ struct QuickActionsMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: MockCurrentDayService()
+            currentDayService: MockCurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let state = makeAppState()

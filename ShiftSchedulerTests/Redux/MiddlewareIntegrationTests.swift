@@ -18,7 +18,8 @@ struct MiddlewareIntegrationTests {
         return ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
     }
 
@@ -32,7 +33,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -58,7 +60,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -84,7 +87,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -112,7 +116,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -152,7 +157,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -250,7 +256,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -287,7 +294,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -321,7 +329,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(
@@ -351,7 +360,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var initialState = AppState()
@@ -405,7 +415,8 @@ struct MiddlewareIntegrationTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         let store = Store(

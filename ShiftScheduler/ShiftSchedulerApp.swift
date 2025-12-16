@@ -71,10 +71,9 @@ struct ShiftSchedulerApp: App {
         timeChangeService.startObserving { [weak reduxStore] in
             guard let reduxStore = reduxStore else { return }
 
-            logger.debug("Time change detected - dispatching significantTimeChange action")
-
             // Dispatch action to Redux to refresh Today and Schedule views
             Task { @MainActor in
+                logger.debug("Time change detected - dispatching significantTimeChange action")
                 await reduxStore.dispatch(action: .appLifecycle(.significantTimeChange))
             }
         }

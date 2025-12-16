@@ -15,7 +15,8 @@ struct LocationUpdateCascadeTests {
         ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
     }
 

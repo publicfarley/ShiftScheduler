@@ -33,7 +33,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -82,7 +83,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -122,7 +124,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -172,7 +175,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -212,7 +216,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: MockCalendarService(),
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -264,7 +269,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -317,7 +323,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: MockPersistenceService(),
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()
@@ -362,7 +369,8 @@ struct BulkAddMiddlewareTests {
         let mockServices = ServiceContainer(
             calendarService: mockCalendar,
             persistenceService: mockPersistence,
-            currentDayService: CurrentDayService()
+            currentDayService: CurrentDayService(),
+            timeChangeService: MockTimeChangeService()
         )
 
         var state = AppState()

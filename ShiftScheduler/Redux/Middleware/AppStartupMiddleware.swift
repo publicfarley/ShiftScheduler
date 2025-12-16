@@ -102,7 +102,7 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
             logger.error("Failed to persist user profile after name change: \(error.localizedDescription)")
         }
 
-    case .tabSelected, .userProfileUpdated, .profileLoaded:
+    case .tabSelected, .userProfileUpdated, .profileLoaded, .significantTimeChange:
         // Not handled by this middleware
         break
     }

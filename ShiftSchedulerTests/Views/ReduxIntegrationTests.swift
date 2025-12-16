@@ -15,7 +15,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -33,7 +38,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: customState,
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -48,7 +58,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -64,7 +79,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -80,7 +100,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -98,7 +123,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -116,7 +146,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -134,7 +169,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -157,7 +197,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -186,7 +231,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -211,7 +261,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
@@ -245,7 +300,12 @@ struct ViewReduxIntegrationTests {
         let store = Store(
             state: AppState(),
             reducer: appReducer,
-            services: ServiceContainer(),
+            services: ServiceContainer(
+                calendarService: MockCalendarService(),
+                persistenceService: MockPersistenceService(),
+                currentDayService: MockCurrentDayService(),
+                timeChangeService: MockTimeChangeService()
+            ),
             middlewares: []
         )
 
