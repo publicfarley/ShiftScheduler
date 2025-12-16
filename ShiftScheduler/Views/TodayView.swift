@@ -476,7 +476,7 @@ struct TodayView: View {
                                                     )
 
                                                 VStack(alignment: .leading, spacing: 2) {
-                                                    Text("Next 7 Days")
+                                                    Text("7 Day Outlook")
                                                         .font(.subheadline)
                                                         .fontWeight(.semibold)
                                                         .foregroundColor(.primary)
