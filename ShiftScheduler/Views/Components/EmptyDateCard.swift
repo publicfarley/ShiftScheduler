@@ -8,6 +8,7 @@ struct EmptyDateCard: View {
     let isCurrentMonth: Bool
     let borderEdges: Edge.Set
     let onTap: () -> Void
+    let assignedShiftSymbol: String? = nil  // Shift symbol to display as overlay in bulk add mode
 
     private var dayNumber: String {
         let formatter = DateFormatter()
@@ -24,30 +25,47 @@ struct EmptyDateCard: View {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             onTap()
         }) {
-            VStack(alignment: .leading, spacing: 0) {
-                // Day number in top-left
-                Text(dayNumber)
-                    .font(.system(size: 20, weight: .thin, design: .rounded))
-                    .foregroundStyle(isCurrentMonth
-                        ? ScheduleViewColorPalette.cellTextPrimary
-                        : ScheduleViewColorPalette.cellTextSecondary)
-                    .lineLimit(1)
-                    .padding(.top, 8)
-                    .padding(.leading, 8)
+            ZStack {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Day number in top-left
+                    Text(dayNumber)
+                        .font(.system(size: 20, weight: .thin, design: .rounded))
+                        .foregroundStyle(isCurrentMonth
+                            ? ScheduleViewColorPalette.cellTextPrimary
+                            : ScheduleViewColorPalette.cellTextSecondary)
+                        .lineLimit(1)
+                        .padding(.top, 8)
+                        .padding(.leading, 8)
 
-                Spacer(minLength: 0)
+                    Spacer(minLength: 0)
 
-                // Checkmark indicator centered at bottom when selected
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(ScheduleViewColorPalette.selectedDateBorder)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 4)
+                    // Checkmark indicator centered at bottom when selected
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(ScheduleViewColorPalette.selectedDateBorder)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 4)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(height: CustomCalendarView.cellHeight)
+
+                // Shift symbol overlay (when assigned in bulk add mode)
+                if let symbol = assignedShiftSymbol {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text(symbol)
+                                .font(.system(size: 32, weight: .semibold))
+                                .opacity(0.7)
+                            Spacer()
+                        }
+                        Spacer()
+                    }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(height: CustomCalendarView.cellHeight)
             .fixedSize(horizontal: false, vertical: true)
             .clipped()
             .background(backgroundColor)

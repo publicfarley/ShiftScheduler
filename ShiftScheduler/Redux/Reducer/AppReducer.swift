@@ -623,6 +623,32 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
 
     case .clearSelectedDates:
         state.selectedDates.removeAll()
+
+    // MARK: - Bulk Add Mode Actions
+
+    case .bulkAddModeChanged(let newMode):
+        state.bulkAddMode = newMode
+        // Clear assignments when switching modes
+        state.dateShiftAssignments.removeAll()
+        state.lastAssignedShiftType = nil
+
+    case .assignShiftToDate(let date, let shiftType):
+        let normalizedDate = Calendar.current.startOfDay(for: date)
+        state.dateShiftAssignments[normalizedDate] = shiftType
+        state.lastAssignedShiftType = shiftType
+
+    case .removeShiftAssignment(let date):
+        let normalizedDate = Calendar.current.startOfDay(for: date)
+        state.dateShiftAssignments.removeValue(forKey: normalizedDate)
+
+    case .bulkAddDifferentShiftsConfirmed:
+        state.isAddingToSelectedDates = true
+        state.currentError = nil
+
+    case .switchModeWarningConfirmed(let newMode):
+        state.bulkAddMode = newMode
+        state.dateShiftAssignments.removeAll()
+        state.lastAssignedShiftType = nil
     }
 
     return state

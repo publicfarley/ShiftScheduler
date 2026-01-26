@@ -421,6 +421,23 @@ enum ScheduleAction: Equatable {
     /// Clear all selected dates for bulk add
     case clearSelectedDates
 
+    // MARK: - Bulk Add Mode Actions (Different Shift Per Date)
+
+    /// Change bulk add mode (sameShiftForAll or differentShiftPerDate)
+    case bulkAddModeChanged(BulkAddMode)
+
+    /// Assign a shift type to a specific date in "different shift per date" mode
+    case assignShiftToDate(date: Date, shiftType: ShiftType)
+
+    /// Remove shift assignment for a date
+    case removeShiftAssignment(date: Date)
+
+    /// Confirm bulk add with per-date shift assignments
+    case bulkAddDifferentShiftsConfirmed(assignments: [Date: ShiftType], notes: String?)
+
+    /// User confirmed mode switch (with warning acknowledgment)
+    case switchModeWarningConfirmed(newMode: BulkAddMode)
+
     // MARK: - Sliding Window Actions
 
     /// User navigated to a different month in the calendar view
@@ -575,6 +592,16 @@ enum ScheduleAction: Equatable {
             return Calendar.current.isDate(lhs, inSameDayAs: rhs)
         case (.clearSelectedDates, .clearSelectedDates):
             return true
+        case let (.bulkAddModeChanged(lhs), .bulkAddModeChanged(rhs)):
+            return lhs == rhs
+        case let (.assignShiftToDate(lhsDate, lhsType), .assignShiftToDate(rhsDate, rhsType)):
+            return Calendar.current.isDate(lhsDate, inSameDayAs: rhsDate) && lhsType.id == rhsType.id
+        case let (.removeShiftAssignment(lhs), .removeShiftAssignment(rhs)):
+            return Calendar.current.isDate(lhs, inSameDayAs: rhs)
+        case (.bulkAddDifferentShiftsConfirmed, .bulkAddDifferentShiftsConfirmed):
+            return true
+        case let (.switchModeWarningConfirmed(lhs), .switchModeWarningConfirmed(rhs)):
+            return lhs == rhs
         default:
             return false
         }

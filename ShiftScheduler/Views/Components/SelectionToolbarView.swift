@@ -7,12 +7,28 @@ struct SelectionToolbarView: View {
     let canDelete: Bool
     let isDeleting: Bool
     let selectionMode: SelectionMode?
+    let bulkAddMode: BulkAddMode? = nil  // Optional bulk add mode for more specific text
     let onDelete: () async -> Void
     let onAdd: () -> Void
     let onClear: () -> Void
     let onExit: () -> Void
 
     @State private var isDeletePressed = false
+
+    private var addButtonText: String {
+        guard selectionMode == .add else { return "" }
+
+        if let bulkAddMode = bulkAddMode {
+            switch bulkAddMode {
+            case .sameShiftForAll:
+                return "Add Same Shift to \(selectionCount) Dates"
+            case .differentShiftPerDate:
+                return "Assign Shifts to \(selectionCount) Dates"
+            }
+        }
+
+        return "Add to \(selectionCount) Dates"
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -54,7 +70,7 @@ struct SelectionToolbarView: View {
                             Image(systemName: "plus.circle.fill")
                                 .font(.headline)
 
-                            Text("Add to \(selectionCount) Dates")
+                            Text(addButtonText)
                                 .font(.headline)
                                 .fontWeight(.semibold)
                         }

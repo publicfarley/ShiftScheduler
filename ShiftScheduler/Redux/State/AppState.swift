@@ -251,6 +251,17 @@ struct ScheduleState: Equatable {
     /// Dates selected for bulk add operations (used when in .add selection mode)
     var selectedDates: Set<Date> = []
 
+    // MARK: - Bulk Add Mode State
+
+    /// Mode for bulk add operations
+    var bulkAddMode: BulkAddMode = .sameShiftForAll
+
+    /// Date-to-ShiftType assignments for "different shift per date" mode
+    var dateShiftAssignments: [Date: ShiftType] = [:]
+
+    /// Last assigned shift type (used for "Repeat Last" button)
+    var lastAssignedShiftType: ShiftType? = nil
+
     // MARK: - Computed Properties
 
     /// Undo/redo button states
@@ -350,6 +361,14 @@ struct ScheduleState: Equatable {
 enum SelectionMode: Equatable {
     case delete  // Selecting existing shifts to delete
     case add     // Selecting empty dates to add shifts
+}
+
+// MARK: - BulkAddMode Enum
+
+/// Enum to track mode for bulk add operations
+enum BulkAddMode: Equatable, Sendable {
+    case sameShiftForAll       // Apply same shift type to all selected dates
+    case differentShiftPerDate // Assign different shift type per date
 }
 
 // MARK: - Shift Types State

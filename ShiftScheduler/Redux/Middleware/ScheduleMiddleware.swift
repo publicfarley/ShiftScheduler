@@ -696,5 +696,109 @@ func scheduleMiddleware(
     case .clearSelectedDates:
         // No middleware side effects needed - reducer handles state update
         break
+
+    // MARK: - Bulk Add Mode Actions
+
+    case .bulkAddModeChanged:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .assignShiftToDate:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .removeShiftAssignment:
+        // No middleware side effects needed - reducer handles state update
+        break
+
+    case .bulkAddDifferentShiftsConfirmed(let assignments, let notes):
+        logger.debug("Bulk add different shifts confirmed with \(assignments.count) assignments")
+
+        let userId = state.userProfile.userId
+        let userDisplayName = state.userProfile.displayName
+
+        do {
+            // MARK: - Pre-Validation Phase
+            // Check all assignments for conflicts BEFORE creating ANY shifts
+            var conflicts: [Date: ScheduledShift] = [:]
+
+            for (date, _) in assignments {
+                // Check if any existing shift on this date overlaps with the new shift
+                if let existingShift = state.schedule.scheduledShifts.first(where: { existingShift in
+                    existingShift.occursOn(date: date)
+                }) {
+                    conflicts[date] = existingShift
+                }
+            }
+
+            // If conflicts found, fail early without creating any shifts (all-or-nothing)
+            if !conflicts.isEmpty {
+                logger.warning("Found \(conflicts.count) conflicting shifts during validation")
+                let error = ScheduleError.unknown("Cannot add shifts. \(conflicts.count) dates already have shifts scheduled.")
+                await dispatch(.schedule(.bulkAddCompleted(.failure(error))))
+                return
+            }
+
+            // MARK: - Bulk Create Phase
+            // Validation passed, create all shifts
+            var createdShifts: [ScheduledShift] = []
+            let calendarService = services.calendarService
+            let persistenceService = services.persistenceService
+
+            // Sort by date for consistent ordering
+            let sortedAssignments = assignments.sorted { $0.key < $1.key }
+
+            for (date, shiftType) in sortedAssignments {
+                do {
+                    // Create shift event in calendar (returns shift with EventKit identifier)
+                    let shift = try await calendarService.createShiftEvent(
+                        date: date,
+                        shiftType: shiftType,
+                        notes: notes?.isEmpty ?? true ? nil : notes
+                    )
+                    createdShifts.append(shift)
+                    logger.debug("Created shift: \(shiftType.title) on \(date)")
+
+                    // Create audit trail entry for shift creation
+                    let entry = ChangeLogEntry(
+                        id: UUID(),
+                        timestamp: Date(),
+                        userId: userId,
+                        userDisplayName: userDisplayName,
+                        changeType: .created,
+                        scheduledShiftDate: date,
+                        oldShiftSnapshot: nil,
+                        newShiftSnapshot: ShiftSnapshot(from: shiftType),
+                        reason: notes?.isEmpty ?? true ? nil : notes
+                    )
+
+                    // Persist change log entry
+                    try await persistenceService.addChangeLogEntry(entry)
+                } catch {
+                    // MARK: - Rollback on Error
+                    // If any shift creation fails, we've already created some shifts
+                    // Log this state but don't try to rollback (calendar events are already created)
+                    logger.error("Failed to create shift on \(date): \(error.localizedDescription)")
+
+                    // Dispatch error indicating partial failure
+                    let failureError = ScheduleError.calendarEventCreationFailed(
+                        "Failed to add shift on \(date). \(createdShifts.count) shifts were created before this error."
+                    )
+                    await dispatch(.schedule(.bulkAddCompleted(.failure(failureError))))
+                    return
+                }
+            }
+
+            // MARK: - Success Phase
+            logger.debug("Successfully created \(createdShifts.count) shifts")
+
+            // Dispatch completion with all created shifts
+            await dispatch(.schedule(.bulkAddCompleted(.success(createdShifts))))
+        }
+        // Note: We don't catch here because the do block handles all errors internally
+
+    case .switchModeWarningConfirmed:
+        // No middleware side effects needed - reducer handles state update
+        break
     }
 }
