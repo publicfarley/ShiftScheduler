@@ -592,6 +592,17 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
     case .bulkAddRequested:
         state.showBulkAddSheet = true
 
+    case .bulkAddCancelled:
+        // User cancelled bulk add - close sheet and reset state
+        state.showBulkAddSheet = false
+        state.isInSelectionMode = false
+        state.selectionMode = nil
+        state.selectedDates.removeAll()
+        state.dateShiftAssignments.removeAll()
+        state.bulkAddMode = .sameShiftForAll  // Reset to default mode
+        state.lastAssignedShiftType = nil
+        state.currentError = nil
+
     case .bulkAddConfirmed:
         state.isAddingToSelectedDates = true
         state.currentError = nil

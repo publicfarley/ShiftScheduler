@@ -132,7 +132,11 @@ private struct AssignmentDetailsView: View {
                     .cornerRadius(8)
                     .disabled(!canConfirm)
 
-                    Button(action: { dismiss() }) {
+                    Button(action: {
+                        Task {
+                            await store.dispatch(action: .schedule(.bulkAddCancelled))
+                        }
+                    }) {
                         Text("Cancel")
                             .frame(maxWidth: .infinity)
                             .font(.system(.body, design: .default))

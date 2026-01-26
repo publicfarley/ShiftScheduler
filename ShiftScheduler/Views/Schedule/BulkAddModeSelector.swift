@@ -81,7 +81,11 @@ struct BulkAddModeSelector: View {
                     .disabled(!isModeSelected)
 
                     // Cancel button
-                    Button(action: { dismiss() }) {
+                    Button(action: {
+                        Task {
+                            await store.dispatch(action: .schedule(.bulkAddCancelled))
+                        }
+                    }) {
                         Text("Cancel")
                             .frame(maxWidth: .infinity)
                             .font(.system(.body, design: .default))

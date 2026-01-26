@@ -640,6 +640,10 @@ func scheduleMiddleware(
         // No middleware side effects needed - reducer shows shift type selection sheet
         break
 
+    case .bulkAddCancelled:
+        // No middleware side effects needed - reducer handles state update
+        break
+
     case let .bulkAddConfirmed(shiftType, notes):
         // Create shifts for all selected dates
         let selectedDates = state.schedule.selectedDates

@@ -409,6 +409,9 @@ enum ScheduleAction: Equatable {
     /// Bulk add was requested (user wants to select dates to add shifts)
     case bulkAddRequested
 
+    /// User cancelled the bulk add operation
+    case bulkAddCancelled
+
     /// Bulk add was confirmed with shift type selection
     case bulkAddConfirmed(shiftType: ShiftType, notes: String)
 
@@ -474,7 +477,8 @@ enum ScheduleAction: Equatable {
              (.selectAllVisible, .selectAllVisible),
              (.clearSelection, .clearSelection),
              (.bulkDeleteRequested, .bulkDeleteRequested),
-             (.bulkAddRequested, .bulkAddRequested):
+             (.bulkAddRequested, .bulkAddRequested),
+             (.bulkAddCancelled, .bulkAddCancelled):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs
