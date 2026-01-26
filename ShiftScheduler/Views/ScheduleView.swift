@@ -7,7 +7,6 @@ struct ScheduleView: View {
     @Environment(\.reduxStore) var store
     @State private var listOpacity: Double = 1
     @State private var showBulkDeleteConfirmation = false
-    @State private var showBulkAddSheet = false
 
     var body: some View {
         ZStack {
@@ -157,29 +156,14 @@ struct ScheduleView: View {
             }
         }
         .sheet(
-            isPresented: $showBulkAddSheet,
+            isPresented: .constant(store.state.schedule.showBulkAddSheet),
             onDismiss: {
                 Task {
                     await store.dispatch(action: .schedule(.clearSelectedDates))
                 }
             }
         ) {
-            ShiftTypeSelectionView(
-                isPresented: $showBulkAddSheet,
-                availableShiftTypes: store.state.shiftTypes.shiftTypes,
-                selectedDateCount: store.state.schedule.selectedDates.count,
-                onConfirm: { shiftType, notes in
-                    Task {
-                        await store.dispatch(action: .schedule(.bulkAddConfirmed(shiftType: shiftType, notes: notes)))
-                        showBulkAddSheet = false
-                    }
-                },
-                onDismiss: {
-                    Task {
-                        await store.dispatch(action: .schedule(.clearSelectedDates))
-                    }
-                }
-            )
+            DateShiftAssignmentView()
         }
         .onAppear {
             logger.debug("ScheduleView appeared - selectedDate: \(store.state.schedule.selectedDate.formatted()), shifts count: \(store.state.schedule.scheduledShifts.count), filtered: \(store.state.schedule.filteredShifts.count)")
@@ -261,8 +245,10 @@ struct ScheduleView: View {
                         showBulkDeleteConfirmation = true
                     },
                     onAdd: {
-                        // Show shift type selection sheet for bulk add
-                        showBulkAddSheet = true
+                        // Dispatch bulk add request to show the assignment flow
+                        Task {
+                            await store.dispatch(action: .schedule(.bulkAddRequested))
+                        }
                     },
                     onClear: {
                         Task {
@@ -291,7 +277,6 @@ struct ScheduleView: View {
                         Button(action: {
                             Task {
                                 await store.dispatch(action: .schedule(.enterSelectionMode(mode: .add, firstId: UUID())))
-                                showBulkAddSheet = false  // Reset to prepare for bulk add
                             }
                         }) {
                             Label("Add Multiple Shifts", systemImage: "plus.circle.fill")
