@@ -925,6 +925,52 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
 
     case .toastMessageCleared:
         state.toastMessage = nil
+
+    // MARK: - Shift Export Cases
+
+    case .exportSheetToggled(let show):
+        state.showExportSheet = show
+        // Reset state when opening sheet
+        if show {
+            state.exportStartDate = nil
+            state.exportEndDate = nil
+            state.exportedSymbols = nil
+            state.exportErrorMessage = nil
+        }
+
+    case .exportStartDateChanged(let date):
+        state.exportStartDate = date
+        state.exportErrorMessage = nil
+
+    case .exportEndDateChanged(let date):
+        state.exportEndDate = date
+        state.exportErrorMessage = nil
+
+    case .generateExport:
+        state.isExporting = true
+        state.exportErrorMessage = nil
+        state.exportedSymbols = nil
+
+    case .exportGenerated(let symbols):
+        state.isExporting = false
+        state.exportedSymbols = symbols
+        state.exportErrorMessage = nil
+
+    case .exportFailed(let error):
+        state.isExporting = false
+        state.exportErrorMessage = error
+        state.exportedSymbols = nil
+
+    case .copyToClipboard:
+        // Middleware will handle clipboard operation
+        state.toastMessage = .success("Copied to clipboard")
+
+    case .resetExport:
+        state.exportStartDate = nil
+        state.exportEndDate = nil
+        state.exportedSymbols = nil
+        state.exportErrorMessage = nil
+        state.isExporting = false
     }
 
     return state

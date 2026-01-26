@@ -858,6 +858,32 @@ enum SettingsAction: Equatable {
     /// Clear toast message
     case toastMessageCleared
 
+    // MARK: - Shift Export Actions
+
+    /// Show/hide shift export sheet
+    case exportSheetToggled(Bool)
+
+    /// Export start date changed
+    case exportStartDateChanged(Date?)
+
+    /// Export end date changed
+    case exportEndDateChanged(Date?)
+
+    /// Generate shift export for selected date range
+    case generateExport
+
+    /// Export generated successfully
+    case exportGenerated(String)
+
+    /// Export failed with error
+    case exportFailed(String)
+
+    /// Copy exported symbols to clipboard
+    case copyToClipboard
+
+    /// Reset export state
+    case resetExport
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -913,6 +939,20 @@ enum SettingsAction: Equatable {
             }
         case (.toastMessageCleared, .toastMessageCleared):
             return true
+        case let (.exportSheetToggled(lhs), .exportSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.exportStartDateChanged(lhs), .exportStartDateChanged(rhs)):
+            return lhs == rhs
+        case let (.exportEndDateChanged(lhs), .exportEndDateChanged(rhs)):
+            return lhs == rhs
+        case (.generateExport, .generateExport),
+             (.resetExport, .resetExport),
+             (.copyToClipboard, .copyToClipboard):
+            return true
+        case let (.exportGenerated(lhs), .exportGenerated(rhs)):
+            return lhs == rhs
+        case let (.exportFailed(lhs), .exportFailed(rhs)):
+            return lhs == rhs
         default:
             return false
         }

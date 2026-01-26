@@ -71,6 +71,16 @@ struct SettingsView: View {
                     }
                 }
             ))
+            .sheet(isPresented: Binding(
+                get: { store.state.settings.showExportSheet },
+                set: { newValue in
+                    Task {
+                        await store.dispatch(action: .settings(.exportSheetToggled(newValue)))
+                    }
+                }
+            )) {
+                ShiftExportView()
+            }
         }
     }
 
@@ -153,6 +163,11 @@ struct SettingsView: View {
 
             // Calendar Resync
             calendarResyncSection
+
+            Divider()
+
+            // Shift Export
+            shiftExportSection
         }
     }
 
@@ -411,6 +426,46 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6).opacity(0.3))
+        )
+    }
+
+    // MARK: - Shift Export Section
+
+    private var shiftExportSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "square.and.arrow.down")
+                    .foregroundColor(.blue)
+                Text("Shift Export")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Text("Export shift type symbols for a date range as a space-separated list.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: {
+                Task {
+                    await store.dispatch(action: .settings(.exportSheetToggled(true)))
+                }
+            }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.down")
+                    Text("Export Shifts")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
         }
         .padding(16)
         .background(

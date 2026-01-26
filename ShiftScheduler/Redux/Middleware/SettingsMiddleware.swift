@@ -1,5 +1,6 @@
 import Foundation
 import OSLog
+import UIKit
 
 private nonisolated let logger = Logger(subsystem: "com.shiftscheduler.redux", category: "SettingsMiddleware")
 
@@ -114,8 +115,72 @@ func settingsMiddleware(
             await dispatch(.settings(.resyncCalendarEventsCompleted(.failure(error))))
         }
 
+    // MARK: - Shift Export Actions
+
+    case .generateExport:
+        logger.debug("Generating shift export")
+        guard let startDate = state.settings.exportStartDate,
+              let endDate = state.settings.exportEndDate else {
+            await dispatch(.settings(.exportFailed("Please select both start and end dates")))
+            return
+        }
+
+        // Validate date range
+        guard startDate <= endDate else {
+            await dispatch(.settings(.exportFailed("Start date must be before or equal to end date")))
+            return
+        }
+
+        do {
+            // Load shifts for the date range
+            let shifts = try await services.calendarService.loadShifts(from: startDate, to: endDate)
+
+            // Group shifts by date and extract symbols
+            var dateToSymbols: [(Date, String)] = []
+
+            // Get all dates in the range
+            var currentDate = Calendar.current.startOfDay(for: startDate)
+            let endOfDayEnd = Calendar.current.startOfDay(for: endDate)
+
+            while currentDate <= endOfDayEnd {
+                // Find shifts on this date
+                let shiftsOnDate = shifts.filter { shift in
+                    shift.occursOn(date: currentDate)
+                }.sorted { $0.date < $1.date }
+
+                // Extract symbol (use first shift if multiple, or empty if none)
+                let symbol = shiftsOnDate.first?.shiftType?.symbol ?? ""
+                dateToSymbols.append((currentDate, symbol))
+
+                // Move to next day
+                currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+            }
+
+            // Format as space-separated symbols
+            let symbolsString = dateToSymbols.map { $0.1 }.joined(separator: " ")
+
+            logger.debug("Export generated: \(symbolsString)")
+            await dispatch(.settings(.exportGenerated(symbolsString)))
+        } catch {
+            logger.error("Failed to generate export: \(error.localizedDescription)")
+            await dispatch(.settings(.exportFailed("Failed to load shifts: \(error.localizedDescription)")))
+        }
+
+    case .copyToClipboard:
+        logger.debug("Copying export to clipboard")
+        guard let symbols = state.settings.exportedSymbols else {
+            logger.warning("No exported symbols to copy")
+            return
+        }
+
+        // Copy to clipboard using UIPasteboard
+        await MainActor.run {
+            UIPasteboard.general.string = symbols
+        }
+
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
-         .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted, .toastMessageCleared:
+         .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted, .toastMessageCleared,
+         .exportSheetToggled, .exportStartDateChanged, .exportEndDateChanged, .exportGenerated, .exportFailed, .resetExport:
         // Handled by reducer only
         break
     }

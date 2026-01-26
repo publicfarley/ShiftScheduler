@@ -517,4 +517,24 @@ struct SettingsState: Equatable {
 
     /// Whether changes have been made but not saved
     var hasUnsavedChanges: Bool = false
+
+    // MARK: - Shift Export State
+
+    /// Whether the shift export sheet is visible
+    var showExportSheet: Bool = false
+
+    /// Start date for shift export range
+    var exportStartDate: Date? = nil
+
+    /// End date for shift export range
+    var exportEndDate: Date? = nil
+
+    /// Generated export string (shift symbols)
+    var exportedSymbols: String? = nil
+
+    /// Whether export is currently being generated
+    var isExporting: Bool = false
+
+    /// Export error message if any
+    var exportErrorMessage: String? = nil
 }
