@@ -168,6 +168,67 @@ struct ShiftDetailsView: View {
                         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
                 )
 
+                // Sick day status section (if applicable)
+                if currentShift.isSickDay {
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "thermometer.medium")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(.orange)
+                                .frame(width: 50, height: 50)
+                                .background(
+                                    Circle()
+                                        .fill(Color.orange.opacity(0.15))
+                                )
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Out Sick")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.orange)
+
+                                Text(currentShift.date.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+                        }
+
+                        // Sick note if available
+                        if let notes = currentShift.notes, !notes.isEmpty {
+                            Divider()
+                                .padding(.vertical, 4)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "note.text")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+
+                                    Text("Note")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .textCase(.uppercase)
+                                        .foregroundColor(.orange)
+                                }
+
+                                Text(notes)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(nil)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.white)
+                            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                    )
+                }
+
                 // Details section
                 VStack(spacing: 16) {
                     DetailRow(
@@ -213,6 +274,35 @@ struct ShiftDetailsView: View {
                             .foregroundColor(.primary)
 
                         Text(shiftType.shiftDescription)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.white)
+                            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                    )
+                }
+
+                // Notes section for regular shifts (not sick days - they show notes in the sick status section)
+                if !currentShift.isSickDay,
+                   let notes = currentShift.notes,
+                   !notes.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "note.text")
+                                .font(.body)
+                                .foregroundColor(cardColor)
+
+                            Text("Notes")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+
+                        Text(notes)
                             .font(.body)
                             .foregroundColor(.secondary)
                             .lineLimit(nil)
