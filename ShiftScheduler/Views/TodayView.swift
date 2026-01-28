@@ -148,6 +148,7 @@ func determineFeaturedShift(shifts: [ScheduledShift], currentTime: Date) -> Shif
 // MARK: - Multi-Shift Carousel Component
 
 struct MultiShiftCarousel: View {
+    @Environment(\.reduxStore) var store
     let shifts: [ScheduledShift]
     @State private var scrollPosition: CGFloat = 0
     @State private var currentFeaturedIndex: Int = 0
@@ -161,7 +162,14 @@ struct MultiShiftCarousel: View {
                 EmptyShiftCard()
             } else if shifts.count == 1 {
                 // Single shift - display centered with full width
-                UnifiedShiftCard(shift: shifts[0], onTap: nil)
+                UnifiedShiftCard(
+                    shift: shifts[0],
+                    onTap: {
+                        Task {
+                            await store.dispatch(action: .schedule(.shiftTapped(shifts[0])))
+                        }
+                    }
+                )
             } else if shifts.count == 2 {
                 // Two shifts - use featuring algorithm with carousel
                 let featuringResult = determineFeaturedShift(shifts: shifts, currentTime: Date())
@@ -171,21 +179,49 @@ struct MultiShiftCarousel: View {
                         HStack(spacing: 16) {
                             if result.featuredPosition == .right {
                                 // Non-featured shift on left (slightly off-screen)
-                                UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
+                                UnifiedShiftCard(
+                                    shift: result.nonFeaturedShift,
+                                    onTap: {
+                                        Task {
+                                            await store.dispatch(action: .schedule(.shiftTapped(result.nonFeaturedShift)))
+                                        }
+                                    }
+                                )
                                     .frame(width: cardWidth)
                                     .opacity(0.6)
                                     .scaleEffect(0.95)
 
                                 // Featured shift
-                                UnifiedShiftCard(shift: result.featuredShift, onTap: nil)
+                                UnifiedShiftCard(
+                                    shift: result.featuredShift,
+                                    onTap: {
+                                        Task {
+                                            await store.dispatch(action: .schedule(.shiftTapped(result.featuredShift)))
+                                        }
+                                    }
+                                )
                                     .frame(width: cardWidth)
                             } else {
                                 // Featured shift on left
-                                UnifiedShiftCard(shift: result.featuredShift, onTap: nil)
+                                UnifiedShiftCard(
+                                    shift: result.featuredShift,
+                                    onTap: {
+                                        Task {
+                                            await store.dispatch(action: .schedule(.shiftTapped(result.featuredShift)))
+                                        }
+                                    }
+                                )
                                     .frame(width: cardWidth)
 
                                 // Non-featured shift on right (slightly visible for peek effect)
-                                UnifiedShiftCard(shift: result.nonFeaturedShift, onTap: nil)
+                                UnifiedShiftCard(
+                                    shift: result.nonFeaturedShift,
+                                    onTap: {
+                                        Task {
+                                            await store.dispatch(action: .schedule(.shiftTapped(result.nonFeaturedShift)))
+                                        }
+                                    }
+                                )
                                     .frame(width: cardWidth)
                                     .opacity(0.6)
                                     .scaleEffect(0.95)
@@ -196,7 +232,14 @@ struct MultiShiftCarousel: View {
                     .scrollTargetBehavior(.paging)
                 } else {
                     // Fallback - show first shift
-                    UnifiedShiftCard(shift: shifts[0], onTap: nil)
+                    UnifiedShiftCard(
+                        shift: shifts[0],
+                        onTap: {
+                            Task {
+                                await store.dispatch(action: .schedule(.shiftTapped(shifts[0])))
+                            }
+                        }
+                    )
                         .padding(.horizontal, 20)
                 }
             } else {
@@ -204,7 +247,14 @@ struct MultiShiftCarousel: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(shifts) { shift in
-                            UnifiedShiftCard(shift: shift, onTap: nil)
+                            UnifiedShiftCard(
+                                shift: shift,
+                                onTap: {
+                                    Task {
+                                        await store.dispatch(action: .schedule(.shiftTapped(shift)))
+                                    }
+                                }
+                            )
                                 .frame(width: cardWidth)
                         }
                     }
@@ -630,6 +680,19 @@ struct TodayView: View {
                         overlappingShifts: store.state.schedule.overlappingShifts
                     )
                     .environment(\.reduxStore, store)
+                }
+            }
+            .sheet(
+                isPresented: .constant(store.state.schedule.showShiftDetail),
+                onDismiss: {
+                    Task {
+                        await store.dispatch(action: .schedule(.shiftDetailDismissed))
+                    }
+                }
+            ) {
+                if let shift = store.state.schedule.selectedShiftForDetail {
+                    ShiftDetailsView(initialShiftId: shift.id)
+                        .environment(\.reduxStore, store)
                 }
             }
             .task {
