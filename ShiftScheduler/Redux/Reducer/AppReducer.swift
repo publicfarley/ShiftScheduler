@@ -224,6 +224,26 @@ func todayReducer(state: TodayState, action: TodayAction) -> TodayState {
 
     case .dismissError:
         state.currentError = nil
+
+    // MARK: - Sick Day Actions
+
+    case .markShiftAsSick(_, _):
+        state.isLoading = true
+
+    case .unmarkShiftAsSick(_):
+        state.isLoading = true
+
+    case .shiftMarkedAsSick(.success):
+        state.isLoading = false
+        state.showMarkAsSickSheet = false
+        state.toastMessage = .success("Shift status updated")
+
+    case .shiftMarkedAsSick(.failure(let error)):
+        state.isLoading = false
+        state.currentError = error as? ScheduleError ?? .unknown(error.localizedDescription)
+
+    case .markAsSickSheetToggled(let show):
+        state.showMarkAsSickSheet = show
     }
 
     return state
@@ -660,6 +680,27 @@ func scheduleReducer(state: ScheduleState, action: ScheduleAction) -> ScheduleSt
         state.bulkAddMode = newMode
         state.dateShiftAssignments.removeAll()
         state.lastAssignedShiftType = nil
+
+    // MARK: - Sick Day Actions
+
+    case .markShiftAsSick(_, _):
+        state.isLoading = true
+
+    case .unmarkShiftAsSick(_):
+        state.isLoading = true
+
+    case .shiftMarkedAsSick(.success):
+        state.isLoading = false
+        state.showMarkAsSickSheet = false
+        state.successMessage = "Shift status updated"
+        state.showSuccessToast = true
+
+    case .shiftMarkedAsSick(.failure(let error)):
+        state.isLoading = false
+        state.currentError = error as? ScheduleError ?? .unknown(error.localizedDescription)
+
+    case .markAsSickSheetToggled(let show):
+        state.showMarkAsSickSheet = show
     }
 
     return state

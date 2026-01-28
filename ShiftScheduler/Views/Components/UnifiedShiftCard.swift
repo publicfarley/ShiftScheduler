@@ -1,9 +1,9 @@
 import SwiftUI
-typealias UnifiedShiftCard = CardDesign2
-/// A reusable shift card component used across multiple screens (Today, Schedule, etc.)
-/// Displays detailed shift information in a professional card layout
-/// Supports selection mode for multi-select operations with long-press gesture
-struct UnifiedShiftCard_: View {
+
+/// Unified Shift Card: Timeline Card with Leading Edge Accent
+/// Thick vertical accent bar (left edge), header row with status/title/location
+/// Symbol inline with time, full address on separate line, expandable notes
+struct UnifiedShiftCard: View {
     let shift: ScheduledShift?
     let onTap: (() -> Void)?
     let isSelected: Bool
@@ -11,6 +11,7 @@ struct UnifiedShiftCard_: View {
     let isInSelectionMode: Bool
 
     @State private var isPressed = false
+    @State private var notesExpanded = false
 
     init(
         shift: ScheduledShift?,
@@ -27,17 +28,12 @@ struct UnifiedShiftCard_: View {
     }
 
     private var shiftStatus: ShiftStatus {
-        guard let shift = shift else {
-            return .upcoming
-        }
+        guard let shift = shift else { return .upcoming }
 
         let now = Date()
-
-        // Use actual start/end date-times for multi-day shift support
         let shiftStart = shift.actualStartDateTime()
         let shiftEnd = shift.actualEndDateTime()
 
-        // Determine status based on current time relative to shift date-time range
         if now < shiftStart {
             return .upcoming
         } else if now >= shiftStart && now <= shiftEnd {
@@ -48,84 +44,137 @@ struct UnifiedShiftCard_: View {
     }
 
     private var cardColor: Color {
-        guard let shiftType = shift?.shiftType else { return Color(red: 0.2, green: 0.35, blue: 0.5) }
-
-        // Use professional, muted color palette
-        let hash = shiftType.symbol.hashValue
-        let professionalColors: [Color] = [
-            Color(red: 0.2, green: 0.35, blue: 0.5),   // Professional Blue
-            Color(red: 0.25, green: 0.4, blue: 0.35),  // Forest Green
-            Color(red: 0.4, green: 0.35, blue: 0.3),   // Warm Brown
-            Color(red: 0.35, green: 0.3, blue: 0.4),   // Slate Purple
-            Color(red: 0.4, green: 0.3, blue: 0.35),   // Muted Burgundy
-            Color(red: 0.3, green: 0.4, blue: 0.4)     // Teal
-        ]
-        return professionalColors[abs(hash) % professionalColors.count]
+        guard let shiftType = shift?.shiftType else {
+            return Color(red: 0.2, green: 0.35, blue: 0.5)
+        }
+        return ShiftColorPalette.colorForShift(shiftType)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            if let shift = shift, let shiftType = shift.shiftType {
-                // Has shift scheduled - Enhanced design
-                VStack(alignment: .leading, spacing: 8) {
-                    // Status badge with shift title and location (top row)
-                    HStack(alignment: .top, spacing: 12) {
-                        StatusBadge(status: shiftStatus)
+            if let shift = shift, shift.isSickDay {
+                // Shift marked as sick day - Show sick day card
+                SickDayCardView(shift: shift, onTap: onTap)
+            } else if let shift = shift, let shiftType = shift.shiftType {
+                HStack(spacing: 0) {
+                    // Thick vertical accent bar (4-6pt)
+                    Rectangle()
+                        .fill(cardColor)
+                        .frame(width: 5)
 
-                        VStack(alignment: .leading, spacing: 0) {
+                    // Content area
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Header row: Status badge + Title + Location name
+                        HStack(alignment: .top, spacing: 12) {
+                            StatusBadge(status: shiftStatus)
+
                             Text(shiftType.title)
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
                                 .lineLimit(2)
+
+                            Spacer(minLength: 0)
+
+                            // Location name (right aligned)
+                            HStack(spacing: 4) {
+                                Image(systemName: "location.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(cardColor)
+                                Text(shiftType.location.name)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                            }
                         }
 
-                        Spacer(minLength: 0)
+                        // Symbol inline with time range (prominent)
+                        HStack(spacing: 8) {
+                            Text(shiftType.symbol)
+                                .font(.title2)
 
-                        // Location on right, top-aligned with title
-                        ShiftCardLocationColumn(location: shiftType.location)
-                    }
+                            Text(shiftType.timeRangeString)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(cardColor)
 
-                    // Main content - Symbol + Time/Description (left)
-                    HStack(alignment: .top, spacing: 8) {
-                        // Symbol on left
-                        ShiftCardSymbolColumn(symbol: shiftType.symbol, color: cardColor)
-
-                        // Time and description in middle
-                        ShiftCardTimeDescriptionColumn(
-                            timeString: shiftType.timeRangeString,
-                            description: shiftType.shiftDescription,
-                            color: cardColor
-                        )
-
-                        Spacer(minLength: 0)
-                    }
-
-                    // User notes - full width if present
-                    if let notes = shift.notes, !notes.isEmpty {
-                        HStack(alignment: .top, spacing: 4) {
-                            Image(systemName: "note.text")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(notes)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(2)
+                            Spacer(minLength: 0)
                         }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Notes: \(notes)")
-                    }
-                }
-                .padding(12)
 
-                // Active shift indicator - subtle
-                if shiftStatus == .active {
-                    Rectangle()
-                        .fill(cardColor.opacity(0.3))
-                        .frame(height: 2)
+                        // Description
+                        if !shiftType.shiftDescription.isEmpty {
+                            Text(shiftType.shiftDescription)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        // Full address on separate line
+                        if !shiftType.location.address.isEmpty {
+                            HStack(alignment: .top, spacing: 4) {
+                                Image(systemName: "mappin.and.ellipse")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text(shiftType.location.address)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                Spacer(minLength: 0)
+                            }
+                        }
+
+                        // Expandable notes section
+                        if let notes = shift.notes, !notes.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        notesExpanded.toggle()
+                                    }
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "note.text")
+                                            .font(.caption2)
+                                            .foregroundColor(cardColor)
+
+                                        Text("Notes")
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(cardColor)
+
+                                        Spacer()
+
+                                        Image(systemName: notesExpanded ? "chevron.up" : "chevron.down")
+                                            .font(.caption2)
+                                            .foregroundColor(cardColor)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                if notesExpanded {
+                                    Text(notes)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.top, 4)
+                                        .transition(.opacity.combined(with: .move(edge: .top)))
+                                }
+                            }
+                            .padding(.top, 4)
+                            .padding(8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(cardColor.opacity(0.05))
+                            )
+                        }
+                    }
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
                 }
             } else {
-                // No shift scheduled - Professional empty state
+                // Empty state
                 VStack(spacing: 12) {
                     Image(systemName: "calendar.badge.exclamationmark")
                         .font(.largeTitle)
@@ -157,16 +206,21 @@ struct UnifiedShiftCard_: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isSelected ? Color.blue : cardColor,
-                            lineWidth: isSelected ? 3 : 2.5
+                            isSelected ? Color.blue : Color(.systemGray5),
+                            lineWidth: isSelected ? 3 : 1
                         )
                 )
-                .shadow(color: isSelected ? Color.blue.opacity(0.3) : cardColor.opacity(0.15), radius: 6, x: 0, y: 3)
+                .shadow(
+                    color: isSelected ? Color.blue.opacity(0.3) : Color.black.opacity(0.08),
+                    radius: 6,
+                    x: 0,
+                    y: 3
+                )
         )
         .overlay(alignment: .topTrailing) {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.headline)
+                    .font(.title3)
                     .foregroundColor(.blue)
                     .padding(8)
                     .background(
@@ -191,29 +245,26 @@ struct UnifiedShiftCard_: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
 
-        // If in selection mode, toggle selection instead of calling onTap
         if isInSelectionMode, let shiftId = shift?.id {
             onSelectionToggle?(shiftId)
         } else {
-            // Normal tap behavior
             withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                 isPressed = true
             }
 
             Task {
-                try await Task.sleep(seconds: 0.1)
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
-                    isPressed = false
+                try? await Task.sleep(seconds: 0.1)
+                await MainActor.run {
+                    withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
+                        isPressed = false
+                    }
+                    onTap?()
                 }
-
-                // Call the onTap handler if provided
-                onTap?()
             }
         }
     }
 
     private func handleLongPress() {
-        // Long press to enter selection mode (if not already in it)
         guard !isInSelectionMode, let shiftId = shift?.id else { return }
 
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
@@ -223,113 +274,20 @@ struct UnifiedShiftCard_: View {
     }
 }
 
-// MARK: - Subviews
-struct ShiftCardSymbolColumn: View {
-    let symbol: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .center, spacing: 2) {
-            Text(symbol)
-                .font(.title2)
-                .foregroundColor(color)
-                .frame(width: 40, height: 40)
-                .background(
-                    Circle()
-                        .fill(color.opacity(0.08))
-                        .overlay(
-                            Circle()
-                                .stroke(color.opacity(0.15), lineWidth: 1)
-                        )
-                )
-        }
-    }
-}
-
-struct ShiftCardTimeDescriptionColumn: View {
-    let timeString: String
-    let description: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Time badge
-            HStack(spacing: 4) {
-                Image(systemName: "clock")
-                    .font(.caption)
-                    .foregroundColor(color)
-
-                Text(timeString)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(color)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                Capsule()
-                    .fill(color.opacity(0.08))
-            )
-
-            // Description if present
-            if !description.isEmpty {
-                Text(description)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-        }
-    }
-}
-
-struct ShiftCardLocationColumn: View {
-    let location: Location
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            // Location name
-            HStack(spacing: 4) {
-                Image(systemName: "location")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Text(location.name)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-
-            // Location address
-            if !location.address.isEmpty {
-                HStack(alignment: .top, spacing: 4) {
-                    Image(systemName: "mappin.and.ellipse")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text(location.address)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-            }
-        }
-    }
-}
-
 #Preview {
-    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St, Suite 100")
+    let sampleLocation = Location(id: UUID(), name: "Main Office", address: "123 Main St, Suite 100, Downtown")
     let sampleShiftType = ShiftType(
         id: UUID(),
-        symbol: "🌅",
+        symbol: "🌙",
         duration: .scheduled(
-            from: HourMinuteTime(hour: 9, minute: 0),
-            to: HourMinuteTime(hour: 17, minute: 0)
+            from: HourMinuteTime(hour: 22, minute: 0),
+            to: HourMinuteTime(hour: 6, minute: 0)
         ),
-        title: "Morning Shift",
-        description: "Regular morning shift with breaks",
+        title: "Night Shift",
+        description: "Overnight monitoring and security",
         location: sampleLocation
     )
 
-    // Shift without notes
     let sampleShift = ScheduledShift(
         id: UUID(),
         eventIdentifier: UUID().uuidString,
@@ -338,66 +296,28 @@ struct ShiftCardLocationColumn: View {
         notes: nil
     )
 
-    // Shift with notes - demonstrates the notes feature
     let sampleShiftWithNotes = ScheduledShift(
         id: UUID(),
         eventIdentifier: UUID().uuidString,
         shiftType: sampleShiftType,
         date: Date(),
-        notes: "Remember to bring safety equipment and laptop. Client meeting at 2 PM."
+        notes: "Remember to bring flashlight and security badge. Check all doors at midnight."
     )
 
-    VStack(spacing: 16) {
-        Text("Shift without notes:")
-            .font(.caption)
-            .foregroundColor(.secondary)
+    return ScrollView {
+        VStack(spacing: 20) {
+            Text("Unified Shift Card: Timeline Card with Leading Edge Accent")
+                .font(.title3)
+                .fontWeight(.bold)
 
-        UnifiedShiftCard(
-            shift: sampleShift,
-            onTap: { print("Shift tapped!") },
-            isSelected: false,
-            onSelectionToggle: nil,
-            isInSelectionMode: false
-        )
+            UnifiedShiftCard(shift: sampleShift)
 
-        Text("Shift with notes:")
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .padding(.top, 8)
+            UnifiedShiftCard(shift: sampleShiftWithNotes)
 
-        UnifiedShiftCard(
-            shift: sampleShiftWithNotes,
-            onTap: { print("Shift with notes tapped!") },
-            isSelected: false,
-            onSelectionToggle: nil,
-            isInSelectionMode: false
-        )
+            UnifiedShiftCard(shift: sampleShiftWithNotes, isSelected: true, isInSelectionMode: true)
 
-        Text("Selected state:")
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .padding(.top, 8)
-
-        UnifiedShiftCard(
-            shift: sampleShiftWithNotes,
-            onTap: nil,
-            isSelected: true,
-            onSelectionToggle: { _ in print("Selection toggled") },
-            isInSelectionMode: true
-        )
-
-        Text("Empty state:")
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .padding(.top, 8)
-
-        UnifiedShiftCard(
-            shift: nil,
-            onTap: nil,
-            isSelected: false,
-            onSelectionToggle: nil,
-            isInSelectionMode: false
-        )
+            UnifiedShiftCard(shift: nil)
+        }
+        .padding()
     }
-    .padding()
 }

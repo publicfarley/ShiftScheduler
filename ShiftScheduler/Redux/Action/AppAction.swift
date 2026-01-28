@@ -182,6 +182,20 @@ enum TodayAction: Equatable {
     /// Dismiss current error
     case dismissError
 
+    // MARK: - Sick Day Actions
+
+    /// Mark today's shift as a sick day
+    case markShiftAsSick(ScheduledShift, reason: String?)
+
+    /// Unmark today's shift as a sick day
+    case unmarkShiftAsSick(ScheduledShift)
+
+    /// Handle mark/unmark sick day result
+    case shiftMarkedAsSick(Result<Void, Error>)
+
+    /// Show/hide mark as sick sheet
+    case markAsSickSheetToggled(Bool)
+
     static func == (lhs: TodayAction, rhs: TodayAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadShifts, .loadShifts),
@@ -194,6 +208,15 @@ enum TodayAction: Equatable {
              (.addShiftButtonTapped, .addShiftButtonTapped),
              (.addShiftSheetDismissed, .addShiftSheetDismissed),
              (.dismissError, .dismissError):
+            return true
+        case let (.markAsSickSheetToggled(lhs), .markAsSickSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.markShiftAsSick(lhsShift, lhsReason), .markShiftAsSick(rhsShift, rhsReason)):
+            return lhsShift.id == rhsShift.id && lhsReason == rhsReason
+        case let (.unmarkShiftAsSick(lhsShift), .unmarkShiftAsSick(rhsShift)):
+            return lhsShift.id == rhsShift.id
+        case (.shiftMarkedAsSick(.success), .shiftMarkedAsSick(.success)),
+             (.shiftMarkedAsSick(.failure), .shiftMarkedAsSick(.failure)):
             return true
         case let (.shiftsLoaded(a), .shiftsLoaded(b)):
             switch (a, b) {
@@ -361,6 +384,20 @@ enum ScheduleAction: Equatable {
     /// Dismiss success toast
     case dismissSuccessToast
 
+    // MARK: - Sick Day Actions
+
+    /// Mark a shift as a sick day
+    case markShiftAsSick(ScheduledShift, reason: String?)
+
+    /// Unmark a shift as a sick day
+    case unmarkShiftAsSick(ScheduledShift)
+
+    /// Handle mark/unmark sick day result
+    case shiftMarkedAsSick(Result<Void, Error>)
+
+    /// Show/hide mark as sick sheet
+    case markAsSickSheetToggled(Bool)
+
     // MARK: - Filter Actions
 
     /// Show/hide filter sheet
@@ -479,6 +516,15 @@ enum ScheduleAction: Equatable {
              (.bulkDeleteRequested, .bulkDeleteRequested),
              (.bulkAddRequested, .bulkAddRequested),
              (.bulkAddCancelled, .bulkAddCancelled):
+            return true
+        case let (.markAsSickSheetToggled(lhs), .markAsSickSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.markShiftAsSick(lhsShift, lhsReason), .markShiftAsSick(rhsShift, rhsReason)):
+            return lhsShift.id == rhsShift.id && lhsReason == rhsReason
+        case let (.unmarkShiftAsSick(lhsShift), .unmarkShiftAsSick(rhsShift)):
+            return lhsShift.id == rhsShift.id
+        case (.shiftMarkedAsSick(.success), .shiftMarkedAsSick(.success)),
+             (.shiftMarkedAsSick(.failure), .shiftMarkedAsSick(.failure)):
             return true
         case let (.authorizationChecked(lhs), .authorizationChecked(rhs)):
             return lhs == rhs

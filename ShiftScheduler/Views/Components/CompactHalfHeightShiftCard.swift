@@ -35,7 +35,35 @@ struct CompactHalfHeightShiftCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if let shift = shift, let shiftType = shift.shiftType {
+            if let shift = shift, shift.isSickDay {
+                // Shift marked as sick day - Compact view
+                HStack(spacing: 12) {
+                    // Thermometer icon in circle
+                    Image(systemName: "thermometer.medium")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            Circle()
+                                .fill(Color.orange.opacity(0.15))
+                        )
+
+                    // Status text
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Out Sick")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+
+                        Text("Tap to see details")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(12)
+            } else if let shift = shift, let shiftType = shift.shiftType {
                 // Compact layout optimized for half-height display
                 HStack(spacing: 12) {
                     // Symbol - smaller circle

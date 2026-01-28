@@ -217,21 +217,9 @@ private func makeAppStateWithShift(_ shift: ScheduledShift) -> AppState {
 
 @MainActor
 private func makeTestShift(date: Date = Date()) -> ScheduledShift {
-    ScheduledShift(
-        id: UUID(),
-        eventIdentifier: "test-event-\(UUID().uuidString)",
-        shiftType: ShiftType(
-            id: UUID(),
-            symbol: "sun.max.fill",
-            duration: .scheduled(
-                from: HourMinuteTime(hour: 9, minute: 0),
-                to: HourMinuteTime(hour: 17, minute: 0)
-            ),
-            title: "Test Shift",
-            description: "A test shift",
-            location: Location(id: UUID(), name: "Test Office", address: "123 Main St")
-        ),
-        date: date,
-        notes: nil
-    )
+    if Calendar.current.isDateInToday(date) {
+        return ScheduledShiftBuilder.today().build()
+    } else {
+        return ScheduledShiftBuilder(date: date).build()
+    }
 }

@@ -172,6 +172,8 @@ struct EnhancedChangeLogCard: View {
         case .created: return .green
         case .undo: return .orange
         case .redo: return .purple
+        case .markedAsSick: return .orange
+        case .unmarkedAsSick: return .blue
         }
     }
 
@@ -182,6 +184,8 @@ struct EnhancedChangeLogCard: View {
         case .created: return "plus.circle.fill"
         case .undo: return "arrow.uturn.backward.circle.fill"
         case .redo: return "arrow.uturn.forward.circle.fill"
+        case .markedAsSick: return "thermometer.medium"
+        case .unmarkedAsSick: return "thermometer.medium.slash"
         }
     }
 
@@ -310,6 +314,48 @@ struct EnhancedChangeLogCard: View {
             if let oldSnapshot = entry.oldShiftSnapshot,
                let newSnapshot = entry.newShiftSnapshot {
                 ShiftComparisonView(oldShift: oldSnapshot, newShift: newSnapshot)
+            }
+
+        case .markedAsSick:
+            if let shiftSnapshot = entry.oldShiftSnapshot {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Marked as Sick")
+                        .font(.headline)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "thermometer.medium")
+                            .foregroundColor(.orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(shiftSnapshot.title)
+                                .font(.body)
+                                .fontWeight(.semibold)
+                            Text(shiftSnapshot.duration.timeRangeString)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+
+        case .unmarkedAsSick:
+            if let shiftSnapshot = entry.oldShiftSnapshot {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Unmarked as Sick")
+                        .font(.headline)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "thermometer.medium.slash")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(shiftSnapshot.title)
+                                .font(.body)
+                                .fontWeight(.semibold)
+                            Text(shiftSnapshot.duration.timeRangeString)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
         }
     }

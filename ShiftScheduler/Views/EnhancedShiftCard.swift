@@ -38,13 +38,17 @@ struct EnhancedShiftCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Main card content
-            VStack(spacing: 12) {
-                // Header section with status
-                HStack {
-                    StatusBadge(status: shiftStatus)
-                    Spacer()
+        if shift.isSickDay {
+            // Shift marked as sick day - Show sick day card
+            SickDayCardView(shift: shift, onTap: onSwitch)
+        } else {
+            VStack(spacing: 0) {
+                // Main card content
+                VStack(spacing: 12) {
+                    // Header section with status
+                    HStack {
+                        StatusBadge(status: shiftStatus)
+                        Spacer()
 
                     HStack(spacing: 8) {
                         if onSwitch != nil {
@@ -235,6 +239,7 @@ struct EnhancedShiftCard: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to delete this shift? This action cannot be undone.")
+        }
         }
     }
 }

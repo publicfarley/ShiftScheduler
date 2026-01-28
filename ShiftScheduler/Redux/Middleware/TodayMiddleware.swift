@@ -244,6 +244,92 @@ func todayMiddleware(
         // logger.debug("No middleware side effects for action: \(String(describing: todayAction))")
         // Handled by reducer only
         break
+
+    // MARK: - Sick Day Actions
+
+    case .markShiftAsSick(let shift, let reason):
+        logger.debug("Marking shift as sick: \(shift.eventIdentifier), reason: \(reason ?? "none")")
+        do {
+            try await services.calendarService.markShiftAsSick(
+                eventIdentifier: shift.eventIdentifier,
+                isSickDay: true,
+                reason: reason
+            )
+
+            // Create change log entry
+            let changeEntry = ChangeLogEntry(
+                id: UUID(),
+                timestamp: Date(),
+                userId: state.userProfile.userId,
+                userDisplayName: state.userProfile.displayName,
+                changeType: .markedAsSick,
+                scheduledShiftDate: shift.date,
+                oldShiftSnapshot: shift.shiftType.map { ShiftSnapshot(from: $0) },
+                newShiftSnapshot: nil,
+                reason: reason
+            )
+
+            // Persist change log entry
+            try await services.persistenceService.addChangeLogEntry(changeEntry)
+
+            // Reload shifts
+            await dispatch(.today(.loadShifts))
+
+            // Reload change log
+            await dispatch(.changeLog(.loadChangeLogEntries))
+
+            // Notify success
+            await dispatch(.today(.shiftMarkedAsSick(.success(()))))
+        } catch {
+            logger.error("Failed to mark shift as sick: \(error.localizedDescription)")
+            await dispatch(.today(.shiftMarkedAsSick(.failure(error))))
+        }
+
+    case .unmarkShiftAsSick(let shift):
+        logger.debug("Unmarking shift as sick: \(shift.eventIdentifier)")
+        do {
+            try await services.calendarService.markShiftAsSick(
+                eventIdentifier: shift.eventIdentifier,
+                isSickDay: false,
+                reason: nil
+            )
+
+            // Create change log entry
+            let changeEntry = ChangeLogEntry(
+                id: UUID(),
+                timestamp: Date(),
+                userId: state.userProfile.userId,
+                userDisplayName: state.userProfile.displayName,
+                changeType: .unmarkedAsSick,
+                scheduledShiftDate: shift.date,
+                oldShiftSnapshot: shift.shiftType.map { ShiftSnapshot(from: $0) },
+                newShiftSnapshot: nil,
+                reason: nil
+            )
+
+            // Persist change log entry
+            try await services.persistenceService.addChangeLogEntry(changeEntry)
+
+            // Reload shifts
+            await dispatch(.today(.loadShifts))
+
+            // Reload change log
+            await dispatch(.changeLog(.loadChangeLogEntries))
+
+            // Notify success
+            await dispatch(.today(.shiftMarkedAsSick(.success(()))))
+        } catch {
+            logger.error("Failed to unmark shift as sick: \(error.localizedDescription)")
+            await dispatch(.today(.shiftMarkedAsSick(.failure(error))))
+        }
+
+    case .shiftMarkedAsSick:
+        // Handled by reducer (state update)
+        break
+
+    case .markAsSickSheetToggled:
+        // Handled by reducer (state update)
+        break
     }
 }
 

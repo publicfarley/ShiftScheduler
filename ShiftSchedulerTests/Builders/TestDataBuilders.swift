@@ -153,17 +153,20 @@ struct ScheduledShiftBuilder {
     let date: Date
     let shiftType: ShiftType
     let notes: String?
+    let isSickDay: Bool
 
     init(
         id: UUID = UUID(),
         date: Date = Date(),
         shiftType: ShiftType? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        isSickDay: Bool = false
     ) {
         self.id = id
         self.date = date
         self.shiftType = shiftType ?? ShiftTypeBuilder().build()
         self.notes = notes
+        self.isSickDay = isSickDay
     }
 
     func build() -> ScheduledShift {
@@ -172,7 +175,18 @@ struct ScheduledShiftBuilder {
             eventIdentifier: "Dummy",
             shiftType: shiftType,
             date: date,
-            notes: notes
+            notes: notes,
+            isSickDay: isSickDay
+        )
+    }
+
+    func asSickDay() -> ScheduledShiftBuilder {
+        ScheduledShiftBuilder(
+            id: id,
+            date: date,
+            shiftType: shiftType,
+            notes: notes,
+            isSickDay: true
         )
     }
 
@@ -180,20 +194,29 @@ struct ScheduledShiftBuilder {
         ScheduledShiftBuilder().build()
     }
 
-    static func today() -> ScheduledShift {
+    static func today() -> ScheduledShiftBuilder {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        return ScheduledShiftBuilder(date: today).build()
+        return ScheduledShiftBuilder(date: today)
     }
 
-    static func tomorrow() -> ScheduledShift? {
+    static func tomorrow() -> ScheduledShiftBuilder? {
         let calendar = Calendar.current
-        
+
         guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) else {
             return nil
         }
-        
-        return ScheduledShiftBuilder(date: tomorrow).build()
+
+        return ScheduledShiftBuilder(date: tomorrow)
+    }
+
+    static func sickDay() -> ScheduledShiftBuilder {
+        ScheduledShiftBuilder(isSickDay: true)
+    }
+
+    static func sickDayTomorrow() -> ScheduledShiftBuilder? {
+        guard let builder = Self.tomorrow() else { return nil }
+        return builder.asSickDay()
     }
 }
 

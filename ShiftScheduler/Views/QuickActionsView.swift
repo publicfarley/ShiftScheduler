@@ -9,6 +9,7 @@ struct QuickActionsView: View {
 
     @State private var showDeleteConfirmation = false
     @State private var showEditNotesSheet = false
+    @State private var showMarkAsSickSheet = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -118,30 +119,55 @@ struct QuickActionsView: View {
                     .cornerRadius(10)
                 }
 
-                // Add Shift Button
-                Button(action: {
-                    Task {
-                        await store.dispatch(action: .today(.addShiftButtonTapped))
-                    }
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Add")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 9)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.purple.opacity(0.8), Color.indigo.opacity(0.6)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                // Mark as Sick / Unmark Sick Button
+                if shift.isSickDay {
+                    Button(action: {
+                        Task {
+                            await store.dispatch(action: .today(.unmarkShiftAsSick(shift)))
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "thermometer.medium.slash")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Unwell")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 9)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.8), Color.indigo.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                } else {
+                    Button(action: {
+                        showMarkAsSickSheet = true
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: "thermometer.medium")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Sick")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 9)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.orange.opacity(0.8), Color.red.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
                 }
             }
             .frame(height: 45)
@@ -163,6 +189,9 @@ struct QuickActionsView: View {
         }
         .sheet(isPresented: $showEditNotesSheet) {
             EditNotesSheetView(isPresented: $showEditNotesSheet, shift: shift)
+        }
+        .sheet(isPresented: $showMarkAsSickSheet) {
+            MarkAsSickSheet(shift: shift)
         }
         .transition(.opacity.combined(with: .scale))
     }

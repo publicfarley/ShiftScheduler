@@ -102,6 +102,9 @@ struct TodayState: Equatable {
 
     /// Current error for Add Shift operations
     var currentError: ScheduleError? = nil
+
+    /// Sheet presentation for marking shift as sick
+    var showMarkAsSickSheet: Bool = false
 }
 
 // MARK: - Schedule State
@@ -250,6 +253,9 @@ struct ScheduleState: Equatable {
 
     /// Dates selected for bulk add operations (used when in .add selection mode)
     var selectedDates: Set<Date> = []
+
+    /// Sheet presentation for marking shift as sick
+    var showMarkAsSickSheet: Bool = false
 
     // MARK: - Bulk Add Mode State
 

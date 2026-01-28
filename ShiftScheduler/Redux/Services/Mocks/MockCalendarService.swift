@@ -24,11 +24,13 @@ final class MockCalendarService: CalendarServiceProtocol {
     private(set) var deleteMultipleShiftEventsCallCount = 0
     private(set) var updateEventsWithShiftTypeCallCount = 0
     private(set) var updateShiftNotesCallCount = 0
+    private(set) var markShiftAsSickCallCount = 0
 
     var lastLoadShiftsRange: (from: Date, to: Date)?
     var lastCreateShiftEventData: (date: Date, shiftType: ShiftType)?
     var lastUpdateShiftEventData: (eventId: String, shiftType: ShiftType)?
     var lastUpdateShiftNotesData: (eventId: String, notes: String)?
+    var lastMarkAsSickData: (eventId: String, isSickDay: Bool, reason: String?)?
 
     // MARK: - Event Timing Tracking (for testing scheduled vs all-day events)
 
@@ -218,7 +220,8 @@ final class MockCalendarService: CalendarServiceProtocol {
             shiftType: shiftType,
             date: startDate,
             endDate: calculatedEndDate,
-            notes: finalNotes
+            notes: finalNotes,
+            isSickDay: false
         )
 
         mockShifts.append(shift)
@@ -281,14 +284,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             calculatedEndDate = startDate
         }
 
-        // Update the shift with the new shift type (preserve notes)
+        // Update the shift with the new shift type (preserve notes and sick day flag)
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
             shiftType: newShiftType,
             date: mockShifts[index].date,
             endDate: calculatedEndDate,
-            notes: mockShifts[index].notes
+            notes: mockShifts[index].notes,
+            isSickDay: mockShifts[index].isSickDay
         )
     }
 
@@ -365,14 +369,15 @@ final class MockCalendarService: CalendarServiceProtocol {
                 calculatedEndDate = shift.date
             }
 
-            // Update the shift with new ShiftType data while preserving notes and date
+            // Update the shift with new ShiftType data while preserving notes, date, and sick day flag
             mockShifts[index] = ScheduledShift(
                 id: shift.id,
                 eventIdentifier: shift.eventIdentifier,
                 shiftType: shiftType,
                 date: shift.date,
                 endDate: calculatedEndDate,
-                notes: shift.notes
+                notes: shift.notes,
+                isSickDay: shift.isSickDay
             )
             updatedCount += 1
         }
@@ -397,14 +402,15 @@ final class MockCalendarService: CalendarServiceProtocol {
             throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
         }
 
-        // Update the shift with new notes (preserve endDate)
+        // Update the shift with new notes (preserve endDate and sick day flag)
         mockShifts[index] = ScheduledShift(
             id: mockShifts[index].id,
             eventIdentifier: mockShifts[index].eventIdentifier,
             shiftType: mockShifts[index].shiftType,
             date: mockShifts[index].date,
             endDate: mockShifts[index].endDate,
-            notes: notes.isEmpty ? nil : notes
+            notes: notes.isEmpty ? nil : notes,
+            isSickDay: mockShifts[index].isSickDay
         )
     }
 
@@ -416,5 +422,34 @@ final class MockCalendarService: CalendarServiceProtocol {
         // Mock behavior: return count of all scheduled shifts
         let count = mockShifts.count
         return (updated: count, total: count)
+    }
+
+    func markShiftAsSick(eventIdentifier: String, isSickDay: Bool, reason: String?) async throws {
+        markShiftAsSickCallCount += 1
+        lastMarkAsSickData = (eventIdentifier, isSickDay, reason)
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+
+        // Check authorization
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        // Find the shift to update
+        guard let index = mockShifts.firstIndex(where: { $0.eventIdentifier == eventIdentifier }) else {
+            throw CalendarServiceError.eventConversionFailed("Event with identifier \(eventIdentifier) not found")
+        }
+
+        // Update the shift with new sick day flag
+        mockShifts[index] = ScheduledShift(
+            id: mockShifts[index].id,
+            eventIdentifier: mockShifts[index].eventIdentifier,
+            shiftType: mockShifts[index].shiftType,
+            date: mockShifts[index].date,
+            endDate: mockShifts[index].endDate,
+            notes: mockShifts[index].notes,
+            isSickDay: isSickDay
+        )
     }
 }

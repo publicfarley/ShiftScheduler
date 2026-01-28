@@ -85,4 +85,12 @@ protocol CalendarServiceProtocol: Sendable {
     /// - Returns: Tuple of (updated count, total count) for user feedback
     /// - Throws: CalendarServiceError if calendar is not authorized or updates fail
     func resyncAllCalendarEvents() async throws -> (updated: Int, total: Int)
+
+    /// Mark or unmark a shift as a sick day
+    /// - Parameters:
+    ///   - eventIdentifier: The EventKit event identifier of the shift to mark
+    ///   - isSickDay: Whether the shift is being marked as sick (true) or unmarked (false)
+    ///   - reason: Optional reason for marking shift as sick
+    /// - Throws: CalendarServiceError if the event cannot be found or update fails
+    func markShiftAsSick(eventIdentifier: String, isSickDay: Bool, reason: String?) async throws -> Void
 }

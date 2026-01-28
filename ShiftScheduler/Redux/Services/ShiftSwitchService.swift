@@ -160,6 +160,11 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
             // For created operations, delete the shift
             try await calendarService.deleteShiftEvent(eventIdentifier: operation.id.uuidString)
 
+        case .markedAsSick, .unmarkedAsSick:
+            // Sick day marking doesn't need undo through shift switch service
+            // The calendar service handles marking/unmarking directly
+            throw ShiftSwitchServiceError.undoFailed("Sick day operations should be handled through calendar service")
+
         case .undo, .redo:
             // These are meta operations, not directly undoable
             throw ShiftSwitchServiceError.undoFailed("Cannot undo \(operation.changeType.displayName) operations")
@@ -233,6 +238,11 @@ final class ShiftSwitchService: ShiftSwitchServiceProtocol {
                 shiftType: shiftType,
                 notes: operation.reason
             )
+
+        case .markedAsSick, .unmarkedAsSick:
+            // Sick day marking doesn't need redo through shift switch service
+            // The calendar service handles marking/unmarking directly
+            throw ShiftSwitchServiceError.redoFailed("Sick day operations should be handled through calendar service")
 
         case .undo, .redo:
             // These are meta operations, not directly redoable
