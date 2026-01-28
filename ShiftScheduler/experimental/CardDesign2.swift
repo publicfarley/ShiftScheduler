@@ -52,7 +52,10 @@ struct CardDesign2: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if let shift = shift, let shiftType = shift.shiftType {
+            if let shift = shift, shift.isSickDay {
+                // Shift marked as sick day - Show sick day card
+                SickDayCardView(shift: shift, onTap: onTap)
+            } else if let shift = shift, let shiftType = shift.shiftType {
                 HStack(spacing: 0) {
                     // Thick vertical accent bar (4-6pt)
                     Rectangle()
