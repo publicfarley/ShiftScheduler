@@ -8,14 +8,16 @@ struct ScheduledShift: Identifiable, Equatable, Sendable {
     let endDate: Date
     let notes: String?
     let isSickDay: Bool
+    let reason: String?
 
-    init(id: UUID = UUID(), eventIdentifier: String, shiftType: ShiftType?, date: Date, endDate: Date? = nil, notes: String? = nil, isSickDay: Bool = false) {
+    init(id: UUID = UUID(), eventIdentifier: String, shiftType: ShiftType?, date: Date, endDate: Date? = nil, notes: String? = nil, isSickDay: Bool = false, reason: String? = nil) {
         self.id = id
         self.eventIdentifier = eventIdentifier
         self.shiftType = shiftType
         self.date = date
         self.notes = notes
         self.isSickDay = isSickDay
+        self.reason = reason
 
         // Calculate endDate based on shift type if not explicitly provided
         if let providedEndDate = endDate {
@@ -35,6 +37,7 @@ struct ScheduledShift: Identifiable, Equatable, Sendable {
         self.date = shiftData.startDate
         self.notes = shiftData.notes
         self.isSickDay = shiftData.isSickDay
+        self.reason = shiftData.reason
         self.endDate = shiftData.endDate
     }
 
@@ -54,6 +57,7 @@ struct ScheduledShift: Identifiable, Equatable, Sendable {
                lhs.date == rhs.date &&
                lhs.endDate == rhs.endDate &&
                lhs.notes == rhs.notes &&
-               lhs.isSickDay == rhs.isSickDay
+               lhs.isSickDay == rhs.isSickDay &&
+               lhs.reason == rhs.reason
     }
 }

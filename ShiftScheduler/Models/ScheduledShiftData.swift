@@ -11,8 +11,9 @@ struct ScheduledShiftData: Hashable, Equatable, Sendable {
     let location: String?
     let notes: String?
     let isSickDay: Bool
+    let reason: String?
 
-    init(eventIdentifier: String, shiftTypeId: UUID, startDate: Date, endDate: Date, title: String, location: String? = nil, notes: String? = nil, isSickDay: Bool = false) {
+    init(eventIdentifier: String, shiftTypeId: UUID, startDate: Date, endDate: Date, title: String, location: String? = nil, notes: String? = nil, isSickDay: Bool = false, reason: String? = nil) {
         self.eventIdentifier = eventIdentifier
         self.shiftTypeId = shiftTypeId
         self.startDate = startDate
@@ -21,6 +22,7 @@ struct ScheduledShiftData: Hashable, Equatable, Sendable {
         self.location = location
         self.notes = notes
         self.isSickDay = isSickDay
+        self.reason = reason
     }
 
     func hash(into hasher: inout Hasher) {

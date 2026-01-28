@@ -458,7 +458,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
             // Preserve shift type ID in notes (don't override user notes)
             let currentNotes = event.notes ?? ""
-            let (_, _, userNotes) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
+            let (_, _, _, userNotes) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
 
             if let notes = userNotes, !notes.isEmpty {
                 event.notes = shiftType.id.uuidString + "\n---\n" + notes
@@ -496,7 +496,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Extract the shift type ID from current notes
         let currentNotes = event.notes ?? ""
-        let (shiftTypeIdString, isSickDay, _) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
+        let (shiftTypeIdString, isSickDay, _, _) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
 
         // Build metadata with shift type ID and sick day flag
         var metadata = shiftTypeIdString
@@ -649,10 +649,11 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
     /// - Parameters:
     ///   - notes: The raw notes string from the EventKit event
     ///   - eventTitle: The event title (for logging purposes)
-    /// - Returns: A tuple containing the shift type ID string, sick day flag, and optional user notes
-    private func extractNotesAndShiftTypeId(from notes: String, eventTitle: String) -> (shiftTypeId: String, isSickDay: Bool, userNotes: String?) {
+    /// - Returns: A tuple containing the shift type ID string, sick day flag, sick day reason, and optional user notes
+    private func extractNotesAndShiftTypeId(from notes: String, eventTitle: String) -> (shiftTypeId: String, isSickDay: Bool, reason: String?, userNotes: String?) {
         var shiftTypeIdString = ""
         var isSickDay = false
+        var reason: String? = nil
         var userNotes: String? = nil
 
         // Try different possible separators
@@ -690,13 +691,32 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             } else {
                 isSickDay = flagSection.lowercased().hasPrefix("true")
             }
+
+            // Extract reason if sick day flag is true and REASON: field exists
+            if isSickDay, let reasonRange = metadataSection.range(of: "|REASON:") {
+                let reasonStart = metadataSection.index(reasonRange.upperBound, offsetBy: 0)
+                let remainingText = metadataSection[reasonStart...]
+
+                // Find end of reason (next | or end of string)
+                if let endIndex = remainingText.firstIndex(of: "|") {
+                    reason = String(remainingText[..<endIndex])
+                } else {
+                    reason = String(remainingText)
+                }
+
+                // Trim whitespace
+                reason = reason?.trimmingCharacters(in: .whitespacesAndNewlines)
+                if reason?.isEmpty == true {
+                    reason = nil
+                }
+            }
         } else {
             // No sick day flag - backward compatible (default to false)
             shiftTypeIdString = metadataSection
             isSickDay = false
         }
 
-        return (shiftTypeIdString, isSickDay, userNotes)
+        return (shiftTypeIdString, isSickDay, reason, userNotes)
     }
 
     /// Reify raw EventKit event to ScheduledShiftData (intermediate representation)
@@ -708,7 +728,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             return nil
         }
 
-        let (shiftTypeIdString, isSickDay, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
+        let (shiftTypeIdString, isSickDay, reason, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 
         guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
             logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")
@@ -727,7 +747,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             title: event.title,
             location: event.location,
             notes: userNotes,
-            isSickDay: isSickDay
+            isSickDay: isSickDay,
+            reason: reason
         )
     }
 
@@ -738,7 +759,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             return nil
         }
 
-        let (shiftTypeIdString, isSickDay, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
+        let (shiftTypeIdString, isSickDay, reason, userNotes) = extractNotesAndShiftTypeId(from: notes, eventTitle: event.title)
 
         guard let shiftTypeId = UUID(uuidString: shiftTypeIdString) else {
             logger.error("Event '\(event.title)' has invalid shift type ID: '\(shiftTypeIdString)' (raw notes: '\(notes)')")
@@ -763,7 +784,8 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
             date: startDate,
             endDate: endDate,
             notes: userNotes,
-            isSickDay: isSickDay
+            isSickDay: isSickDay,
+            reason: reason
         )
 
         return shift
@@ -784,7 +806,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
         // Extract the shift type ID from current notes
         let currentNotes = event.notes ?? ""
-        let (shiftTypeIdString, _, userNotes) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
+        let (shiftTypeIdString, _, _, userNotes) = extractNotesAndShiftTypeId(from: currentNotes, eventTitle: event.title)
 
         // Build metadata with shift type ID and sick day flag
         var metadata = shiftTypeIdString

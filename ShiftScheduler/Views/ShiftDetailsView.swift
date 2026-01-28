@@ -195,7 +195,32 @@ struct ShiftDetailsView: View {
                             Spacer()
                         }
 
-                        // Sick note if available
+                        // Sick day REASON (primary info)
+                        if let reason = currentShift.reason, !reason.isEmpty {
+                            Divider()
+                                .padding(.vertical, 4)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "heart.text.square")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+
+                                    Text("Reason")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .textCase(.uppercase)
+                                        .foregroundColor(.orange)
+                                }
+
+                                Text(reason)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(nil)
+                            }
+                        }
+
+                        // Additional user notes (secondary info)
                         if let notes = currentShift.notes, !notes.isEmpty {
                             Divider()
                                 .padding(.vertical, 4)
@@ -206,7 +231,7 @@ struct ShiftDetailsView: View {
                                         .font(.caption)
                                         .foregroundColor(.orange)
 
-                                    Text("Note")
+                                    Text("Additional Notes")
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                         .textCase(.uppercase)

@@ -31,7 +31,8 @@ struct SickDayTests {
             endDate: date,
             title: "Test Shift",
             notes: nil,
-            isSickDay: true
+            isSickDay: true,
+            reason: nil
         )
         #expect(shiftData.isSickDay == true)
     }
