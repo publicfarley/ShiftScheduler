@@ -79,12 +79,18 @@ private struct ReasonSection: View {
         reason.components(separatedBy: .newlines).count
     }
 
-    private var hasMoreThanThreeLines: Bool {
-        lineCount > 3
+    private var characterCount: Int {
+        reason.count
     }
 
-    private var hasMoreThanSixLines: Bool {
-        lineCount > 6
+    private var shouldShowExpansionControls: Bool {
+        // Show if EITHER line count > 3 OR character count > 80
+        lineCount > 3 || characterCount > 80
+    }
+
+    private var shouldShowFullNoteButton: Bool {
+        // Show if EITHER line count > 6 OR character count > 240
+        lineCount > 6 || characterCount > 240
     }
 
     var body: some View {
@@ -98,8 +104,8 @@ private struct ReasonSection: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Expansion controls (show if text has more than 3 lines)
-            if hasMoreThanThreeLines {
+            // Expansion controls (show if either threshold is exceeded)
+            if shouldShowExpansionControls {
                 HStack(spacing: 12) {
                     // Show more/less button
                     Button(action: {
@@ -118,8 +124,8 @@ private struct ReasonSection: View {
                     }
                     .buttonStyle(.plain)
 
-                    // "View Full Note" button (only when expanded and text exceeds 6 lines)
-                    if isExpanded && hasMoreThanSixLines {
+                    // "View Full Note" button (only when expanded and text exceeds 6 lines or 240 chars)
+                    if isExpanded && shouldShowFullNoteButton {
                         Button(action: {
                             showFullNoteSheet = true
                         }) {
