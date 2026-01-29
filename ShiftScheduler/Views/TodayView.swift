@@ -403,19 +403,29 @@ struct TodayView: View {
                                     }
 
                                     if !todayShifts.isEmpty {
-                                        VStack(spacing: 16) {
-                                            // Use Multi-Shift Carousel
-                                            MultiShiftCarousel(shifts: todayShifts)
-                                                .frame(height: 200)
+                                        ZStack(alignment: .top) {
+                                            // Background layout with divider and quick actions
+                                            VStack(spacing: 16) {
+                                                Spacer()
+                                                    .frame(height: 200)
 
-                                            // Divider between shift and quick actions
-                                            Divider()
-                                                .padding(.vertical, 4)
+                                                // Divider between shift and quick actions
+                                                Divider()
+                                                    .padding(.vertical, 4)
 
-                                            // Quick Actions Section (show for first shift)
-                                            if let firstShift = todayShifts.first {
-                                                QuickActionsView(shift: firstShift)
+                                                // Quick Actions Section (show for first shift)
+                                                if let firstShift = todayShifts.first {
+                                                    QuickActionsView(shift: firstShift)
+                                                }
                                             }
+
+                                            // Carousel overlays on top - can expand and occlude quick actions
+                                            VStack {
+                                                MultiShiftCarousel(shifts: todayShifts)
+                                                    .frame(minHeight: 200)
+                                                Spacer()
+                                            }
+                                            .zIndex(1)
                                         }
                                         .offset(x: todayCardOffset)
                                         .opacity(todayCardOpacity)

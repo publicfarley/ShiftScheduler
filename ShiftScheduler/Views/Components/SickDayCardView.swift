@@ -74,9 +74,17 @@ private struct ReasonSection: View {
     @Binding var isExpanded: Bool
     @Binding var showFullNoteSheet: Bool
 
-    private var isTruncatedAtSixLines: Bool {
-        // Heuristic: ~40 characters per line, 6 lines ≈ 240 characters
-        reason.count > 240
+    private var lineCount: Int {
+        // Count actual lines by splitting on newlines
+        reason.components(separatedBy: .newlines).count
+    }
+
+    private var hasMoreThanThreeLines: Bool {
+        lineCount > 3
+    }
+
+    private var hasMoreThanSixLines: Bool {
+        lineCount > 6
     }
 
     var body: some View {
@@ -90,8 +98,8 @@ private struct ReasonSection: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Expansion controls (show if text needs truncation)
-            if reason.count > 80 {
+            // Expansion controls (show if text has more than 3 lines)
+            if hasMoreThanThreeLines {
                 HStack(spacing: 12) {
                     // Show more/less button
                     Button(action: {
@@ -111,7 +119,7 @@ private struct ReasonSection: View {
                     .buttonStyle(.plain)
 
                     // "View Full Note" button (only when expanded and text exceeds 6 lines)
-                    if isExpanded && isTruncatedAtSixLines {
+                    if isExpanded && hasMoreThanSixLines {
                         Button(action: {
                             showFullNoteSheet = true
                         }) {
