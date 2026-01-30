@@ -140,6 +140,7 @@ struct SickDayTests {
     func testCalendarServiceMarkAsSick() async throws {
         let service = MockCalendarService()
         let shift = try #require(ScheduledShiftBuilder.tomorrow()?.build())
+        service.mockShifts = [shift]
 
         let initialCallCount = service.markShiftAsSickCallCount
         try await service.markShiftAsSick(
@@ -155,6 +156,7 @@ struct SickDayTests {
     func testCalendarServicePreservesNotes() async throws {
         let service = MockCalendarService()
         let shift = ScheduledShiftBuilder.today().build()
+        service.mockShifts = [shift]
 
         // Mark shift with both notes and sick day flag
         try await service.markShiftAsSick(

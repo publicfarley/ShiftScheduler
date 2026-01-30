@@ -263,8 +263,19 @@ struct PersistenceServiceUnitTests {
             reason: "Old change"
         )
 
-        // Create recent entry
-        let recentEntry = try Self.createTestChangeLogEntry()
+        // Create recent entry with current date
+        let recentDate = Date()
+        let recentEntry = ChangeLogEntry(
+            id: UUID(),
+            timestamp: recentDate,
+            userId: UUID(),
+            userDisplayName: "Recent User",
+            changeType: .switched,
+            scheduledShiftDate: recentDate,
+            oldShiftSnapshot: nil,
+            newShiftSnapshot: nil,
+            reason: "Recent change"
+        )
 
         try await mockService.addChangeLogEntry(oldEntry)
         try await mockService.addChangeLogEntry(recentEntry)
