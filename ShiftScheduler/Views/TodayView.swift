@@ -235,25 +235,16 @@ private struct TodayShiftSection: View {
             }
 
             if !todayShifts.isEmpty {
-                ZStack(alignment: .top) {
-                    VStack(spacing: 16) {
-                        Spacer()
-                            .frame(height: 200)
+                VStack(spacing: 16) {
+                    MultiShiftCarousel(shifts: todayShifts)
+                        .frame(minHeight: 200)
 
-                        Divider()
-                            .padding(.vertical, 4)
+                    Divider()
+                        .padding(.vertical, 4)
 
-                        if let firstShift = todayShifts.first {
-                            QuickActionsView(shift: firstShift)
-                        }
+                    if let firstShift = todayShifts.first {
+                        QuickActionsView(shift: firstShift)
                     }
-
-                    VStack {
-                        MultiShiftCarousel(shifts: todayShifts)
-                            .frame(minHeight: 200)
-                        Spacer()
-                    }
-                    .zIndex(1)
                 }
                 .offset(x: cardOffset)
                 .opacity(cardOpacity)
