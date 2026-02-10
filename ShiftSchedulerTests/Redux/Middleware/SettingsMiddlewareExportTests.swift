@@ -45,10 +45,10 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create three consecutive days, all with shifts
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
         let date1 = startDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: date1))
         let endDate = date3
 
         // Map dates to symbols (all scheduled)
@@ -100,9 +100,9 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create three consecutive days, middle day unscheduled
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
         let date1 = startDate
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: date1))
         let endDate = date3
 
         // Map dates to symbols (day 2 unscheduled)
@@ -153,10 +153,10 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create five consecutive days, days 2 and 4 unscheduled
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
         let date1 = startDate
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
-        let date5 = Calendar.current.date(byAdding: .day, value: 4, to: date1)!
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: date1))
+        let date5 = try #require(Calendar.current.date(byAdding: .day, value: 4, to: date1))
         let endDate = date5
 
         // Map dates to symbols (days 2 and 4 unscheduled)
@@ -208,8 +208,8 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create three consecutive days, all unscheduled
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
-        let endDate = Calendar.current.date(byAdding: .day, value: 2, to: startDate)!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
+        let endDate = try #require(Calendar.current.date(byAdding: .day, value: 2, to: startDate))
 
         // No shifts scheduled
         mockCalendar.mockShifts = []
@@ -252,10 +252,10 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create three consecutive days, first day unscheduled
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
         let date1 = startDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: date1))
         let endDate = date3
 
         // Map dates to symbols (day 1 unscheduled)
@@ -306,10 +306,10 @@ struct SettingsMiddlewareExportTests {
         let mockCalendar = try #require(mockServices.calendarService as? MockCalendarService)
 
         // Create three consecutive days, last day unscheduled
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3))!
+        let startDate = try #require(Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 3)))
         let date1 = startDate
-        let date2 = Calendar.current.date(byAdding: .day, value: 1, to: date1)!
-        let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
+        let date2 = try #require(Calendar.current.date(byAdding: .day, value: 1, to: date1))
+        let date3 = try #require(Calendar.current.date(byAdding: .day, value: 2, to: date1))
         let endDate = date3
 
         // Map dates to symbols (day 3 unscheduled)
