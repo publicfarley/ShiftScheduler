@@ -89,32 +89,3 @@ public final class ServiceContainer {
         )
     }
 }
-
-// MARK: - Shared Instance (Optional - For Convenience)
-
-/// Global shared service container instance
-/// Usage in Redux middleware: let services = ServiceContainer.shared
-/// For testing: Create a new container with mock services
-extension ServiceContainer {
-    private static var _shared: ServiceContainer?
-
-    /// Get or create the shared service container instance
-    static var shared: ServiceContainer {
-        if let existing = _shared {
-            return existing
-        }
-        let new = ServiceContainer()
-        _shared = new
-        return new
-    }
-
-    /// Reset the shared container (useful for testing)
-    static func resetShared() {
-        _shared = nil
-    }
-
-    /// Set a custom shared container (useful for testing)
-    static func setSharedForTesting(_ container: ServiceContainer) {
-        _shared = container
-    }
-}
