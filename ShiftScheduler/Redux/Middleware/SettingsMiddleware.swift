@@ -148,8 +148,8 @@ func settingsMiddleware(
                     shift.occursOn(date: currentDate)
                 }.sorted { $0.date < $1.date }
 
-                // Extract symbol (use first shift if multiple, or empty if none)
-                let symbol = shiftsOnDate.first?.shiftType?.symbol ?? ""
+                // Extract symbol (use first shift if multiple, or tilde if none)
+                let symbol = shiftsOnDate.first?.shiftType?.symbol ?? "~"
                 dateToSymbols.append((currentDate, symbol))
 
                 // Move to next day

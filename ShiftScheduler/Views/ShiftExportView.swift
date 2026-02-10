@@ -111,7 +111,7 @@ struct ShiftExportView: View {
                 .cornerRadius(8)
             }
 
-            Text("Export will include shift type symbols for each day in the selected range, separated by spaces.")
+            Text("Export will include shift type symbols for each day in the selected range, separated by spaces. Unscheduled dates will be marked with ~.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 4)
