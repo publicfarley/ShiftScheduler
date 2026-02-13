@@ -30,7 +30,7 @@ struct HourMinuteTime: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-enum ShiftDuration: Codable, Equatable, Hashable, Sendable {
+enum ShiftDuration: Equatable, Hashable, Sendable {
     case allDay
     case scheduled(from: HourMinuteTime, to: HourMinuteTime)
 
@@ -134,5 +134,49 @@ enum ShiftDuration: Codable, Equatable, Hashable, Sendable {
             return true // All-day shifts are always valid
         }
         return duration < 24.0
+    }
+}
+
+// MARK: - Codable (nonisolated encoding/decoding)
+extension ShiftDuration: Codable {
+    enum CodingKeys: String, CodingKey {
+        case allDay
+        case scheduled
+    }
+
+    enum ScheduledCodingKeys: String, CodingKey {
+        case from, to
+    }
+
+    nonisolated func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .allDay:
+            var unkeyedContainer = container.nestedUnkeyedContainer(forKey: .allDay)
+            try unkeyedContainer.encodeNil()
+        case .scheduled(let from, let to):
+            var nestedContainer = container.nestedContainer(keyedBy: ScheduledCodingKeys.self, forKey: .scheduled)
+            try nestedContainer.encode(from, forKey: .from)
+            try nestedContainer.encode(to, forKey: .to)
+        }
+    }
+
+    nonisolated init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if container.contains(.allDay) {
+            self = .allDay
+        } else if container.contains(.scheduled) {
+            let nestedContainer = try container.nestedContainer(keyedBy: ScheduledCodingKeys.self, forKey: .scheduled)
+            let from = try nestedContainer.decode(HourMinuteTime.self, forKey: .from)
+            let to = try nestedContainer.decode(HourMinuteTime.self, forKey: .to)
+            self = .scheduled(from: from, to: to)
+        } else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unknown ShiftDuration variant"
+                )
+            )
+        }
     }
 }
