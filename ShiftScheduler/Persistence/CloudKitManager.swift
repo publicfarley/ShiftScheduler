@@ -107,6 +107,15 @@ actor CloudKitManager: Sendable {
             }
             logger.debug("Fetched \(shiftTypes.count) ShiftTypes from CloudKit")
             return shiftTypes
+        } catch let error as CKError {
+            if error.code == .unknownItem {
+                logger.error("❌ CloudKit schema missing: 'ShiftType' record type not found")
+                logger.error("📚 Setup required: See CLOUDKIT_SETUP.md in project root")
+                logger.error("🔧 Or run initializeSchemaIfNeeded() in development")
+                throw CloudKitError.fetchFailed("CloudKit schema not configured. See CLOUDKIT_SETUP.md")
+            }
+            logger.error("Failed to fetch ShiftTypes: \(error.localizedDescription)")
+            throw CloudKitError.fetchFailed(error.localizedDescription)
         } catch {
             logger.error("Failed to fetch ShiftTypes: \(error.localizedDescription)")
             throw CloudKitError.fetchFailed(error.localizedDescription)
@@ -260,6 +269,57 @@ actor CloudKitManager: Sendable {
         logger.debug("Migrated \(shiftTypes.count) shift types to CloudKit")
 
         logger.debug("CloudKit migration complete")
+    }
+
+    // MARK: - Development Schema Initialization
+
+    /// Initialize CloudKit schema in development environment
+    /// Uses Just-In-Time (JIT) schema creation by saving sample records
+    ///
+    /// ⚠️ Only works in development environment - production requires manual Dashboard setup
+    func initializeSchemaIfNeeded() async throws {
+        // Check if schema already exists
+        do {
+            _ = try await fetchAllShiftTypes()
+            _ = try await fetchAllLocations()
+            logger.debug("CloudKit schema already exists")
+            return
+        } catch let error as CKError where error.code == .unknownItem {
+            // Schema doesn't exist - create it in development
+            logger.debug("CloudKit schema not found - initializing in development")
+        } catch {
+            // Other errors - don't try to initialize
+            throw error
+        }
+
+        // Create sample location first (ShiftType references Location)
+        let sampleLocation = Location(
+            id: UUID(),
+            name: "Sample Location",
+            address: "Created for schema initialization"
+        )
+
+        // Create sample shift type
+        let sampleShiftType = ShiftType(
+            id: UUID(),
+            symbol: "📋",
+            duration: .allDay,
+            title: "Sample Shift Type",
+            description: "Created for schema initialization",
+            location: sampleLocation
+        )
+
+        // Save records - this creates the schema in development via JIT
+        do {
+            try await saveLocation(sampleLocation)
+            try await saveShiftType(sampleShiftType)
+            logger.debug("✅ CloudKit schema initialized in development environment")
+            logger.debug("ℹ️ For production, see CLOUDKIT_SETUP.md")
+        } catch {
+            logger.error("Failed to initialize CloudKit schema: \(error.localizedDescription)")
+            logger.error("📚 Manual setup required - see CLOUDKIT_SETUP.md")
+            throw CloudKitError.saveFailed("Schema initialization failed: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Private Helpers

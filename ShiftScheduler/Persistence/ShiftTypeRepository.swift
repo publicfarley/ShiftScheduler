@@ -130,6 +130,23 @@ actor ShiftTypeRepository: Sendable {
             // In production, compare modifiedAt timestamps for proper conflict resolution
             try await saveLocal(cloudShiftTypes)
             logger.debug("Synced \(cloudShiftTypes.count) ShiftTypes from CloudKit to local cache")
+        } catch let error as CloudKitManager.CloudKitError {
+            if case .fetchFailed(let message) = error, message.contains("schema not configured") {
+                // First-time setup - try to initialize schema in development
+                logger.warning("Attempting automatic schema initialization...")
+                do {
+                    try await cloudKitManager.initializeSchemaIfNeeded()
+                    // Retry fetch after initialization
+                    let cloudShiftTypes = try await cloudKitManager.fetchAllShiftTypes()
+                    try await saveLocal(cloudShiftTypes)
+                    logger.debug("✅ Schema initialized and synced successfully")
+                } catch {
+                    logger.error("Schema initialization failed: \(error.localizedDescription)")
+                    logger.error("📚 Manual setup required - see CLOUDKIT_SETUP.md")
+                }
+            } else {
+                logger.warning("Failed to sync ShiftTypes from CloudKit (offline?): \(error.localizedDescription)")
+            }
         } catch {
             logger.warning("Failed to sync ShiftTypes from CloudKit (offline?): \(error.localizedDescription)")
         }

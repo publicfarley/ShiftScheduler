@@ -129,6 +129,23 @@ actor LocationRepository: Sendable {
             // Merge strategy: CloudKit wins for conflicts (last-write-wins)
             try await saveLocal(cloudLocations)
             logger.debug("Synced \(cloudLocations.count) Locations from CloudKit to local cache")
+        } catch let error as CloudKitManager.CloudKitError {
+            if case .fetchFailed(let message) = error, message.contains("schema not configured") {
+                // First-time setup - try to initialize schema in development
+                logger.warning("Attempting automatic schema initialization...")
+                do {
+                    try await cloudKitManager.initializeSchemaIfNeeded()
+                    // Retry fetch after initialization
+                    let cloudLocations = try await cloudKitManager.fetchAllLocations()
+                    try await saveLocal(cloudLocations)
+                    logger.debug("✅ Schema initialized and synced successfully")
+                } catch {
+                    logger.error("Schema initialization failed: \(error.localizedDescription)")
+                    logger.error("📚 Manual setup required - see CLOUDKIT_SETUP.md")
+                }
+            } else {
+                logger.warning("Failed to sync Locations from CloudKit (offline?): \(error.localizedDescription)")
+            }
         } catch {
             logger.warning("Failed to sync Locations from CloudKit (offline?): \(error.localizedDescription)")
         }
