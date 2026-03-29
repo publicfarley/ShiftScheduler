@@ -95,3 +95,9 @@ iOSInjectionProject/
 # Build and test output
 test_output.txt
 *_output.txt
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+Package.resolved
