@@ -12,11 +12,11 @@ Add an import facility that accepts shift schedule data as **pasted text from th
 
 - **First token**: anchor date in ISO `yyyy-MM-dd` format.
 - **Remaining tokens**: one shift-type symbol per consecutive calendar day, whitespace-separated. The first symbol applies to the anchor date itself, the second to the next day, and so on. The example above covers 2026-12-28 through 2027-01-07 (11 days).
-- **`~` token**: skip the day, leave it unscheduled (matches the export format, which marks unscheduled days with `~`).
-- **Symbols**: matched case-insensitively against the `ShiftType.symbol` values in the user's shift type catalog. Unknown symbols are a validation error — the import never silently guesses.
+- **`~` and `x` tokens**: skip the day, leave it unscheduled. `x` is treated exactly like `~` (case-insensitive, so `X` too). `~` matches the export format, which marks unscheduled days with `~`; `x` is the conventional day-off notation in hand-written rotations like the sample above.
+- **Symbols**: all other tokens are matched case-insensitively against the `ShiftType.symbol` values in the user's shift type catalog. Unknown symbols are a validation error — the import never silently guesses.
 - **Multiple lines**: each non-empty line is an independent `date symbols...` record, allowing several date ranges in one import. Blank lines and surrounding whitespace are ignored.
 
-> **Open decision — `x` as day-off alias:** In the sample, `x` likely denotes an off day. If the user's catalog contains a shift type with symbol `x` (e.g. an "Off" shift), it imports as that shift. If not, validation will reject it and the preview will say which symbol is unknown. If desired, we could later add a setting to treat a configurable symbol (default `x`) as "skip", but the initial implementation treats only `~` as skip to stay strictly round-trip-compatible with export.
+> **Note — `x` is reserved:** Because `x`/`X` always means "skip", a shift type whose catalog symbol is `x` cannot be referenced by import. Skip-token checking happens **before** catalog lookup. The preview makes this visible by labeling those days "Skipped".
 
 ---
 
@@ -47,8 +47,11 @@ A pure, `Sendable`, fully unit-testable component with no service dependencies.
 struct ShiftImportParser {
     struct ParsedEntry: Equatable, Sendable {
         let date: Date          // startOfDay
-        let symbol: String      // raw symbol token ("~" allowed)
+        let symbol: String      // raw symbol token ("~"/"x" skip tokens allowed)
     }
+
+    /// Tokens (lowercased) that mean "leave this day unscheduled"
+    static let skipTokens: Set<String> = ["~", "x"]
 
     enum ParseError: Error, Equatable {
         case emptyInput
@@ -66,7 +69,7 @@ Rules:
 - Per line: first whitespace-separated token must parse as `yyyy-MM-dd` (fixed `en_US_POSIX` locale, current calendar/timezone at `startOfDay`); remaining tokens map to consecutive days.
 - Reject a line with a valid date but zero symbols.
 - Reject duplicate day assignments across lines.
-- `~` entries are retained in the parse result (so the preview can show "skipped") but produce no shift.
+- Skip-token entries (`~`, `x`, case-insensitive) are retained in the parse result (so the preview can show "Skipped") but produce no shift.
 
 ### Step 2 — Resolution & preview model (same file or `ShiftImportPreview.swift`)
 
@@ -76,7 +79,7 @@ A second pure stage resolves parsed entries against the catalog and existing sch
 struct ShiftImportPreview: Equatable, Sendable {
     enum DayStatus: Equatable, Sendable {
         case willImport(ShiftType)
-        case skipped                    // "~"
+        case skipped                    // "~" or "x" (checked before catalog lookup)
         case unknownSymbol(String)      // blocks import
         case conflict(ShiftType, existing: ScheduledShiftData)  // day already scheduled
     }
@@ -87,6 +90,7 @@ struct ShiftImportPreview: Equatable, Sendable {
 }
 ```
 
+- Skip tokens (`~`, `x`) are classified as `.skipped` first; only remaining tokens go through catalog lookup.
 - Symbol lookup: case-insensitive exact match on `ShiftType.symbol` from `state.shiftTypes.shiftTypes`.
 - Conflicts detected against shifts loaded via `calendarService.loadShifts(from:to:)` for the parsed date span (same `occursOn(date:)` check the bulk-add validation uses).
 
@@ -162,7 +166,7 @@ Sheet presented from Settings with:
    - **Paste from Clipboard** button → `.pasteImportFromClipboard`.
    - **Import from File…** button → SwiftUI `.fileImporter(allowedContentTypes: [.plainText, .text])`; read the file (security-scoped access), dispatch `.importFileLoaded(...)`.
 2. **Preview button** → `.validateImport`.
-3. **Preview section** (when `importPreview != nil`): per-day rows — date, symbol, resolved shift title/time or "Skipped (~)" / "⚠ Unknown symbol" / "Conflict: already scheduled". Summary line with counts. Conflict policy picker (Skip conflicting days / Cancel if conflicts).
+3. **Preview section** (when `importPreview != nil`): per-day rows — date, symbol, resolved shift title/time or "Skipped" (for `~`/`x`) / "⚠ Unknown symbol" / "Conflict: already scheduled". Summary line with counts. Conflict policy picker (Skip conflicting days / Cancel if conflicts).
 4. **Import N Shifts** button → `.confirmImport`; disabled while `isImporting` or when `hasBlockingErrors`.
 5. Error and success sections styled like the export view's `errorSection`.
 6. Per CLAUDE.md: `.scrollDismissesKeyboard(.immediately)` + `.dismissKeyboardOnTap()`.
@@ -175,7 +179,7 @@ Add a `shiftImportSection` beside the existing `shiftExportSection` ("Import shi
 
 | Suite | Coverage |
 |---|---|
-| `ShiftImportParserTests` (new) | valid single line (the sample input, verifying 11 consecutive dates); multi-line; blank lines; `~` handling; invalid date token; missing symbols; duplicate day across lines; leading/trailing whitespace; month/year rollover (2026-12-28 → 2027-01) |
+| `ShiftImportParserTests` (new) | valid single line (the sample input, verifying 11 consecutive dates); multi-line; blank lines; skip tokens `~`, `x`, `X` produce no shift; invalid date token; missing symbols; duplicate day across lines; leading/trailing whitespace; month/year rollover (2026-12-28 → 2027-01) |
 | `SettingsReducerTests` (extend) | each new action's state transition; sheet dismissal clears state |
 | `SettingsMiddlewareImportTests` (new, mirrors `SettingsMiddlewareExportTests`) | validate happy path via mocks; unknown symbol blocks; conflict detection; confirm creates N events + N change log entries via `MockCalendarService`/`MockPersistenceService`; skip-conflicts vs abort policies; partial-failure error message; `.schedule(.loadShifts)` dispatched after success |
 | Round-trip test | export a known schedule → prepend the start date → import into empty schedule → same shifts |
@@ -191,7 +195,8 @@ Add a `shiftImportSection` beside the existing `shiftExportSection` ("Import shi
 | Case | Behavior |
 |---|---|
 | Symbol not in catalog | Validation error shown in preview; import blocked (no silent guessing) |
-| `~` symbol | Day intentionally left unscheduled |
+| `~` or `x`/`X` symbol | Day intentionally left unscheduled (skip tokens, checked before catalog lookup) |
+| Catalog contains a shift type with symbol `x` | Unreachable via import — `x` is reserved as a skip token; preview shows "Skipped" so this is visible |
 | Day already has a shift | Surfaced as conflict; user chooses skip-conflicting-days (default) or abort |
 | Duplicate day across input lines | Parse error |
 | Case differences (`WD` vs `wd`) | Case-insensitive symbol match |
