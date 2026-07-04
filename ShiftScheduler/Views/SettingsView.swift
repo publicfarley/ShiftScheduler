@@ -81,6 +81,16 @@ struct SettingsView: View {
             )) {
                 ShiftExportView()
             }
+            .sheet(isPresented: Binding(
+                get: { store.state.settings.showImportSheet },
+                set: { newValue in
+                    Task {
+                        await store.dispatch(action: .settings(.importSheetToggled(newValue)))
+                    }
+                }
+            )) {
+                ShiftImportView()
+            }
         }
     }
 
@@ -168,6 +178,9 @@ struct SettingsView: View {
 
             // Shift Export
             shiftExportSection
+
+            // Shift Import
+            shiftImportSection
         }
     }
 
@@ -459,6 +472,46 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "square.and.arrow.down")
                     Text("Export Shifts")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6).opacity(0.3))
+        )
+    }
+
+    // MARK: - Shift Import Section
+
+    private var shiftImportSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "square.and.arrow.up")
+                    .foregroundColor(.blue)
+                Text("Shift Import")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Text("Import shifts from a start date and a space-separated list of shift symbols.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: {
+                Task {
+                    await store.dispatch(action: .settings(.importSheetToggled(true)))
+                }
+            }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Import Shifts")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

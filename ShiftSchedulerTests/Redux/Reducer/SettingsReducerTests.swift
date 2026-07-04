@@ -194,4 +194,128 @@ struct SettingsReducerTests {
         #expect(state.hasUnsavedChanges == false)
         #expect(state.retentionPolicy == .days30)  // Policy preserved
     }
+
+    // MARK: - Shift Import
+
+    @Test("importSheetToggled(true) resets import state")
+    func testImportSheetToggledOnResetsState() {
+        var state = SettingsState()
+        state.importText = "stale text"
+        state.importErrorMessage = "stale error"
+        state.importSuccessMessage = "stale success"
+
+        let newState = settingsReducer(state: state, action: .importSheetToggled(true))
+
+        #expect(newState.showImportSheet == true)
+        #expect(newState.importText == "")
+        #expect(newState.importPreview == nil)
+        #expect(newState.importErrorMessage == nil)
+        #expect(newState.importSuccessMessage == nil)
+    }
+
+    @Test("importSheetToggled(false) does not reset in-progress text")
+    func testImportSheetToggledOffPreservesText() {
+        var state = SettingsState()
+        state.importText = "keep me"
+
+        let newState = settingsReducer(state: state, action: .importSheetToggled(false))
+
+        #expect(newState.showImportSheet == false)
+        #expect(newState.importText == "keep me")
+    }
+
+    @Test("importTextChanged updates text and clears stale preview/errors")
+    func testImportTextChangedClearsPreview() throws {
+        var state = SettingsState()
+        state.importPreview = ShiftImportPreview(days: [])
+        state.importErrorMessage = "old error"
+
+        let newState = settingsReducer(state: state, action: .importTextChanged("new text"))
+
+        #expect(newState.importText == "new text")
+        #expect(newState.importPreview == nil)
+        #expect(newState.importErrorMessage == nil)
+    }
+
+    @Test("importPreviewGenerated stores the preview and clears errors")
+    func testImportPreviewGenerated() {
+        var state = SettingsState()
+        state.importErrorMessage = "old error"
+
+        let preview = ShiftImportPreview(days: [])
+        let newState = settingsReducer(state: state, action: .importPreviewGenerated(preview))
+
+        #expect(newState.importPreview == preview)
+        #expect(newState.importErrorMessage == nil)
+    }
+
+    @Test("confirmImport sets isImporting and clears messages")
+    func testConfirmImportSetsLoadingState() {
+        var state = SettingsState()
+        state.importSuccessMessage = "old success"
+        state.importErrorMessage = "old error"
+
+        let newState = settingsReducer(state: state, action: .confirmImport)
+
+        #expect(newState.isImporting == true)
+        #expect(newState.importSuccessMessage == nil)
+        #expect(newState.importErrorMessage == nil)
+    }
+
+    @Test("importCompleted success clears preview and sets success message")
+    func testImportCompletedSuccess() {
+        var state = SettingsState()
+        state.isImporting = true
+        state.importText = "2026-01-01 d"
+        state.importPreview = ShiftImportPreview(days: [])
+
+        let newState = settingsReducer(state: state, action: .importCompleted(.success(3)))
+
+        #expect(newState.isImporting == false)
+        #expect(newState.importPreview == nil)
+        #expect(newState.importText == "")
+        #expect(newState.importSuccessMessage == "Imported 3 shifts")
+    }
+
+    @Test("importCompleted success with singular count uses singular wording")
+    func testImportCompletedSuccessSingular() {
+        var state = SettingsState()
+
+        let newState = settingsReducer(state: state, action: .importCompleted(.success(1)))
+
+        #expect(newState.importSuccessMessage == "Imported 1 shift")
+    }
+
+    @Test("importFailed sets the error message and stops loading")
+    func testImportFailed() {
+        var state = SettingsState()
+        state.isImporting = true
+
+        let newState = settingsReducer(state: state, action: .importFailed("Line 1: bad date"))
+
+        #expect(newState.isImporting == false)
+        #expect(newState.importErrorMessage == "Line 1: bad date")
+    }
+
+    @Test("resetImport clears all import state and closes the sheet")
+    func testResetImport() {
+        var state = SettingsState()
+        state.showImportSheet = true
+        state.importText = "2026-01-01 d"
+        state.importPreview = ShiftImportPreview(days: [])
+        state.importConflictPolicy = .abortOnConflict
+        state.isImporting = true
+        state.importErrorMessage = "error"
+        state.importSuccessMessage = "success"
+
+        let newState = settingsReducer(state: state, action: .resetImport)
+
+        #expect(newState.showImportSheet == false)
+        #expect(newState.importText == "")
+        #expect(newState.importPreview == nil)
+        #expect(newState.importConflictPolicy == .skipConflicts)
+        #expect(newState.isImporting == false)
+        #expect(newState.importErrorMessage == nil)
+        #expect(newState.importSuccessMessage == nil)
+    }
 }

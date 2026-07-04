@@ -178,10 +178,113 @@ func settingsMiddleware(
             UIPasteboard.general.string = symbols
         }
 
+    // MARK: - Shift Import Actions
+
+    case .pasteImportFromClipboard:
+        logger.debug("Pasting import text from clipboard")
+        let text = await MainActor.run { UIPasteboard.general.string }
+        await dispatch(.settings(.importTextChanged(text ?? "")))
+        await dispatch(.settings(.validateImport))
+
+    case .validateImport:
+        logger.debug("Validating shift import text")
+        do {
+            let entries = try ShiftImportParser.parse(state.settings.importText)
+
+            guard let firstDate = entries.first?.date, let lastDate = entries.last?.date else {
+                await dispatch(.settings(.importFailed("No shifts found to import")))
+                return
+            }
+
+            let existingShifts = try await services.calendarService.loadShifts(from: firstDate, to: lastDate)
+            let preview = ShiftImportPreview.build(
+                entries: entries,
+                shiftTypes: state.shiftTypes.shiftTypes,
+                existingShifts: existingShifts
+            )
+            await dispatch(.settings(.importPreviewGenerated(preview)))
+        } catch let error as ShiftImportParser.ParseError {
+            await dispatch(.settings(.importFailed(importParseErrorMessage(error))))
+        } catch {
+            await dispatch(.settings(.importFailed("Failed to validate import: \(error.localizedDescription)")))
+        }
+
+    case .confirmImport:
+        logger.debug("Confirming shift import")
+        guard let preview = state.settings.importPreview, !preview.hasBlockingErrors else {
+            await dispatch(.settings(.importFailed("Cannot import: resolve unknown symbols first")))
+            return
+        }
+
+        if state.settings.importConflictPolicy == .abortOnConflict && preview.conflictCount > 0 {
+            await dispatch(.settings(.importFailed("Import aborted: \(preview.conflictCount) day(s) already have a scheduled shift")))
+            return
+        }
+
+        let userId = state.userProfile.userId
+        let userDisplayName = state.userProfile.displayName
+        let calendarService = services.calendarService
+        let persistenceService = services.persistenceService
+
+        let daysToImport = preview.days.compactMap { day -> (Date, ShiftType)? in
+            if case .willImport(let shiftType) = day.status {
+                return (day.date, shiftType)
+            }
+            return nil
+        }
+
+        var createdCount = 0
+        for (date, shiftType) in daysToImport.sorted(by: { $0.0 < $1.0 }) {
+            do {
+                _ = try await calendarService.createShiftEvent(date: date, shiftType: shiftType, notes: "Imported")
+                createdCount += 1
+
+                let entry = ChangeLogEntry(
+                    id: UUID(),
+                    timestamp: Date(),
+                    userId: userId,
+                    userDisplayName: userDisplayName,
+                    changeType: .created,
+                    scheduledShiftDate: date,
+                    oldShiftSnapshot: nil,
+                    newShiftSnapshot: ShiftSnapshot(from: shiftType),
+                    reason: "Imported from text"
+                )
+                try await persistenceService.addChangeLogEntry(entry)
+            } catch {
+                logger.error("Failed to import shift on \(date): \(error.localizedDescription)")
+                let failureError = ScheduleError.calendarEventCreationFailed(
+                    "Failed to import shift on \(date). \(createdCount) shift(s) were imported before this error."
+                )
+                await dispatch(.settings(.importCompleted(.failure(failureError))))
+                await dispatch(.schedule(.loadShifts))
+                return
+            }
+        }
+
+        await dispatch(.settings(.importCompleted(.success(createdCount))))
+        await dispatch(.schedule(.loadShifts))
+
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
          .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted, .toastMessageCleared,
-         .exportSheetToggled, .exportStartDateChanged, .exportEndDateChanged, .exportGenerated, .exportFailed, .resetExport:
+         .exportSheetToggled, .exportStartDateChanged, .exportEndDateChanged, .exportGenerated, .exportFailed, .resetExport,
+         .importSheetToggled, .importTextChanged, .importFileLoaded, .importPreviewGenerated, .importConflictPolicyChanged,
+         .importCompleted, .importFailed, .resetImport:
         // Handled by reducer only
         break
+    }
+}
+
+private func importParseErrorMessage(_ error: ShiftImportParser.ParseError) -> String {
+    switch error {
+    case .emptyInput:
+        return "Import text is empty"
+    case .invalidDate(let line, let token):
+        return "Line \(line): expected a date in yyyy-MM-dd format, got \"\(token)\""
+    case .noSymbols(let line):
+        return "Line \(line): date has no shift symbols"
+    case .overlappingRanges(let date):
+        let dateStr = date.formatted(date: .abbreviated, time: .omitted)
+        return "\(dateStr) is assigned more than once"
     }
 }

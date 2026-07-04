@@ -930,6 +930,41 @@ enum SettingsAction: Equatable {
     /// Reset export state
     case resetExport
 
+    // MARK: - Shift Import Actions
+
+    /// Show/hide shift import sheet
+    case importSheetToggled(Bool)
+
+    /// Import text changed (typed, pasted, or loaded from file)
+    case importTextChanged(String)
+
+    /// User tapped "Paste from Clipboard"
+    case pasteImportFromClipboard
+
+    /// Text loaded from a file via the file importer
+    case importFileLoaded(Result<String, Error>)
+
+    /// Parse and resolve the current import text into a preview
+    case validateImport
+
+    /// Preview generated from the current import text
+    case importPreviewGenerated(ShiftImportPreview)
+
+    /// User changed how to handle conflicting days
+    case importConflictPolicyChanged(ImportConflictPolicy)
+
+    /// User confirmed the import, creating shifts from the current preview
+    case confirmImport
+
+    /// Import completed with the number of shifts created
+    case importCompleted(Result<Int, Error>)
+
+    /// Import failed with a human-readable error
+    case importFailed(String)
+
+    /// Reset import state
+    case resetImport
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -998,6 +1033,39 @@ enum SettingsAction: Equatable {
         case let (.exportGenerated(lhs), .exportGenerated(rhs)):
             return lhs == rhs
         case let (.exportFailed(lhs), .exportFailed(rhs)):
+            return lhs == rhs
+        case let (.importSheetToggled(lhs), .importSheetToggled(rhs)):
+            return lhs == rhs
+        case let (.importTextChanged(lhs), .importTextChanged(rhs)):
+            return lhs == rhs
+        case (.pasteImportFromClipboard, .pasteImportFromClipboard),
+             (.validateImport, .validateImport),
+             (.confirmImport, .confirmImport),
+             (.resetImport, .resetImport):
+            return true
+        case let (.importFileLoaded(lhs), .importFileLoaded(rhs)):
+            switch (lhs, rhs) {
+            case (.success(let l), .success(let r)):
+                return l == r
+            case (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case let (.importPreviewGenerated(lhs), .importPreviewGenerated(rhs)):
+            return lhs == rhs
+        case let (.importConflictPolicyChanged(lhs), .importConflictPolicyChanged(rhs)):
+            return lhs == rhs
+        case let (.importCompleted(lhs), .importCompleted(rhs)):
+            switch (lhs, rhs) {
+            case (.success(let l), .success(let r)):
+                return l == r
+            case (.failure, .failure):
+                return true
+            default:
+                return false
+            }
+        case let (.importFailed(lhs), .importFailed(rhs)):
             return lhs == rhs
         default:
             return false

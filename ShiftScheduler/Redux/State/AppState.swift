@@ -543,4 +543,38 @@ struct SettingsState: Equatable {
 
     /// Export error message if any
     var exportErrorMessage: String? = nil
+
+    // MARK: - Shift Import State
+
+    /// Whether the shift import sheet is visible
+    var showImportSheet: Bool = false
+
+    /// Raw import text (pasted or loaded from file)
+    var importText: String = ""
+
+    /// Resolved preview of the current import text, nil until validated
+    var importPreview: ShiftImportPreview? = nil
+
+    /// How to handle days that already have a scheduled shift
+    var importConflictPolicy: ImportConflictPolicy = .skipConflicts
+
+    /// Whether an import operation is currently in progress
+    var isImporting: Bool = false
+
+    /// Import error message if any
+    var importErrorMessage: String? = nil
+
+    /// Import success message if any (e.g. "Imported 8 shifts")
+    var importSuccessMessage: String? = nil
+}
+
+// MARK: - ImportConflictPolicy Enum
+
+/// How the import should treat days that already have a scheduled shift
+enum ImportConflictPolicy: Equatable, Hashable, Sendable {
+    /// Leave conflicting days untouched, import everything else
+    case skipConflicts
+
+    /// Abort the entire import if any conflicts are found
+    case abortOnConflict
 }

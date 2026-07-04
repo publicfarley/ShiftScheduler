@@ -1012,6 +1012,76 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
         state.exportedSymbols = nil
         state.exportErrorMessage = nil
         state.isExporting = false
+
+    // MARK: - Shift Import Cases
+
+    case .importSheetToggled(let show):
+        state.showImportSheet = show
+        // Reset state when opening sheet
+        if show {
+            state.importText = ""
+            state.importPreview = nil
+            state.importErrorMessage = nil
+            state.importSuccessMessage = nil
+        }
+
+    case .importTextChanged(let text):
+        state.importText = text
+        state.importPreview = nil
+        state.importErrorMessage = nil
+        state.importSuccessMessage = nil
+
+    case .pasteImportFromClipboard:
+        // Middleware will handle clipboard read
+        break
+
+    case .importFileLoaded(.success(let text)):
+        state.importText = text
+        state.importPreview = nil
+        state.importErrorMessage = nil
+        state.importSuccessMessage = nil
+
+    case .importFileLoaded(.failure(let error)):
+        state.importErrorMessage = "Failed to read file: \(error.localizedDescription)"
+
+    case .validateImport:
+        state.importErrorMessage = nil
+        state.importSuccessMessage = nil
+
+    case .importPreviewGenerated(let preview):
+        state.importPreview = preview
+        state.importErrorMessage = nil
+
+    case .importConflictPolicyChanged(let policy):
+        state.importConflictPolicy = policy
+
+    case .confirmImport:
+        state.isImporting = true
+        state.importErrorMessage = nil
+        state.importSuccessMessage = nil
+
+    case .importCompleted(.success(let count)):
+        state.isImporting = false
+        state.importPreview = nil
+        state.importText = ""
+        state.importSuccessMessage = "Imported \(count) shift\(count == 1 ? "" : "s")"
+
+    case .importCompleted(.failure(let error)):
+        state.isImporting = false
+        state.importErrorMessage = error.localizedDescription
+
+    case .importFailed(let message):
+        state.isImporting = false
+        state.importErrorMessage = message
+
+    case .resetImport:
+        state.showImportSheet = false
+        state.importText = ""
+        state.importPreview = nil
+        state.importConflictPolicy = .skipConflicts
+        state.isImporting = false
+        state.importErrorMessage = nil
+        state.importSuccessMessage = nil
     }
 
     return state
