@@ -11,16 +11,23 @@ final class PersistenceService: PersistenceServiceProtocol {
     private let changeLogRepository: ChangeLogRepository
     private let userProfileRepository: UserProfileRepository
 
+    /// When `true`, `loadUserProfile()` never reads or clears the legacy UserDefaults keys
+    /// (`displayName`, `autoPurgeEnabled`, `lastPurgeDate`). Used by Test Data Mode's sandbox
+    /// so enabling test mode can never delete the real user's legacy UserDefaults data.
+    private let skipLegacyMigration: Bool
+
     init(
         shiftTypeRepository: ShiftTypeRepository? = nil,
         locationRepository: LocationRepository? = nil,
         changeLogRepository: ChangeLogRepository? = nil,
-        userProfileRepository: UserProfileRepository? = nil
+        userProfileRepository: UserProfileRepository? = nil,
+        skipLegacyMigration: Bool = false
     ) {
         self.shiftTypeRepository = shiftTypeRepository ?? ShiftTypeRepository()
         self.locationRepository = locationRepository ?? LocationRepository()
         self.changeLogRepository = changeLogRepository ?? ChangeLogRepository()
         self.userProfileRepository = userProfileRepository ?? UserProfileRepository()
+        self.skipLegacyMigration = skipLegacyMigration
     }
 
     // MARK: - Shift Types
@@ -214,8 +221,9 @@ final class PersistenceService: PersistenceServiceProtocol {
             return profile
         }
 
-        // Check for UserDefaults migration
-        if let migratedProfile = try await migrateUserDefaultsToProfile() {
+        // Check for UserDefaults migration (skipped entirely in Test Data Mode so the
+        // real user's legacy UserDefaults keys are never read or cleared)
+        if !skipLegacyMigration, let migratedProfile = try await migrateUserDefaultsToProfile() {
             logger.debug("Migrated user profile from UserDefaults")
             // Save migrated profile to JSON
             try await userProfileRepository.save(migratedProfile)

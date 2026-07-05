@@ -1012,6 +1012,18 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
         state.exportedSymbols = nil
         state.exportErrorMessage = nil
         state.isExporting = false
+
+    // MARK: - Test Data Mode Cases
+
+    case .testDataModeToggled(let enabled):
+        state.isTestDataModeActive = enabled
+
+    case .resetTestDataRequested:
+        state.isTestDataResetting = true
+
+    case .testDataResetCompleted:
+        state.isTestDataResetting = false
+        state.toastMessage = .success("Test data reset")
     }
 
     return state

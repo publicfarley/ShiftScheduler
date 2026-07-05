@@ -5,6 +5,7 @@ struct SettingsView: View {
     @State private var displayName: String = ""
     @State private var saveStatus: SaveStatus = .idle
     @State private var showPurgeConfirmation = false
+    @State private var showResetTestDataConfirmation = false
     @State private var saveTask: Task<Void, Never>? = nil
 
     private enum SaveStatus: Equatable {
@@ -21,6 +22,11 @@ struct SettingsView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
+                    // MARK: - Test Data Mode Section
+                    testDataModeSection
+
+                    Divider()
+
                     // MARK: - User Profile Section
                     profileSection
 
@@ -61,6 +67,16 @@ struct SettingsView: View {
             } message: {
                 purgeConfirmationMessage
             }
+            .alert("Reset Test Data?", isPresented: $showResetTestDataConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Reset", role: .destructive) {
+                    Task {
+                        await store.dispatch(action: .settings(.resetTestDataRequested))
+                    }
+                }
+            } message: {
+                Text("This will erase the current sandbox and generate a fresh sample dataset. Your real data and the device calendar are never affected.")
+            }
             .toast(Binding(
                 get: { store.state.settings.toastMessage },
                 set: { newValue in
@@ -82,6 +98,74 @@ struct SettingsView: View {
                 ShiftExportView()
             }
         }
+    }
+
+    // MARK: - Test Data Mode Section
+
+    private var testDataModeSection: some View {
+        let isActive = store.state.settings.isTestDataModeActive
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("🧪")
+                Text("Test Data Mode")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+            }
+
+            Toggle(isOn: Binding(
+                get: { store.state.settings.isTestDataModeActive },
+                set: { newValue in
+                    Task {
+                        await store.dispatch(action: .settings(.testDataModeToggled(newValue)))
+                    }
+                }
+            )) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Use Sample Data")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text("Replaces your real data with a sample sandbox so you can explore every feature freely. Your real data and the device calendar are never touched. Turning this off returns you to your real data.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .tint(.orange)
+
+            if isActive {
+                Button(action: {
+                    showResetTestDataConfirmation = true
+                }) {
+                    HStack {
+                        if store.state.settings.isTestDataResetting {
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        Text(store.state.settings.isTestDataResetting ? "Resetting..." : "Reset Test Data")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .disabled(store.state.settings.isTestDataResetting)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isActive ? Color.orange.opacity(0.12) : Color(.systemGray6).opacity(0.5))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isActive ? Color.orange.opacity(0.5) : Color.clear, lineWidth: 1)
+        )
     }
 
     // MARK: - Profile Section

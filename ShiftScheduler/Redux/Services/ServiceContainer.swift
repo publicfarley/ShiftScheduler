@@ -88,4 +88,46 @@ public final class ServiceContainer {
             timeChangeService: timeChangeService
         )
     }
+
+    // MARK: - Test Data Mode
+
+    /// Creates a service container wired entirely to Test Data Mode's sandboxed directory:
+    /// JSON persistence under `ShiftSchedulerData-Test`, CloudKit sync disabled, and a fully
+    /// simulated calendar (no EventKit, no permission prompt). Real (non-mock)
+    /// `CurrentDayService`/`TimeChangeService` are used since they hold no user data.
+    static func createTestDataContainer() -> ServiceContainer {
+        let testDirectory = TestDataMode.testDataDirectory
+        let cloudKitManager = CloudKitManager(isEnabled: false)
+
+        let shiftTypeRepository = ShiftTypeRepository(directoryURL: testDirectory, cloudKitManager: cloudKitManager)
+        let locationRepository = LocationRepository(directoryURL: testDirectory, cloudKitManager: cloudKitManager)
+        let changeLogRepository = ChangeLogRepository(directoryURL: testDirectory)
+        let userProfileRepository = UserProfileRepository(directoryURL: testDirectory)
+
+        let persistenceService = PersistenceService(
+            shiftTypeRepository: shiftTypeRepository,
+            locationRepository: locationRepository,
+            changeLogRepository: changeLogRepository,
+            userProfileRepository: userProfileRepository,
+            skipLegacyMigration: true
+        )
+
+        let calendarService = SimulatedCalendarService(
+            directoryURL: testDirectory,
+            shiftTypeRepository: shiftTypeRepository
+        )
+
+        return ServiceContainer(
+            calendarService: calendarService,
+            persistenceService: persistenceService,
+            currentDayService: CurrentDayService(),
+            timeChangeService: TimeChangeService()
+        )
+    }
+
+    /// Convenience factory used by `StoreConfiguration` to pick the right container based on
+    /// the persisted Test Data Mode flag.
+    static func makeContainer(testDataMode: Bool) -> ServiceContainer {
+        testDataMode ? createTestDataContainer() : ServiceContainer()
+    }
 }

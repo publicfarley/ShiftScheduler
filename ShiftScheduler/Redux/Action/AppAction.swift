@@ -930,6 +930,17 @@ enum SettingsAction: Equatable {
     /// Reset export state
     case resetExport
 
+    // MARK: - Test Data Mode Actions
+
+    /// User toggled Test Data Mode on/off from Settings
+    case testDataModeToggled(Bool)
+
+    /// User tapped "Reset Test Data"
+    case resetTestDataRequested
+
+    /// Middleware finished resetting and reseeding test data
+    case testDataResetCompleted
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -999,6 +1010,11 @@ enum SettingsAction: Equatable {
             return lhs == rhs
         case let (.exportFailed(lhs), .exportFailed(rhs)):
             return lhs == rhs
+        case let (.testDataModeToggled(lhs), .testDataModeToggled(rhs)):
+            return lhs == rhs
+        case (.resetTestDataRequested, .resetTestDataRequested),
+             (.testDataResetCompleted, .testDataResetCompleted):
+            return true
         default:
             return false
         }

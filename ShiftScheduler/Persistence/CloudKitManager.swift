@@ -6,8 +6,13 @@ import OSLog
 /// to the public CloudKit database for cross-account synchronization
 actor CloudKitManager: Sendable {
     private let logger = Logger(subsystem: "com.functioncraft.ShiftScheduler", category: "CloudKit")
-    private let container: CKContainer
-    private let publicDatabase: CKDatabase
+
+    /// When `false`, this manager is fully inert: every public operation returns
+    /// immediately (empty fetches, no-op saves/deletes) and `CKContainer` is never
+    /// constructed. Used to keep Test Data Mode's sandbox iCloud-silent.
+    private let isEnabled: Bool
+    private let container: CKContainer?
+    private let publicDatabase: CKDatabase?
 
     enum CloudKitError: Error, LocalizedError, Sendable {
         case accountNotAvailable
@@ -31,15 +36,27 @@ actor CloudKitManager: Sendable {
         }
     }
 
-    init(containerIdentifier: String = "iCloud.com.functioncraft.ShiftScheduler") {
-        self.container = CKContainer(identifier: containerIdentifier)
-        self.publicDatabase = container.publicCloudDatabase
+    init(containerIdentifier: String = "iCloud.com.functioncraft.ShiftScheduler", isEnabled: Bool = true) {
+        self.isEnabled = isEnabled
+        if isEnabled {
+            let container = CKContainer(identifier: containerIdentifier)
+            self.container = container
+            self.publicDatabase = container.publicCloudDatabase
+        } else {
+            // A disabled manager must never construct CKContainer.
+            self.container = nil
+            self.publicDatabase = nil
+        }
     }
 
     // MARK: - Account Status
 
     /// Check if CloudKit account is available
     func checkAccountStatus() async throws -> Bool {
+        guard isEnabled, let container else {
+            return false
+        }
+
         let status = try await container.accountStatus()
         switch status {
         case .available:
@@ -67,6 +84,7 @@ actor CloudKitManager: Sendable {
 
     /// Save a shift type to CloudKit
     func saveShiftType(_ shiftType: ShiftType) async throws {
+        guard isEnabled, let publicDatabase else { return }
         _ = try await checkAccountStatus()
 
         let record = CKRecord(recordType: "ShiftType", recordID: CKRecord.ID(recordName: shiftType.id.uuidString))
@@ -84,7 +102,7 @@ actor CloudKitManager: Sendable {
         record["durationData"] = durationData as NSData
 
         do {
-            let savedRecord = try await saveWithRetry(record)
+            let savedRecord = try await saveWithRetry(record, database: publicDatabase)
             logger.debug("Saved ShiftType: \(shiftType.title)")
         } catch {
             logger.error("Failed to save ShiftType: \(error.localizedDescription)")
@@ -94,6 +112,7 @@ actor CloudKitManager: Sendable {
 
     /// Fetch all shift types from CloudKit
     func fetchAllShiftTypes() async throws -> [ShiftType] {
+        guard isEnabled, let publicDatabase else { return [] }
         _ = try await checkAccountStatus()
 
         let query = CKQuery(recordType: "ShiftType", predicate: NSPredicate(value: true))
@@ -124,6 +143,7 @@ actor CloudKitManager: Sendable {
 
     /// Delete a shift type from CloudKit
     func deleteShiftType(id: UUID) async throws {
+        guard isEnabled, let publicDatabase else { return }
         _ = try await checkAccountStatus()
 
         let recordID = CKRecord.ID(recordName: id.uuidString)
@@ -140,6 +160,7 @@ actor CloudKitManager: Sendable {
 
     /// Save a location to CloudKit
     func saveLocation(_ location: Location) async throws {
+        guard isEnabled, let publicDatabase else { return }
         _ = try await checkAccountStatus()
 
         let record = CKRecord(recordType: "Location", recordID: CKRecord.ID(recordName: location.id.uuidString))
@@ -149,7 +170,7 @@ actor CloudKitManager: Sendable {
         record["modifiedAt"] = Date()
 
         do {
-            let savedRecord = try await saveWithRetry(record)
+            let savedRecord = try await saveWithRetry(record, database: publicDatabase)
             logger.debug("Saved Location: \(location.name)")
         } catch {
             logger.error("Failed to save Location: \(error.localizedDescription)")
@@ -159,6 +180,7 @@ actor CloudKitManager: Sendable {
 
     /// Fetch all locations from CloudKit
     func fetchAllLocations() async throws -> [Location] {
+        guard isEnabled, let publicDatabase else { return [] }
         _ = try await checkAccountStatus()
 
         let query = CKQuery(recordType: "Location", predicate: NSPredicate(value: true))
@@ -180,6 +202,7 @@ actor CloudKitManager: Sendable {
 
     /// Delete a location from CloudKit
     func deleteLocation(id: UUID) async throws {
+        guard isEnabled, let publicDatabase else { return }
         _ = try await checkAccountStatus()
 
         let recordID = CKRecord.ID(recordName: id.uuidString)
@@ -196,6 +219,7 @@ actor CloudKitManager: Sendable {
 
     /// Subscribe to ShiftType changes (for real-time updates)
     func subscribeToShiftTypeChanges() async throws {
+        guard isEnabled, let publicDatabase else { return }
         let subscription = CKQuerySubscription(
             recordType: "ShiftType",
             predicate: NSPredicate(value: true),
@@ -217,6 +241,7 @@ actor CloudKitManager: Sendable {
 
     /// Subscribe to Location changes (for real-time updates)
     func subscribeToLocationChanges() async throws {
+        guard isEnabled, let publicDatabase else { return }
         let subscription = CKQuerySubscription(
             recordType: "Location",
             predicate: NSPredicate(value: true),
@@ -243,6 +268,7 @@ actor CloudKitManager: Sendable {
         shiftTypes: [ShiftType],
         locations: [Location]
     ) async throws {
+        guard isEnabled else { return }
         _ = try await checkAccountStatus()
 
         logger.debug("Starting CloudKit migration...")
@@ -278,6 +304,8 @@ actor CloudKitManager: Sendable {
     ///
     /// ⚠️ Only works in development environment - production requires manual Dashboard setup
     func initializeSchemaIfNeeded() async throws {
+        guard isEnabled else { return }
+
         // Check if schema already exists
         do {
             _ = try await fetchAllShiftTypes()
@@ -330,12 +358,12 @@ actor CloudKitManager: Sendable {
     }
 
     /// Retry save operation with exponential backoff for network errors
-    private func saveWithRetry(_ record: CKRecord, maxRetries: Int = 3) async throws -> CKRecord {
+    private func saveWithRetry(_ record: CKRecord, database: CKDatabase, maxRetries: Int = 3) async throws -> CKRecord {
         var lastError: Error?
 
         for attempt in 1...maxRetries {
             do {
-                return try await publicDatabase.save(record)
+                return try await database.save(record)
             } catch let error as CKError {
                 lastError = error
 

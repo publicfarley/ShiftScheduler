@@ -178,6 +178,54 @@ func settingsMiddleware(
             UIPasteboard.general.string = symbols
         }
 
+    // MARK: - Test Data Mode Actions
+
+    case .testDataModeToggled(let enabled):
+        logger.debug("Test Data Mode toggled: \(enabled)")
+        TestDataMode.isEnabled = enabled
+        // The actual store/container swap happens at the app root (ShiftSchedulerApp)
+        // via .onChange(of: reduxStore.state.settings.isTestDataModeActive)
+
+    case .resetTestDataRequested:
+        guard state.settings.isTestDataModeActive else {
+            logger.warning("Reset Test Data requested while not in Test Data Mode - ignoring")
+            return
+        }
+
+        logger.debug("Resetting test data")
+        TestDataMode.resetTestData()
+
+        do {
+            try await TestDataSeeder.reseed(
+                persistenceService: services.persistenceService,
+                calendarService: services.calendarService
+            )
+        } catch {
+            logger.error("Failed to reseed test data: \(error.localizedDescription)")
+        }
+
+        await dispatch(.settings(.testDataResetCompleted))
+
+        // Reload user profile so app-level state reflects the freshly seeded "Test User"
+        do {
+            let profile = try await services.persistenceService.loadUserProfile()
+            await dispatch(.appLifecycle(.userProfileUpdated(profile)))
+        } catch {
+            logger.error("Failed to reload user profile after test data reset: \(error.localizedDescription)")
+        }
+
+        // Reload the same data the startup middleware loads (locations + shift types)
+        await dispatch(.appLifecycle(.loadInitialData))
+
+        // Reload change log and settings-derived state so the UI refreshes in place
+        await dispatch(.changeLog(.loadChangeLogEntries))
+        await dispatch(.settings(.loadSettings))
+        await dispatch(.settings(.loadPurgeStatistics))
+
+    case .testDataResetCompleted:
+        // Handled by reducer only
+        break
+
     case .settingsLoaded, .settingsSaved, .clearUnsavedChanges, .displayNameChanged, .retentionPolicyChanged,
          .purgeStatisticsLoaded, .lastPurgeDateUpdated, .resyncCalendarEventsCompleted, .toastMessageCleared,
          .exportSheetToggled, .exportStartDateChanged, .exportEndDateChanged, .exportGenerated, .exportFailed, .resetExport:

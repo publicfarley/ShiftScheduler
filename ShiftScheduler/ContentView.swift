@@ -103,6 +103,11 @@ struct ContentView: View {
                     UserNameOnboardingView()
                         .environment(\.reduxStore, reduxStore)
                 }
+
+                // Test Data Mode indicator - visible on every tab
+                if reduxStore.state.settings.isTestDataModeActive {
+                    TestDataModeBanner()
+                }
             }
             .onAppear {
                 Task {

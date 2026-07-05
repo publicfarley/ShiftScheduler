@@ -67,6 +67,19 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         break
 
     case .loadInitialData:
+        // If Test Data Mode is active, seed the sandbox before loading so the very first
+        // load already has content (idempotent - a no-op after the first successful seed).
+        if state.settings.isTestDataModeActive {
+            do {
+                try await TestDataSeeder.seedIfNeeded(
+                    persistenceService: services.persistenceService,
+                    calendarService: services.calendarService
+                )
+            } catch {
+                logger.error("Failed to seed test data: \(error.localizedDescription)")
+            }
+        }
+
         // Load locations and shift types from persistent storage
         do {
             // Load locations

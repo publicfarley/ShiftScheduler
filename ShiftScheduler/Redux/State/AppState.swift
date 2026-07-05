@@ -543,4 +543,13 @@ struct SettingsState: Equatable {
 
     /// Export error message if any
     var exportErrorMessage: String? = nil
+
+    // MARK: - Test Data Mode
+
+    /// Whether Test Data Mode is currently active (app is operating against the sandboxed
+    /// test directory instead of real data)
+    var isTestDataModeActive: Bool = false
+
+    /// Whether a Test Data reset operation is currently in progress
+    var isTestDataResetting: Bool = false
 }

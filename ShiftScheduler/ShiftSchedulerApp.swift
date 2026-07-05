@@ -55,6 +55,14 @@ struct ShiftSchedulerApp: App {
                         .transition(.opacity)
                 }
             }
+            .onChange(of: reduxStore.state.settings.isTestDataModeActive) { _, _ in
+                // Test Data Mode was toggled - do a full, clean store swap so no service
+                // state can leak across modes (every service lives in the discarded
+                // container). Re-show the splash so initialization re-runs cleanly
+                // against the new container.
+                reduxStore = createReduxStore(includeStartup: true)
+                showSplash = true
+            }
         }
     }
 
