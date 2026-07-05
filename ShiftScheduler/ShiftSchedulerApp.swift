@@ -55,11 +55,17 @@ struct ShiftSchedulerApp: App {
                         .transition(.opacity)
                 }
             }
-            .onChange(of: reduxStore.state.settings.isTestDataModeActive) { _, _ in
+            .onChange(of: reduxStore.state.settings.isTestDataModeActive) { _, newValue in
                 // Test Data Mode was toggled - do a full, clean store swap so no service
                 // state can leak across modes (every service lives in the discarded
                 // container). Re-show the splash so initialization re-runs cleanly
                 // against the new container.
+                //
+                // Persist the flag here (idempotent with the settings middleware write):
+                // the reducer flips the state before the middleware runs, so this
+                // onChange can fire before the middleware has written UserDefaults, and
+                // createReduxStore reads the flag to pick the service container.
+                TestDataMode.isEnabled = newValue
                 reduxStore = createReduxStore(includeStartup: true)
                 showSplash = true
             }
