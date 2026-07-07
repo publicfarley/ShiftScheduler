@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6CF40981FF057D4A8DF36295 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 556A5066D9FBDD440A952F17 /* Cocoa.framework */; };
+		9DE6D95F07136A14B5F4D011 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 25B4179DD8356CD795E8F77D /* ArgumentParser */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B4B284BC2E7682340010D2E9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -17,24 +22,115 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0B77AB27CC36EDB81703FA8B /* shift-scheduler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "shift-scheduler.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		556A5066D9FBDD440A952F17 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		73C5EAC44E66171E1E9CDD52 /* CLI.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CLI.entitlements; sourceTree = "<group>"; };
 		B4B284AE2E7682320010D2E9 /* ShiftScheduler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShiftScheduler.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShiftSchedulerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FD1BC81D1B12115EE7889EA1 /* Exceptions for "ShiftScheduler/Redux/Services" folder in "ShiftSchedulerCLI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ServiceContainer.swift,
+				Mocks,
+			);
+			target = 7089690810B8BE50CA0A227A /* ShiftSchedulerCLI */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		134DC4B00234387812192904 /* ShiftScheduler/Persistence */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Persistence;
+			sourceTree = "<group>";
+		};
+		270A63D05903A8369DF49C10 /* ShiftScheduler/Protocols */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Protocols;
+			sourceTree = "<group>";
+		};
+		441374D10EBBED4394E9F819 /* Sources/ShiftSchedulerCLI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = Sources/ShiftSchedulerCLI;
+			sourceTree = "<group>";
+		};
+		54CB606A9A03C80AA251D797 /* ShiftScheduler/Repositories */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Repositories;
+			sourceTree = "<group>";
+		};
+		68646DC30864DB21B75B72A8 /* ShiftScheduler/Models */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Models;
+			sourceTree = "<group>";
+		};
+		7635C24D785023515707522A /* ShiftScheduler/Redux/Services */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FD1BC81D1B12115EE7889EA1 /* Exceptions for "ShiftScheduler/Redux/Services" folder in "ShiftSchedulerCLI" target */,
+			);
+			path = ShiftScheduler/Redux/Services;
+			sourceTree = "<group>";
+		};
+		AF5733ECB12A0563289C2442 /* ShiftScheduler/Redux/Errors */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Redux/Errors;
+			sourceTree = "<group>";
+		};
 		B4B284B02E7682320010D2E9 /* ShiftScheduler */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ShiftScheduler;
 			sourceTree = "<group>";
 		};
 		B4B284BE2E7682340010D2E9 /* ShiftSchedulerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ShiftSchedulerTests;
+			sourceTree = "<group>";
+		};
+		D315BF7534ADA122188C896E /* ShiftScheduler/Domain */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Domain;
+			sourceTree = "<group>";
+		};
+		D71D3A277C4E20C68D2E9482 /* ShiftScheduler/Services */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = ShiftScheduler/Services;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7E0BC85B73FA10FFDFAF557C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CF40981FF057D4A8DF36295 /* Cocoa.framework in Frameworks */,
+				9DE6D95F07136A14B5F4D011 /* ArgumentParser in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B4B284AB2E7682320010D2E9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -52,12 +148,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0828405CEC24BFD00A29108E /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				556A5066D9FBDD440A952F17 /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
 		B4B284A52E7682320010D2E9 = {
 			isa = PBXGroup;
 			children = (
 				B4B284B02E7682320010D2E9 /* ShiftScheduler */,
 				B4B284BE2E7682340010D2E9 /* ShiftSchedulerTests */,
 				B4B284AF2E7682320010D2E9 /* Products */,
+				B5D96DE59031728317C646DF /* Frameworks */,
+				68646DC30864DB21B75B72A8 /* ShiftScheduler/Models */,
+				D315BF7534ADA122188C896E /* ShiftScheduler/Domain */,
+				134DC4B00234387812192904 /* ShiftScheduler/Persistence */,
+				54CB606A9A03C80AA251D797 /* ShiftScheduler/Repositories */,
+				270A63D05903A8369DF49C10 /* ShiftScheduler/Protocols */,
+				D71D3A277C4E20C68D2E9482 /* ShiftScheduler/Services */,
+				AF5733ECB12A0563289C2442 /* ShiftScheduler/Redux/Errors */,
+				441374D10EBBED4394E9F819 /* Sources/ShiftSchedulerCLI */,
+				7635C24D785023515707522A /* ShiftScheduler/Redux/Services */,
+				73C5EAC44E66171E1E9CDD52 /* CLI.entitlements */,
 			);
 			sourceTree = "<group>";
 		};
@@ -66,13 +181,53 @@
 			children = (
 				B4B284AE2E7682320010D2E9 /* ShiftScheduler.app */,
 				B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */,
+				0B77AB27CC36EDB81703FA8B /* shift-scheduler.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B5D96DE59031728317C646DF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0828405CEC24BFD00A29108E /* OS X */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7089690810B8BE50CA0A227A /* ShiftSchedulerCLI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 045B69745DB786E398E29B87 /* Build configuration list for PBXNativeTarget "ShiftSchedulerCLI" */;
+			buildPhases = (
+				A0C6E90007017455DD3100B3 /* Sources */,
+				7E0BC85B73FA10FFDFAF557C /* Frameworks */,
+				7FAE8739B4218036E6643934 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				68646DC30864DB21B75B72A8 /* ShiftScheduler/Models */,
+				D315BF7534ADA122188C896E /* ShiftScheduler/Domain */,
+				134DC4B00234387812192904 /* ShiftScheduler/Persistence */,
+				54CB606A9A03C80AA251D797 /* ShiftScheduler/Repositories */,
+				270A63D05903A8369DF49C10 /* ShiftScheduler/Protocols */,
+				D71D3A277C4E20C68D2E9482 /* ShiftScheduler/Services */,
+				AF5733ECB12A0563289C2442 /* ShiftScheduler/Redux/Errors */,
+				441374D10EBBED4394E9F819 /* Sources/ShiftSchedulerCLI */,
+				7635C24D785023515707522A /* ShiftScheduler/Redux/Services */,
+			);
+			name = ShiftSchedulerCLI;
+			packageProductDependencies = (
+				25B4179DD8356CD795E8F77D /* ArgumentParser */,
+			);
+			productName = "shift-scheduler";
+			productReference = 0B77AB27CC36EDB81703FA8B /* shift-scheduler.app */;
+			productType = "com.apple.product-type.application";
+		};
 		B4B284AD2E7682320010D2E9 /* ShiftScheduler */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B4B284CF2E7682340010D2E9 /* Build configuration list for PBXNativeTarget "ShiftScheduler" */;
@@ -89,8 +244,6 @@
 				B4B284B02E7682320010D2E9 /* ShiftScheduler */,
 			);
 			name = ShiftScheduler;
-			packageProductDependencies = (
-			);
 			productName = ShiftScheduler;
 			productReference = B4B284AE2E7682320010D2E9 /* ShiftScheduler.app */;
 			productType = "com.apple.product-type.application";
@@ -112,8 +265,6 @@
 				B4B284BE2E7682340010D2E9 /* ShiftSchedulerTests */,
 			);
 			name = ShiftSchedulerTests;
-			packageProductDependencies = (
-			);
 			productName = ShiftSchedulerTests;
 			productReference = B4B284BB2E7682340010D2E9 /* ShiftSchedulerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -147,6 +298,7 @@
 			mainGroup = B4B284A52E7682320010D2E9;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				6F94FAFB4D4D485A07C35A4E /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B4B284AF2E7682320010D2E9 /* Products */;
@@ -155,11 +307,19 @@
 			targets = (
 				B4B284AD2E7682320010D2E9 /* ShiftScheduler */,
 				B4B284BA2E7682340010D2E9 /* ShiftSchedulerTests */,
+				7089690810B8BE50CA0A227A /* ShiftSchedulerCLI */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7FAE8739B4218036E6643934 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B4B284AC2E7682320010D2E9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -177,6 +337,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A0C6E90007017455DD3100B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B4B284AA2E7682320010D2E9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -202,6 +369,62 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3262732354513D7109674363 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CLI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M8T74C3QWG;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.ShiftScheduler;
+				PRODUCT_NAME = "shift-scheduler";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A198BC514D1E0131DEDAA920 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CLI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M8T74C3QWG;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = functioncraft.ShiftScheduler;
+				PRODUCT_NAME = "shift-scheduler";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 		B4B284CD2E7682340010D2E9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -450,6 +673,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		045B69745DB786E398E29B87 /* Build configuration list for PBXNativeTarget "ShiftSchedulerCLI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3262732354513D7109674363 /* Release */,
+				A198BC514D1E0131DEDAA920 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		B4B284A92E7682320010D2E9 /* Build configuration list for PBXProject "ShiftScheduler" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -478,6 +710,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6F94FAFB4D4D485A07C35A4E /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		25B4179DD8356CD795E8F77D /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6F94FAFB4D4D485A07C35A4E /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B4B284A62E7682320010D2E9 /* Project object */;
 }
