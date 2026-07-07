@@ -6,8 +6,19 @@ import OSLog
 /// to the public CloudKit database for cross-account synchronization
 actor CloudKitManager: Sendable {
     private let logger = Logger(subsystem: "com.functioncraft.ShiftScheduler", category: "CloudKit")
-    private let container: CKContainer
-    private let publicDatabase: CKDatabase
+    private let containerIdentifier: String
+    private var cachedContainer: CKContainer?
+
+    /// CloudKit requires an icloud-services entitlement. Unbundled processes
+    /// (like the SPM-built CLI) don't have one, and CKContainer traps — it does
+    /// not throw — when used without it, so sync is compiled out for SPM builds.
+    static var isSyncAvailable: Bool {
+        #if SWIFT_PACKAGE
+        return false
+        #else
+        return true
+        #endif
+    }
 
     enum CloudKitError: Error, LocalizedError, Sendable {
         case accountNotAvailable
@@ -32,14 +43,27 @@ actor CloudKitManager: Sendable {
     }
 
     init(containerIdentifier: String = "iCloud.com.functioncraft.ShiftScheduler") {
-        self.container = CKContainer(identifier: containerIdentifier)
-        self.publicDatabase = container.publicCloudDatabase
+        self.containerIdentifier = containerIdentifier
+    }
+
+    private var container: CKContainer {
+        if let cachedContainer { return cachedContainer }
+        let container = CKContainer(identifier: containerIdentifier)
+        cachedContainer = container
+        return container
+    }
+
+    private var publicDatabase: CKDatabase {
+        container.publicCloudDatabase
     }
 
     // MARK: - Account Status
 
     /// Check if CloudKit account is available
     func checkAccountStatus() async throws -> Bool {
+        guard Self.isSyncAvailable else {
+            throw CloudKitError.accountNotAvailable
+        }
         let status = try await container.accountStatus()
         switch status {
         case .available:
@@ -196,6 +220,7 @@ actor CloudKitManager: Sendable {
 
     /// Subscribe to ShiftType changes (for real-time updates)
     func subscribeToShiftTypeChanges() async throws {
+        _ = try await checkAccountStatus()
         let subscription = CKQuerySubscription(
             recordType: "ShiftType",
             predicate: NSPredicate(value: true),
@@ -217,6 +242,7 @@ actor CloudKitManager: Sendable {
 
     /// Subscribe to Location changes (for real-time updates)
     func subscribeToLocationChanges() async throws {
+        _ = try await checkAccountStatus()
         let subscription = CKQuerySubscription(
             recordType: "Location",
             predicate: NSPredicate(value: true),

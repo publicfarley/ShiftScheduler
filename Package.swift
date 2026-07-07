@@ -7,10 +7,6 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .library(
-            name: "ShiftSchedulerCore",
-            targets: ["ShiftSchedulerCore"]
-        ),
         .executable(
             name: "shift-scheduler",
             targets: ["ShiftSchedulerCLI"]
@@ -23,42 +19,45 @@ let package = Package(
         )
     ],
     targets: [
-        // Core library: domain models, persistence, repositories, services
-        // References existing iOS source files directly via path
-        .target(
-            name: "ShiftSchedulerCore",
-            dependencies: [],
-            path: "ShiftScheduler",
+        // Single-module executable: compiles the iOS app's domain, persistence,
+        // and service sources together with the CLI sources. The app code has no
+        // `public` API surface, so a separate library module would require
+        // publicizing dozens of types; one module keeps the app sources unchanged.
+        .executableTarget(
+            name: "ShiftSchedulerCLI",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ],
+            path: ".",
+            exclude: [
+                // Test doubles must not ship in the executable
+                "ShiftScheduler/Redux/Services/Mocks",
+                // App-level DI container; references the mocks and is unused by the CLI
+                "ShiftScheduler/Redux/Services/ServiceContainer.swift"
+            ],
             sources: [
                 // Domain models
-                "Models",
+                "ShiftScheduler/Models",
                 // Domain value objects
-                "Domain",
+                "ShiftScheduler/Domain",
                 // Persistence repositories
-                "Persistence",
+                "ShiftScheduler/Persistence",
                 // Repository protocols
-                "Repositories",
+                "ShiftScheduler/Repositories",
                 // Foundation protocols (DateProviderProtocol, UserDefaultsProtocol)
-                "Protocols",
+                "ShiftScheduler/Protocols",
                 // Services: TimeChangeService (guards UIKit via #if canImport)
-                "Services",
+                "ShiftScheduler/Services",
                 // Redux services layer (protocols + implementations)
-                "Redux/Services",
+                "ShiftScheduler/Redux/Services",
                 // Redux error types (ScheduleError used by services)
-                "Redux/Errors"
+                "ShiftScheduler/Redux/Errors",
+                // CLI commands and utilities
+                "Sources/ShiftSchedulerCLI"
             ],
             swiftSettings: [
                 .define("SWIFT_PACKAGE")
             ]
-        ),
-        // CLI executable
-        .executableTarget(
-            name: "ShiftSchedulerCLI",
-            dependencies: [
-                "ShiftSchedulerCore",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
-            ],
-            path: "Sources/ShiftSchedulerCLI"
         )
     ]
 )
