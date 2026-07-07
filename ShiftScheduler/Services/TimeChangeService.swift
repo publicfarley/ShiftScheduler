@@ -1,6 +1,4 @@
 import Foundation
-import UIKit
-import Combine
 
 /// Protocol for observing significant time changes (e.g., midnight crossing, time zone changes)
 @MainActor
@@ -12,6 +10,10 @@ protocol TimeChangeServiceProtocol: Sendable {
     /// Stop observing significant time changes
     func stopObserving()
 }
+
+#if canImport(UIKit)
+import UIKit
+import Combine
 
 /// Production implementation of TimeChangeServiceProtocol
 /// Listens to UIApplication.significantTimeChangeNotification to detect:
@@ -44,3 +46,18 @@ final class TimeChangeService: TimeChangeServiceProtocol, @unchecked Sendable {
         print("[TimeChangeService] Stopped observing significant time changes")
     }
 }
+#else
+/// No-op implementation for platforms without UIKit (e.g., macOS CLI)
+@MainActor
+final class TimeChangeService: TimeChangeServiceProtocol, @unchecked Sendable {
+    nonisolated init() {}
+
+    func startObserving(onTimeChange: @escaping @Sendable () -> Void) {
+        // No-op on non-UIKit platforms
+    }
+
+    func stopObserving() {
+        // No-op on non-UIKit platforms
+    }
+}
+#endif
