@@ -1,0 +1,618 @@
+<title>shift-scheduler — CLI Manual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --surface-2: #f2efe8;
+    --ink: #1e2126;
+    --ink-soft: #383c42;
+    --muted: #6b7280;
+    --accent: #a85a20;
+    --accent-ink: #ffffff;
+    --agent: #3b5f78;
+    --agent-bg: #eaf1f5;
+    --agent-line: #c3d6e0;
+    --line: #e4e1d9;
+    --line-strong: #d3cfc3;
+    --code-bg: #21242b;
+    --code-ink: #e8e6df;
+    --code-accent: #e6a15c;
+    --code-muted: #8891a0;
+    --danger: #a13d3d;
+    --ok: #3f7a4f;
+    --shadow: 0 1px 2px rgba(30, 33, 38, 0.06), 0 8px 24px -12px rgba(30, 33, 38, 0.12);
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #15171b;
+    --surface: #1b1e23;
+    --surface-2: #20232a;
+    --ink: #e9e7df;
+    --ink-soft: #cbc9c0;
+    --muted: #939aa6;
+    --accent: #e08a45;
+    --accent-ink: #191108;
+    --agent: #8db3cc;
+    --agent-bg: #1c2a33;
+    --agent-line: #2d4453;
+    --line: #2a2d33;
+    --line-strong: #383c44;
+    --code-bg: #0f1114;
+    --code-ink: #e4e2d9;
+    --code-accent: #f0a862;
+    --code-muted: #7c8494;
+    --danger: #d98080;
+    --ok: #7fbf8f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171b;
+      --surface: #1b1e23;
+      --surface-2: #20232a;
+      --ink: #e9e7df;
+      --ink-soft: #cbc9c0;
+      --muted: #939aa6;
+      --accent: #e08a45;
+      --accent-ink: #191108;
+      --agent: #8db3cc;
+      --agent-bg: #1c2a33;
+      --agent-line: #2d4453;
+      --line: #2a2d33;
+      --line-strong: #383c44;
+      --code-bg: #0f1114;
+      --code-ink: #e4e2d9;
+      --code-accent: #f0a862;
+      --code-muted: #7c8494;
+      --danger: #d98080;
+      --ok: #7fbf8f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Georgia", serif;
+    font-weight: 600;
+    color: var(--ink);
+    text-wrap: balance;
+    line-height: 1.2;
+  }
+
+  code, pre, kbd, .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+
+  a { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .toc { display: none; }
+  }
+
+  .toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--line);
+    scrollbar-width: thin;
+  }
+
+  .toc-title {
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+  }
+
+  .toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.05rem; }
+  .toc a { display: block; padding: 0.32rem 0.5rem; border-radius: 6px; color: var(--ink-soft); font-size: 0.87rem; text-decoration: none; }
+  .toc a:hover { background: var(--surface-2); color: var(--ink); }
+  .toc .sub { padding-left: 1.1rem; font-size: 0.82rem; color: var(--muted); }
+
+  main { padding: 0 2.5rem 6rem; min-width: 0; }
+  @media (max-width: 640px) { main { padding: 0 1.25rem 4rem; } }
+  .content-col { max-width: 43rem; }
+
+  header.hero { padding: 3.2rem 0 2rem; max-width: 43rem; }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    padding: 0.28rem 0.65rem; border-radius: 999px; margin-bottom: 1.1rem;
+  }
+
+  h1.title { font-size: clamp(2.1rem, 4.4vw, 2.9rem); margin: 0 0 0.6rem; }
+  .subtitle { color: var(--ink-soft); font-size: 1.08rem; max-width: 40rem; margin: 0 0 1.6rem; }
+
+  .prompt {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+    padding: 0.85rem 1.1rem; font-family: ui-monospace, monospace; font-size: 0.92rem;
+    box-shadow: var(--shadow); overflow-x: auto;
+  }
+  .prompt .sigil { color: var(--code-accent); user-select: none; }
+  .prompt .ver { margin-left: auto; color: var(--code-muted); white-space: nowrap; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; margin-top: 1.1rem; font-size: 0.83rem; color: var(--muted); }
+  .meta-row span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .meta-row .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); display: inline-block; }
+
+  section { padding-top: 2.6rem; scroll-margin-top: 1.5rem; }
+  h2 { font-size: 1.5rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--line); margin: 0 0 1.1rem; }
+
+  h3.cmd {
+    font-family: ui-monospace, monospace; font-size: 1.05rem; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.55rem 0.85rem; margin: 2rem 0 0.9rem; color: var(--ink);
+  }
+
+  h4.subcmd { font-family: ui-monospace, monospace; font-size: 0.95rem; font-weight: 600; color: var(--accent); margin: 1.6rem 0 0.5rem; }
+
+  p { color: var(--ink-soft); }
+  .content-col p, .content-col li { max-width: 42rem; }
+
+  pre {
+    background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+    padding: 0.95rem 1.15rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6;
+    margin: 0.9rem 0 1.3rem; box-shadow: var(--shadow);
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .content-col pre, .content-col table, .content-col .callout { max-width: 100%; }
+
+  code {
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px;
+    padding: 0.1rem 0.38rem; font-size: 0.87em; color: var(--ink);
+  }
+
+  pre .c1 { color: var(--code-muted); }
+  pre .flag { color: var(--code-accent); }
+
+  .table-wrap { overflow-x: auto; margin: 0.9rem 0 1.4rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 420px; font-size: 0.88rem; }
+  th {
+    text-align: left; font-family: ui-monospace, monospace; font-size: 0.72rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    padding: 0.5rem 0.9rem; border-bottom: 2px solid var(--line-strong); white-space: nowrap;
+  }
+  td { padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+  td code, td kbd { font-size: 0.85em; }
+  tr:last-child td { border-bottom: none; }
+  td.exit-0 { color: var(--ok); font-weight: 600; }
+  td.exit-1 { color: var(--danger); font-weight: 600; }
+  td.exit-64 { color: var(--muted); font-weight: 600; }
+
+  .callout {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface);
+    border-radius: 0 8px 8px 0; padding: 0.9rem 1.1rem; margin: 1rem 0 1.4rem;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    font-family: ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.35rem; display: block;
+  }
+
+  .agent-block {
+    border: 1px solid var(--agent-line); background: var(--agent-bg); border-radius: 10px;
+    padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem;
+  }
+  .agent-block h4 { margin: 0 0 0.2rem; color: var(--agent); font-family: ui-monospace, monospace; font-size: 0.95rem; }
+  .agent-block ol, .agent-block ul { padding-left: 1.2rem; }
+  .agent-block li { margin-bottom: 0.55rem; color: var(--ink-soft); }
+  .agent-block li:last-child { margin-bottom: 0; }
+  .agent-block code { background: color-mix(in srgb, var(--agent) 12%, var(--surface)); border-color: var(--agent-line); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.18rem 0.55rem; border-radius: 999px; border: 1px solid var(--agent-line);
+    color: var(--agent); background: var(--agent-bg);
+  }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.7rem; margin: 1rem 0 1.5rem; }
+  .ref-card { border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 0.9rem; background: var(--surface); }
+  .ref-card .n { font-family: ui-monospace, monospace; font-weight: 600; color: var(--accent); font-size: 0.85rem; }
+  .ref-card p { margin: 0.25rem 0 0; font-size: 0.85rem; }
+
+  footer {
+    max-width: 43rem; padding: 2.5rem 0 1rem; color: var(--muted); font-size: 0.85rem;
+    border-top: 1px solid var(--line); margin-top: 3rem;
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Table of contents">
+    <p class="toc-title">On this page</p>
+    <ol>
+      <li><a href="#install">Installation &amp; build</a></li>
+      <li><a href="#quickstart">Quick start</a></li>
+      <li><a href="#globals">Global options</a></li>
+      <li><a href="#exitcodes">Exit codes</a></li>
+      <li><a href="#reference">Command reference</a>
+        <ol>
+          <li class="sub"><a href="#today">today</a></li>
+          <li class="sub"><a href="#schedule">schedule</a></li>
+          <li class="sub"><a href="#types">types</a></li>
+          <li class="sub"><a href="#locations">locations</a></li>
+          <li class="sub"><a href="#log">log</a></li>
+          <li class="sub"><a href="#profile">profile</a></li>
+          <li class="sub"><a href="#auth">auth</a></li>
+          <li class="sub"><a href="#undoredo">undo / redo</a></li>
+        </ol>
+      </li>
+      <li><a href="#dates">Date &amp; time formats</a></li>
+      <li><a href="#refs">Referencing objects</a></li>
+      <li><a href="#agents">For LLM agents</a></li>
+      <li><a href="#humans">For human users</a></li>
+      <li><a href="#datamodel">Data model notes</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="content-col">
+      <header class="hero">
+        <span class="kicker">● CLI Manual</span>
+        <h1 class="title">shift-scheduler</h1>
+        <p class="subtitle">A macOS command-line companion to the ShiftScheduler iOS app — for the person running it by hand, and for the agent running it unattended.</p>
+        <div class="prompt">
+          <span class="sigil">$</span>
+          <span>shift-scheduler --help</span>
+          <span class="ver">v0.1.0</span>
+        </div>
+        <div class="meta-row">
+          <span><span class="dot"></span>swift-argument-parser</span>
+          <span><span class="dot"></span>JSON on <code>--json</code>, human tables by default</span>
+          <span><span class="dot"></span>EventKit + local JSON persistence</span>
+        </div>
+      </header>
+
+      <section id="install">
+        <h2>Installation &amp; build</h2>
+        <pre><code><span class="c1"># from the repo root</span>
+swift build -c release
+.build/release/shift-scheduler --help
+
+<span class="c1"># iterate during development</span>
+swift run shift-scheduler <span class="flag">today</span>
+
+<span class="c1"># optional: put it on PATH</span>
+cp .build/release/shift-scheduler /usr/local/bin/</code></pre>
+      </section>
+
+      <section id="quickstart">
+        <h2>Quick start</h2>
+        <pre><code><span class="c1"># one-time: grant Calendar access</span>
+shift-scheduler auth request
+
+<span class="c1"># set up a location and a shift type</span>
+shift-scheduler locations add <span class="flag">--name</span> "Downtown" <span class="flag">--address</span> "123 Main St"
+shift-scheduler types add <span class="flag">--title</span> "Day Shift" <span class="flag">--symbol</span> D \
+  <span class="flag">--location</span> "Downtown" <span class="flag">--start</span> 07:00 <span class="flag">--end</span> 15:00
+
+<span class="c1"># schedule and inspect</span>
+shift-scheduler schedule add <span class="flag">--date</span> tomorrow <span class="flag">--type</span> "Day Shift"
+shift-scheduler today
+shift-scheduler schedule list <span class="flag">--from</span> today <span class="flag">--to</span> +14d</code></pre>
+      </section>
+
+      <section id="globals">
+        <h2>Global options</h2>
+        <p>Every leaf command accepts these two flags. (<code>schedule</code>, <code>types</code>, <code>locations</code>, <code>log</code>, <code>profile</code>, and <code>auth</code> are group headers — the flags live on their subcommands.)</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>--json</code></td><td>Machine-readable JSON instead of a table/message — on <strong>both</strong> success and error output. Errors go to stderr.</td></tr>
+              <tr><td><code>--data-dir &lt;path&gt;</code></td><td>Override the data directory (default <code>~/Documents/ShiftSchedulerData</code>). Accepts <code>~</code>. Useful for tests, alternate profiles, or sandboxing an agent's writes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Root-level: <code>shift-scheduler --version</code>, <code>shift-scheduler --help</code>.</p>
+      </section>
+
+      <section id="exitcodes">
+        <h2>Exit codes</h2>
+        <p>Documented in root <code>--help</code> and stable across releases. Scripts and agents should branch on this first, then read stderr for detail.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td class="exit-0">0</td><td>Success.</td></tr>
+              <tr><td class="exit-1">1</td><td>Runtime failure — not found, not authorized, I/O error, validation error, cancelled, confirmation required without a TTY.</td></tr>
+              <tr><td class="exit-64">64</td><td>Usage error — unknown command/subcommand, bad or missing arguments.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="reference">
+        <h2>Command reference</h2>
+
+        <article id="today">
+          <h3 class="cmd">shift-scheduler today</h3>
+          <p>Show today's scheduled shifts. Requires calendar authorization. Prints a table, or a "no shifts" message if the day is empty.</p>
+          <pre><code>shift-scheduler today [<span class="flag">--json</span>] [<span class="flag">--data-dir</span> &lt;path&gt;]</code></pre>
+        </article>
+
+        <article id="schedule">
+          <h3 class="cmd">shift-scheduler schedule</h3>
+          <p>Manage scheduled shifts in the calendar. Default subcommand: <code>list</code>.</p>
+
+          <h4 class="subcmd">schedule list</h4>
+          <p>Defaults to the current calendar month. <code>--to</code> is inclusive. Date arguments are validated before the calendar-authorization check, so a bad date reports as a date error, not an auth error.</p>
+          <pre><code>shift-scheduler schedule list [<span class="flag">--from</span> &lt;date&gt;] [<span class="flag">--to</span> &lt;date&gt;] [<span class="flag">--json</span>]
+
+<span class="c1">$ shift-scheduler schedule list --from today --to +14d</span></code></pre>
+
+          <h4 class="subcmd">schedule add</h4>
+          <p>Creates a calendar event and records an undoable change-log entry. Prints the new EventKit identifier — capture it for later <code>edit</code>/<code>delete</code>/<code>switch</code> calls.</p>
+          <pre><code>shift-scheduler schedule add <span class="flag">--date</span> &lt;date&gt; <span class="flag">--type</span> &lt;ref&gt; [<span class="flag">--notes</span> &lt;text&gt;] [<span class="flag">--json</span>]
+
+<span class="c1">$ shift-scheduler schedule add --date 2026-07-15 --type D --notes "Covering for Sam"</span></code></pre>
+
+          <h4 class="subcmd">schedule edit</h4>
+          <p>Replaces a shift's notes (<code>--notes ""</code> clears them). To change the shift type, use <code>switch</code> instead.</p>
+          <pre><code>shift-scheduler schedule edit <span class="flag">--event-id</span> &lt;id&gt; <span class="flag">--notes</span> &lt;text&gt; [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">schedule delete</h4>
+          <p>Deletes the shift and records an undoable change-log entry. Prompts for confirmation unless <code>--force</code> — without a TTY, omitting <code>--force</code> fails fast rather than hanging.</p>
+          <pre><code>shift-scheduler schedule delete <span class="flag">--event-id</span> &lt;id&gt; [<span class="flag">--reason</span> &lt;text&gt;] [<span class="flag">--force</span>] [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">schedule switch</h4>
+          <p>Switches a scheduled shift to a different shift type, recording a before/after snapshot so it can be undone.</p>
+          <pre><code>shift-scheduler schedule switch <span class="flag">--event-id</span> &lt;id&gt; <span class="flag">--to</span> &lt;ref&gt; [<span class="flag">--reason</span> &lt;text&gt;] [<span class="flag">--json</span>]
+
+<span class="c1">$ shift-scheduler schedule switch --event-id &lt;ID&gt; --to N --reason "Traded with Alex"</span></code></pre>
+        </article>
+
+        <article id="types">
+          <h3 class="cmd">shift-scheduler types</h3>
+          <p>Manage shift type templates (title, symbol, time range or all-day, location). Default subcommand: <code>list</code>.</p>
+
+          <h4 class="subcmd">types add</h4>
+          <p>Provide either <code>--all-day</code> or <strong>both</strong> <code>--start</code> and <code>--end</code>. Overnight shifts (end before start) are supported.</p>
+          <pre><code>shift-scheduler types add <span class="flag">--title</span> &lt;text&gt; <span class="flag">--symbol</span> &lt;text&gt; <span class="flag">--location</span> &lt;ref&gt; \
+  [<span class="flag">--description</span> &lt;text&gt;] (<span class="flag">--all-day</span> | <span class="flag">--start</span> &lt;HH:MM&gt; <span class="flag">--end</span> &lt;HH:MM&gt;) [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">types edit</h4>
+          <p>Only the fields you provide change. Existing calendar events using this type cascade-update when calendar access is authorized.</p>
+          <pre><code>shift-scheduler types edit <span class="flag">--id</span> &lt;ref&gt; [<span class="flag">--title</span> …] [<span class="flag">--symbol</span> …] [<span class="flag">--location</span> …] \
+  [(<span class="flag">--all-day</span> | <span class="flag">--start</span> &lt;HH:MM&gt; <span class="flag">--end</span> &lt;HH:MM&gt;)] [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">types delete</h4>
+          <p>Already-scheduled events using this type keep their event but display as "(unknown type)" afterward — deletion does not cascade to the calendar.</p>
+          <pre><code>shift-scheduler types delete <span class="flag">--id</span> &lt;ref&gt; [<span class="flag">--force</span>] [<span class="flag">--json</span>]</code></pre>
+        </article>
+
+        <article id="locations">
+          <h3 class="cmd">shift-scheduler locations</h3>
+          <p>Manage locations. Default subcommand: <code>list</code>.</p>
+
+          <h4 class="subcmd">locations add</h4>
+          <pre><code>shift-scheduler locations add <span class="flag">--name</span> &lt;text&gt; <span class="flag">--address</span> &lt;text&gt; [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">locations edit</h4>
+          <p>Cascades: shift types referencing this location update automatically, and their calendar events update when authorized. Reports both cascade counts.</p>
+          <pre><code>shift-scheduler locations edit <span class="flag">--id</span> &lt;ref&gt; [<span class="flag">--name</span> …] [<span class="flag">--address</span> …] [<span class="flag">--json</span>]</code></pre>
+
+          <h4 class="subcmd">locations delete</h4>
+          <div class="callout">
+            <span class="label">Guardrail</span>
+            <p>Fails with a <code>locationInUse</code> error if any shift type still references the location. Edit or delete those shift types first, or point them elsewhere.</p>
+          </div>
+          <pre><code>shift-scheduler locations delete <span class="flag">--id</span> &lt;ref&gt; [<span class="flag">--force</span>] [<span class="flag">--json</span>]</code></pre>
+        </article>
+
+        <article id="log">
+          <h3 class="cmd">shift-scheduler log</h3>
+          <p>View or purge the shift change log — the audit trail behind <code>undo</code>/<code>redo</code>. Default subcommand: <code>list</code>.</p>
+          <pre><code>shift-scheduler log list [<span class="flag">--limit</span> &lt;n&gt;] [<span class="flag">--json</span>]     <span class="c1"># newest first, default limit 20</span>
+shift-scheduler log purge <span class="flag">--older-than</span> &lt;days&gt; [<span class="flag">--force</span>] [<span class="flag">--json</span>]</code></pre>
+        </article>
+
+        <article id="profile">
+          <h3 class="cmd">shift-scheduler profile</h3>
+          <p>View or update the local user profile. Default subcommand: <code>show</code>. At least one field is required for <code>set</code>.</p>
+          <pre><code>shift-scheduler profile show [<span class="flag">--json</span>]
+shift-scheduler profile set [<span class="flag">--name</span> &lt;text&gt;] [<span class="flag">--retention</span> &lt;policy&gt;] [<span class="flag">--auto-purge</span> &lt;true|false&gt;] [<span class="flag">--json</span>]</code></pre>
+          <p>Valid <code>--retention</code> values: <code>30_days</code>, <code>90_days</code>, <code>6_months</code>, <code>1_year</code>, <code>2_years</code>, <code>forever</code>.</p>
+        </article>
+
+        <article id="auth">
+          <h3 class="cmd">shift-scheduler auth</h3>
+          <p>Check or request calendar (EventKit) authorization. Default subcommand: <code>status</code>.</p>
+          <pre><code>shift-scheduler auth status [<span class="flag">--json</span>]    <span class="c1"># never prompts — reports {"authorized": true|false}</span>
+shift-scheduler auth request [<span class="flag">--json</span>]   <span class="c1"># shows the macOS permission dialog; exits 1 if denied</span></code></pre>
+        </article>
+
+        <article id="undoredo">
+          <h3 class="cmd">shift-scheduler undo / redo</h3>
+          <p>Reverts or re-applies the most recent <code>schedule add</code> / <code>delete</code> / <code>switch</code>, from change-log snapshots. Reports <code>nothingToUndo</code> / <code>nothingToRedo</code> when the stack is empty — checked before calendar authorization, so an empty stack is reported accurately even without calendar access.</p>
+          <pre><code>shift-scheduler undo [<span class="flag">--json</span>]
+shift-scheduler redo [<span class="flag">--json</span>]</code></pre>
+        </article>
+      </section>
+
+      <section id="dates">
+        <h2>Date &amp; time formats</h2>
+        <p><strong>Dates</strong> (<code>--date</code>, <code>--from</code>, <code>--to</code>):</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Input</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>today</code> / <code>tomorrow</code> / <code>yesterday</code></td><td>Relative to the current day.</td></tr>
+              <tr><td><code>+Nd</code> / <code>-Nd</code></td><td>N days from today, e.g. <code>+14d</code>, <code>-7d</code>.</td></tr>
+              <tr><td><code>+Nw</code> / <code>-Nw</code></td><td>N weeks from today, e.g. <code>+2w</code>.</td></tr>
+              <tr><td><code>YYYY-MM-DD</code></td><td>Absolute date, e.g. <code>2026-07-15</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Times</strong> (<code>--start</code>, <code>--end</code>): 24-hour <code>HH:MM</code>, e.g. <code>07:00</code>, <code>22:30</code>. Overnight ranges (end &lt; start) are valid.</p>
+      </section>
+
+      <section id="refs">
+        <h2>Referencing objects</h2>
+        <p>Anywhere a command takes a shift-type or location reference (<code>--type</code>, <code>--to</code>, <code>--location</code>, or <code>--id</code> on <code>types</code>/<code>locations</code>), pass:</p>
+        <div class="ref-grid">
+          <div class="ref-card"><span class="n">UUID</span><p>Always unambiguous — preferred for scripts and agents.</p></div>
+          <div class="ref-card"><span class="n">Title / name</span><p>Case-insensitive; shift types by title, locations by name.</p></div>
+          <div class="ref-card"><span class="n">Symbol</span><p>Shift types only, case-insensitive (e.g. <code>D</code>, <code>N</code>).</p></div>
+        </div>
+        <p>A match on more than one object fails with an <code>ambiguous</code> error listing the candidates — re-run with the UUID. Scheduled shifts are always referenced by EventKit <code>--event-id</code>, obtained from <code>schedule list</code> or the output of <code>schedule add</code>.</p>
+      </section>
+
+      <section id="agents">
+        <h2>For LLM agents <span class="badge">machine contract</span></h2>
+        <p>Rely on this contract rather than parsing human-readable text.</p>
+
+        <div class="agent-block">
+          <h4>01 · Always pass --json</h4>
+          <p>Human table output isn't a stable format; JSON field names are.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>02 · Error shape (stderr)</h4>
+          <pre><code>{
+  "error": {
+    "message": "No shift type matches 'Nite Shift'",
+    "suggestion": "Run 'shift-scheduler types list' to see available shift types. …"
+  }
+}</code></pre>
+          <p style="margin-top:0.6rem"><code>suggestion</code> appears when there's an actionable next step. Check the exit code first — <code>0</code> means stdout holds the result; nonzero means stderr holds the error.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>03 · Destructive commands never hang</h4>
+          <p><code>schedule delete</code>, <code>types delete</code>, <code>locations delete</code>, and <code>log purge</code> only prompt when stdin is a TTY. Non-interactively, the prompt is skipped and the command fails immediately with <code>confirmationRequired</code> (exit 1) unless <code>--force</code> is passed. Always pass <code>--force</code> from an agent, and gate that decision in your own logic.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>04 · auth request needs a human</h4>
+          <p>It shows the native macOS permission dialog — there's no headless path to grant EventKit access. Call <code>auth status --json</code> first; if <code>authorized</code> is <code>false</code>, surface that to a human instead of invoking <code>auth request</code> unattended.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>05 · Prefer UUIDs</h4>
+          <p>Avoid <code>ambiguous</code> errors in generated commands. Get UUIDs from <code>id</code> in <code>types list --json</code> / <code>locations list --json</code>; get event IDs from <code>eventId</code> in <code>schedule list --json</code> / <code>schedule add --json</code>.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>06 · No idempotency on add</h4>
+          <p><code>schedule add</code> always creates a new event — retrying a successful call duplicates the shift. Check <code>schedule list</code> first if you're unsure whether it already exists.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>07 · --data-dir sandboxes reference data only</h4>
+          <p>It does <strong>not</strong> sandbox calendar writes — those always go to the shared <code>functioncraft.ShiftScheduler</code> calendar. There's no <code>--dry-run</code> for calendar-mutating commands; confirm authorization and review <code>schedule list</code> before mutating if you need a rehearsal.</p>
+        </div>
+
+        <div class="agent-block">
+          <h4>08 · undo/redo is one global, shared stack</h4>
+          <p>Not scoped per session or per actor. Undoing after another actor (the iOS app, another script) has made changes may not do what you expect — prefer targeted <code>edit</code>/<code>switch</code>/<code>delete</code> calls with explicit event IDs in multi-actor environments.</p>
+        </div>
+
+        <h3 style="font-family:ui-monospace,monospace;font-size:1rem;margin-top:2rem">Stable JSON fields</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>DTO</th><th>Fields</th></tr></thead>
+            <tbody>
+              <tr><td><code>LocationDTO</code></td><td><code>id, name, address</code></td></tr>
+              <tr><td><code>ShiftTypeDTO</code></td><td><code>id, symbol, title, description, allDay, startTime, endTime, location</code></td></tr>
+              <tr><td><code>ShiftDTO</code></td><td><code>eventId, date, endDate, shiftType, notes, sickDay, sickReason</code></td></tr>
+              <tr><td><code>ChangeLogEntryDTO</code></td><td><code>id, timestamp, user, changeType, shiftDate, from, to, reason</code></td></tr>
+              <tr><td><code>ProfileDTO</code></td><td><code>userId, displayName, retentionPolicy, autoPurgeEnabled, lastPurgeDate</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Dates are <code>YYYY-MM-DD</code>; timestamps are ISO 8601.</p>
+
+        <h3 style="font-family:ui-monospace,monospace;font-size:1rem;margin-top:2rem">Minimal agent recipe</h3>
+        <pre><code>shift-scheduler auth status --json                            <span class="c1"># confirm access first</span>
+shift-scheduler types list --json                              <span class="c1"># get type UUIDs</span>
+shift-scheduler locations list --json                           <span class="c1"># get location UUIDs</span>
+shift-scheduler schedule list --from today --to +7d --json     <span class="c1"># check current state</span>
+shift-scheduler schedule add --date 2026-07-15 --type &lt;UUID&gt; --json   <span class="c1"># mutate</span></code></pre>
+      </section>
+
+      <section id="humans">
+        <h2>For human users</h2>
+        <ul>
+          <li>Run any command with <code>--help</code> for its flags, an abstract, and worked examples — every leaf command has an <code>EXAMPLES:</code> section, e.g. <code>shift-scheduler schedule switch --help</code>.</li>
+          <li>Omit <code>--json</code> for readable, aligned tables.</li>
+          <li>Destructive commands prompt <code>[y/N]</code> interactively — no need to remember <code>--force</code> unless you're scripting.</li>
+          <li>Made a mistake? <code>shift-scheduler undo</code> reverts the last add/delete/switch; <code>redo</code> re-applies it.</li>
+          <li>The calendar is named <strong>functioncraft.ShiftScheduler</strong>, visible in Calendar.app and the iOS app once access is granted and iCloud sync catches up.</li>
+          <li><code>--data-dir</code> is mainly for testing — leave it at the default day-to-day so the CLI and iOS app see the same reference data.</li>
+        </ul>
+      </section>
+
+      <section id="datamodel">
+        <h2>Data model notes</h2>
+        <p><strong>Reference data</strong> (shift types, locations, profile, change log) is local JSON on the machine running the CLI, at <code>~/Documents/ShiftSchedulerData/</code> by default. It syncs through CloudKit only where entitlements allow (the iOS app) — an unbundled CLI binary has none, so CloudKit sync silently no-ops there (treated internally as a benign "offline" condition), and reference data stays local to that machine's <code>--data-dir</code>.</p>
+        <p><strong>Scheduled shifts</strong> live in EventKit, in the shared <code>functioncraft.ShiftScheduler</code> calendar. This does sync across devices via iCloud, independent of the CloudKit path above — it's the actual mechanism by which CLI-created shifts appear in the iOS app.</p>
+        <p><strong>Undo/redo</strong> replays from <code>ChangeLogEntry</code> snapshots (no stored EventKit identifiers); shifts are re-located by date + shift-type ID when reverting or reapplying.</p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr><td><code>Calendar access is not authorized</code></td><td>EventKit permission not granted</td><td><code>auth request</code> and grant it in the dialog</td></tr>
+              <tr><td><code>Confirmation required: …</code> in a script</td><td>No TTY, <code>--force</code> omitted</td><td>Add <code>--force</code></td></tr>
+              <tr><td><code>'X' matches multiple shift types:</code></td><td>Ambiguous title/symbol</td><td>Re-run using the UUID (<code>types list --json</code>)</td></tr>
+              <tr><td><code>Location 'X' is used by shift type(s): …</code></td><td>Deleting a referenced location</td><td>Edit/delete those shift types first, or use another location</td></tr>
+              <tr><td><code>Cannot parse date 'X'</code></td><td>Unsupported format</td><td>Use <code>YYYY-MM-DD</code>, <code>today</code>/<code>tomorrow</code>, or <code>+Nd</code>/<code>-Nw</code></td></tr>
+              <tr><td>CLI and iOS app show different data</td><td>Different <code>--data-dir</code>, or CloudKit unavailable to the CLI</td><td>Confirm the same data directory / calendar; remember reference-data CloudKit sync is iOS-only</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>
+        shift-scheduler v0.1.0 · CLI companion to the ShiftScheduler iOS app · source of truth: <code>CLI_USAGE.md</code> in the repository root
+      </footer>
+    </div>
+  </main>
+</div>
