@@ -554,6 +554,47 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         return (updated: totalUpdated, total: totalUpdated)
     }
 
+    // MARK: - Recovery
+
+    func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result {
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        let appCalendar = try getOrCreateAppCalendar()
+
+        // `predicateForEvents` caps the range at ~4 years, so walk 1-year windows
+        // across a wide span to catch every event the calendar still holds.
+        let now = Date()
+        let rangeStart = Calendar.current.date(byAdding: .year, value: -3, to: now) ?? now
+        let rangeEnd = Calendar.current.date(byAdding: .year, value: 2, to: now) ?? now
+
+        var recoverable: [RecoverableCalendarEvent] = []
+        var windowStart = rangeStart
+        while windowStart < rangeEnd {
+            let windowEnd = min(
+                Calendar.current.date(byAdding: .year, value: 1, to: windowStart) ?? rangeEnd,
+                rangeEnd
+            )
+            let predicate = eventStore.predicateForEvents(withStart: windowStart, end: windowEnd, calendars: [appCalendar])
+            for event in eventStore.events(matching: predicate) {
+                recoverable.append(RecoverableCalendarEvent(
+                    title: event.title ?? "",
+                    location: event.location,
+                    notes: event.notes,
+                    startDate: event.startDate,
+                    endDate: event.endDate,
+                    isAllDay: event.isAllDay
+                ))
+            }
+            windowStart = windowEnd
+        }
+
+        let result = CalendarShiftTypeRecovery.reconstruct(from: recoverable)
+        logger.debug("Recovery reconstructed \(result.shiftTypes.count) shift types and \(result.locations.count) locations from \(recoverable.count) events")
+        return result
+    }
+
     // MARK: - Private Helpers
 
     /// Formats a multi-line address for EventKit location field
