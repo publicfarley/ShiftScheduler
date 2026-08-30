@@ -108,7 +108,7 @@ actor CloudKitManager: Sendable {
         record["durationData"] = durationData as NSData
 
         do {
-            let savedRecord = try await saveWithRetry(record)
+            _ = try await saveWithRetry(record)
             logger.debug("Saved ShiftType: \(shiftType.title)")
         } catch {
             logger.error("Failed to save ShiftType: \(error.localizedDescription)")
@@ -173,7 +173,7 @@ actor CloudKitManager: Sendable {
         record["modifiedAt"] = Date()
 
         do {
-            let savedRecord = try await saveWithRetry(record)
+            _ = try await saveWithRetry(record)
             logger.debug("Saved Location: \(location.name)")
         } catch {
             logger.error("Failed to save Location: \(error.localizedDescription)")
