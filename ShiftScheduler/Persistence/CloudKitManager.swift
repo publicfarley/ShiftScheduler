@@ -93,8 +93,9 @@ actor CloudKitManager: Sendable {
     func saveShiftType(_ shiftType: ShiftType) async throws {
         _ = try await checkAccountStatus()
 
+        // The record's identity already carries the UUID (recordName); do NOT add a
+        // custom "recordID" field — it is a CloudKit reserved key and throws CKException.
         let record = CKRecord(recordType: "ShiftType", recordID: CKRecord.ID(recordName: shiftType.id.uuidString))
-        record["recordID"] = shiftType.id.uuidString
         record["symbol"] = shiftType.symbol
         record["title"] = shiftType.title
         record["shiftDescription"] = shiftType.shiftDescription
@@ -166,8 +167,8 @@ actor CloudKitManager: Sendable {
     func saveLocation(_ location: Location) async throws {
         _ = try await checkAccountStatus()
 
+        // "recordID" is a CloudKit reserved key — the UUID lives in recordName instead.
         let record = CKRecord(recordType: "Location", recordID: CKRecord.ID(recordName: location.id.uuidString))
-        record["recordID"] = location.id.uuidString
         record["name"] = location.name
         record["address"] = location.address
         record["modifiedAt"] = Date()
@@ -391,8 +392,7 @@ actor CloudKitManager: Sendable {
     /// Convert CKRecord to ShiftType
     nonisolated private func shiftTypeFromRecord(_ record: CKRecord) -> ShiftType? {
         guard
-            let idString = record["recordID"] as? String,
-            let id = UUID(uuidString: idString),
+            let id = UUID(uuidString: record.recordID.recordName),
             let symbol = record["symbol"] as? String,
             let title = record["title"] as? String,
             let shiftDescription = record["shiftDescription"] as? String,
@@ -425,8 +425,7 @@ actor CloudKitManager: Sendable {
     /// Convert CKRecord to Location
     nonisolated private func locationFromRecord(_ record: CKRecord) -> Location? {
         guard
-            let idString = record["recordID"] as? String,
-            let id = UUID(uuidString: idString),
+            let id = UUID(uuidString: record.recordID.recordName),
             let name = record["name"] as? String,
             let address = record["address"] as? String
         else {

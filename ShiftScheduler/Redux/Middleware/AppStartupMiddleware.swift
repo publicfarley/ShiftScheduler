@@ -69,14 +69,33 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
     case .loadInitialData:
         // Load locations and shift types from persistent storage
         do {
-            // Load locations
-            let locations = try await services.persistenceService.loadLocations()
-            logger.debug("Loaded \(locations.count) locations")
-            await dispatch(.locations(.locationsLoaded(.success(locations))))
+            var locations = try await services.persistenceService.loadLocations()
+            var shiftTypes = try await services.persistenceService.loadShiftTypes()
+            logger.debug("Loaded \(locations.count) locations and \(shiftTypes.count) shift types")
 
-            // Load shift types
-            let shiftTypes = try await services.persistenceService.loadShiftTypes()
-            logger.debug("Loaded \(shiftTypes.count) shift types")
+            // Recovery: if the local cache is empty but the calendar still holds
+            // shift events, those events are orphaned (they reference shift-type
+            // UUIDs that no longer resolve) and every schedule view shows blank.
+            // Reconstruct the templates from the events themselves so they re-link.
+            if shiftTypes.isEmpty {
+                logger.warning("No shift types in local cache - attempting recovery from calendar events")
+                if let recovery = try? await services.calendarService.recoverShiftTypeData(),
+                   !recovery.shiftTypes.isEmpty {
+                    for location in recovery.locations {
+                        try? await services.persistenceService.saveLocation(location)
+                    }
+                    for shiftType in recovery.shiftTypes {
+                        try? await services.persistenceService.saveShiftType(shiftType)
+                    }
+                    locations = try await services.persistenceService.loadLocations()
+                    shiftTypes = try await services.persistenceService.loadShiftTypes()
+                    logger.debug("Recovery restored \(shiftTypes.count) shift types and \(locations.count) locations from calendar")
+                } else {
+                    logger.warning("Calendar recovery produced no shift types")
+                }
+            }
+
+            await dispatch(.locations(.locationsLoaded(.success(locations))))
             await dispatch(.shiftTypes(.shiftTypesLoaded(.success(shiftTypes))))
 
             // Mark initialization as complete

@@ -93,4 +93,13 @@ protocol CalendarServiceProtocol: Sendable {
     ///   - reason: Optional reason for marking shift as sick
     /// - Throws: CalendarServiceError if the event cannot be found or update fails
     func markShiftAsSick(eventIdentifier: String, isSickDay: Bool, reason: String?) async throws -> Void
+
+    /// Reconstruct `ShiftType` / `Location` templates from existing calendar events.
+    ///
+    /// Used to recover from a lost local JSON cache: the app's calendar events
+    /// encode the shift-type id, symbol, title, times, and location, which is
+    /// enough to re-link orphaned events. Best-effort — descriptions are not
+    /// recoverable.
+    /// - Throws: `CalendarServiceError.notAuthorized` if calendar access is denied.
+    func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result
 }

@@ -121,15 +121,47 @@ actor ShiftTypeRepository: Sendable {
         }
     }
 
+    /// Merge CloudKit results into the local cache **without destroying local-only data.**
+    ///
+    /// `fetchAllShiftTypes()` returns an empty array (not an error) whenever the
+    /// public database has no records for the current iCloud account, records fail
+    /// to decode, or a query is throttled. Writing that empty array straight to
+    /// disk wipes the user's shift types and blanks every calendar view (see
+    /// DATA_LOSS_INCIDENT_REPORT.md). Guard against it and union by id instead.
+    private func mergeFromCloud(_ cloudShiftTypes: [ShiftType]) async throws {
+        let local = try fetchLocal()
+
+        guard !cloudShiftTypes.isEmpty else {
+            if !local.isEmpty {
+                logger.warning("CloudKit returned 0 ShiftTypes but local cache has \(local.count); keeping local data")
+            }
+            return
+        }
+
+        // Union by id; CloudKit wins field-level conflicts. Local-only entries are
+        // preserved (no reliable tombstone/timestamp exists to detect deletions).
+        var merged: [UUID: ShiftType] = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        for shiftType in cloudShiftTypes {
+            merged[shiftType.id] = shiftType
+        }
+
+        let mergedList = Array(merged.values).sorted { $0.title < $1.title }
+        let localSorted = local.sorted { $0.title < $1.title }
+        let encoder = JSONEncoder()
+        if let a = try? encoder.encode(mergedList), let b = try? encoder.encode(localSorted), a == b {
+            logger.debug("CloudKit sync produced no changes for ShiftTypes")
+            return
+        }
+
+        try await saveLocal(mergedList)
+        logger.debug("Merged \(cloudShiftTypes.count) CloudKit ShiftTypes into local cache (now \(mergedList.count))")
+    }
+
     /// Sync all shift types from CloudKit to local cache
     private func syncFromCloudKit() async {
         do {
             let cloudShiftTypes = try await cloudKitManager.fetchAllShiftTypes()
-
-            // Merge strategy: CloudKit wins for conflicts (last-write-wins)
-            // In production, compare modifiedAt timestamps for proper conflict resolution
-            try await saveLocal(cloudShiftTypes)
-            logger.debug("Synced \(cloudShiftTypes.count) ShiftTypes from CloudKit to local cache")
+            try await mergeFromCloud(cloudShiftTypes)
         } catch let error as CloudKitManager.CloudKitError {
             if case .fetchFailed(let message) = error, message.contains("schema not configured") {
                 // First-time setup - try to initialize schema in development
@@ -138,7 +170,7 @@ actor ShiftTypeRepository: Sendable {
                     try await cloudKitManager.initializeSchemaIfNeeded()
                     // Retry fetch after initialization
                     let cloudShiftTypes = try await cloudKitManager.fetchAllShiftTypes()
-                    try await saveLocal(cloudShiftTypes)
+                    try await mergeFromCloud(cloudShiftTypes)
                     logger.debug("✅ Schema initialized and synced successfully")
                 } catch {
                     logger.error("Schema initialization failed: \(error.localizedDescription)")

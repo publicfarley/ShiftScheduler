@@ -121,14 +121,44 @@ actor LocationRepository: Sendable {
         }
     }
 
+    /// Merge CloudKit results into the local cache **without destroying local-only data.**
+    ///
+    /// A remote empty result (no records for this iCloud account, decode failure,
+    /// throttling) must never clear a populated local cache — that wipes the user's
+    /// locations and breaks every calendar event that references them (see
+    /// DATA_LOSS_INCIDENT_REPORT.md). Union by id instead.
+    private func mergeFromCloud(_ cloudLocations: [Location]) async throws {
+        let local = try fetchLocal()
+
+        guard !cloudLocations.isEmpty else {
+            if !local.isEmpty {
+                logger.warning("CloudKit returned 0 Locations but local cache has \(local.count); keeping local data")
+            }
+            return
+        }
+
+        var merged: [UUID: Location] = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        for location in cloudLocations {
+            merged[location.id] = location
+        }
+
+        let mergedList = Array(merged.values).sorted { $0.name < $1.name }
+        let localSorted = local.sorted { $0.name < $1.name }
+        let encoder = JSONEncoder()
+        if let a = try? encoder.encode(mergedList), let b = try? encoder.encode(localSorted), a == b {
+            logger.debug("CloudKit sync produced no changes for Locations")
+            return
+        }
+
+        try await saveLocal(mergedList)
+        logger.debug("Merged \(cloudLocations.count) CloudKit Locations into local cache (now \(mergedList.count))")
+    }
+
     /// Sync all locations from CloudKit to local cache
     private func syncFromCloudKit() async {
         do {
             let cloudLocations = try await cloudKitManager.fetchAllLocations()
-
-            // Merge strategy: CloudKit wins for conflicts (last-write-wins)
-            try await saveLocal(cloudLocations)
-            logger.debug("Synced \(cloudLocations.count) Locations from CloudKit to local cache")
+            try await mergeFromCloud(cloudLocations)
         } catch let error as CloudKitManager.CloudKitError {
             if case .fetchFailed(let message) = error, message.contains("schema not configured") {
                 // First-time setup - try to initialize schema in development
@@ -137,7 +167,7 @@ actor LocationRepository: Sendable {
                     try await cloudKitManager.initializeSchemaIfNeeded()
                     // Retry fetch after initialization
                     let cloudLocations = try await cloudKitManager.fetchAllLocations()
-                    try await saveLocal(cloudLocations)
+                    try await mergeFromCloud(cloudLocations)
                     logger.debug("✅ Schema initialized and synced successfully")
                 } catch {
                     logger.error("Schema initialization failed: \(error.localizedDescription)")

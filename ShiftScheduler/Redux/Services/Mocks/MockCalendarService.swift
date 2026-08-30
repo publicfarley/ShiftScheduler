@@ -424,6 +424,20 @@ final class MockCalendarService: CalendarServiceProtocol {
         return (updated: count, total: count)
     }
 
+    var mockRecoveryResult = CalendarShiftTypeRecovery.Result(shiftTypes: [], locations: [])
+    private(set) var recoverShiftTypeDataCallCount = 0
+
+    func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result {
+        recoverShiftTypeDataCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+        return mockRecoveryResult
+    }
+
     func markShiftAsSick(eventIdentifier: String, isSickDay: Bool, reason: String?) async throws {
         markShiftAsSickCallCount += 1
         lastMarkAsSickData = (eventIdentifier, isSickDay, reason)
