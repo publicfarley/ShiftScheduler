@@ -1,3 +1,5 @@
+@~/.claude/ios-engineering-constraints.md
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -7,19 +9,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing
 ```bash
 # Run all tests (when Xcode project is set up)
-xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' test
+xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' test
 
 # Run tests with xcpretty for cleaner output (if installed)
-xcodebuild test -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' | xcpretty
+xcodebuild test -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' | xcpretty
 ```
 
 ### Building
 ```bash
 # Build for iOS Simulator
-xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' build
+xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' build
 
 # Build for release
-xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -configuration Release -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' build
+xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -configuration Release -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' build
 
 # List available simulators
 xcrun simctl list devices
@@ -92,12 +94,12 @@ When completing work or making changes, you MUST validate that the entire projec
 
 1. **App Target Build:**
    ```bash
-   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-148A74A72499' build
+   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' build
    ```
 
 2. **Test Target Build:**
    ```bash
-   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,id=490A490A-C97A-43EE-978E-978E-148A74A72499' -only-testing:ShiftSchedulerTests test
+   xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' -only-testing:ShiftSchedulerTests test
    ```
 
 **Why Both Targets Matter:**
