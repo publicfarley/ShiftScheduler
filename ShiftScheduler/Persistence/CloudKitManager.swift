@@ -1,6 +1,7 @@
 import Foundation
 import CloudKit
 import OSLog
+import Security
 
 /// Actor-based CloudKit manager for syncing shift types and locations
 /// to the public CloudKit database for cross-account synchronization
@@ -9,12 +10,25 @@ actor CloudKitManager: Sendable {
     private let containerIdentifier: String
     private var cachedContainer: CKContainer?
 
-    /// CloudKit requires an icloud-services entitlement. Unbundled processes
-    /// (like the SPM-built CLI) don't have one, and CKContainer traps — it does
-    /// not throw — when used without it, so sync is compiled out for SPM builds.
+    /// CloudKit requires the icloud-services entitlement — CKContainer traps
+    /// (does not throw) when used without it. On macOS, check the running
+    /// process's actual code-signed entitlements at runtime rather than
+    /// assuming based on build type: true for the entitled macOS app bundle,
+    /// and also true for the SPM-built CLI once it has been signed with a
+    /// matching entitlements file (see CLI.entitlements). Unsigned/unentitled
+    /// macOS processes safely get `false` instead of trapping. SecTask isn't
+    /// available on iOS, but the iOS app bundle is always properly entitled,
+    /// so sync is unconditionally available there.
     static var isSyncAvailable: Bool {
-        #if SWIFT_PACKAGE
-        return false
+        #if os(macOS)
+        guard let task = SecTaskCreateFromSelf(nil) else { return false }
+        guard let value = SecTaskCopyValueForEntitlement(
+            task,
+            "com.apple.developer.icloud-services" as CFString,
+            nil
+        ) else { return false }
+        guard let services = value as? [String] else { return false }
+        return services.contains("CloudKit")
         #else
         return true
         #endif
@@ -311,12 +325,18 @@ actor CloudKitManager: Sendable {
             _ = try await fetchAllLocations()
             logger.debug("CloudKit schema already exists")
             return
-        } catch let error as CKError where error.code == .unknownItem {
+        } catch {
+            // fetchAllShiftTypes/fetchAllLocations already translate a raw
+            // CKError.unknownItem into CloudKitError.fetchFailed(message),
+            // so that's the shape we need to match here — a bare `CKError`
+            // never reaches this catch.
+            guard case CloudKitError.fetchFailed(let message) = error,
+                  message.contains("schema not configured") else {
+                // Other errors - don't try to initialize
+                throw error
+            }
             // Schema doesn't exist - create it in development
             logger.debug("CloudKit schema not found - initializing in development")
-        } catch {
-            // Other errors - don't try to initialize
-            throw error
         }
 
         // Create sample location first (ShiftType references Location)

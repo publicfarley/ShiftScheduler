@@ -32,6 +32,15 @@ actor ShiftTypeRepository: Sendable {
         // 1. Load from local JSON cache first (fast, doesn't block UI)
         let localShiftTypes = try fetchLocal()
 
+        guard !localShiftTypes.isEmpty else {
+            // Nothing local to show yet (e.g. first run on a new device/CLI
+            // invocation) — await the CloudKit fetch since there's no cached
+            // data to return in the meantime, and a detached background sync
+            // would never be observed by a one-shot process like the CLI.
+            await syncFromCloudKit()
+            return try fetchLocal()
+        }
+
         // 2. Try to sync from CloudKit in background (don't block on failure)
         Task {
             await syncFromCloudKit()
