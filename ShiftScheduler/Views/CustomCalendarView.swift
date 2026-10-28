@@ -5,7 +5,7 @@ struct BorderEdges: Shape {
     let edges: Edge.Set
     let width: CGFloat
 
-    func path(in rect: CGRect) -> Path {
+    nonisolated func path(in rect: CGRect) -> Path {
         var path = Path()
 
         if edges.contains(.top) {
