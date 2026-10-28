@@ -1074,6 +1074,9 @@ func settingsReducer(state: SettingsState, action: SettingsAction) -> SettingsSt
         state.isImporting = false
         state.importErrorMessage = message
 
+    case .calendarAudit(let auditAction):
+        state.calendarAudit = calendarAuditReducer(state: state.calendarAudit, action: auditAction)
+
     case .resetImport:
         state.showImportSheet = false
         state.importText = ""

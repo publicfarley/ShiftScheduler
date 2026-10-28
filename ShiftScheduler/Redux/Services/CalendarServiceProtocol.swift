@@ -102,4 +102,13 @@ protocol CalendarServiceProtocol: Sendable {
     /// recoverable.
     /// - Throws: `CalendarServiceError.notAuthorized` if calendar access is denied.
     func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result
+
+    /// Calendars the user can audit the app calendar against (excludes the app calendar itself)
+    /// - Throws: `CalendarServiceError.notAuthorized` if calendar access is denied.
+    func availableCalendars() async throws -> [CalendarAudit.AuditCalendar]
+
+    /// Raw events from another calendar for the days `startDate` through `endDate` (both inclusive)
+    /// - Throws: `CalendarServiceError.notAuthorized` if calendar access is denied, or
+    ///   `CalendarServiceError.eventConversionFailed` if the calendar no longer exists.
+    func loadCalendarEvents(calendarIdentifier: String, from startDate: Date, through endDate: Date) async throws -> [CalendarAudit.ExternalEvent]
 }

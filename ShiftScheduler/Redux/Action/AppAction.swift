@@ -965,6 +965,10 @@ enum SettingsAction: Equatable {
     /// Reset import state
     case resetImport
 
+    // MARK: - Calendar Audit Actions
+
+    case calendarAudit(CalendarAuditAction)
+
     static func == (lhs: SettingsAction, rhs: SettingsAction) -> Bool {
         switch (lhs, rhs) {
         case (.loadSettings, .loadSettings),
@@ -1066,6 +1070,8 @@ enum SettingsAction: Equatable {
                 return false
             }
         case let (.importFailed(lhs), .importFailed(rhs)):
+            return lhs == rhs
+        case let (.calendarAudit(lhs), .calendarAudit(rhs)):
             return lhs == rhs
         default:
             return false

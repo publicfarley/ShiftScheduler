@@ -556,6 +556,38 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
 
     // MARK: - Recovery
 
+    func availableCalendars() async throws -> [CalendarAudit.AuditCalendar] {
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        return eventStore.calendars(for: .event)
+            .filter { $0.title != appCalendarName }
+            .map { CalendarAudit.AuditCalendar(id: $0.calendarIdentifier, title: $0.title, sourceTitle: $0.source?.title ?? "") }
+            .sorted { ($0.sourceTitle, $0.title) < ($1.sourceTitle, $1.title) }
+    }
+
+    func loadCalendarEvents(calendarIdentifier: String, from startDate: Date, through endDate: Date) async throws -> [CalendarAudit.ExternalEvent] {
+        guard try await isCalendarAuthorized() else {
+            throw CalendarServiceError.notAuthorized
+        }
+
+        guard let calendar = eventStore.calendar(withIdentifier: calendarIdentifier) else {
+            throw CalendarServiceError.eventConversionFailed("Calendar not found")
+        }
+
+        let rangeStart = Calendar.current.startOfDay(for: startDate)
+        let lastDay = Calendar.current.startOfDay(for: endDate)
+        guard let rangeEnd = Calendar.current.date(byAdding: .day, value: 1, to: lastDay) else {
+            throw CalendarServiceError.dateCalculationFailed
+        }
+
+        let predicate = eventStore.predicateForEvents(withStart: rangeStart, end: rangeEnd, calendars: [calendar])
+        return eventStore.events(matching: predicate)
+            .sorted { $0.startDate < $1.startDate }
+            .map { CalendarAudit.ExternalEvent(date: Calendar.current.startOfDay(for: $0.startDate), description: $0.notes) }
+    }
+
     func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result {
         guard try await isCalendarAuthorized() else {
             throw CalendarServiceError.notAuthorized

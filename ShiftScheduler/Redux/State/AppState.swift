@@ -566,6 +566,10 @@ struct SettingsState: Equatable {
 
     /// Import success message if any (e.g. "Imported 8 shifts")
     var importSuccessMessage: String? = nil
+
+    // MARK: - Calendar Audit State
+
+    var calendarAudit: CalendarAuditState = CalendarAuditState()
 }
 
 // MARK: - ImportConflictPolicy Enum
