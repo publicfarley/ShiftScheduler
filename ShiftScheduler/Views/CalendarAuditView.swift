@@ -86,7 +86,7 @@ struct CalendarAuditView: View {
                 .cornerRadius(8)
             }
 
-            Text("The shift symbol is read from each event's notes: the text before the first colon, such as \u{201C}x: Off\u{201D}. An empty app day matches x, X or ~.")
+            Text("The shift symbol is read from each event's title: the text before the first colon, such as \u{201C}x: Off\u{201D}. An empty app day matches x, X or ~.")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

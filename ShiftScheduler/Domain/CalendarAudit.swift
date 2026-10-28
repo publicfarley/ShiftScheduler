@@ -2,14 +2,14 @@ import Foundation
 
 /// Compares the app calendar against a user-chosen calendar, day by day.
 ///
-/// The chosen calendar encodes a shift symbol in each event's description
+/// The chosen calendar encodes a shift symbol in each event's title
 /// (the text before the first `:`, e.g. `x: Off` → `x`). An empty day in the
 /// app calendar is equivalent to `x`, `X` or `~` in the chosen calendar.
 enum CalendarAudit {
     /// A raw event read from the chosen calendar
     struct ExternalEvent: Equatable, Sendable {
         let date: Date
-        let description: String?
+        let title: String?
     }
 
     /// A calendar the user can pick to audit against
@@ -54,7 +54,7 @@ enum CalendarAudit {
     struct Report: Equatable, Sendable {
         /// Days where either calendar has an entry, in date order
         let days: [Day]
-        /// Chosen-calendar events whose description has no readable symbol
+        /// Chosen-calendar events whose title has no readable symbol
         let skippedEventCount: Int
 
         var matchCount: Int {
@@ -70,15 +70,15 @@ enum CalendarAudit {
         }
     }
 
-    /// Extracts the symbol from a description: the trimmed text before the first `:`
+    /// Extracts the symbol from an event title: the trimmed text before the first `:`
     ///
     /// Text containing whitespace (e.g. `Meeting with Bob: notes`) is not a symbol.
-    static func symbol(fromDescription description: String?) -> String? {
-        guard let description, let colon = description.firstIndex(of: ":") else {
+    static func symbol(fromTitle title: String?) -> String? {
+        guard let title, let colon = title.firstIndex(of: ":") else {
             return nil
         }
 
-        let symbol = description[..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+        let symbol = title[..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
         guard !symbol.isEmpty, !symbol.contains(where: \.isWhitespace) else {
             return nil
         }
@@ -112,7 +112,7 @@ enum CalendarAudit {
         for event in externalEvents {
             let day = calendar.startOfDay(for: event.date)
             guard inRange(day) else { continue }
-            guard let symbol = symbol(fromDescription: event.description) else {
+            guard let symbol = symbol(fromTitle: event.title) else {
                 skipped += 1
                 continue
             }

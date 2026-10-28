@@ -585,7 +585,7 @@ final class CalendarService: CalendarServiceProtocol, @unchecked Sendable {
         let predicate = eventStore.predicateForEvents(withStart: rangeStart, end: rangeEnd, calendars: [calendar])
         return eventStore.events(matching: predicate)
             .sorted { $0.startDate < $1.startDate }
-            .map { CalendarAudit.ExternalEvent(date: Calendar.current.startOfDay(for: $0.startDate), description: $0.notes) }
+            .map { CalendarAudit.ExternalEvent(date: Calendar.current.startOfDay(for: $0.startDate), title: $0.title) }
     }
 
     func recoverShiftTypeData() async throws -> CalendarShiftTypeRecovery.Result {

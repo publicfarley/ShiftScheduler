@@ -84,7 +84,7 @@ struct CalendarAuditMiddlewareTests {
         let target = try Self.date(2026, 1, 5)
         let harness = try Self.makeHarness { _, calendar in
             calendar.mockShifts = [ScheduledShift(eventIdentifier: "evt-1", shiftType: Self.day, date: target)]
-            calendar.mockExternalEvents["c1"] = [CalendarAudit.ExternalEvent(date: target, description: "N: Night")]
+            calendar.mockExternalEvents["c1"] = [CalendarAudit.ExternalEvent(date: target, title: "N: Night")]
         }
 
         await harness.store.dispatch(action: .settings(.calendarAudit(.runAudit)))
@@ -138,10 +138,10 @@ struct CalendarAuditMiddlewareTests {
                 ScheduledShift(eventIdentifier: "evt-remove", shiftType: Self.day, date: removeDate)
             ]
             calendar.mockExternalEvents["c1"] = [
-                CalendarAudit.ExternalEvent(date: switchDate, description: "N: Night"),
-                CalendarAudit.ExternalEvent(date: createDate, description: "D: Day"),
-                CalendarAudit.ExternalEvent(date: removeDate, description: "x: Off"),
-                CalendarAudit.ExternalEvent(date: skippedDate, description: "N: Night")
+                CalendarAudit.ExternalEvent(date: switchDate, title: "N: Night"),
+                CalendarAudit.ExternalEvent(date: createDate, title: "D: Day"),
+                CalendarAudit.ExternalEvent(date: removeDate, title: "x: Off"),
+                CalendarAudit.ExternalEvent(date: skippedDate, title: "N: Night")
             ]
             state.settings.calendarAudit.report = CalendarAudit.Report(
                 days: [

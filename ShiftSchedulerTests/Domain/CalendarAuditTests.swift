@@ -21,7 +21,7 @@ struct CalendarAuditTests {
     }
 
     private static func external(_ description: String?, on date: Date) -> CalendarAudit.ExternalEvent {
-        CalendarAudit.ExternalEvent(date: date, description: description)
+        CalendarAudit.ExternalEvent(date: date, title: description)
     }
 
     /// Audits a single day and returns its row (nil when the day produced no row)
@@ -43,36 +43,36 @@ struct CalendarAuditTests {
 
     @Test("Symbol is the text before the first colon")
     func symbolBeforeColon() {
-        #expect(CalendarAudit.symbol(fromDescription: "x: Off") == "x")
+        #expect(CalendarAudit.symbol(fromTitle: "x: Off") == "x")
     }
 
     @Test("Symbol is trimmed of surrounding whitespace")
     func symbolIsTrimmed() {
-        #expect(CalendarAudit.symbol(fromDescription: "  N : Night shift") == "N")
+        #expect(CalendarAudit.symbol(fromTitle: "  N : Night shift") == "N")
     }
 
     @Test("Only the first colon counts")
     func onlyFirstColonCounts() {
-        #expect(CalendarAudit.symbol(fromDescription: "D: Day: extra") == "D")
+        #expect(CalendarAudit.symbol(fromTitle: "D: Day: extra") == "D")
     }
 
     @Test("Tilde is a valid symbol")
     func tildeSymbol() {
-        #expect(CalendarAudit.symbol(fromDescription: "~: Nothing") == "~")
+        #expect(CalendarAudit.symbol(fromTitle: "~: Nothing") == "~")
     }
 
     @Test("No symbol when the description is nil, empty, has no colon, or starts with a colon")
     func noSymbol() {
-        #expect(CalendarAudit.symbol(fromDescription: nil) == nil)
-        #expect(CalendarAudit.symbol(fromDescription: "") == nil)
-        #expect(CalendarAudit.symbol(fromDescription: "just words") == nil)
-        #expect(CalendarAudit.symbol(fromDescription: ": text") == nil)
-        #expect(CalendarAudit.symbol(fromDescription: "   : text") == nil)
+        #expect(CalendarAudit.symbol(fromTitle: nil) == nil)
+        #expect(CalendarAudit.symbol(fromTitle: "") == nil)
+        #expect(CalendarAudit.symbol(fromTitle: "just words") == nil)
+        #expect(CalendarAudit.symbol(fromTitle: ": text") == nil)
+        #expect(CalendarAudit.symbol(fromTitle: "   : text") == nil)
     }
 
     @Test("Text containing whitespace before the colon is not a symbol")
     func prefixWithSpacesIsNotASymbol() {
-        #expect(CalendarAudit.symbol(fromDescription: "Meeting with Bob: notes") == nil)
+        #expect(CalendarAudit.symbol(fromTitle: "Meeting with Bob: notes") == nil)
     }
 
     // MARK: - Per-date comparison
