@@ -10,7 +10,8 @@ let baseMiddlewares: [Middleware<AppState, AppAction>] = [
     locationsMiddleware,
     shiftTypesMiddleware,
     changeLogMiddleware,
-    settingsMiddleware
+    settingsMiddleware,
+    calendarAuditMiddleware
 ]
 
 /// Production middlewares with startup initialization
@@ -22,7 +23,8 @@ let productionMiddlewares: [Middleware<AppState, AppAction>] = [
     locationsMiddleware,
     shiftTypesMiddleware,
     changeLogMiddleware,
-    settingsMiddleware
+    settingsMiddleware,
+    calendarAuditMiddleware
 ]
 
 // MARK: - Store Factory

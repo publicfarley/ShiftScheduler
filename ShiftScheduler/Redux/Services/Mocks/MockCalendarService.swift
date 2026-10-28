@@ -438,6 +438,34 @@ final class MockCalendarService: CalendarServiceProtocol {
         return mockRecoveryResult
     }
 
+    var mockAvailableCalendars: [CalendarAudit.AuditCalendar] = []
+    /// External events keyed by calendar identifier
+    var mockExternalEvents: [String: [CalendarAudit.ExternalEvent]] = [:]
+    private(set) var loadCalendarEventsCallCount = 0
+
+    func availableCalendars() async throws -> [CalendarAudit.AuditCalendar] {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+        return mockAvailableCalendars
+    }
+
+    func loadCalendarEvents(calendarIdentifier: String, from startDate: Date, through endDate: Date) async throws -> [CalendarAudit.ExternalEvent] {
+        loadCalendarEventsCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        guard mockIsAuthorized else {
+            throw CalendarServiceError.notAuthorized
+        }
+        let first = Calendar.current.startOfDay(for: startDate)
+        let last = Calendar.current.startOfDay(for: endDate)
+        return (mockExternalEvents[calendarIdentifier] ?? []).filter { $0.date >= first && $0.date <= last }
+    }
+
     func markShiftAsSick(eventIdentifier: String, isSickDay: Bool, reason: String?) async throws {
         markShiftAsSickCallCount += 1
         lastMarkAsSickData = (eventIdentifier, isSickDay, reason)

@@ -272,6 +272,10 @@ func settingsMiddleware(
          .importCompleted, .importFailed, .resetImport:
         // Handled by reducer only
         break
+
+    case .calendarAudit:
+        // Handled by calendarAuditMiddleware
+        break
     }
 }
 
