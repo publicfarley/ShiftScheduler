@@ -91,6 +91,18 @@ struct SettingsView: View {
             )) {
                 ShiftImportView()
             }
+            .sheet(isPresented: Binding(
+                get: { store.state.settings.calendarAudit.isSheetPresented },
+                set: { newValue in
+                    if !newValue {
+                        Task {
+                            await store.dispatch(action: .settings(.calendarAudit(.sheetDismissed)))
+                        }
+                    }
+                }
+            )) {
+                CalendarAuditView()
+            }
         }
     }
 
@@ -181,6 +193,9 @@ struct SettingsView: View {
 
             // Shift Import
             shiftImportSection
+
+            // Calendar Audit
+            calendarAuditSection
         }
     }
 
@@ -512,6 +527,46 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "square.and.arrow.up")
                     Text("Import Shifts")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6).opacity(0.3))
+        )
+    }
+
+    // MARK: - Calendar Audit Section
+
+    private var calendarAuditSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "checklist")
+                    .foregroundColor(.blue)
+                Text("Calendar Audit")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Text("Compare the app calendar with another calendar and update any days that differ.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: {
+                Task {
+                    await store.dispatch(action: .settings(.calendarAudit(.sheetOpened(now: Date()))))
+                }
+            }) {
+                HStack {
+                    Image(systemName: "checklist")
+                    Text("Audit Calendar")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

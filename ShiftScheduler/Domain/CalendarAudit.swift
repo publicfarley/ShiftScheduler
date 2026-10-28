@@ -168,3 +168,35 @@ enum CalendarAudit {
         return .differs(.switchTo(target, from: app.type, eventIdentifier: app.shift.eventIdentifier))
     }
 }
+
+// MARK: - Display
+
+extension CalendarAudit.Fix {
+    /// What applying this fix does to the app calendar
+    var actionDescription: String {
+        switch self {
+        case .create(let shiftType):
+            return "Add \(shiftType.title) (\(shiftType.symbol))"
+        case .switchTo(let shiftType, _, _):
+            return "Switch to \(shiftType.title) (\(shiftType.symbol))"
+        case .remove:
+            return "Remove shift"
+        }
+    }
+}
+
+extension CalendarAudit.Day {
+    /// Why no fix is offered, or what the fix does; nil for a match
+    var detail: String? {
+        switch outcome {
+        case .match:
+            return nil
+        case .differs(let fix):
+            return fix.actionDescription
+        case .notInExternal:
+            return "Not on the chosen calendar"
+        case .unknownExternalSymbol(let symbol):
+            return "No shift type with symbol \u{201C}\(symbol)\u{201D}"
+        }
+    }
+}

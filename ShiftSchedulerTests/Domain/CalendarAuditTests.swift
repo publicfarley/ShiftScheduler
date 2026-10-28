@@ -226,4 +226,21 @@ struct CalendarAuditTests {
         #expect(report.discrepancyCount == 1)
         #expect(report.fixableDays.map(\.date) == [d3])
     }
+
+    // MARK: - Display
+
+    @Test("Each outcome describes what will happen or why nothing can")
+    func outcomeDetails() throws {
+        let target = try Self.date(2026, 1, 5)
+        func row(_ outcome: CalendarAudit.Outcome) -> CalendarAudit.Day {
+            CalendarAudit.Day(date: target, appSymbol: nil, externalSymbol: nil, outcome: outcome)
+        }
+
+        #expect(row(.match).detail == nil)
+        #expect(row(.differs(.create(Self.day))).detail == "Add Day (D)")
+        #expect(row(.differs(.switchTo(Self.night, from: Self.day, eventIdentifier: "e"))).detail == "Switch to Night (N)")
+        #expect(row(.differs(.remove(current: Self.day, eventIdentifier: "e"))).detail == "Remove shift")
+        #expect(row(.notInExternal).detail == "Not on the chosen calendar")
+        #expect(row(.unknownExternalSymbol("Q")).detail == "No shift type with symbol \u{201C}Q\u{201D}")
+    }
 }
