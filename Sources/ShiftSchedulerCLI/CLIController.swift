@@ -28,6 +28,57 @@ final class CLIController {
         }
     }
 
+    // MARK: - Shift type resolution
+    //
+    // The CLI keeps its own data directory, so it can lack the shift types that
+    // calendar events point at. Such events cannot show as shifts. Before a read
+    // command lists shifts, rebuild the missing types from the events themselves.
+
+    /// Outcome of loading shifts for a range.
+    struct ShiftLoad {
+        var shifts: [ScheduledShift]
+        /// Shift types rebuilt from calendar events (local file only).
+        var rebuiltTypes: Int
+        /// Events still hidden because their shift type is unknown.
+        var skippedEvents: Int
+    }
+
+    func loadShiftsResolvingTypes(from start: Date, to end: Date) async throws -> ShiftLoad {
+        let events = try await calendar.loadShiftData(from: start, to: end)
+        var known = Set(try await persistence.loadShiftTypes().map(\.id))
+        var rebuilt = 0
+
+        let unresolved = ShiftTypeResolution.unresolvedShiftTypeIds(in: events, knownIds: known)
+        if !unresolved.isEmpty {
+            let recovery = try await calendar.recoverShiftTypeData()
+            let wanted = recovery.shiftTypes.filter { unresolved.contains($0.id) }
+            rebuilt = try await persistence.restoreMissing(shiftTypes: wanted, locations: recovery.locations).shiftTypes
+            known = Set(try await persistence.loadShiftTypes().map(\.id))
+        }
+
+        let shifts = try await calendar.loadShifts(from: start, to: end)
+        return ShiftLoad(
+            shifts: shifts,
+            rebuiltTypes: rebuilt,
+            skippedEvents: ShiftTypeResolution.skippedEventCount(in: events, knownIds: known)
+        )
+    }
+
+    /// Writes notices about a shift load to stderr, so stdout stays clean for scripts.
+    func reportNotices(for load: ShiftLoad) {
+        for line in OutputFormatter.resolutionNotices(rebuiltTypes: load.rebuiltTypes, skippedEvents: load.skippedEvents) {
+            FileHandle.standardError.write(Data((line + "\n").utf8))
+        }
+    }
+
+    // MARK: - CloudKit
+
+    /// Pulls shift types and locations from CloudKit and waits for the result.
+    func syncFromCloudKit() async throws -> (shiftTypes: Int, locations: Int) {
+        guard CloudKitManager.isSyncAvailable else { throw CLIError.cloudKitUnavailable }
+        return try await persistence.pullFromCloudKit()
+    }
+
     // MARK: - Reference resolution
     //
     // Commands accept UUIDs (unambiguous, agent-friendly) or human-readable

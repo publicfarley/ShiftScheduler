@@ -102,6 +102,20 @@ struct ProfileDTO: Codable {
 enum OutputFormatter {
     static let iso8601 = ISO8601DateFormatter()
 
+    /// Stderr lines that tell the user about a shift type rebuild or skipped events.
+    static func resolutionNotices(rebuiltTypes: Int, skippedEvents: Int) -> [String] {
+        var lines: [String] = []
+        if rebuiltTypes > 0 {
+            let noun = rebuiltTypes == 1 ? "shift type" : "shift types"
+            lines.append("Note: rebuilt \(rebuiltTypes) \(noun) from calendar events (local file only).")
+        }
+        if skippedEvents > 0 {
+            let noun = skippedEvents == 1 ? "event was" : "events were"
+            lines.append("Warning: \(skippedEvents) calendar \(noun) skipped because the shift type is unknown. Run 'shift-scheduler sync' to pull shift types from CloudKit.")
+        }
+        return lines
+    }
+
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"

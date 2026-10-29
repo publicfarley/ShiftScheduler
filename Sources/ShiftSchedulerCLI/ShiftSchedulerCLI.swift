@@ -33,6 +33,7 @@ struct ShiftSchedulerCLI: AsyncParsableCommand {
               shift-scheduler schedule add --date tomorrow --type "Day Shift"
               shift-scheduler schedule list --from today --to +14d
               shift-scheduler schedule switch --event-id <ID> --to "Night Shift"
+              shift-scheduler sync
               shift-scheduler undo
             """,
         version: "0.1.0",
@@ -44,6 +45,7 @@ struct ShiftSchedulerCLI: AsyncParsableCommand {
             LogCommand.self,
             ProfileCommand.self,
             AuthCommand.self,
+            SyncCommand.self,
             UndoCommand.self,
             RedoCommand.self
         ]

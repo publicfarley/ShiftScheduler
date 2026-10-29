@@ -30,6 +30,16 @@ protocol PersistenceServiceProtocol: Sendable {
     /// Delete location by ID
     func deleteLocation(id: UUID) async throws
 
+    // MARK: - Recovery and cloud pull
+
+    /// Add shift types and locations the local files lack. Writes local files only.
+    /// - Returns: The numbers of shift types and locations added.
+    func restoreMissing(shiftTypes: [ShiftType], locations: [Location]) async throws -> (shiftTypes: Int, locations: Int)
+
+    /// Pull shift types and locations from CloudKit and wait for the result.
+    /// - Returns: The numbers of records CloudKit returned.
+    func pullFromCloudKit() async throws -> (shiftTypes: Int, locations: Int)
+
     // MARK: - Change Log
 
     /// Load all change log entries

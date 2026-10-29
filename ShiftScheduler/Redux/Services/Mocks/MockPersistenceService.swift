@@ -57,6 +57,30 @@ final class MockPersistenceService: PersistenceServiceProtocol {
     var lastDeletedChangeLogEntryId: UUID?
     var lastPurgeOldEntriesCutoffDate: Date?
 
+    // MARK: - Recovery and cloud pull
+
+    private(set) var restoreMissingCallCount = 0
+    var mockCloudPullResult: (shiftTypes: Int, locations: Int) = (0, 0)
+
+    func restoreMissing(shiftTypes: [ShiftType], locations: [Location]) async throws -> (shiftTypes: Int, locations: Int) {
+        restoreMissingCallCount += 1
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        let newTypes = ShiftTypeResolution.missingOnly(recovered: shiftTypes, existingIds: Set(mockShiftTypes.map(\.id)), id: \.id)
+        let newLocations = ShiftTypeResolution.missingOnly(recovered: locations, existingIds: Set(mockLocations.map(\.id)), id: \.id)
+        mockShiftTypes.append(contentsOf: newTypes)
+        mockLocations.append(contentsOf: newLocations)
+        return (newTypes.count, newLocations.count)
+    }
+
+    func pullFromCloudKit() async throws -> (shiftTypes: Int, locations: Int) {
+        if shouldThrowError, let error = throwError {
+            throw error
+        }
+        return mockCloudPullResult
+    }
+
     // MARK: - Shift Types
 
     func loadShiftTypes() async throws -> [ShiftType] {

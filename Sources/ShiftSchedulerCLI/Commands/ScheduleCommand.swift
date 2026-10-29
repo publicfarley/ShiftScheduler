@@ -49,7 +49,9 @@ struct ScheduleCommand: AsyncParsableCommand {
                 try await controller.requireCalendarAuthorization()
                 let endExclusive = Calendar.current.date(byAdding: .day, value: 1, to: endInclusive) ?? endInclusive
 
-                let shifts = try await controller.calendar.loadShifts(from: startDate, to: endExclusive)
+                let load = try await controller.loadShiftsResolvingTypes(from: startDate, to: endExclusive)
+                let shifts = load.shifts
+                controller.reportNotices(for: load)
                 if options.json {
                     try OutputFormatter.printJSON(shifts.map(ShiftDTO.init))
                 } else if shifts.isEmpty {

@@ -77,6 +77,28 @@ actor ShiftTypeRepository: Sendable {
         }
     }
 
+    /// Add shift types that the local file does not hold. Writes the local file only,
+    /// never CloudKit: rebuilt records lack fields such as the description and must
+    /// not overwrite the full records in the cloud. Existing local records win.
+    /// - Returns: The number of shift types added.
+    @discardableResult
+    func restoreMissing(_ shiftTypes: [ShiftType]) async throws -> Int {
+        let local = try fetchLocal()
+        let missing = ShiftTypeResolution.missingOnly(recovered: shiftTypes, existingIds: Set(local.map(\.id)), id: \.id)
+        guard !missing.isEmpty else { return 0 }
+        try await saveLocal(local + missing)
+        return missing.count
+    }
+
+    /// Pull shift types from CloudKit into the local file and wait for the result.
+    /// Unlike the background sync, this reports failures to the caller.
+    /// - Returns: The number of records CloudKit returned.
+    func pullFromCloudKit() async throws -> Int {
+        let cloud = try await cloudKitManager.fetchAllShiftTypes()
+        try await mergeFromCloud(cloud)
+        return cloud.count
+    }
+
     /// Delete a shift type
     func delete(id: UUID) async throws {
         var shiftTypes = try fetchLocal()

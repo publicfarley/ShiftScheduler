@@ -16,6 +16,7 @@ enum CLIError: Error {
     case invalidOperation(String)
     case confirmationRequired(String)
     case calendarNotAuthorized
+    case cloudKitUnavailable
     case cancelled
 
     var message: String {
@@ -46,6 +47,8 @@ enum CLIError: Error {
             return "Confirmation required: \(action)"
         case .calendarNotAuthorized:
             return "Calendar access is not authorized"
+        case .cloudKitUnavailable:
+            return "CloudKit is not available to this build"
         case .cancelled:
             return "Cancelled"
         }
@@ -71,6 +74,8 @@ enum CLIError: Error {
             return "Re-run with --force to skip the confirmation prompt (no interactive terminal is available)."
         case .calendarNotAuthorized:
             return "Run 'shift-scheduler auth request' to grant calendar access, or check System Settings > Privacy & Security > Calendars."
+        case .cloudKitUnavailable:
+            return "Use the signed build (the ShiftSchedulerCLI scheme in Xcode) and sign in to iCloud. A build from 'swift build' has no CloudKit entitlement."
         default:
             return nil
         }

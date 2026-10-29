@@ -276,6 +276,7 @@
           <li class="sub"><a href="#log">log</a></li>
           <li class="sub"><a href="#profile">profile</a></li>
           <li class="sub"><a href="#auth">auth</a></li>
+          <li class="sub"><a href="#sync">sync</a></li>
           <li class="sub"><a href="#undoredo">undo / redo</a></li>
         </ol>
       </li>
@@ -370,7 +371,7 @@ shift-scheduler schedule list <span class="flag">--from</span> today <span class
 
         <article id="today">
           <h3 class="cmd">shift-scheduler today</h3>
-          <p>Show today's scheduled shifts. Requires calendar authorization. Prints a table, or a "no shifts" message if the day is empty.</p>
+          <p>Show today's scheduled shifts. Requires calendar authorization. Rebuilds missing shift types and warns about skipped events the same way as <code>schedule list</code>. Prints a table, or a "no shifts" message if the day is empty.</p>
           <pre><code>shift-scheduler today [<span class="flag">--json</span>] [<span class="flag">--data-dir</span> &lt;path&gt;]</code></pre>
         </article>
 
@@ -380,6 +381,7 @@ shift-scheduler schedule list <span class="flag">--from</span> today <span class
 
           <h4 class="subcmd">schedule list</h4>
           <p>Defaults to the current calendar month. <code>--to</code> is inclusive. Date arguments are validated before the calendar-authorization check, so a bad date reports as a date error, not an auth error.</p>
+          <p>If events point at shift types this Mac lacks, the CLI rebuilds them from the events before it lists. It writes the local file only, never CloudKit, and prints a <code>Note: rebuilt N shift types …</code> line on stderr. If events are still hidden because their type is unknown, stderr gets a <code>Warning: N calendar events were skipped …</code> line. The exit code stays <code>0</code> and stdout holds the shifts that did resolve. Run <code>sync</code> for the full shift type records.</p>
           <pre><code>shift-scheduler schedule list [<span class="flag">--from</span> &lt;date&gt;] [<span class="flag">--to</span> &lt;date&gt;] [<span class="flag">--json</span>]
 
 <span class="c1">$ shift-scheduler schedule list --from today --to +14d</span></code></pre>
@@ -463,6 +465,12 @@ shift-scheduler profile set [<span class="flag">--name</span> &lt;text&gt;] [<sp
           <p>Check or request calendar (EventKit) authorization. Default subcommand: <code>status</code>.</p>
           <pre><code>shift-scheduler auth status [<span class="flag">--json</span>]    <span class="c1"># never prompts — reports {"authorized": true|false}</span>
 shift-scheduler auth request [<span class="flag">--json</span>]   <span class="c1"># shows the macOS permission dialog; exits 1 if denied</span></code></pre>
+        </article>
+
+        <article id="sync">
+          <h3 class="cmd">shift-scheduler sync</h3>
+          <p>Pulls shift types and locations from the CloudKit public database, waits for the result, and merges them into the local files. Local records are kept; CloudKit wins when both hold the same record. No other command waits for the network. Needs the signed build (the <code>ShiftSchedulerCLI</code> scheme in Xcode) and an iCloud account. A <code>swift build</code> binary has no CloudKit entitlement and exits <code>1</code> with <code>CloudKit is not available to this build</code>.</p>
+          <pre><code>shift-scheduler sync [<span class="flag">--json</span>]   <span class="c1"># --json: {"shiftTypes": N, "locations": M}</span></code></pre>
         </article>
 
         <article id="undoredo">

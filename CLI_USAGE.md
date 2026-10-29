@@ -30,6 +30,7 @@ Binary name: `shift-scheduler`. Version: `0.1.0`.
    - [log](#log)
    - [profile](#profile)
    - [auth](#auth)
+   - [sync](#sync)
    - [undo / redo](#undo--redo)
 6. [Date & Time Formats](#date--time-formats)
 7. [Referencing Objects (types & locations)](#referencing-objects-types--locations)
@@ -58,6 +59,8 @@ you want a bare `shift-scheduler` command, e.g.:
 ```bash
 cp .build/release/shift-scheduler /usr/local/bin/
 ```
+
+To run the CLI's own tests: `swift test`.
 
 ---
 
@@ -139,6 +142,14 @@ shift-scheduler schedule list [--from <date>] [--to <date>] [--json]
 - Dates accept the formats in [Date & Time Formats](#date--time-formats).
 - Date arguments are validated *before* the calendar-authorization check, so
   a bad `--from`/`--to` value reports as a date error, not an auth error.
+- If calendar events point at shift types this Mac's data directory lacks, the
+  CLI rebuilds those types from the events before it lists. It writes the local
+  file only, never CloudKit, and prints `Note: rebuilt N shift types …` on
+  stderr. Rebuilt types have no description; run [`sync`](#sync) to get the
+  full records.
+- If events are still hidden because their shift type is unknown, stderr gets
+  `Warning: N calendar events were skipped …`. The exit code stays `0` and
+  stdout (table or JSON) holds the shifts that did resolve.
 
 ```bash
 shift-scheduler schedule list
@@ -394,6 +405,24 @@ shift-scheduler auth request [--json]
 Triggers the macOS system permission dialog (interactive; there is no
 non-interactive way to grant Calendar access — see
 [For LLM Agents](#for-llm-agents)). Exits `1` if access is denied.
+
+---
+
+### `sync`
+
+```
+shift-scheduler sync [--json]
+```
+
+Pulls shift types and locations from the CloudKit public database, waits for
+the result, and merges them into the local files. Local records are kept;
+CloudKit wins when both hold the same record. No other command waits for the
+network. Prints `Pulled N shift types and M locations from CloudKit.`, or with
+`--json`: `{"shiftTypes": N, "locations": M}`.
+
+Needs the signed build (the `ShiftSchedulerCLI` scheme in Xcode) and an iCloud
+account. A build from `swift build` has no CloudKit entitlement and fails with
+`CloudKit is not available to this build` (exit `1`).
 
 ---
 

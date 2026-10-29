@@ -94,6 +94,20 @@ final class PersistenceService: PersistenceServiceProtocol {
         try await locationRepository.delete(id: id)
     }
 
+    // MARK: - Recovery and cloud pull
+
+    func restoreMissing(shiftTypes: [ShiftType], locations: [Location]) async throws -> (shiftTypes: Int, locations: Int) {
+        let addedLocations = try await locationRepository.restoreMissing(locations)
+        let addedTypes = try await shiftTypeRepository.restoreMissing(shiftTypes)
+        return (addedTypes, addedLocations)
+    }
+
+    func pullFromCloudKit() async throws -> (shiftTypes: Int, locations: Int) {
+        let locations = try await locationRepository.pullFromCloudKit()
+        let shiftTypes = try await shiftTypeRepository.pullFromCloudKit()
+        return (shiftTypes, locations)
+    }
+
     // MARK: - Change Log
 
     func loadChangeLogEntries() async throws -> [ChangeLogEntry] {

@@ -77,6 +77,26 @@ actor LocationRepository: Sendable {
         }
     }
 
+    /// Add locations that the local file does not hold. Writes the local file only,
+    /// never CloudKit. Existing local records win.
+    /// - Returns: The number of locations added.
+    @discardableResult
+    func restoreMissing(_ locations: [Location]) async throws -> Int {
+        let local = try fetchLocal()
+        let missing = ShiftTypeResolution.missingOnly(recovered: locations, existingIds: Set(local.map(\.id)), id: \.id)
+        guard !missing.isEmpty else { return 0 }
+        try await saveLocal(local + missing)
+        return missing.count
+    }
+
+    /// Pull locations from CloudKit into the local file and wait for the result.
+    /// - Returns: The number of records CloudKit returned.
+    func pullFromCloudKit() async throws -> Int {
+        let cloud = try await cloudKitManager.fetchAllLocations()
+        try await mergeFromCloud(cloud)
+        return cloud.count
+    }
+
     /// Delete a location
     func delete(id: UUID) async throws {
         var locations = try fetchLocal()

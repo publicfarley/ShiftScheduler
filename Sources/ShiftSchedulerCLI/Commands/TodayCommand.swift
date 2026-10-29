@@ -20,7 +20,9 @@ struct TodayCommand: AsyncParsableCommand {
             try await controller.requireCalendarAuthorization()
             let today = controller.currentDay.getTodayDate()
             let tomorrow = controller.currentDay.getTomorrowDate()
-            let shifts = try await controller.calendar.loadShifts(from: today, to: tomorrow)
+            let load = try await controller.loadShiftsResolvingTypes(from: today, to: tomorrow)
+            let shifts = load.shifts
+            controller.reportNotices(for: load)
             if options.json {
                 try OutputFormatter.printJSON(shifts.map(ShiftDTO.init))
             } else if shifts.isEmpty {

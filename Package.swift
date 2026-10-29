@@ -59,5 +59,11 @@ let package = Package(
                 .define("SWIFT_PACKAGE")
             ]
         )
+        ,
+        .testTarget(
+            name: "ShiftSchedulerCLITests",
+            dependencies: ["ShiftSchedulerCLI"],
+            path: "Tests/ShiftSchedulerCLITests"
+        )
     ]
 )
