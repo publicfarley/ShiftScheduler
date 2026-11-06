@@ -138,7 +138,7 @@ struct CustomCalendarView: View {
                         let shiftsForDate = scheduledShiftsByDate[date] ?? []
                         let hasShift = !shiftsForDate.isEmpty
                         let isAllDayShift = shiftsForDate.contains { $0.shiftType?.isAllDay == true }
-                        let shiftSymbol = shiftsForDate.first?.shiftType?.symbol
+                        let shiftSymbols = shiftsForDate.calendarSymbols
 
                         // Show EmptyDateCard in bulk add mode (.add) if no shift on that date
                         if selectionMode == .add && !hasShift {
@@ -162,7 +162,7 @@ struct CustomCalendarView: View {
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
                                 isAllDayShift: isAllDayShift,
-                                shiftSymbol: shiftSymbol,
+                                shiftSymbols: shiftSymbols,
                                 isCurrentMonth: isCurrentMonth,
                                 borderEdges: cellEdges
                             ) {
@@ -240,7 +240,7 @@ struct DayView: View {
     let isSelected: Bool
     let hasShift: Bool
     let isAllDayShift: Bool
-    let shiftSymbol: String?
+    let shiftSymbols: [String]
     let isCurrentMonth: Bool
     let borderEdges: Edge.Set
     let onTap: () -> Void
@@ -255,15 +255,17 @@ struct DayView: View {
         Calendar.current.isDateInToday(date)
     }
 
+    /// All shift symbols for the day, each limited to 3 characters, joined with spaces
     private var displaySymbol: String? {
-        guard let symbol = shiftSymbol else { return nil }
+        guard !shiftSymbols.isEmpty else { return nil }
 
-        // Limit to 3 characters, add ellipsis if longer
-        if symbol.count > 3 {
-            let index = symbol.index(symbol.startIndex, offsetBy: 3)
-            return String(symbol[..<index]) + "…"
-        }
-        return symbol
+        return shiftSymbols
+            .map { symbol in
+                guard symbol.count > 3 else { return symbol }
+                let index = symbol.index(symbol.startIndex, offsetBy: 3)
+                return String(symbol[..<index]) + "…"
+            }
+            .joined(separator: " ")
     }
 
     var body: some View {
@@ -287,6 +289,8 @@ struct DayView: View {
                         .font(.system(size: 16, weight: .regular, design: .rounded))
                         .foregroundStyle(ScheduleViewColorPalette.cellTextPrimary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .padding(.horizontal, 2)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.bottom, 4)
                 }
