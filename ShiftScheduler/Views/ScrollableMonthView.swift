@@ -170,7 +170,7 @@ private struct SingleMonthView: View {
                         let shiftsForDate = scheduledShiftsByDate[date] ?? []
                         let hasShift = !shiftsForDate.isEmpty
                         let isAllDayShift = shiftsForDate.contains { $0.shiftType?.isAllDay == true }
-                        let shiftSymbol = shiftsForDate.first?.shiftType?.symbol
+                        let shiftSymbols = shiftsForDate.calendarSymbols
 
                         if selectionMode == .add && !hasShift {
                             let isSelected = selectedDates.contains { selectedDate in
@@ -192,7 +192,7 @@ private struct SingleMonthView: View {
                                 isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                                 hasShift: hasShift,
                                 isAllDayShift: isAllDayShift,
-                                shiftSymbol: shiftSymbol,
+                                shiftSymbols: shiftSymbols,
                                 isCurrentMonth: isCurrentMonth,
                                 borderEdges: cellEdges
                             ) {
