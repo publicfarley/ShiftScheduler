@@ -18,6 +18,7 @@
  <rect width="80" height="80" fill="#E6C35E"/>
  <path d="M0 0H80M0 0V80" stroke="#9C7A24" stroke-width="5" fill="none"/>
 </pattern>
+<clipPath id="cal"><rect x="230" y="268" width="564" height="520" rx="54"/></clipPath>
 </defs>
 <rect width="1024" height="1024" fill="url(#base)"/>
 <rect x="352" y="0" width="120" height="1024" fill="url(#foldV)"/>
@@ -28,8 +29,10 @@
 
 <rect x="370" y="392" width="142" height="140" fill="url(#brick)"/>
 <rect x="512" y="532" width="142" height="132" fill="url(#brick)"/>
+<rect x="230" y="664" width="140" height="124" fill="url(#brick)" clip-path="url(#cal)"/>
 <g stroke="#1E1A14" stroke-width="10" fill="none"><path d="M230 532H794M230 664H794M370 392V788M512 392V788M654 392V788"/></g>
-<g stroke="#1E1A14" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="441" cy="462" r="22"/><path d="M479.0 462.0L493.0 462.0M467.9 488.9L477.8 498.8M441.0 500.0L441.0 514.0M414.1 488.9L404.2 498.8M403.0 462.0L389.0 462.0M414.1 435.1L404.2 425.2M441.0 424.0L441.0 410.0M467.9 435.1L477.8 425.2"/></g>
+<g stroke="#1E1A14" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="441" cy="462" r="20"/><path d="M473.0 462.0L485.0 462.0M463.6 484.6L472.1 493.1M441.0 494.0L441.0 506.0M418.4 484.6L409.9 493.1M409.0 462.0L397.0 462.0M418.4 439.4L409.9 430.9M441.0 430.0L441.0 418.0M463.6 439.4L472.1 430.9"/></g>
+<g stroke="#1E1A14" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="305" cy="721" r="20"/><path d="M337.0 721.0L349.0 721.0M327.6 743.6L336.1 752.1M305.0 753.0L305.0 765.0M282.4 743.6L273.9 752.1M273.0 721.0L261.0 721.0M282.4 698.4L273.9 689.9M305.0 689.0L305.0 677.0M327.6 698.4L336.1 689.9"/></g>
 <path d="M602 560 a42 42 0 1 0 22 62 a34 34 0 1 1 -22 -62z" fill="#FFF8E6" stroke="#1E1A14" stroke-width="10" stroke-linejoin="round"/>
 <path d="M370 214V310M654 214V310" stroke="#1E1A14" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M230 392H794" stroke="#1E1A14" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
