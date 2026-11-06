@@ -336,7 +336,7 @@
 				DEVELOPMENT_TEAM = M8T74C3QWG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Shift Machine";
+				INFOPLIST_KEY_CFBundleDisplayName = ShiftScheduler;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "ShiftScheduler needs full access to your calendar to create, read, and manage your work shifts in a dedicated calendar.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "ShiftScheduler needs access to your calendar to save and display your work shifts.";
@@ -374,7 +374,7 @@
 				DEVELOPMENT_TEAM = M8T74C3QWG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Shift Machine";
+				INFOPLIST_KEY_CFBundleDisplayName = ShiftScheduler;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "ShiftScheduler needs full access to your calendar to create, read, and manage your work shifts in a dedicated calendar.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "ShiftScheduler needs access to your calendar to save and display your work shifts.";
