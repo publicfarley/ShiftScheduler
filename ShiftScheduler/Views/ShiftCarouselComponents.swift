@@ -219,18 +219,14 @@ struct CompactMultiShiftCarousel: View {
             // Single shift - display with full width
             CompactHalfHeightShiftCard(shift: shifts[0], onTap: nil)
         } else {
-            // Multiple shifts - show in scrollable horizontal carousel
-            GeometryReader { geometry in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(shifts) { shift in
-                            CompactHalfHeightShiftCard(shift: shift, onTap: nil)
-                                .frame(width: geometry.size.width * 0.85)  // 85% width for peek effect
-                        }
-                    }
-                    .padding(.horizontal, 20)
+            // Multiple shifts - stack the compact cards vertically so each one
+            // keeps its natural height and full width. A GeometryReader-based
+            // horizontal carousel collapses to near-zero height inside the
+            // Today screen's vertical ScrollView, clipping the cards.
+            VStack(spacing: 8) {
+                ForEach(shifts) { shift in
+                    CompactHalfHeightShiftCard(shift: shift, onTap: nil)
                 }
-                .scrollTargetBehavior(.paging)
             }
         }
     }

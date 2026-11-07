@@ -255,7 +255,7 @@ struct DayView: View {
         Calendar.current.isDateInToday(date)
     }
 
-    /// All shift symbols for the day, each limited to 3 characters, joined with spaces
+    /// All shift symbols for the day, each limited to 3 characters, joined with "/"
     private var displaySymbol: String? {
         guard !shiftSymbols.isEmpty else { return nil }
 
@@ -265,7 +265,7 @@ struct DayView: View {
                 let index = symbol.index(symbol.startIndex, offsetBy: 3)
                 return String(symbol[..<index]) + "…"
             }
-            .joined(separator: " ")
+            .joined(separator: "/")
     }
 
     var body: some View {
