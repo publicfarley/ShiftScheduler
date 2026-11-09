@@ -22,7 +22,7 @@ common_settings = {
   'PRODUCT_NAME' => 'shift-scheduler',
   'MACOSX_DEPLOYMENT_TARGET' => '14.0',
   'SDKROOT' => 'macosx',
-  'SWIFT_VERSION' => '5.0',
+  'SWIFT_VERSION' => '6.0',
   'SWIFT_EMIT_LOC_STRINGS' => 'NO',
   'ENABLE_HARDENED_RUNTIME' => 'NO',
   'SKIP_INSTALL' => 'YES',
@@ -95,7 +95,14 @@ target.file_system_synchronized_groups << redux_services_group
 
 exception_set = project.new(Xcodeproj::Project::Object::PBXFileSystemSynchronizedBuildFileExceptionSet)
 exception_set.target = target
-exception_set.membership_exceptions = ['ServiceContainer.swift', 'Mocks']
+# Xcode ignores a bare directory entry here, so list each mock file explicitly.
+exception_set.membership_exceptions = [
+  'ServiceContainer.swift',
+  'Mocks/MockCalendarService.swift',
+  'Mocks/MockCurrentDayService.swift',
+  'Mocks/MockPersistenceService.swift',
+  'Mocks/MockShiftSwitchService.swift',
+]
 redux_services_group.exceptions ||= []
 redux_services_group.exceptions << exception_set
 

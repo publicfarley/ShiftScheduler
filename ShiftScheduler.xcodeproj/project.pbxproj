@@ -34,7 +34,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ServiceContainer.swift,
-				Mocks,
+				Mocks/MockCalendarService.swift,
+				Mocks/MockCurrentDayService.swift,
+				Mocks/MockPersistenceService.swift,
+				Mocks/MockShiftSwitchService.swift,
 			);
 			target = 7089690810B8BE50CA0A227A /* ShiftSchedulerCLI */;
 		};
@@ -393,7 +396,7 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -421,7 +424,7 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};

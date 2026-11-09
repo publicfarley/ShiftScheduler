@@ -35,7 +35,7 @@ struct ProfileCommand: AsyncParsableCommand {
                     print("Retention policy:  \(profile.retentionPolicy.displayName)")
                     print("Auto-purge:        \(profile.autoPurgeEnabled ? "enabled" : "disabled")")
                     if let lastPurge = profile.lastPurgeDate {
-                        print("Last purge:        \(OutputFormatter.iso8601.string(from: lastPurge))")
+                        print("Last purge:        \(OutputFormatter.iso8601String(lastPurge))")
                     }
                 }
             }

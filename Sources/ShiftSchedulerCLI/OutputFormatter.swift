@@ -71,7 +71,7 @@ struct ChangeLogEntryDTO: Codable {
 
     init(_ entry: ChangeLogEntry) {
         id = entry.id.uuidString
-        timestamp = OutputFormatter.iso8601.string(from: entry.timestamp)
+        timestamp = OutputFormatter.iso8601String(entry.timestamp)
         user = entry.userDisplayName
         changeType = entry.changeType.rawValue
         shiftDate = OutputFormatter.dayString(entry.scheduledShiftDate)
@@ -93,14 +93,18 @@ struct ProfileDTO: Codable {
         displayName = profile.displayName
         retentionPolicy = profile.retentionPolicy.rawValue
         autoPurgeEnabled = profile.autoPurgeEnabled
-        lastPurgeDate = profile.lastPurgeDate.map { OutputFormatter.iso8601.string(from: $0) }
+        lastPurgeDate = profile.lastPurgeDate.map { OutputFormatter.iso8601String($0) }
     }
 }
 
 // MARK: - Formatting
 
 enum OutputFormatter {
-    static let iso8601 = ISO8601DateFormatter()
+    /// Internet date-time in UTC, e.g. `2026-11-09T05:00:00Z`. Uses the Sendable
+    /// `Date.ISO8601FormatStyle` rather than a shared `ISO8601DateFormatter`.
+    static func iso8601String(_ date: Date) -> String {
+        date.formatted(.iso8601)
+    }
 
     /// Stderr lines that tell the user about a shift type rebuild or skipped events.
     static func resolutionNotices(rebuiltTypes: Int, skippedEvents: Int) -> [String] {
@@ -207,7 +211,7 @@ enum OutputFormatter {
             headers: ["TIMESTAMP", "USER", "CHANGE", "SHIFT-DATE", "FROM", "TO", "REASON"],
             rows: entries.map { entry in
                 [
-                    iso8601.string(from: entry.timestamp),
+                    iso8601String(entry.timestamp),
                     entry.userDisplayName,
                     entry.changeType.rawValue,
                     dayString(entry.scheduledShiftDate),
