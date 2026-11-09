@@ -87,7 +87,10 @@ struct AppStartupRecoveryTests {
         )
 
         var dispatched: [AppAction] = []
-        await appStartupMiddleware(AppState(), .appLifecycle(.loadInitialData), services) { dispatched.append($0) }
+        let mockDispatch: @MainActor (AppAction) async -> Void = { action in
+            dispatched.append(action)
+        }
+        await appStartupMiddleware(AppState(), .appLifecycle(.loadInitialData), services, mockDispatch)
 
         let completed = dispatched.contains {
             if case .appLifecycle(.initializationComplete(.success)) = $0 { return true }
