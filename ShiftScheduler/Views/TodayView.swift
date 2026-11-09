@@ -389,6 +389,11 @@ private struct WeekSummarySection: View {
                     }
                 })
             } else {
+                WeekDayStrip(
+                    days: (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: today) },
+                    scheduledShifts: weekShifts
+                )
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(Array(shiftTypeCounts.enumerated()), id: \.element.id) { index, typeCount in

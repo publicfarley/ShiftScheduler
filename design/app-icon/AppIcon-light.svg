@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs>
+<filter id="crumple" x="0" y="0" width="100%" height="100%">
+ <feTurbulence type="fractalNoise" baseFrequency="0.0028" numOctaves="3" seed="7" result="n"/>
+ <feDiffuseLighting in="n" surfaceScale="14" lighting-color="#fff" result="l"><feDistantLight azimuth="235" elevation="55"/></feDiffuseLighting>
+ <feColorMatrix in="l" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.75 0 0 0 0.62" result="shade"/>
+ <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="g"/>
+ <feColorMatrix in="g" type="matrix" values="0 0 0 0 0.2  0 0 0 0 0.15  0 0 0 0 0.05  0 0 0 -1.4 0.72" result="grain"/>
+ <feMerge><feMergeNode in="shade"/><feMergeNode in="grain"/></feMerge>
+</filter>
+<linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D9B44A"/><stop offset=".55" stop-color="#C9A23A"/><stop offset="1" stop-color="#B38B2C"/></linearGradient>
+<linearGradient id="foldV" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#5a3f0a" stop-opacity=".28"/><stop offset=".5" stop-color="#fff3c4" stop-opacity=".45"/><stop offset=".56" stop-color="#000" stop-opacity="0"/></linearGradient>
+<linearGradient id="foldH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".46" stop-color="#5a3f0a" stop-opacity=".25"/><stop offset=".5" stop-color="#fff3c4" stop-opacity=".4"/><stop offset=".55" stop-color="#000" stop-opacity="0"/></linearGradient>
+<pattern id="brick" width="72" height="44" patternUnits="userSpaceOnUse">
+ <rect width="72" height="44" fill="#E6C35E"/>
+ <path d="M0 0H72M0 22H72M36 0V22M0 22V44M72 22V44" stroke="#9C7A24" stroke-width="5" fill="none"/>
+</pattern>
+<pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+ <rect width="80" height="80" fill="#E6C35E"/>
+ <path d="M0 0H80M0 0V80" stroke="#9C7A24" stroke-width="5" fill="none"/>
+</pattern>
+<clipPath id="cal"><rect x="230" y="268" width="564" height="520" rx="54"/></clipPath>
+</defs>
+<rect width="1024" height="1024" fill="url(#base)"/>
+<rect x="352" y="0" width="120" height="1024" fill="url(#foldV)"/>
+<rect x="0" y="300" width="1024" height="120" fill="url(#foldH)"/>
+<rect x="0" y="700" width="1024" height="110" fill="url(#foldH)" opacity=".7"/>
+<rect width="1024" height="1024" filter="url(#crumple)"/>
+<g stroke-width="3" fill="none"><path d="M412 0 L414 1024M0 360 L1024 356M0 756 L1024 760" stroke="#6b4c0e" stroke-opacity=".35"/><path d="M416 0 L418 1024M0 364 L1024 360M0 760 L1024 764" stroke="#fff6cf" stroke-opacity=".5"/></g>
+
+<rect x="370" y="392" width="142" height="140" fill="url(#brick)"/>
+<rect x="512" y="532" width="142" height="132" fill="url(#brick)"/>
+<rect x="230" y="664" width="140" height="124" fill="url(#brick)" clip-path="url(#cal)"/>
+<g stroke="#1E1A14" stroke-width="10" fill="none"><path d="M230 532H794M230 664H794M370 392V788M512 392V788M654 392V788"/></g>
+<g stroke="#1E1A14" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="441" cy="462" r="20"/><path d="M473.0 462.0L485.0 462.0M463.6 484.6L472.1 493.1M441.0 494.0L441.0 506.0M418.4 484.6L409.9 493.1M409.0 462.0L397.0 462.0M418.4 439.4L409.9 430.9M441.0 430.0L441.0 418.0M463.6 439.4L472.1 430.9"/></g>
+<g stroke="#1E1A14" stroke-width="10" fill="none" stroke-linecap="round"><circle cx="305" cy="721" r="20"/><path d="M337.0 721.0L349.0 721.0M327.6 743.6L336.1 752.1M305.0 753.0L305.0 765.0M282.4 743.6L273.9 752.1M273.0 721.0L261.0 721.0M282.4 698.4L273.9 689.9M305.0 689.0L305.0 677.0M327.6 698.4L336.1 689.9"/></g>
+<path d="M602 560 a42 42 0 1 0 22 62 a34 34 0 1 1 -22 -62z" fill="#FFF8E6" stroke="#1E1A14" stroke-width="10" stroke-linejoin="round"/>
+<path d="M370 214V310M654 214V310" stroke="#1E1A14" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M230 392H794" stroke="#1E1A14" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="230" y="268" width="564" height="520" rx="54" stroke="#1E1A14" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
