@@ -21,6 +21,13 @@ struct ShiftSchedulerCLI: AsyncParsableCommand {
             commands prompt for confirmation; pass --force to skip the prompt
             (required when running non-interactively, e.g. from a script or agent).
 
+            QUERYING SHIFTS (e.g. "show my Saturday shifts until the end of the year"):
+              shift-scheduler schedule list --from today --to +60d --weekday sat --json
+            Prints a JSON array of shifts, each with date, eventId, notes, and a
+            shiftType (symbol, title, startTime, endTime, location). --from/--to take
+            YYYY-MM-DD, today, tomorrow, +3d, -1w; --to is inclusive. --weekday takes
+            names like sat or sun and can be repeated.
+
             EXIT CODES:
               0   Success.
               1   Runtime failure (not found, not authorized, I/O error, cancelled).

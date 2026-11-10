@@ -380,11 +380,12 @@ shift-scheduler schedule list <span class="flag">--from</span> today <span class
           <p>Manage scheduled shifts in the calendar. Default subcommand: <code>list</code>.</p>
 
           <h4 class="subcmd">schedule list</h4>
-          <p>Defaults to the current calendar month. <code>--to</code> is inclusive. Date arguments are validated before the calendar-authorization check, so a bad date reports as a date error, not an auth error.</p>
+          <p>Defaults to the current calendar month. <code>--to</code> is inclusive. <code>--weekday</code> keeps only shifts that start on the given weekday (<code>saturday</code> or <code>sat</code>, case-insensitive); repeat the option or comma-separate for several days. Date arguments are validated before the calendar-authorization check, so a bad date reports as a date error, not an auth error.</p>
           <p>If events point at shift types this Mac lacks, the CLI rebuilds them from the events before it lists. It writes the local file only, never CloudKit, and prints a <code>Note: rebuilt N shift types …</code> line on stderr. If events are still hidden because their type is unknown, stderr gets a <code>Warning: N calendar events were skipped …</code> line. The exit code stays <code>0</code> and stdout holds the shifts that did resolve. Run <code>sync</code> for the full shift type records.</p>
-          <pre><code>shift-scheduler schedule list [<span class="flag">--from</span> &lt;date&gt;] [<span class="flag">--to</span> &lt;date&gt;] [<span class="flag">--json</span>]
+          <pre><code>shift-scheduler schedule list [<span class="flag">--from</span> &lt;date&gt;] [<span class="flag">--to</span> &lt;date&gt;] [<span class="flag">--weekday</span> &lt;day&gt; ...] [<span class="flag">--json</span>]
 
-<span class="c1">$ shift-scheduler schedule list --from today --to +14d</span></code></pre>
+<span class="c1">$ shift-scheduler schedule list --from today --to +14d</span>
+<span class="c1">$ shift-scheduler schedule list --from today --to +60d --weekday sat --json</span></code></pre>
 
           <h4 class="subcmd">schedule add</h4>
           <p>Creates a calendar event and records an undoable change-log entry. Prints the new EventKit identifier — capture it for later <code>edit</code>/<code>delete</code>/<code>switch</code> calls.</p>

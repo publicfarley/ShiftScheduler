@@ -134,11 +134,16 @@ Manage scheduled shifts in the calendar. Default subcommand: `list`.
 #### `schedule list`
 
 ```
-shift-scheduler schedule list [--from <date>] [--to <date>] [--json]
+shift-scheduler schedule list [--from <date>] [--to <date>] [--weekday <day> ...] [--json]
 ```
 
 - Defaults to the **current calendar month** if `--from`/`--to` are omitted.
 - `--to` is **inclusive**.
+- `--weekday` keeps only shifts that **start** on the given weekday. It takes
+  full or three-letter names (`saturday`, `sat`), case-insensitive. Repeat the
+  option or comma-separate for several days (`--weekday sat --weekday sun` or
+  `--weekday sat,sun`). A name that isn't a weekday fails with an
+  `invalidWeekday` error before the calendar is read.
 - Dates accept the formats in [Date & Time Formats](#date--time-formats).
 - Date arguments are validated *before* the calendar-authorization check, so
   a bad `--from`/`--to` value reports as a date error, not an auth error.
@@ -155,6 +160,7 @@ shift-scheduler schedule list [--from <date>] [--to <date>] [--json]
 shift-scheduler schedule list
 shift-scheduler schedule list --from today --to +14d
 shift-scheduler schedule list --from 2026-07-01 --to 2026-07-31 --json
+shift-scheduler schedule list --from today --to +60d --weekday sat --json
 ```
 
 #### `schedule add`

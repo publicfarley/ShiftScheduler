@@ -19,10 +19,14 @@ struct ScheduleCommand: AsyncParsableCommand {
                 Dates accept YYYY-MM-DD, today, tomorrow, yesterday, +3d, -1w.
                 --to is inclusive.
 
+                --weekday keeps only shifts that start on the given weekday(s), such
+                as sat or saturday. Repeat the option or separate names with commas.
+
                 EXAMPLES:
                   shift-scheduler schedule list
                   shift-scheduler schedule list --from today --to +14d
                   shift-scheduler schedule list --from 2026-07-01 --to 2026-07-31 --json
+                  shift-scheduler schedule list --from today --to +60d --weekday sat --json
                 """
         )
 
@@ -32,11 +36,18 @@ struct ScheduleCommand: AsyncParsableCommand {
         @Option(help: "End date of the range (inclusive).")
         var to: String?
 
+        @Option(
+            name: .long,
+            help: "Only shifts starting on this weekday (sat, saturday, ...). Repeat or comma-separate for several."
+        )
+        var weekday: [String] = []
+
         @OptionGroup var options: GlobalOptions
 
         func run() async throws {
             try await CLIRuntime.run(json: options.json) {
                 let controller = options.makeController()
+                let weekdays = try WeekdayFilter.parse(weekday)
 
                 let today = controller.currentDay.getTodayDate()
                 let startDate = try from.map { try DateParsing.parseDate($0) }
@@ -50,7 +61,7 @@ struct ScheduleCommand: AsyncParsableCommand {
                 let endExclusive = Calendar.current.date(byAdding: .day, value: 1, to: endInclusive) ?? endInclusive
 
                 let load = try await controller.loadShiftsResolvingTypes(from: startDate, to: endExclusive)
-                let shifts = load.shifts
+                let shifts = WeekdayFilter.apply(load.shifts, weekdays: weekdays)
                 controller.reportNotices(for: load)
                 if options.json {
                     try OutputFormatter.printJSON(shifts.map(ShiftDTO.init))

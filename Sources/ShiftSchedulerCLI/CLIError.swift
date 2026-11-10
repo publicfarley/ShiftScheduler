@@ -9,6 +9,7 @@ enum CLIError: Error {
     case ambiguous(kind: String, reference: String, candidates: [String])
     case invalidDate(String)
     case invalidTime(String)
+    case invalidWeekday(String)
     case locationInUse(name: String, usedBy: [String])
     case nothingToUndo
     case nothingToRedo
@@ -33,6 +34,8 @@ enum CLIError: Error {
             return "Cannot parse date '\(input)'"
         case .invalidTime(let input):
             return "Cannot parse time '\(input)'"
+        case .invalidWeekday(let input):
+            return "Cannot parse weekday '\(input)'"
         case .locationInUse(let name, let usedBy):
             return "Location '\(name)' is used by shift type(s): \(usedBy.joined(separator: ", "))"
         case .nothingToUndo:
@@ -68,6 +71,8 @@ enum CLIError: Error {
             return "Supported formats: YYYY-MM-DD, today, tomorrow, yesterday, +3d, -1w."
         case .invalidTime:
             return "Use 24-hour HH:MM format, e.g. 07:00 or 22:30."
+        case .invalidWeekday:
+            return "Use a weekday name such as sat or saturday. Repeat --weekday or separate names with commas for several days."
         case .locationInUse:
             return "Edit or delete those shift types first, or point them at a different location."
         case .confirmationRequired:

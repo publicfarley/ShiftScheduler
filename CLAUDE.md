@@ -27,6 +27,36 @@ xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -configurati
 xcrun simctl list devices
 ```
 
+## Querying the user's real shift data (CLI)
+
+The `shift-scheduler` CLI reads the user's live schedule, shift types, locations
+and change log. **For questions about their actual shifts** ("what am I working
+Saturday?", "how many night shifts in December?", "when is my next day off?"),
+run the CLI instead of guessing or reading source. Examples:
+
+```bash
+shift-scheduler schedule list --from today --to +60d --weekday sat --json
+shift-scheduler today --json
+shift-scheduler types list --json
+```
+
+- Installed at `~/bin/shift-scheduler`. If it is missing or stale, run
+  `scripts/install_cli.sh` (builds the signed scheme and installs it).
+- Run `shift-scheduler --help` or `shift-scheduler <command> --help` for syntax;
+  the full manual, including the JSON/exit-code contract for agents, is
+  `CLI_USAGE.md`.
+- Always pass `--json` and parse that, not the table output.
+- Reads (`schedule list`, `today`, `types list`, `locations list`, `log list`,
+  `profile show`, `auth status`) are safe to run freely.
+- Writes (`schedule add/edit/delete/switch`, `types`/`locations` add/edit/delete,
+  `undo`, `redo`, `sync`, `log purge`, `profile set`) change the user's real
+  calendar or data. Confirm with the user before running one. `delete` commands
+  need `--force` when run non-interactively.
+- There is no filter beyond `--from`/`--to`/`--weekday`; do further filtering or
+  counting on the JSON output.
+- A plain `swift build` binary has no CloudKit entitlement, so `sync` only works
+  from the signed build.
+
 ## Architecture
 
 This is an iOS Swift/SwiftUI application for shift scheduling, implementing Domain-Driven Design (DDD) principles. The app will provide a user interface for managing work shifts and schedules.
