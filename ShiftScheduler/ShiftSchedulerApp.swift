@@ -28,14 +28,14 @@ struct ShiftSchedulerApp: App {
                                     if reduxStore.state.isInitializationComplete {
                                         break
                                     }
-                                    try await Task.sleep(nanoseconds: 100_000_000) // 100ms
+                                    guard await Task.sleepUnlessCancelled(seconds: 0.1) else { return } // 100ms
                                 }
 
                                 // Ensure we show splash for at least 2 seconds
                                 let elapsedTime = Date().timeIntervalSince(startTime)
                                 let remainingTime = max(0, 2.0 - elapsedTime)
 
-                                try await Task.sleep(nanoseconds: UInt64(remainingTime * 1_000_000_000))
+                                guard await Task.sleepUnlessCancelled(seconds: remainingTime) else { return }
 
                                 // Hide splash screen with animation
                                 withAnimation(.easeOut(duration: 0.5)) {
