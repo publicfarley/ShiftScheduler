@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Quick Actions section for managing today's shift
-/// Displays three action buttons: Switch Shift, Delete Shift, and Edit Notes
+/// Displays action buttons: Switch Shift, Delete Shift, Edit Notes, and Sick / Not Sick
 struct QuickActionsView: View {
     @Environment(\.reduxStore) var store
 
@@ -119,7 +119,10 @@ struct QuickActionsView: View {
                     .cornerRadius(10)
                 }
 
-                // Mark as Sick / Unmark Sick Button
+                // Mark as Sick / Not Sick Button
+                // When the day is marked sick, this button reverts it back to the
+                // originally scheduled shift (the shift type is kept on the event,
+                // only the sick flag and reason are removed).
                 if shift.isSickDay {
                     Button(action: {
                         Task {
@@ -127,9 +130,9 @@ struct QuickActionsView: View {
                         }
                     }) {
                         VStack(spacing: 4) {
-                            Image(systemName: "thermometer.medium.slash")
+                            Image(systemName: "arrow.uturn.backward")
                                 .font(.system(size: 14, weight: .semibold))
-                            Text("Unwell")
+                            Text("Not Sick")
                                 .font(.caption)
                                 .fontWeight(.semibold)
                         }
@@ -145,6 +148,8 @@ struct QuickActionsView: View {
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }
+                    .accessibilityLabel("Not sick")
+                    .accessibilityHint("Cancels the sick day and restores your scheduled shift")
                 } else {
                     Button(action: {
                         showMarkAsSickSheet = true
