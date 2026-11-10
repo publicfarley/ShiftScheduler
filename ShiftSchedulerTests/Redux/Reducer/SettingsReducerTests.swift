@@ -279,7 +279,7 @@ struct SettingsReducerTests {
 
     @Test("importCompleted success with singular count uses singular wording")
     func testImportCompletedSuccessSingular() {
-        var state = SettingsState()
+        let state = SettingsState()
 
         let newState = settingsReducer(state: state, action: .importCompleted(.success(1)))
 

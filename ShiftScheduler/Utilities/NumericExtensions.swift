@@ -27,4 +27,27 @@ extension Task where Success == Never, Failure == Never {
     static func sleep(seconds: Double) async throws {
         try await Self.sleep(nanoseconds: seconds.seconds)
     }
+
+    /// Sleeps for a specified duration in seconds and reports whether it ran to completion.
+    ///
+    /// Use this for fire-and-forget delays (animation resets, auto-dismiss) where the
+    /// only thing that can throw is cancellation. Returns `false` if the task was
+    /// cancelled, so the caller can skip the work that follows. Negative durations
+    /// are treated as zero.
+    ///
+    /// Example:
+    /// ```swift
+    /// Task {
+    ///     guard await Task.sleepUnlessCancelled(seconds: 0.1) else { return }
+    ///     isPressed = false
+    /// }
+    /// ```
+    static func sleepUnlessCancelled(seconds: Double) async -> Bool {
+        do {
+            try await Self.sleep(nanoseconds: max(0, seconds).seconds)
+            return true
+        } catch {
+            return false
+        }
+    }
 }

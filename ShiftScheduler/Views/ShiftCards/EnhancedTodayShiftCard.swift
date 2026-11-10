@@ -208,7 +208,7 @@ struct EnhancedTodayShiftCard: View {
             }
 
             Task {
-                try await Task.sleep(nanoseconds: 150_000_000)
+                guard await Task.sleepUnlessCancelled(seconds: 0.15) else { return }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isPressed = false
                 }

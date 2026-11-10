@@ -219,7 +219,7 @@ struct EnhancedShiftCard: View {
             }
 
             Task {
-                try await Task.sleep(seconds: 0.1)
+                guard await Task.sleepUnlessCancelled(seconds: 0.1) else { return }
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                     isPressed = false
                 }

@@ -58,9 +58,9 @@ struct SickDayTests {
         let shift = ScheduledShiftBuilder.today().build()
         let action = TodayAction.markShiftAsSick(shift, reason: "Flu")
 
-        // Verify action can be created and encoded
-        let actionData = AppAction.today(action)
-        #expect(actionData != nil)
+        let wrapped = AppAction.today(action)
+        #expect(wrapped == .today(.markShiftAsSick(shift, reason: "Flu")))
+        #expect(wrapped != .today(.markShiftAsSick(shift, reason: "Cold")))
     }
 
     @Test("TodayAction has unmarkShiftAsSick action")
@@ -68,8 +68,9 @@ struct SickDayTests {
         let shift = ScheduledShiftBuilder.today().build()
         let action = TodayAction.unmarkShiftAsSick(shift)
 
-        let actionData = AppAction.today(action)
-        #expect(actionData != nil)
+        let wrapped = AppAction.today(action)
+        #expect(wrapped == .today(.unmarkShiftAsSick(shift)))
+        #expect(wrapped != .today(.markShiftAsSick(shift, reason: nil)))
     }
 
     @Test("ScheduleAction has markShiftAsSick action")
@@ -77,8 +78,9 @@ struct SickDayTests {
         let shift = ScheduledShiftBuilder.today().build()
         let action = ScheduleAction.markShiftAsSick(shift, reason: "Illness")
 
-        let actionData = AppAction.schedule(action)
-        #expect(actionData != nil)
+        let wrapped = AppAction.schedule(action)
+        #expect(wrapped == .schedule(.markShiftAsSick(shift, reason: "Illness")))
+        #expect(wrapped != .schedule(.markShiftAsSick(shift, reason: "Cold")))
     }
 
     // MARK: - Reducer Tests

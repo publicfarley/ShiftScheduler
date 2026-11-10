@@ -56,7 +56,7 @@ struct ToastModifier: ViewModifier {
 
                         // Auto-dismiss after duration
                         Task {
-                            try await Task.sleep(seconds: toast.duration)
+                            guard await Task.sleepUnlessCancelled(seconds: toast.duration) else { return }
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                 self.toast = nil
                             }
