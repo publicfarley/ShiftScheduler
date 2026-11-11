@@ -104,3 +104,6 @@ Package.resolved
 
 # Xcode Cloud (workflows live in App Store Connect; this only links the project)
 ShiftScheduler.xcodeproj/xcshareddata/xcodecloud/
+
+# App Store Connect API keys: keep these in the Keychain, never in the repo
+*.p8
