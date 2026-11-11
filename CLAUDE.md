@@ -27,6 +27,18 @@ xcodebuild -project ShiftScheduler.xcodeproj -scheme ShiftScheduler -configurati
 xcrun simctl list devices
 ```
 
+### Releasing to TestFlight
+```bash
+# Test, archive and upload a new TestFlight build (build number = UTC timestamp)
+scripts/testflight.sh
+scripts/testflight.sh --dry-run        # print the xcodebuild commands only
+
+# Optional: save an App Store Connect API key in the login Keychain instead of using Xcode's Apple ID
+scripts/testflight.sh store-key ~/Downloads/AuthKey_XXXXXXXXXX.p8 <issuer-id>
+```
+Uploading publishes a build to the user's App Store Connect account: only run it when the user asks.
+Never commit `.p8` keys (they are gitignored); they belong in the Keychain or CI secrets.
+
 ## Querying the user's real shift data (CLI)
 
 The `shift-scheduler` CLI reads the user's live schedule, shift types, locations
