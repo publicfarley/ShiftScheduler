@@ -62,6 +62,22 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
             await dispatch(.appLifecycle(.calendarAccessRequested(.failure(error))))
         }
 
+    case .calendarAccessRequested(.success(true)):
+        // On first launch, loadInitialData runs while the permission prompt is still
+        // on screen, so its recovery attempt cannot read the calendar yet. Retry now
+        // that access is granted, otherwise the schedule stays blank until relaunch.
+        do {
+            let shiftTypes = try await services.persistenceService.loadShiftTypes()
+            guard shiftTypes.isEmpty, await recoverFromCalendarEvents(services: services) else { break }
+
+            let locations = try await services.persistenceService.loadLocations()
+            let recoveredShiftTypes = try await services.persistenceService.loadShiftTypes()
+            await dispatch(.locations(.locationsLoaded(.success(locations))))
+            await dispatch(.shiftTypes(.shiftTypesLoaded(.success(recoveredShiftTypes))))
+        } catch {
+            logger.error("Failed to recover shift types after calendar access granted: \(error.localizedDescription)")
+        }
+
     case .calendarAccessVerified, .calendarAccessRequested:
         // State updates handled by reducer, no middleware action needed
         break
@@ -79,14 +95,7 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
             // Reconstruct the templates from the events themselves so they re-link.
             if shiftTypes.isEmpty {
                 logger.warning("No shift types in local cache - attempting recovery from calendar events")
-                if let recovery = try? await services.calendarService.recoverShiftTypeData(),
-                   !recovery.shiftTypes.isEmpty {
-                    for location in recovery.locations {
-                        try? await services.persistenceService.saveLocation(location)
-                    }
-                    for shiftType in recovery.shiftTypes {
-                        try? await services.persistenceService.saveShiftType(shiftType)
-                    }
+                if await recoverFromCalendarEvents(services: services) {
                     locations = try await services.persistenceService.loadLocations()
                     shiftTypes = try await services.persistenceService.loadShiftTypes()
                     logger.debug("Recovery restored \(shiftTypes.count) shift types and \(locations.count) locations from calendar")
@@ -125,4 +134,22 @@ let appStartupMiddleware: Middleware<AppState, AppAction> = { state, action, ser
         // Not handled by this middleware
         break
     }
+}
+
+/// Rebuilds shift types and locations from the events already in the calendar and
+/// saves them. Returns true only if at least one shift type was recovered.
+/// Fails quietly (returns false) when the calendar cannot be read, for example
+/// before the user has granted access.
+private func recoverFromCalendarEvents(services: ServiceContainer) async -> Bool {
+    guard let recovery = try? await services.calendarService.recoverShiftTypeData(),
+          !recovery.shiftTypes.isEmpty else {
+        return false
+    }
+    for location in recovery.locations {
+        try? await services.persistenceService.saveLocation(location)
+    }
+    for shiftType in recovery.shiftTypes {
+        try? await services.persistenceService.saveShiftType(shiftType)
+    }
+    return true
 }
