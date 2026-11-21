@@ -1,0 +1,304 @@
+<title>ShiftScheduler TestFlight Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: single reading column, two parts (one-time setup, every release), then post-upload, troubleshooting, checklist. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --fg: #16202e;
+  --muted: #566376;
+  --line: #d9dfe8;
+  --accent: #0a5fd0;
+  --accent-soft: #e3eefc;
+  --code-bg: #101a2a;
+  --code-fg: #e6edf7;
+  --warn-bg: #fff3d6;
+  --warn-line: #e0a526;
+  --warn-fg: #5a3d00;
+  --ok: #1d7a46;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141d; --surface: #161e2b; --fg: #e4eaf3; --muted: #9aa8bd; --line: #2a3546;
+    --accent: #6fa8ff; --accent-soft: #1b2b45; --code-bg: #0a0f17; --code-fg: #e6edf7;
+    --warn-bg: #3a2d0e; --warn-line: #b8892a; --warn-fg: #f3d899; --ok: #5fcf8f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141d; --surface: #161e2b; --fg: #e4eaf3; --muted: #9aa8bd; --line: #2a3546;
+  --accent: #6fa8ff; --accent-soft: #1b2b45; --code-bg: #0a0f17; --code-fg: #e6edf7;
+  --warn-bg: #3a2d0e; --warn-line: #b8892a; --warn-fg: #f3d899; --ok: #5fcf8f;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font: 16px/1.6 var(--font-body);
+  padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: 2.2rem; font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 500; }
+p { margin: 0; max-width: 65ch; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+header { display: flex; flex-direction: column; gap: 12px; }
+header p { color: var(--muted); }
+.glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.glance > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.glance span { color: var(--muted); font-size: 0.9rem; }
+section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step-head { display: flex; gap: 12px; align-items: baseline; }
+.step-num { font-family: var(--font-mono); color: var(--accent); font-weight: 500; flex: none; }
+.step ul, .step ol { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 6px; }
+.tag { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.codebox { position: relative; background: var(--code-bg); color: var(--code-fg); border-radius: 6px; }
+.codebox pre { margin: 0; padding: 14px 76px 14px 16px; overflow-x: auto; font: 0.85rem/1.55 var(--font-mono); }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 0.75rem var(--font-body); background: transparent; color: var(--code-fg); border: 1px solid #3b4a63; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+.copy:hover { background: #22304a; }
+button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.note { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-line); border-radius: 6px; padding: 12px 14px; font-size: 0.93rem; }
+.note strong { font-weight: 600; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+.checklist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.checklist label { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; cursor: pointer; }
+.checklist input { margin-top: 5px; accent-color: var(--accent); }
+.checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+.progress { color: var(--muted); font-size: 0.9rem; }
+.flags dt { font-family: var(--font-mono); font-size: 0.88rem; margin-top: 8px; }
+.flags dd { margin: 0 0 0 0; color: var(--muted); font-size: 0.93rem; }
+@media (max-width: 520px) { h1 { font-size: 1.7rem; } .step { padding: 16px; } }
+</style>
+
+<main>
+<header>
+  <span class="eyebrow">ShiftScheduler · iOS</span>
+  <h1>Deploying to TestFlight</h1>
+  <p>Everything runs through <code>scripts/testflight.sh</code>. Part 1 happens once. Part 2 is the routine for every build after that.</p>
+</header>
+
+<div class="glance">
+  <div><strong>Bundle ID</strong><code>functioncraft.ShiftScheduler</code></div>
+  <div><strong>Team</strong><code>M8T74C3QWG</code></div>
+  <div><strong>CloudKit container</strong><code>iCloud.com.functioncraft.ShiftScheduler</code></div>
+  <div><strong>Build number</strong><span>UTC timestamp, set by the script on each run</span></div>
+</div>
+
+<section id="setup">
+  <span class="eyebrow">Part 1</span>
+  <h2>One-time setup</h2>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h3>Confirm your account</h3></div>
+    <ul>
+      <li>You need a paid Apple Developer Program membership under team <code>M8T74C3QWG</code>.</li>
+      <li>In Xcode, open Settings &rarr; Accounts and confirm your Apple ID is signed in. The script uses it unless you set up an API key in step 2.</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h3>Create an API key</h3><span class="tag">Optional</span></div>
+    <p>A key lets the script sign and upload without depending on Xcode's login session.</p>
+    <ol>
+      <li>Open <a href="https://appstoreconnect.apple.com/access/integrations/api" target="_blank" rel="noopener">App Store Connect &rarr; Users and Access &rarr; Integrations</a>.</li>
+      <li>Generate a Team Key with the <strong>App Manager</strong> role.</li>
+      <li>Download the <code>.p8</code> file. Apple lets you download it only once.</li>
+      <li>Note the Key ID and the Issuer ID shown on that page.</li>
+    </ol>
+    <div class="codebox"><pre>mkdir -p ~/.appstoreconnect/private_keys
+mv ~/Downloads/AuthKey_ABC123DEFG.p8 ~/.appstoreconnect/private_keys/
+chmod 600 ~/.appstoreconnect/private_keys/AuthKey_ABC123DEFG.p8</pre><button class="copy" type="button">Copy</button></div>
+    <p>Add the three variables to <code>~/.zshrc</code>. Set all three or none.</p>
+    <div class="codebox"><pre>export ASC_KEY_ID=ABC123DEFG
+export ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000
+export ASC_KEY_PATH=$HOME/.appstoreconnect/private_keys/AuthKey_ABC123DEFG.p8</pre><button class="copy" type="button">Copy</button></div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">3</span><h3>Dry run the archive</h3></div>
+    <p>This builds and exports an <code>.ipa</code> without uploading anything. With automatic signing it also registers the App ID and creates the provisioning profile, which step 4 needs.</p>
+    <div class="codebox"><pre>scripts/testflight.sh --no-upload --skip-tests</pre><button class="copy" type="button">Copy</button></div>
+    <p>Read the preflight warnings it prints. Two matter for this app:</p>
+    <ul>
+      <li><strong>No <code>aps-environment</code> entitlement.</strong> Ignore this unless you use CloudKit push subscriptions. If you do, add the Push Notifications capability in Xcode first.</li>
+      <li><strong>No <code>PrivacyInfo.xcprivacy</code>.</strong> Apple can flag required-reason API use (for example <code>UserDefaults</code> or file timestamps) after upload. Adding a privacy manifest in Xcode avoids that.</li>
+    </ul>
+    <div class="note"><strong>If signing fails</strong> with a missing profile or iCloud container error, open the project in Xcode, select the ShiftScheduler target, and check Signing &amp; Capabilities. Confirm the iCloud capability lists the container above, then rerun.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">4</span><h3>Create the app record</h3></div>
+    <ol>
+      <li>Open <a href="https://appstoreconnect.apple.com/apps" target="_blank" rel="noopener">App Store Connect &rarr; Apps</a> and choose + &rarr; New App.</li>
+      <li>Platform iOS. Pick a name and primary language. Choose <code>functioncraft.ShiftScheduler</code> from the Bundle ID list. Enter any SKU.</li>
+      <li>Save.</li>
+    </ol>
+    <div class="note"><strong>Bundle ID missing from the list?</strong> The dry run in step 3 did not register it. Rerun it, or register the ID at developer.apple.com under Certificates, Identifiers &amp; Profiles. You cannot change the bundle ID after the record exists. Note that it has no <code>com.</code> prefix, unlike the iCloud container.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">5</span><h3>Deploy the CloudKit schema to Production</h3></div>
+    <p>TestFlight builds talk to the Production CloudKit environment. Your development schema is not there until you deploy it.</p>
+    <ol>
+      <li>Open the <a href="https://icloud.developer.apple.com/dashboard" target="_blank" rel="noopener">CloudKit Dashboard</a> and select <code>iCloud.com.functioncraft.ShiftScheduler</code>.</li>
+      <li>In the Development environment, choose Deploy Schema Changes.</li>
+      <li>Review the record types and confirm the deploy to Production.</li>
+    </ol>
+    <div class="note"><strong>Back up first.</strong> The Production container starts empty, and an empty CloudKit fetch has wiped local JSON in this project before. Confirm that fix is in place, and export your real shifts with the CLI before installing the first TestFlight build on your own phone.</div>
+  </div>
+</section>
+
+<section id="release">
+  <span class="eyebrow">Part 2</span>
+  <h2>Each release</h2>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">1</span><h3>Get main clean</h3></div>
+    <p>The script warns about uncommitted changes and about branches other than <code>main</code>, but it still builds them. Merge and commit first.</p>
+    <div class="codebox"><pre>git status
+git branch --show-current</pre><button class="copy" type="button">Copy</button></div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">2</span><h3>Bump the version if needed</h3></div>
+    <p>The build number changes on its own. The marketing version (currently 1.0) does not. Change <code>MARKETING_VERSION</code> in Xcode only when you want testers to see a new version number. Apple requires a new Beta App Review for each new version that goes to external testers.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">3</span><h3>Run the script</h3></div>
+    <div class="codebox"><pre>scripts/testflight.sh</pre><button class="copy" type="button">Copy</button></div>
+    <p>It runs these stages in order and stops on the first failure:</p>
+    <ol>
+      <li>Preflight: reads settings, checks entitlements, picks the auth method.</li>
+      <li>Unit tests on the iPhone 17 Pro simulator.</li>
+      <li>Release archive for a generic iOS device, to <code>build/testflight/</code>.</li>
+      <li>Export and upload to App Store Connect.</li>
+    </ol>
+    <dl class="flags">
+      <dt>--skip-tests</dt><dd>Skip the test run.</dd>
+      <dt>--no-upload</dt><dd>Export an <code>.ipa</code> only.</dd>
+      <dt>--build-number N</dt><dd>Use a specific build number instead of the timestamp.</dd>
+    </dl>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num">4</span><h3>Wait for processing</h3></div>
+    <p>After the upload finishes, App Store Connect processes the build, usually in 5 to 30 minutes. Watch it under your app &rarr; TestFlight &rarr; Builds. You also get an email when it is ready or if it is rejected.</p>
+  </div>
+</section>
+
+<section id="testers">
+  <span class="eyebrow">Part 3</span>
+  <h2>Getting it onto devices</h2>
+
+  <div class="step">
+    <h3>Internal testing <span class="tag">No review</span></h3>
+    <ol>
+      <li>In TestFlight, open Internal Testing and create a group.</li>
+      <li>Add yourself. Internal testers must be users on your App Store Connect team, up to 100.</li>
+      <li>Add the processed build to the group.</li>
+      <li>On your iPhone, install the TestFlight app, accept the email invite, and install ShiftScheduler.</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <h3>External testing <span class="tag">Beta App Review</span></h3>
+    <ol>
+      <li>Create an External group. Add testers by email, or enable a public link.</li>
+      <li>Fill in Test Information: what to test, a contact email, and a note about the calendar permission the app asks for.</li>
+      <li>Add a build and submit it. The first build of each new version goes to Beta App Review, which often takes a day.</li>
+    </ol>
+  </div>
+
+  <div class="note"><strong>Builds expire after 90 days.</strong> Upload a fresh build before then so testers keep access.</div>
+</section>
+
+<section id="trouble">
+  <span class="eyebrow">Reference</span>
+  <h2>Troubleshooting</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Symptom</th><th>Likely cause and fix</th></tr></thead>
+      <tbody>
+        <tr><td>Script says tests failed</td><td>Fix them, or rerun with <code>--skip-tests</code> if you accept the risk.</td></tr>
+        <tr><td>No profile or "no account" signing error</td><td>Sign in under Xcode Settings &rarr; Accounts, or set the three <code>ASC_*</code> variables.</td></tr>
+        <tr><td>"set all of ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_PATH"</td><td>One or two of the variables are set. Set all three or unset them all.</td></tr>
+        <tr><td>Upload rejected: build number already used</td><td>Two runs in the same minute. Wait a minute or pass <code>--build-number</code>.</td></tr>
+        <tr><td>No app record found for the bundle ID</td><td>Create the app record (Part 1, step 4) with the exact bundle ID.</td></tr>
+        <tr><td>Build never appears in TestFlight</td><td>Check your email for a processing rejection. Common causes are a missing privacy manifest or entitlement mismatch.</td></tr>
+        <tr><td>Syncs fine in Xcode, fails in TestFlight</td><td>CloudKit schema not deployed to Production (Part 1, step 5).</td></tr>
+        <tr><td>Empty calendar on first launch</td><td>Production container starts empty. Grant calendar access, then restore from your backup.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="check">
+  <span class="eyebrow">Tracker</span>
+  <h2>Checklist</h2>
+  <p class="progress" id="progress" aria-live="polite"></p>
+  <ul class="checklist" id="checklist">
+    <li><label><input type="checkbox" id="c1"><span>Developer account active and signed in to Xcode</span></label></li>
+    <li><label><input type="checkbox" id="c2"><span>API key created and environment variables set (optional)</span></label></li>
+    <li><label><input type="checkbox" id="c3"><span>Dry run with <code>--no-upload</code> succeeded</span></label></li>
+    <li><label><input type="checkbox" id="c4"><span>App record created in App Store Connect</span></label></li>
+    <li><label><input type="checkbox" id="c5"><span>CloudKit schema deployed to Production</span></label></li>
+    <li><label><input type="checkbox" id="c6"><span>Real shift data backed up</span></label></li>
+    <li><label><input type="checkbox" id="c7"><span>Ran <code>scripts/testflight.sh</code>, upload succeeded</span></label></li>
+    <li><label><input type="checkbox" id="c8"><span>Build finished processing</span></label></li>
+    <li><label><input type="checkbox" id="c9"><span>Internal group created, build installed from TestFlight</span></label></li>
+  </ul>
+</section>
+</main>
+
+<script>
+(function () {
+  document.querySelectorAll('.codebox').forEach(function (box) {
+    var btn = box.querySelector('.copy');
+    var pre = box.querySelector('pre');
+    btn.addEventListener('click', function () {
+      var text = pre.innerText;
+      var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1500); };
+      var fallback = function () {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = 'Selected';
+      };
+      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+    });
+  });
+
+  var KEY = 'shiftscheduler-testflight-checklist';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#checklist input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  function update() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    document.getElementById('progress').textContent = n + ' of ' + boxes.length + ' done';
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.addEventListener('change', function () {
+      var state = {};
+      boxes.forEach(function (x) { state[x.id] = x.checked; });
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      update();
+    });
+  });
+  update();
+})();
+</script>
